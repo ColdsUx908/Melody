@@ -29,30 +29,28 @@ public static partial class TOLocalizationUtils
 
     public static void ChatLocalizedTextWith(string key, Color? textColor = null, params object[] args)
     {
-        Color textColorValue = textColor ?? Color.White;
         if (Main.netMode == NetmodeID.SinglePlayer)
-            Main.NewText(Language.GetTextValueWith(key, args), textColorValue);
+            Main.NewText(Language.GetText(key).Format(args), textColor ?? Color.White);
         else if (Main.netMode is NetmodeID.Server or NetmodeID.MultiplayerClient)
-            ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(Language.GetText(key).Format(args)), textColorValue);
+            ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(Language.GetText(key).Format(args)), textColor ?? Color.White);
     }
 
     public static void ChatLocalizedTextWith(string key, Player receiver, Color? textColor = null, params object[] args)
     {
         if (Main.netMode == NetmodeID.SinglePlayer)
-            Main.NewText(Language.GetTextValueWith(key, args), textColor ?? Color.White);
+            Main.NewText(Language.GetText(key).Format(args), textColor ?? Color.White);
         else if (Main.netMode is NetmodeID.Server or NetmodeID.MultiplayerClient)
             ChatHelper.SendChatMessageToClient(NetworkText.FromLiteral(Language.GetText(key).Format(args)), textColor ?? Color.White, receiver.whoAmI);
     }
 
     public static void ChatLocalizedTextWith(string key, Player[] receivers, Color? textColor = null, params object[] args)
     {
-        Color textColorValue = textColor ?? Color.White;
         if (Main.netMode == NetmodeID.SinglePlayer)
-            Main.NewText(Language.GetTextValueWith(key, args), textColorValue);
+            Main.NewText(Language.GetText(key).Format(args), textColor ?? Color.White);
         else if (Main.netMode is NetmodeID.Server or NetmodeID.MultiplayerClient)
         {
             foreach (Player player in receivers)
-                ChatHelper.SendChatMessageToClient(NetworkText.FromLiteral(Language.GetText(key).Format(args)), textColorValue, player.whoAmI);
+                ChatHelper.SendChatMessageToClient(NetworkText.FromLiteral(Language.GetText(key).Format(args)), textColor ?? Color.White, player.whoAmI);
         }
     }
 

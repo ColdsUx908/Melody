@@ -18,9 +18,40 @@ public class ImmortalBloodRain : ModProjectile, ILocalizedModType
     public new string LocalizationCategory => "Projectiles.LegendaryItems";
 
     private const float homingDistance = 10000f;
-    private Player playerTarget = null;
-    private NPC npcTarget = null;
-    private static readonly List<int> InstantKill =
+
+    private int AIPhase
+    {
+        get => (int)Projectile.ai[0];
+        set => Projectile.ai[0] = value;
+    }
+
+    private int AITimer
+    {
+        get => (int)Projectile.ai[1];
+        set => Projectile.ai[1] = value;
+    }
+
+    private Player PlayerTarget
+    {
+        get
+        {
+            int temp = (int)Projectile.ai[2];
+            return temp is >= 0 and < Main.maxPlayers ? Main.player[temp] : null;
+        }
+        set => Projectile.ai[2] = value?.whoAmI ?? -1;
+    }
+
+    private NPC NPCTarget
+    {
+        get
+        {
+            int temp = (int)Projectile.ai[3];
+            return temp >= 0 && temp < Main.maxNPCs ? Main.npc[temp] : null;
+        }
+        set => Projectile.ai[3] = value?.whoAmI ?? -1;
+    }
+
+    private static readonly HashSet<int> InstantKill =
     [
         //1,
         //2
@@ -42,37 +73,27 @@ public class ImmortalBloodRain : ModProjectile, ILocalizedModType
         Projectile.extraUpdates = 2; //速度UpUp
     }
 
-    public override void SendExtraAI(BinaryWriter writer)
-    {
-        writer.Write(Projectile.localAI[0]);
-    }
-
-    public override void ReceiveExtraAI(BinaryReader reader)
-    {
-        Projectile.localAI[0] = reader.ReadSingle();
-    }
-
     public override void AI()
     {
         Lighting.AddLight((int)((Projectile.position.X + Projectile.width / 2) / 16f), (int)((Projectile.position.Y + Projectile.height / 2) / 16f), 175f / 255f, 1f, 1f);
 
-        switch (Projectile.ai[0])
+        switch (AIPhase)
         {
             case 0: //初始化
                 TOProjectileUtils.VelocityToRotation(Projectile);
-                Projectile.ai[0] = 1;
-                Projectile.ai[1] = 0;
+                AIPhase = 1;
+                AITimer = 0;
                 break;
             case 1: //寻找目标并追踪，优先追踪玩家；在追踪超过3秒后加速，速度显著更高
-                Projectile.ai[1]++;
-                if (!TOKinematicUtils.Homing(Projectile, playerTarget, rotating: true))
+                AITimer++;
+                if (!TOKinematicUtils.Homing(Projectile, PlayerTarget, rotating: true))
                 {
-                    if ((playerTarget = TOKinematicUtils.GetPvPPlayerTarget(Main.player[Projectile.owner], Projectile.Center, homingDistance, true, PriorityType.LifeMax)) != null)
+                    if ((PlayerTarget = TOKinematicUtils.GetPvPPlayerTarget(Main.player[Projectile.owner], Projectile.Center, homingDistance, true, PriorityType.LifeMax)) != null)
                         break;
-                    if (!TOKinematicUtils.Homing(Projectile, npcTarget, rotating: true))
-                        npcTarget = TOKinematicUtils.GetNPCTarget(Projectile.Center, homingDistance, true, true, PriorityType.LifeMax);
+                    if (!TOKinematicUtils.Homing(Projectile, NPCTarget, rotating: true))
+                        NPCTarget = TOKinematicUtils.GetNPCTarget(Projectile.Center, homingDistance, true, true, PriorityType.LifeMax);
                 }
-                if (Projectile.ai[1] > 360)
+                if (AITimer > 360)
                     Projectile.velocity *= 1.0013f;
                 break;
         }

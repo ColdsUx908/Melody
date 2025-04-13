@@ -17,7 +17,30 @@ public class ImmortalIceRain : ModProjectile, ILocalizedModType
     public new string LocalizationCategory => "Projectiles.LegendaryItems";
 
     private const float homingDistance = 4000f;
-    private NPC npcTarget = null;
+
+    private int AI_Phase
+    {
+        get => (int)Projectile.ai[0];
+        set => Projectile.ai[0] = value;
+    }
+
+    private int AI_Timer
+    {
+        get => (int)Projectile.ai[1];
+        set => Projectile.ai[1] = value;
+    }
+
+    private float AI_InitialVelocity => Projectile.ai[2];
+
+    private NPC AI_NPCTarget
+    {
+        get
+        {
+            int temp = (int)Projectile.ai[3];
+            return temp >= 0 && temp < Main.maxNPCs ? Main.npc[temp] : null;
+        }
+        set => Projectile.ai[3] = value?.whoAmI ?? -1;
+    }
 
     public override void SetDefaults()
     {
@@ -34,39 +57,29 @@ public class ImmortalIceRain : ModProjectile, ILocalizedModType
         Projectile.timeLeft = 1230; //追踪10秒
     }
 
-    public override void SendExtraAI(BinaryWriter writer)
-    {
-        writer.Write(Projectile.localAI[0]);
-    }
-
-    public override void ReceiveExtraAI(BinaryReader reader)
-    {
-        Projectile.localAI[0] = reader.ReadSingle();
-    }
-
     public override void AI()
     {
-        Projectile.ai[1]++;
+        AI_Timer++;
 
         Lighting.AddLight((int)((Projectile.position.X + Projectile.width / 2) / 16f), (int)((Projectile.position.Y + Projectile.height / 2) / 16f), 175f / 255f, 1f, 1f);
 
-        switch (Projectile.ai[0])
+        switch (AI_Phase)
         {
             case 0: //初始化
                 TOProjectileUtils.VelocityToRotation(Projectile);
-                Projectile.ai[0] = 1;
-                Projectile.ai[1] = 0;
+                AI_Phase = 1;
+                AI_Timer = 0;
                 break;
             case 1: //逐渐减速
-                TOMathHelper.ToCustomLength(Projectile.velocity, Projectile.ai[2] * (20 - Projectile.ai[1]) / 20);
-                if (Projectile.ai[1] == 20)
+                TOMathHelper.ToCustomLength(Projectile.velocity, AI_InitialVelocity * (20 - AI_Timer) / 20);
+                if (AI_Timer == 20)
                 {
-                    Projectile.ai[0] = 2;
-                    Projectile.ai[1] = 0;
+                    AI_Phase = 2;
+                    AI_Timer = 0;
                 }
                 break;
             case 2: //停顿10帧后向上飞出
-                if (Projectile.ai[1] > 10)
+                if (AI_Timer > 10)
                 {
                     //SoundEngine.PlaySound(SoundID.NPCHit5, Projectile.Center);
                     for (int i = 0; i < 10; i++)
@@ -82,14 +95,14 @@ public class ImmortalIceRain : ModProjectile, ILocalizedModType
                     float velocity2 = Main.rand.NextFloat(10f, 12.5f);
                     TOProjectileUtils.SetVelocityandRotation(Projectile, new Vector2(0, -velocity2));
                     Projectile.extraUpdates = 1;
-                    Projectile.ai[0] = 3;
-                    Projectile.ai[1] = 0;
+                    AI_Phase = 3;
+                    AI_Timer = 0;
                 }
                 break;
             case 3: //寻找目标并追踪；在追踪超过3秒后加速
-                if (!TOKinematicUtils.Homing(Projectile, npcTarget, rotating: true))
-                    npcTarget = TOKinematicUtils.GetNPCTarget(Projectile.Center, homingDistance, true, true, PriorityType.LifeMax);
-                if (Projectile.ai[1] > 360)
+                if (!TOKinematicUtils.Homing(Projectile, AI_NPCTarget, rotating: true))
+                    AI_NPCTarget = TOKinematicUtils.GetNPCTarget(Projectile.Center, homingDistance, true, true, PriorityType.LifeMax);
+                if (AI_Timer > 360)
                     Projectile.velocity *= 1.0013f;
                 break;
         }

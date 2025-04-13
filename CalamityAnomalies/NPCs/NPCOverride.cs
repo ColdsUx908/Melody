@@ -26,6 +26,7 @@ public enum DisableCalamityMethods
     PostAI = 1 << 2,
     PreDraw = 1 << 3,
     FindFrame = 1 << 4,
+    GetAlpha = 1 << 5,
 }
 
 [Flags]
@@ -33,11 +34,11 @@ public enum HasCustomNPCMethods
 {
     None = 0,
     SetDefaults = 1 << 0,
-    AnomalyAI = 1 << 1,
-    AI = 1 << 2,
-    PostAI = 1 << 3,
-    PreDraw = 1 << 4,
-    FindFrame = 1 << 5,
+    OnSpawn = 1 << 1,
+    AnomalyAI = 1 << 2,
+    PreDraw = 1 << 3,
+    FindFrame = 1 << 4,
+    GetAlpha = 1 << 5,
 }
 
 public record NPCOverrideContainer(NPCOverride BehaviorOverride, HasCustomNPCMethods HasCustomMethods);
@@ -199,15 +200,23 @@ public abstract class NPCOverride : ITOLoader
 
     /// <summary>
     /// 异象模式AI。
+    /// <br/><see cref="NPC"/> 等属性会在调用前自动更新，调用后自动清除。
     /// </summary>
     public virtual void AnomalyAI() { }
 
     /// <summary>
     /// Use this to set the NPCs current frame.
     /// </summary>
-    /// <param name="npc"></param>
     /// <param name="frameHeight"></param>
     public virtual void FindFrame(int frameHeight) { }
+
+    /// <summary>
+    /// 获取绘制颜色。
+    /// <br/>返回 <see langword="null"/> 以使用默认颜色。
+    /// </summary>
+    /// <param name="drawColor">原始绘制颜色。</param>
+    /// <returns></returns>
+    public virtual Color? GetAlpha(Color drawColor) => null;
 
     /// <summary>
     /// Use this to perform custom drawing for the NPC. Return false to stop the game drawing the NPC as well. Returns true by default.
@@ -233,20 +242,28 @@ public abstract class NPCOverride : ITOLoader
     void ITOLoader.PostSetupContent()
     {
         NPCOverrideSet = new SetFactory(ContentSamples.NpcsByNetId.Count).CreateCustomSet<NPCOverrideContainer>(null);
-        Type typeNPCOverride = typeof(NPCOverride);
         foreach ((Type type, NPCOverride npcOverride) in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<NPCOverride>(CAMain.Assembly))
         {
             HasCustomNPCMethods hasCustomMethods = HasCustomNPCMethods.None;
+            if (type.HasRealMethod("SetDefaults", TOMain.UniversalBindingFlags, out _))
+                hasCustomMethods |= HasCustomNPCMethods.SetDefaults;
+
+            if (type.HasRealMethod("OnSpawn", TOMain.UniversalBindingFlags, out _))
+                hasCustomMethods |= HasCustomNPCMethods.OnSpawn;
 
             if (type.HasRealMethod("AnomalyAI", TOMain.UniversalBindingFlags, out _))
                 hasCustomMethods |= HasCustomNPCMethods.AnomalyAI;
 
+            if (type.HasRealMethod("PreDraw", TOMain.UniversalBindingFlags, out _))
+                hasCustomMethods |= HasCustomNPCMethods.PreDraw;
+
             if (type.HasRealMethod("FindFrame", TOMain.UniversalBindingFlags, out _))
                 hasCustomMethods |= HasCustomNPCMethods.FindFrame;
 
-            NPCOverrideContainer container = new(npcOverride, hasCustomMethods);
+            if (type.HasRealMethod("GetAlpha", TOMain.UniversalBindingFlags, out _))
+                hasCustomMethods |= HasCustomNPCMethods.GetAlpha;
 
-            NPCOverrideSet[npcOverride.OverrideNPCType] = container;
+            NPCOverrideSet[npcOverride.OverrideNPCType] = new NPCOverrideContainer(npcOverride, hasCustomMethods);
         }
     }
 

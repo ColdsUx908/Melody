@@ -14,7 +14,7 @@ public static class CANetUtils
         if (Main.netMode == NetmodeID.SinglePlayer)
             return;
         ModPacket packet = GetCAPacket();
-        packet.Write(CANetPacketID.syncAllAnomalyAI);
+        packet.Write(CANetPacketID.SyncAllAnomalyAI);
         packet.Write((byte)npc.whoAmI);
 
         CAGlobalNPC anomalyNPC = npc.Anomaly();
@@ -32,7 +32,7 @@ public static class CANetUtils
             return;
 
         ModPacket packet = GetCAPacket();
-        packet.Write(CANetPacketID.syncAnomalyAIWithIndexes);
+        packet.Write(CANetPacketID.SyncAnomalyAIWithIndexes);
         packet.Write((byte)indexes.Length);
         packet.Write((byte)npc.whoAmI);
 

@@ -12,22 +12,26 @@ public interface ITOCommand : ITOLoader
 
     public abstract string Command { get; }
 
+    /// <summary>
+    /// 执行命令的函数。
+    /// </summary>
+    /// <param name="caller"></param>
+    /// <param name="args">参数数组。</param>
     public abstract void Action(CommandCaller caller, string[] args);
 
     public virtual string Usage => "";
 
     public virtual string Description => "";
 
-
-
-    public static Dictionary<(string Command, CommandType Type), Action<CommandCaller, string[]>> CommandSet = [];
+    public static Dictionary<(string Command, CommandType Type), Action<CommandCaller, string[]>> CommandSet { get; private set; }
 
     void ITOLoader.PostSetupContent()
     {
-        foreach (ITOCommand instance in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOCommand>())
+        CommandSet = [];
+        foreach (ITOCommand commandContainer in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOCommand>())
         {
-            if (!instance.Command.Equals("help", StringComparison.CurrentCultureIgnoreCase)) //不加载关键字为"help"的命令
-                CommandSet.TryAdd((instance.Command, instance.Type), instance.Action);
+            if (!commandContainer.Command.Equals("help", StringComparison.CurrentCultureIgnoreCase)) //不加载关键字为"help"的命令
+                CommandSet.TryAdd((commandContainer.Command.ToLower(), commandContainer.Type), commandContainer.Action);
         }
     }
 

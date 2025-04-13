@@ -11,18 +11,11 @@ public partial class CAGlobalNPC : GlobalNPC
 {
     public override Color? GetAlpha(NPC npc, Color drawColor)
     {
-        if (Main.LocalPlayer.Calamity().trippy)
-            return new(Main.DiscoR, Main.DiscoG, Main.DiscoB, Main.DiscoR);
+        if (!CAWorld.Anomaly ||
+            !NPCOverride.NPCRegistered(npc.type, out NPCOverrideContainer container) ||
+            !container.BehaviorOverride.DisableCalamityMethods.HasFlag(DisableCalamityMethods.GetAlpha))
+            return null;
 
-        if (CAWorld.Anomaly)
-        {
-            switch (npc.type)
-            {
-                case NPCID.KingSlime:
-                    return null;
-            }
-        }
-
-        return base.GetAlpha(npc, drawColor);
+        return container.BehaviorOverride.GetAlpha(drawColor);
     }
 }

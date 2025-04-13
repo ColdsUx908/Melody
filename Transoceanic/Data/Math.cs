@@ -64,7 +64,7 @@ public struct PolarVector2
                         Angle = 0f;
                         break;
                     case < 0f:
-                        throw new ArgumentException("Negative");
+                        throw new ArgumentOutOfRangeException(nameof(value), value, "Negative");
                     default:
                         throw new NotFiniteNumberException("NotFinite");
                 }
@@ -72,7 +72,7 @@ public struct PolarVector2
             catch (Exception e)
             {
                 if (TOMain.DEBUG)
-                    TOLocalizationUtils.ChatLocalizedTextWith(TOMain.DebugPrefix + "PolarVector2.RadiusInvalid", TOMain.TODebugErrorColor, value, e.Message);
+                    TOLocalizationUtils.ChatLocalizedTextWith(TOMain.DebugPrefix + "PolarVector2.RadiusInvalid", textColor: TOMain.TODebugErrorColor, value, e.Message);
                 else
                     throw; //不处理异常
             }

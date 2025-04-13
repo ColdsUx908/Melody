@@ -177,9 +177,9 @@ public partial class CANPCHook : ITODetourProvider, ITOLoader
             }
         }
         CalamityUtils.DrawBorderStringEightWay(
-        spriteBatch,
-        mouseFont,
-        npcName,
+            spriteBatch,
+            mouseFont,
+            npcName,
             baseDrawPosition,
             Color.White * animationCompletionRatio2,
             Color.Black * 0.2f * animationCompletionRatio2);
@@ -193,8 +193,8 @@ public partial class CANPCHook : ITODetourProvider, ITOLoader
             BossHealthBarManager.HPBarFont,
             bigLifeText,
             new Vector2(x, y + 22 - bigLifeTextSize.Y),
-            loc_MainColor,
-            loc_MainBorderColour * 0.25f * animationCompletionRatio);
+            loc_MainColor * animationCompletionRatio2,
+            loc_MainBorderColour * 0.25f * animationCompletionRatio2);
         #endregion
 
         #region 小生命值数字和额外信息

@@ -1,13 +1,10 @@
 ﻿namespace CalamityAnomalies.Net;
 
-public enum CANetPacketType : byte
-{
-    SyncAllAnomalyAI = 0,
-    SyncAnomalyAIWithIndexes = 1,
-}
-
+/// <summary>
+/// CA使用的NetPacketID
+/// </summary>
 public static class CANetPacketID
 {
-    public const byte syncAllAnomalyAI = 0;
-    public const byte syncAnomalyAIWithIndexes = 1;
+    public const byte SyncAllAnomalyAI = 0;
+    public const byte SyncAnomalyAIWithIndexes = 1;
 }

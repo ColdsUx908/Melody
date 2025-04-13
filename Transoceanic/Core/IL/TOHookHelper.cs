@@ -27,8 +27,8 @@ public class TOHookHelper : ITOLoader
     void ITOLoader.PostSetupContent()
     {
         detours = [];
-        foreach (ITODetourProvider instance in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITODetourProvider>())
-            instance.ModifyMethods();
+        foreach (ITODetourProvider detourProvider in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITODetourProvider>())
+            detourProvider.ModifyMethods();
     }
 
     void ITOLoader.OnModUnload()

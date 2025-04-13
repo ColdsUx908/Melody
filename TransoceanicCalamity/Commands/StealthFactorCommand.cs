@@ -9,12 +9,12 @@ using Transoceanic.Commands;
 namespace TransoceanicCalamity.Commands;
 
 /// <summary>
-/// 获取客户端的潜伏攻击伤害倍率。
+/// 获取和设置客户端的潜伏攻击伤害倍率。
+/// <para/>存在作弊风险。
 /// </summary>
 public class StealthStrikeFactorCommand_TO : ITOCommand
 {
     CommandType ITOCommand.Type => CommandType.Chat;
-
     string ITOCommand.Command => "stealthfactor";
 
     private const string commandPrefix = TOCMain.ModLocalizationPrefix + "Commands.StealthStrikeFactor.";

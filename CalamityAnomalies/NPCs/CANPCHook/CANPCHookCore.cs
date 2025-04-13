@@ -13,7 +13,7 @@ public partial class CANPCHook : ITODetourProvider, ITOLoader
     void ITODetourProvider.ModifyMethods()
     {
         TOHookHelper.ModifyMethodWithDetour(CalGlobalNPCPreAI, CalPreAIDetour);
-
+        TOHookHelper.ModifyMethodWithDetour(CalGlobalNPCPreDraw, CalPreDrawDetour);
         TOHookHelper.ModifyMethodWithDetour(CalBossBarUIDraw, CalBossBarUIDrawDetour);
         TOHookHelper.ModifyMethodWithDetour(CalBossBarUIUpdate, CalBossBarUIUpdateDetour);
         TOHookHelper.ModifyMethodWithDetour(CalBossBarDraw, CalBossBarDrawDetour);

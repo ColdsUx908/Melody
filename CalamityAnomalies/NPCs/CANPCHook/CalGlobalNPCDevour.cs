@@ -27,4 +27,12 @@ public partial class CANPCHook : ITODetourProvider, ITOLoader
 
         return orig(self, npc);
     }
+
+    internal static bool CalPreDrawDetour(Orig_CalGlobalNPCPreDraw orig, CalamityGlobalNPC self, NPC npc, SpriteBatch spriteBatch, Color drawColor)
+    {
+        if (CAWorld.Anomaly && NPCOverride.NPCRegistered(npc.type, out NPCOverrideContainer container) && container.BehaviorOverride.DisableCalamityMethods.HasFlag(DisableCalamityMethods.PreDraw))
+            return false;
+
+        return orig(self, npc, spriteBatch, drawColor);
+    }
 }

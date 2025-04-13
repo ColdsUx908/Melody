@@ -16,20 +16,15 @@ public partial class CAGlobalNPC : GlobalNPC
     {
         TOGlobalNPC oceanNPC = npc.Ocean();
         TOCGlobalNPC oceanCalNPC = npc.OceanCal();
-        CAGlobalNPC anomalyNPC = npc.Anomaly();
         CalamityGlobalNPC calamityNPC = npc.Calamity();
 
         //初始化anomalyAI数组
         for (int i = 0; i < anomalyAI.Length; i++)
             anomalyAI[i] = 0f;
 
-        if (!CAWorld.Anomaly)
-            return;
-
-        if (!NPCOverride.NPCRegistered(npc.type, out NPCOverrideContainer container))
-            return;
-
-        if (!anomalyNPC.shouldRunAnomalyAI)
+        if (!CAWorld.Anomaly ||
+            !NPCOverride.NPCRegistered(npc.type, out NPCOverrideContainer container) ||
+            !shouldRunAnomalyAI)
             return;
 
         NPCOverride behaviorOverride = container.BehaviorOverride;

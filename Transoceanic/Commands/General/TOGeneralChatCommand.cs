@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria.ModLoader;
 using Transoceanic.Core;
 
@@ -21,7 +17,7 @@ public class TOGeneralChatCommand : ModCommand
         else if (args[0].Equals("help", StringComparison.CurrentCultureIgnoreCase))
         {
         }
-        else if (ITOCommand.CommandSet.TryGetValue((args[0], CommandType.Chat), out Action<CommandCaller, string[]> action))
+        else if (ITOCommand.CommandSet.TryGetValue((args[0].ToLower(), CommandType.Chat), out Action<CommandCaller, string[]> action))
             action?.Invoke(caller, args[1..]);
         else
             caller.ReplyLocalizedText(TOMain.ModLocalizationPrefix + "Commands.GeneralCommand.Helper2");

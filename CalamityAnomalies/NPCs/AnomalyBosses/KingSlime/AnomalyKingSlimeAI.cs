@@ -35,12 +35,7 @@ public partial class AnomalyKingSlime
         TOEntityIterator<NPC> activeNPCs = TOMain.ActiveNPCs;
 
         //宝石存活状态，仅检测属于当前NPC的宝石
-        /*
-        bool jewel_EmeraldAlive = activeNPCs.TryGetFirst(k => k.type == ModContent.NPCType<KingSlimeJewelEmerald>() && k.Ocean().master == NPC.whoAmI, out NPC jewelEmerald);
-        bool jewel_RubyAlive = activeNPCs.TryGetFirst(k => k.type == ModContent.NPCType<KingSlimeJewelRuby>() && k.Ocean().master == NPC.whoAmI, out NPC jewelRuby);
-        bool jewel_SapphireAlive = activeNPCs.TryGetFirst(k => k.type == ModContent.NPCType<KingSlimeJewelSapphire>() && k.Ocean().master == NPC.whoAmI, out NPC jewelSapphire);
-        */
-        bool jewel_EmeraldAlive = AI_JewelEmerald.active && AI_JewelEmerald.type == ModContent.NPCType<KingSlimeJewelEmerald>() &&  AI_JewelEmerald.Ocean().Master == NPC.whoAmI;
+        bool jewel_EmeraldAlive = AI_JewelEmerald.active && AI_JewelEmerald.type == ModContent.NPCType<KingSlimeJewelEmerald>() && AI_JewelEmerald.Ocean().Master == NPC.whoAmI;
         bool jewel_RubyAlive = AI_JewelRuby.active && AI_JewelRuby.type == ModContent.NPCType<KingSlimeJewelRuby>() && AI_JewelRuby.Ocean().Master == NPC.whoAmI;
         bool jewel_SapphireAlive = AI_JewelSapphire.active && AI_JewelSapphire.type == ModContent.NPCType<KingSlimeJewelSapphire>() && AI_JewelSapphire.Ocean().Master == NPC.whoAmI;
 
@@ -60,6 +55,7 @@ public partial class AnomalyKingSlime
         #endregion
 
         float expectedScale = Constant.minScale[index] + lifeRatio * (Constant.maxScale[index] - Constant.minScale[index]);
+        float distanceBelowTarget = Math.Max(NPC.Center.Y - target.Center.Y, 0f);
         ChangeScale(expectedScale);
 
         switch (AI_CurrentPhase)
@@ -91,7 +87,7 @@ public partial class AnomalyKingSlime
         }
 
         TrySpawnMinions();
-        return; ;
+        return;
 
         #region 行为函数
         //快速停止水平移动
@@ -110,10 +106,9 @@ public partial class AnomalyKingSlime
         //脱战
         void Despawn()
         {
-            // Rapidly cease any horizontal movement, to prevent weird sliding behaviors
+            //停止水平移动，避免奇怪的滑行现象
             StopHorizontalMovement();
 
-            // Disable damage.
             NPC.dontTakeDamage = true;
             NPC.damage = 0;
 
@@ -277,9 +272,11 @@ public partial class AnomalyKingSlime
                     SpawnCore(spawnType);
                 }
 
+                //生成彩虹史莱姆
                 for (int i = 0; i < spawnAmount2; i++)
                     SpawnCore(NPCID.RainbowSlime);
 
+                ///生成粉史莱姆
                 if (Main.rand.NextBool(4))
                     SpawnCore(NPCID.Pinky);
 
@@ -324,9 +321,7 @@ public partial class AnomalyKingSlime
                 case 1: //起跳
                     NPC.damage = expectedDamage;
                     NPC.netUpdate = true;
-                    float distanceBelowTarget = Math.Max(NPC.Center.Y - target.Center.Y, 0f);
-                    NPC.velocity.Y = -10f * (1f + Math.Min(distanceBelowTarget / 400f, 1.5f));
-                    NPC.velocity.X = 5f * NPC.direction;
+                    NPC.velocity = GetVelocityInitial();
                     AI_CurrentAttackPhase = 2;
                     break;
                 case 2: //上升
@@ -355,23 +350,54 @@ public partial class AnomalyKingSlime
                             NPC.velocity.X -= GetVelocityXDelta() * NPC.direction;
                         }
                     }
-                    if (NPC.velocity.Y == 0f)
+                    if (AI_CurrentAttackPhase == 2 && NPC.oldVelocity.Y <= 0 && NPC.velocity.Y >= 0) //检测是否已过最高点
+                        AI_CurrentAttackPhase = 3;
+                    if (AI_CurrentAttackPhase == 3 && NPC.velocity.Y == 0f)
                         SelectNextAttack();
                     break;
             }
 
-            float GetVelocityXLimit() => AI_ChangedVelocityDirectionWhenJump switch
+            Vector2 GetVelocityInitial()
             {
-                0 => 10f,
-                1 => 7.5f,
-                _ => 6f,
+                return AI_CurrentAttack switch
+                {
+                    AttackType.NormalJump_Phase1 => new Vector2(5f * NPC.direction, -6f * (1f + Math.Min(distanceBelowTarget / 400f, 0.8f))),
+                    AttackType.HighJump_Phase1 => new Vector2(5f * NPC.direction, -10f * (1f + Math.Min(distanceBelowTarget / 400f, 1.5f))),
+                    AttackType.RapidJump_Phase1 => new Vector2(12.5f * NPC.direction, 3f),
+                    _ => Vector2.Zero
+                };
+            }
+
+            float GetVelocityXLimit() => AI_CurrentAttack switch
+            {
+                AttackType.RapidJump_Phase1 => AI_ChangedVelocityDirectionWhenJump switch
+                {
+                    0 => 18.5f,
+                    1 => 10.5f,
+                    _ => 7f
+                },
+                _ => AI_ChangedVelocityDirectionWhenJump switch
+                {
+                    0 => 10f,
+                    1 => 7.5f,
+                    _ => 5f
+                },
             };
 
-            float GetVelocityXDelta() => AI_ChangedVelocityDirectionWhenJump switch
+            float GetVelocityXDelta() => AI_CurrentAttack switch
             {
-                0 => 0.5f,
-                1 => 0.4f,
-                _ => 0.35f,
+                AttackType.RapidJump_Phase1 => AI_ChangedVelocityDirectionWhenJump switch
+                {
+                    0 => 0.8f,
+                    1 => 0.55f,
+                    _ => 0.35f
+                },
+                _ => AI_ChangedVelocityDirectionWhenJump switch
+                {
+                    0 => 0.5f,
+                    1 => 0.4f,
+                    _ => 0.25f
+                },
             };
         }
         #endregion

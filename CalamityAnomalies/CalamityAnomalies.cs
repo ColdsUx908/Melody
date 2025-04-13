@@ -4,7 +4,6 @@ using CalamityAnomalies.Systems;
 using CalamityMod.Systems;
 using Terraria;
 using Terraria.ModLoader;
-using Transoceanic;
 
 namespace CalamityAnomalies;
 
@@ -27,10 +26,10 @@ public class CalamityAnomalies : Mod
     {
         switch (reader.ReadByte())
         {
-            case CANetPacketID.syncAllAnomalyAI:
+            case CANetPacketID.SyncAllAnomalyAI:
                 SyncAllAnomalyAI_Func();
                 break;
-            case CANetPacketID.syncAnomalyAIWithIndexes:
+            case CANetPacketID.SyncAnomalyAIWithIndexes:
                 SyncAnomalyAIWithIndexes_Func();
                 break;
         }
