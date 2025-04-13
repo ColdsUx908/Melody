@@ -30,6 +30,6 @@ public partial class CAGlobalNPC : GlobalNPC
         NPCOverride behaviorOverride = container.BehaviorOverride;
         behaviorOverride.TryConnectWithNPC(npc);
         behaviorOverride.SetDefaults();
-        behaviorOverride.ClearNPCInstances();
+        behaviorOverride.ClearNPCInstances();       
     }
 }

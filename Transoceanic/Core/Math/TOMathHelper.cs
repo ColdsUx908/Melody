@@ -7,6 +7,16 @@ namespace Transoceanic.Core;
 
 public static class TOMathHelper
 {
+    /// <summary>
+    /// 将像素每帧转换为英里每小时的转换因子。
+    /// <br/>计算公式为：<c>C = 60f / 8f * 0.681818f</c>
+    /// （一像素为 <c>1/8</c> 英尺）
+    /// </summary>
+    private const float PptToMph_Constant = 5.1136364f;
+
+    public static float Pixptick_To_Mph(float value) => value * PptToMph_Constant;
+    public static float Mph_To_Pixptick(float value) => value / PptToMph_Constant;
+
     public static void AddAssign(this ref Vector2 value1, float value2)
     {
         value1.X += value2;
@@ -19,7 +29,7 @@ public static class TOMathHelper
         value1.Y += value2.Y;
     }
 
-    public static bool AtLeastXTrue(int x, params Span<bool> span)
+    public static bool AtLeastXTrue(int x, params ReadOnlySpan<bool> span)
     {
         if (x <= 0)
             return true;
@@ -27,9 +37,11 @@ public static class TOMathHelper
             return false;
 
         int count = 0;
-        for (int i = 0; i < span.Length; i++)
-            if (span[i] && ++count >= x)
+        foreach (bool value in span)
+        {
+            if (value && ++count >= x)
                 return true;
+        }
 
         return false;
     }
