@@ -1,0 +1,23 @@
+GeneralCommand: {
+	Helper:
+		'''
+		No command input.
+		Use help keyword to see all available commands.
+		'''
+	Helper2:
+		'''
+		Command not found.
+		Use help keyword to see all available commands.
+		'''
+}
+
+DebugMode: {
+	Status: Debug Mode is now {0}.
+	On:
+		'''
+		Debug Mode is enabled.
+		This will show additional information and may affect performance.
+		'''
+	Off: Debug Mod is disabled.
+	Invalid: Invalid argument.
+}

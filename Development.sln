@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35707.178
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{20BDE17A-E493-4424-BF32-90E84953C296}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Transoceanic", "Transoceanic\Transoceanic.csproj", "{730C783F-1D46-061F-935E-C56883B0D6F8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransoceanicCalamity", "TransoceanicCalamity\TransoceanicCalamity.csproj", "{C88A6FA0-1BFA-A641-06B1-CF620910885C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CalamityAnomalies", "CalamityAnomalies\CalamityAnomalies.csproj", "{164053CA-56DF-33CC-E4BC-0E2430AB4595}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{730C783F-1D46-061F-935E-C56883B0D6F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{730C783F-1D46-061F-935E-C56883B0D6F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{730C783F-1D46-061F-935E-C56883B0D6F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{730C783F-1D46-061F-935E-C56883B0D6F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C88A6FA0-1BFA-A641-06B1-CF620910885C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C88A6FA0-1BFA-A641-06B1-CF620910885C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C88A6FA0-1BFA-A641-06B1-CF620910885C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C88A6FA0-1BFA-A641-06B1-CF620910885C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{164053CA-56DF-33CC-E4BC-0E2430AB4595}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{164053CA-56DF-33CC-E4BC-0E2430AB4595}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{164053CA-56DF-33CC-E4BC-0E2430AB4595}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{164053CA-56DF-33CC-E4BC-0E2430AB4595}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

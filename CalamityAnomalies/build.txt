@@ -1,0 +1,7 @@
+displayName = Calamity Anomalies [c/afffff:Rebirth]
+author = ColdsUx
+version = 0.1
+modReferences = CalamityMod, TransoceanicCalamity, Luminance
+hideCode = true
+sortAfter = CalamityMod, TransoceanicCalamity, Luminance
+buildIgnore = .vs\*, Properties\*, *.sln, obj\*, bin\*

@@ -1,0 +1,46 @@
+Difficulty: {
+	Anomaly: Anomaly
+	AnomalyShortInfo: "[c/FFCFFF:Extreme]"
+	AnomalyExpandedInfo: 
+		'''
+		[c/FF0000:>:(]
+		'''
+	AnomalyActivate: Anomaly is active... are you serious?
+	AnomalyDeactivate: Anomaly is not active; wise choice.
+	AnomalyIllegal: Anomaly is only available in Master Mode.
+	AnomalyIllegalNotLegendary: Anomaly Ultramundane is only available in TRUE Legendary difficulty.
+	AnomalyIllegalZenith: Anomaly Ultramundane is not supported in Get fixed boi worlds.
+	AnomalyUltramundaneActivate:
+		'''
+		Anomaly Ultramundane is fully activated, please make sure you know what you're doing!
+		Note: This difficulty is extremely difficult and only suitable for ALIEN players!
+		'''
+	AnomalyUltramundaneDeactivate:
+		'''
+		Anomaly Ultramundane is back to normal...
+		Did you try it?
+		'''
+}
+
+
+Items: {
+	LegendaryItems: {
+		AscendantWings: {
+			DisplayName: Ascendant Wings
+			Tooltip: Legendary wings that soar through the sky
+		}
+
+		ImmortalCeless: {
+			DisplayName: Immortal Celess
+			Tooltip: ""
+		}
+	}
+}
+
+Projectiles: {
+	LegendaryItems: {
+		ImmortalBloodRain.DisplayName: Immortal Blood Rain
+		ImmortalIceRain.DisplayName: Immortal Ice Rain
+		ImmortalVoidRain.DisplayName: Immortal Void Rain
+	}
+}

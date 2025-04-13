@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Import tModLoader mod properties -->
+	<Import Project="..\tModLoader.targets" />
+
+	<!-- General -->
+	<PropertyGroup>
+		<LangVersion>preview</LangVersion>
+	</PropertyGroup>
+	<ItemGroup>
+	  <AdditionalFiles Remove="Localization\zh-Hans_Mods.CalamityAnomalies.hjson" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="CalamityMod">
+	    <HintPath>..\..\..\..\..\..\..\..\CalamityMod\CalamityMod.dll</HintPath>
+	  </Reference>
+	  <Reference Include="Luminance">
+	    <HintPath>..\..\ModReader\Luminance\Luminance.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\TransoceanicCalamity\TransoceanicCalamity.csproj" />
+	  <ProjectReference Include="..\Transoceanic\Transoceanic.csproj" />
+	</ItemGroup>
+
+	<!-- References -->
+
+</Project>
