@@ -1,28 +1,34 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using Terraria;
+﻿using Terraria;
 using Terraria.DataStructures;
+using Terraria.GameContent.Creative;
 using Terraria.ModLoader;
-using Transoceanic.Core;
 
-namespace Transoceanic.Systems;
+namespace Transoceanic;
 
 public class TOWorld : ModSystem
 {
-    public static bool TrueMasterMode { get; set; } = false;
-    public static bool LegendaryMode { get; set; } = false;
-
     public override void PreUpdateEntities()
     {
-        TrueMasterMode = ((GameModeData)typeof(Main).GetField("_currentGameModeInfo", TOMain.UniversalBindingFlags).GetValue(null)).IsMasterMode;
-        LegendaryMode = Main.getGoodWorld && TrueMasterMode;
+        GameModeData gameModeData = TOMain.GameModeData;
+        TOMain.TrueMasterMode = gameModeData.IsMasterMode;
+
+        bool journeyMaster = false;
+        if (gameModeData.IsJourneyMode)
+        {
+            CreativePowers.DifficultySliderPower power = CreativePowerManager.Instance.GetPower<CreativePowers.DifficultySliderPower>();
+            bool currentJourneyMaster = power.StrengthMultiplierToGiveNPCs == 3f;
+            if (power.GetIsUnlocked())
+                journeyMaster = currentJourneyMaster;
+            else if (!currentJourneyMaster)
+                journeyMaster = false;
+        }
+
+        TOMain.LegendaryMode = Main.getGoodWorld && (TOMain.TrueMasterMode || journeyMaster);
     }
 
     public override void PostUpdateNPCs()
     {
-        TOEntityIterator<NPC> bosses = TOMain.Bosses;
-        TOMain.BossList = bosses.ToList();
-        TOMain.BossActive = bosses.Any();
+        TOMain.BossList = TOMain.Bosses.ToList();
+        TOMain.BossActive = TOMain.BossList.Count > 0;
     }
 }

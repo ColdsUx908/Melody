@@ -8,7 +8,7 @@
 		<LangVersion>preview</LangVersion>
 	</PropertyGroup>
 	<ItemGroup>
-	  <AdditionalFiles Remove="Localization\zh-Hans_Mods.CalamityAnomalies.hjson" />
+	  <None Remove="Contents\AnomalyNPCs\KingSlime\bgj3mbvz.vqw~" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Reference Include="CalamityMod">
@@ -19,7 +19,6 @@
 	  </Reference>
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\TransoceanicCalamity\TransoceanicCalamity.csproj" />
 	  <ProjectReference Include="..\Transoceanic\Transoceanic.csproj" />
 	</ItemGroup>
 

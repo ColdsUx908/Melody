@@ -1,7 +1,7 @@
 using System.IO;
+using CalamityAnomalies.GlobalInstances;
 using CalamityAnomalies.Net;
-using CalamityAnomalies.Systems;
-using CalamityMod.Systems;
+using CalamityAnomalies.Utilities;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -14,8 +14,6 @@ public class CalamityAnomalies : Mod
     public override void Load()
     {
         Instance = this;
-        DifficultyModeSystem.Difficulties.Add(new AnomalyMode());
-        DifficultyModeSystem.CalculateDifficultyData();
     }
 
     public override void PostSetupContent()
@@ -36,17 +34,17 @@ public class CalamityAnomalies : Mod
 
         void SyncAllAnomalyAI_Func()
         {
-            ref float[] anomalyAI = ref Main.npc[reader.ReadByte()].Anomaly().anomalyAI;
-            for (int i = 0; i < anomalyAI.Length; i++)
-                anomalyAI[i] = reader.ReadSingle();
+            CAGlobalNPC anomalyNPC = Main.npc[reader.ReadByte()].Anomaly();
+            for (int i = 0; i < anomalyNPC.AnomalyAI.Length; i++)
+                anomalyNPC.AnomalyAI[i] = reader.ReadSingle();
         }
 
         void SyncAnomalyAIWithIndexes_Func()
         {
             int totalIndexes = reader.ReadByte();
-            ref float[] anomalyAI = ref Main.npc[reader.ReadByte()].Anomaly().anomalyAI;
+            CAGlobalNPC anomalyNPC = Main.npc[reader.ReadByte()].Anomaly();
             for (int i = 0; i < totalIndexes; i++)
-                anomalyAI[reader.ReadByte()] = reader.ReadSingle();
+                anomalyNPC.AnomalyAI[reader.ReadByte()] = reader.ReadSingle();
         }
     }
 

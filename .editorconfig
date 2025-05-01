@@ -205,17 +205,21 @@ csharp_preserve_single_line_statements = true
 
 # 命名规则
 
-dotnet_naming_rule.interface_should_be_以_i_开始.severity = suggestion
+dotnet_naming_rule.interface_should_be_以_i_开始.severity = warning
 dotnet_naming_rule.interface_should_be_以_i_开始.symbols = interface
 dotnet_naming_rule.interface_should_be_以_i_开始.style = 以_i_开始
 
-dotnet_naming_rule.类型_should_be_帕斯卡拼写法.severity = suggestion
+dotnet_naming_rule.类型_should_be_帕斯卡拼写法.severity = warning
 dotnet_naming_rule.类型_should_be_帕斯卡拼写法.symbols = 类型
 dotnet_naming_rule.类型_should_be_帕斯卡拼写法.style = 帕斯卡拼写法
 
-dotnet_naming_rule.非字段成员_should_be_帕斯卡拼写法.severity = suggestion
+dotnet_naming_rule.非字段成员_should_be_帕斯卡拼写法.severity = warning
 dotnet_naming_rule.非字段成员_should_be_帕斯卡拼写法.symbols = 非字段成员
 dotnet_naming_rule.非字段成员_should_be_帕斯卡拼写法.style = 帕斯卡拼写法
+
+dotnet_naming_rule.私有字段_should_be_以下划线开始的驼峰拼写法.severity = warning
+dotnet_naming_rule.私有字段_should_be_以下划线开始的驼峰拼写法.symbols = 私有字段
+dotnet_naming_rule.私有字段_should_be_以下划线开始的驼峰拼写法.style = 以下划线开始的驼峰拼写法
 
 # 符号规范
 
@@ -231,6 +235,10 @@ dotnet_naming_symbols.非字段成员.applicable_kinds = property, event, method
 dotnet_naming_symbols.非字段成员.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
 dotnet_naming_symbols.非字段成员.required_modifiers = 
 
+dotnet_naming_symbols.私有字段.applicable_kinds = field
+dotnet_naming_symbols.私有字段.applicable_accessibilities = private
+dotnet_naming_symbols.私有字段.required_modifiers = 
+
 # 命名样式
 
 dotnet_naming_style.帕斯卡拼写法.required_prefix = 
@@ -242,6 +250,11 @@ dotnet_naming_style.以_i_开始.required_prefix = I
 dotnet_naming_style.以_i_开始.required_suffix = 
 dotnet_naming_style.以_i_开始.word_separator = 
 dotnet_naming_style.以_i_开始.capitalization = pascal_case
+
+dotnet_naming_style.以下划线开始的驼峰拼写法.required_prefix = _
+dotnet_naming_style.以下划线开始的驼峰拼写法.required_suffix = 
+dotnet_naming_style.以下划线开始的驼峰拼写法.word_separator = 
+dotnet_naming_style.以下划线开始的驼峰拼写法.capitalization = camel_case
 csharp_style_prefer_unbound_generic_type_in_nameof = true:suggestion
 
 [*.{cs,vb}]

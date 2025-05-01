@@ -1,11 +1,9 @@
 using System;
 using System.Linq;
-using System.Reflection;
-using Terraria;
 using Terraria.ModLoader;
-using Transoceanic.Commands;
 using Transoceanic.Core;
-using Transoceanic.GlobalEntity.GlobalNPCs;
+using Transoceanic.Core.IL;
+using Transoceanic.GlobalInstances.GlobalNPCs;
 
 namespace Transoceanic;
 
@@ -17,12 +15,12 @@ public class Transoceanic : Mod
     {
         Instance = this;
         TOMain.GeneralTimer = 0;
-        TOGlobalNPC._identifierAllocator = 0;
-        foreach ((Type type, ITOLoader loader) in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(TOMain.Assembly).
-            OrderByDescending(k => k.instance.LoadPriority(LoadMethodType.Load)))
+        TOGlobalNPC._identifierAllocator = 0ul;
+        foreach ((Type type, ITOLoader loader) in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(TOMain.Assembly)
+            .OrderByDescending(k => k.instance.GetLoadPriority(LoadMethodType.Load)))
         {
-            if (!type.MustHaveRealMethodTogether("Load", "Unload", TOMain.UniversalBindingFlags))
-                throw new Exception($"[{type.Name}] must have a Load and Unload method together or neither.");
+            if (!type.MustHaveRealMethodWith("Load", "Unload", TOMain.UniversalBindingFlags))
+                throw new Exception($"[{type.Name}] must implement Unload with Load implemented.");
             else
                 loader.Load();
         }
@@ -30,26 +28,23 @@ public class Transoceanic : Mod
 
     public override void PostSetupContent()
     {
-        foreach ((Type type, ITOLoader loader) in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>().
-            OrderByDescending(k => k.instance.LoadPriority(LoadMethodType.PostSetupContent)))
+        foreach ((Type type, ITOLoader loader) in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>()
+            .OrderByDescending(k => k.instance.GetLoadPriority(LoadMethodType.PostSetupContent)))
         {
-            if (!type.MustHaveRealMethodTogether("PostSetUpContents", "OnModUnload", TOMain.UniversalBindingFlags))
-                throw new Exception($"[{type.Name}] must have a PostSetUpContents and OnModUnload method together or neither.");
+            if (!type.MustHaveRealMethodWith("PostSetUpContents", "OnModUnload", TOMain.UniversalBindingFlags))
+                throw new Exception($"[{type.Name}] must implement OnModUnload with PostSetupContent implemented.");
             else
-                loader.Load();
+                loader.PostSetupContent();
         }
-
-        foreach (ITOLoader loader in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOLoader>().
-            OrderByDescending(k => k.LoadPriority(LoadMethodType.PostSetupContent)))
-            loader.PostSetupContent();
     }
 
     public override void Unload()
     {
-        foreach (ITOLoader loader in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOLoader>(TOMain.Assembly).
-            OrderByDescending(k => k.LoadPriority(LoadMethodType.Load)))
+        foreach (ITOLoader loader in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOLoader>(TOMain.Assembly)
+            .OrderByDescending(k => k.GetLoadPriority(LoadMethodType.UnLoad)))
             loader.UnLoad();
-        TOGlobalNPC._identifierAllocator = 0;
+
+        TOGlobalNPC._identifierAllocator = 0ul;
         TOMain.GeneralTimer = 0;
         Instance = null;
     }

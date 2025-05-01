@@ -1,17 +1,17 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
-using Terraria.Localization;
 using Terraria.ModLoader;
-using Transoceanic.Core;
+using Transoceanic.Core.Localization;
 
 namespace Transoceanic.Commands;
 
 /// <summary>
 /// 开启或关闭调试模式的命令。
 /// </summary>
-public class DebugModeCommand_TO : ITOCommand
+public class DebugModeCommand : ITOCommand
 {
     CommandType ITOCommand.Type => CommandType.Chat;
+
     string ITOCommand.Command => "debug";
 
     private const string commandPrefix = TOMain.ModLocalizationPrefix + "Commands.DebugMode.";

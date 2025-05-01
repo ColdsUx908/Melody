@@ -8,15 +8,17 @@ using ReLogic.Content;
 using Terraria;
 using Terraria.Localization;
 using Terraria.ModLoader;
+using Transoceanic;
 using Transoceanic.Core;
-using Transoceanic.Data;
-using Transoceanic.Systems;
+using Transoceanic.Core.ExtraData.Maths;
+using Transoceanic.Core.Localization;
+using Transoceanic.Core.MathHelp;
 
 namespace CalamityAnomalies.Systems;
 
-public class AnomalyMode : DifficultyMode
+public class AnomalyMode : DifficultyMode, ITOLoader
 {
-    internal static AnomalyMode Instance { get; set; } = null;
+    internal static AnomalyMode Instance { get; set; }
 
     public override bool Enabled
     {
@@ -24,27 +26,43 @@ public class AnomalyMode : DifficultyMode
         set => CAWorld.Anomaly = value;
     }
 
-    public override Asset<Texture2D> Texture => field ??= ModContent.Request<Texture2D>("CalamityAnomalies/Textures/Anomaly/ModeIndicator_Anomaly", AssetRequestMode.AsyncLoad);
+    public override Asset<Texture2D> Texture { get; }
+
     public override LocalizedText ExpandedDescription => Language.GetOrRegister(CAMain.ModLocalizationPrefix + "Difficulty.AnomalyExpandedInfo");
 
     public override int FavoredDifficultyAtTier(int tier)
     {
         DifficultyMode[] tierList = DifficultyModeSystem.DifficultyTiers[tier];
         for (int i = 0; i < tierList.Length; i++)
+        {
             if (tierList[i].Name == CalamityUtils.GetText("UI.Death"))
                 return i;
+        }
         return 0;
     }
 
     public AnomalyMode()
     {
-        DifficultyScale = 2.49147E23f;
+        Texture = ModContent.Request<Texture2D>("CalamityAnomalies/Contents/Textures/Anomaly/ModeIndicator_Anomaly", AssetRequestMode.AsyncLoad);
+        DifficultyScale = 2.49147e23f;
         Name = Language.GetOrRegister(CAMain.ModLocalizationPrefix + "Difficulty.Anomaly");
         ShortDescription = Language.GetOrRegister(CAMain.ModLocalizationPrefix + "Difficulty.AnomalyShortInfo");
         ActivationTextKey = CAMain.ModLocalizationPrefix + "Difficulty.AnomalyActivate";
         DeactivationTextKey = CAMain.ModLocalizationPrefix + "Difficulty.AnomalyDeactivate";
         ActivationSound = SupremeCalamitas.BulletHellEndSound;
         ChatTextColor = Color.HotPink;
+    }
+
+    void ITOLoader.PostSetupContent()
+    {
+        DifficultyModeSystem.Difficulties.Add(Instance = this);
+        DifficultyModeSystem.CalculateDifficultyData();
+    }
+
+    void ITOLoader.OnModUnload()
+    {
+        //DifficultyModeSystem.Difficulties.Remove(Instance);
+        //DifficultyModeSystem.CalculateDifficultyData();
     }
 }
 
@@ -63,7 +81,7 @@ public class AnomalyManagement : ModSystem
             CalamityWorld.revenge = true;
             CalamityWorld.death = true;
 
-            switch (TOMathHelper.GetTwoBooleanStatus(!TOWorld.LegendaryMode, Main.zenithWorld))
+            switch (TOMathHelper.GetTwoBooleanStatus(!TOMain.LegendaryMode, Main.zenithWorld))
             {
                 case TwoBooleanStatus.ATrue when CAWorld.AnomalyUltramundane:
                     NotLegendaryInfo();

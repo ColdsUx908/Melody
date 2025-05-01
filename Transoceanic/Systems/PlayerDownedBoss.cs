@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
 using Terraria;
-using Terraria.ID;
-using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
-using Transoceanic.Core;
+using Transoceanic.Core.MathHelp;
 
 namespace Transoceanic.Systems;
 
@@ -42,7 +40,7 @@ public abstract class PlayerDownedBoss
     public bool Everscream { get; set; } = false;
     public bool SantaNK1 { get; set; } = false;
     public bool IceQueen { get; set; } = false;
-    public bool Betsy {  get; set; } = false;
+    public bool Betsy { get; set; } = false;
     public bool Dreadnautilus { get; set; }
 
     public bool SolarTower { get; set; } = false;
@@ -121,7 +119,16 @@ public abstract class PlayerDownedBoss
             StardustTower = true;
     }
 
-    public virtual void SaveDataTo(List<string> downed)
+    public virtual void SaveData(TagCompound tag, string key)
+    {
+        List<string> downed = [];
+
+        SaveDataToList(downed);
+
+        tag[key] = downed;
+    }
+
+    public virtual void SaveDataToList(List<string> downed)
     {
         if (KingSlime)
             downed.Add("KingSlime");
@@ -195,7 +202,9 @@ public abstract class PlayerDownedBoss
             downed.Add("StardustTower");
     }
 
-    public virtual void LoadDataFrom(IList<string> downedLoaded)
+    public virtual void LoadData(TagCompound tag, string key) => LoadDataFromIList(tag.GetList<string>(key));
+
+    public virtual void LoadDataFromIList(IList<string> downedLoaded)
     {
         if (downedLoaded.Contains("KingSlime"))
             KingSlime = true;

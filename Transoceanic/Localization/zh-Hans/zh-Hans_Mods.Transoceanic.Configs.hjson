@@ -1,34 +1,4 @@
 TOUtilityConfig: {
 	DisplayName: 实用设置
 	Headers.UI: UI
-
-	BossTimer: {
-		Label: Boss计时器
-		Tooltip: 在Boss存活时显示Boss战斗时长
-	}
-
-	DisplayTicks: {
-		Label: 精确到帧
-		Tooltip: ""
-	}
-
-	XScale: {
-		Label: Boss计时器X位置
-		Tooltip: ""
-	}
-
-	YScale: {
-		Label: Boss计时器Y位置
-		Tooltip: ""
-	}
-
-	Size: {
-		Label: Boss计时器字号
-		Tooltip: ""
-	}
-
-	Bar: {
-		Label: Boss计时器边框宽度
-		Tooltip: ""
-	}
 }

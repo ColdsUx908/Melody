@@ -1,14 +1,10 @@
-﻿using CalamityAnomalies.NPCs;
-using Terraria;
-using Terraria.ID;
-using Terraria.ModLoader;
-
-namespace CalamityAnomalies.Net;
+﻿namespace CalamityAnomalies.Net;
 
 public static class CANetUtils
 {
-    private static ModPacket GetCAPacket() => CalamityAnomalies.Instance.GetPacket();
+    //private static ModPacket GetCAPacket() => CalamityAnomalies.Instance.GetPacket();
 
+    /*
     public static void SyncAnomalyAI(this NPC npc)
     {
         if (Main.netMode == NetmodeID.SinglePlayer)
@@ -18,10 +14,9 @@ public static class CANetUtils
         packet.Write((byte)npc.whoAmI);
 
         CAGlobalNPC anomalyNPC = npc.Anomaly();
-        ref float[] anomalyAI = ref anomalyNPC.anomalyAI;
 
-        for (int i = 0; i < anomalyAI.Length; i++)
-            packet.Write(anomalyAI[i]);
+        for (int i = 0; i < anomalyNPC.AnomalyAI.Length; i++)
+            packet.Write(anomalyNPC.AnomalyAI[i]);
 
         packet.Send();
     }
@@ -37,14 +32,14 @@ public static class CANetUtils
         packet.Write((byte)npc.whoAmI);
 
         CAGlobalNPC anomalyNPC = npc.Anomaly();
-        ref float[] anomalyAI = ref anomalyNPC.anomalyAI;
 
         foreach (int i in indexes)
         {
             packet.Write(i);
-            packet.Write(anomalyAI[i]);
+            packet.Write(anomalyNPC.AnomalyAI[i]);
         }
 
         packet.Send();
     }
+    */
 }

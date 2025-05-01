@@ -1,41 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using MonoMod.RuntimeDetour;
 
-namespace Transoceanic.Core;
+namespace Transoceanic.Core.IL;
 
 public class TOHookHelper : ITOLoader
 {
-    private static List<Hook> detours;
-
-    /// <summary>
-    /// 使用Hook修改指定方法。
-    /// </summary>
-    /// <param name="methodToModify"></param>
-    /// <param name="detourMethod"></param>
-    public static void ModifyMethodWithDetour(MethodBase methodToModify, Delegate detourMethod)
-    {
-        Hook hook = new(methodToModify, detourMethod);
-        hook.Apply();
-        detours.Add(hook);
-    }
+    private static List<Hook> _detours = [];
 
     void ITOLoader.PostSetupContent()
     {
-        detours = [];
+        _detours = [];
         foreach (ITODetourProvider detourProvider in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITODetourProvider>())
-            detourProvider.ModifyMethods();
+        {
+            foreach ((MethodInfo methodToModify, Delegate detourMethod) in detourProvider.DetoursToApply)
+            {
+                Hook hook = new(methodToModify, detourMethod);
+                hook.Apply();
+                _detours.Add(hook);
+            }
+        }
     }
 
     void ITOLoader.OnModUnload()
     {
-        foreach (Hook hook in detours)
+        foreach (Hook hook in _detours)
             hook.Undo();
-        detours.Clear();
-        detours = null;
+        _detours.Clear();
+        _detours = null;
     }
 }

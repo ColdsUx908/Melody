@@ -1,34 +1,4 @@
 TOUtilityConfig: {
 	DisplayName: UtilityConfig
 	Headers.UI: UI
-
-	BossTimer: {
-		Label: Boss Timer
-		Tooltip: ""
-	}
-
-	DisplayTicks: {
-		Label: Display Ticks
-		Tooltip: ""
-	}
-
-	XScale: {
-		Label: X Scale
-		Tooltip: ""
-	}
-
-	YScale: {
-		Label: Y Scale
-		Tooltip: ""
-	}
-
-	Size: {
-		Label: Size
-		Tooltip: ""
-	}
-
-	Bar: {
-		Label: Bar
-		Tooltip: ""
-	}
 }

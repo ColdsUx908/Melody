@@ -1,6 +1,11 @@
 ErrorMessage: If you see this message, please report it to the mod author.
-PolarVector2.RadiusInvalid:
+PolarVector2:
 	'''
-	Error: Polar vector radius must be greater than or equal to 0.
-	Error message: {0} ({1})
+	PolarVector2 Error.
+	Error message: {0}.
+	'''
+ClockHands:
+	'''
+	ClockHands Error.
+	Error message: {0}
 	'''

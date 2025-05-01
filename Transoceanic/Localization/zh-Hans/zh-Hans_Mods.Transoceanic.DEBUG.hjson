@@ -1,6 +1,11 @@
 ErrorMessage: 如果您看到此消息，请向 Mod 作者报告。
-PolarVector2.RadiusInvalid:
+PolarVector2:
 	'''
-	错误：极坐标向量半径必须大于或等于 0。
-	错误消息：{0} ({1})
+	结构 PolarVector2 引发错误。
+	错误消息：{0}。
+	'''
+ClockHands:
+	'''
+	结构 ClockHands 引发错误。
+	错误消息: {0}
 	'''

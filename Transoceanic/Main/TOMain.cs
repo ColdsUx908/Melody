@@ -1,10 +1,11 @@
-﻿using System.IO;
-using Terraria;
-using Microsoft.Xna.Framework;
+﻿using System;
 using System.Collections.Generic;
-using Transoceanic.Core;
 using System.Reflection;
+using Microsoft.Xna.Framework;
+using Terraria;
+using Terraria.DataStructures;
 using Terraria.ID;
+using Transoceanic.Core.GameData;
 
 namespace Transoceanic;
 
@@ -12,29 +13,32 @@ public partial class TOMain
 {
     public static int GeneralTimer { get; internal set; }
 
-    public static Assembly Assembly => Transoceanic.Instance.Code;
+    public static readonly Assembly Assembly = Transoceanic.Instance.Code;
+
+    public static readonly Type MainType = typeof(Main);
+
+    public static GameModeData GameModeData => (GameModeData)MainType.GetField("_currentGameModeInfo", UniversalBindingFlags).GetValue(null);
 
 
-    public static TOEntityIterator<NPC> ActiveNPCs => TOEntityIteratorCreator.NewNPCIterator(k => k.active);
+    public static TOIterator<NPC> ActiveNPCs => TOIteratorFactory.NewActiveNPCIterator();
 
-    public static TOEntityIterator<NPC> Enemies => TOEntityIteratorCreator.NewNPCIterator(TONPCUtils.IsEnemy);
+    public static TOIterator<NPC> Enemies => TOIteratorFactory.NewActiveNPCIterator(TONPCUtils.IsEnemy);
 
-    public static TOEntityIterator<NPC> Bosses => TOEntityIteratorCreator.NewNPCIterator(TONPCUtils.IsBossTO);
+    public static TOIterator<NPC> Bosses => TOIteratorFactory.NewActiveNPCIterator(TONPCUtils.IsBossTO);
 
-    public static TOEntityIterator<Projectile> ActiveProjectiles => TOEntityIteratorCreator.NewProjectileIterator(k => k.active);
+    public static TOIterator<Projectile> ActiveProjectiles => TOIteratorFactory.NewActiveProjectileIterator();
 
-    public static TOEntityIterator<Player> ActivePlayers => TOEntityIteratorCreator.NewPlayerIterator(k => k.active);
+    public static TOIterator<Player> ActivePlayers => TOIteratorFactory.NewActivePlayerIterator();
 
-    public static TOEntityIterator<Player> PVPPlayers => TOEntityIteratorCreator.NewPlayerIterator(TOPlayerUtils.IsPvP);
+    public static TOIterator<Player> PVPPlayers => TOIteratorFactory.NewActivePlayerIterator(TOPlayerUtils.IsPvP);
 
     public static List<NPC> BossList { get; internal set; }
 
     public static bool BossActive { get; internal set; } = false;
 
-    /// <summary>
-    /// Binding flags that account for all access/local membership status.
-    /// </summary>
-    public const BindingFlags UniversalBindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
+    public static bool TrueMasterMode { get; internal set; } = false;
+
+    public static bool LegendaryMode { get; internal set; } = false;
 
     /// <summary>
     /// 有些行为仅在单人模式或者多人模式服务端进行。
@@ -51,12 +55,17 @@ public partial class TOMain
 
     public const string DebugErrorMessageKey = ModLocalizationPrefix + "DEBUG.ErrorMessage";
 
-    public static string ConfigPath => Path.Combine(Main.SavePath, "ModConfigs", "Transoceanic_TOConfig.json");
+    /// <summary>
+    /// 包含所有所需Flag。
+    /// </summary>
+    public const BindingFlags UniversalBindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
 
-    public static Color TODebugErrorColor => new(0xFF, 0x00, 0x00);
+    //public static string ConfigPath => Path.Combine(Main.SavePath, "ModConfigs", "Transoceanic_TOConfig.json");
 
-    public static Color CelestialColor => new(0xAF, 0xFF, 0xFF);
+    public static readonly Color TODebugErrorColor = new(0xFF, 0x00, 0x00);
 
-    public const int celestialValue = 25000000;
+    public static readonly Color CelestialColor = new(0xAF, 0xFF, 0xFF);
+
+    public const int CelestialValue = 25000000;
     #endregion
 }
