@@ -307,17 +307,17 @@ public class CalBossBarDetour : ITODetourProvider, ITOLoader
                 MainBorderColour * 0.25f * animationCompletionRatio2);
             #endregion
 
-            #region 小生命值数字和额外信息
+            #region 小字文本
             if (!CanDrawExtraSmallText)
                 return;
-            string smallText = $"({CombinedNPCLife} / {InitialMaxLife})";
-            if (EntityExtensionHandler.TryGetValue(NPCType, out BossHealthBarManager.BossEntityExtension extraEntityData))
+            string smallText = "";
+            if (EntityExtensionHandler.TryGetValue(NPCType, out BossEntityExtension extraEntityData))
             {
-                string extentionName = extraEntityData.NameOfExtensions.ToString();
+                string extensionName = extraEntityData.NameOfExtensions.ToString();
                 int extraEntities = CalamityUtils.CountNPCsBetter(extraEntityData.TypesToSearchFor);
-                string extentionText = $"({extentionName}: {extraEntities})";
-                smallText = extentionText + " " + smallText;
+                smallText += $"({extensionName}: {extraEntities}) ";
             }
+            smallText += $"({CombinedNPCLife} / {InitialMaxLife})";
             CalamityUtils.DrawBorderStringEightWay(
                 spriteBatch,
                 itemStackFont,

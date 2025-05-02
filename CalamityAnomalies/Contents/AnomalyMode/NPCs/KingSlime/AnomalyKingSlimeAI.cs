@@ -1,4 +1,5 @@
 ﻿using System;
+using CalamityAnomalies.Contents.AnomalyMode.NPCs;
 using CalamityMod.NPCs.NormalNPCs;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -11,7 +12,7 @@ using Transoceanic.Core.MathHelp;
 
 namespace CalamityAnomalies.GlobalInstances.AnomalyBosses.KingSlime;
 
-public partial class AnomalyKingSlime
+public partial class AnomalyKingSlime : AnomalyNPCOverride
 {
     public override void PreAI()
     {
