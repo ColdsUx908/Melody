@@ -1,0 +1,11 @@
+LegendaryItems: {
+	AscendantWings: {
+		DisplayName: Ascendant Wings
+		Tooltip: Legendary wings that soar through the sky
+	}
+
+	ImmortalCeless: {
+		DisplayName: Immortal Celess
+		Tooltip: ""
+	}
+}

@@ -1,4 +1,4 @@
-﻿using CalamityAnomalies.Contents.AnomalyNPCs;
+﻿using CalamityAnomalies.Contents.AnomalyMode.NPCs;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -14,7 +14,7 @@ public partial class CAGlobalNPC : GlobalNPC
 
         if (!CAWorld.Anomaly
             || !AnomalyNPCOverrideHelper.Registered(npc.type, out AnomalyNPCOverride anomalyNPCOverride)
-            || !shouldRunAnomalyAI)
+            || !ShouldRunAnomalyAI)
             return;
 
         anomalyNPCOverride.TryConnectWithNPC(npc);

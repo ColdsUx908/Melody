@@ -1,0 +1,13 @@
+CAClientConfig: {
+	DisplayName: Client Settings
+	Headers.Content: Content Settings
+
+	BossRushDifficulty: {
+		Label: BossRush Difficulty
+		Tooltip:
+			'''
+			Add BossRush Difficulty
+			Completely OPTIONAL
+			'''
+	}
+}

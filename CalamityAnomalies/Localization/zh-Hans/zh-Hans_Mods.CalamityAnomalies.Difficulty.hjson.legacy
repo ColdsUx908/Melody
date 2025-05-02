@@ -1,4 +1,4 @@
-Difficulty: {
+AnomalyMode: {
 	Anomaly: 异象
 	AnomalyShortInfo: “[c/FFCFFF:跨越深渊后的真正挑战]”
 	AnomalyExpandedInfo:
@@ -10,7 +10,7 @@ Difficulty: {
 		'''
 	AnomalyActivate: 异象模式已开启……你还好吗？
 	AnomalyDeactivate: 异象模式已关闭，明智之选。
-	AnomalyIllegal: 异象模式只能在大师模式下开启。
+	AnomalyIllegal: 异象模式只能在真正的大师难度下开启。
 	AnomalyIllegalNotLegendary: 异象超凡只能在真正的传奇难度下开启。
 	AnomalyIllegalZenith: 异象超凡不支持 Get fixed boi 世界。
 	AnomalyUltramundaneActivate:
@@ -25,24 +25,15 @@ Difficulty: {
 		'''
 }
 
-Items: {
-	LegendaryItems: {
-		AscendantWings: {
-			DisplayName: 上界之翼
-			Tooltip: 飞翔于天空的传奇之翼
-		}
-
-		ImmortalCeless: {
-			DisplayName: 不朽之天渊
-			Tooltip: 传奇亘古，盛世笙歌
-		}
-	}
-}
-
-Projectiles: {
-	LegendaryItems: {
-		ImmortalBloodRain.DisplayName: Immortal Blood Rain
-		ImmortalIceRain.DisplayName: Immortal Ice Rain
-		ImmortalVoidRain.DisplayName: Immortal Void Rain
-	}
+BossRushMode: {
+	BossRush: BossRush
+	BossRushShortInfo: 完整的BossRush流程体验
+	BossRushExpandedInfo:
+		'''
+		所有Boss应用BossRush中的AI
+		可选择开启BossRush滤镜效果
+		你的面前是登神长阶，还是无尽深渊？
+		'''
+	BossRushActivate: BossRush模式已开启，纯粹的疯狂！
+	BossRushDeactivate: BossRush模式已关闭，平静依旧。
 }

@@ -7,7 +7,7 @@ public partial class CAGlobalNPC : GlobalNPC
 {
     public override bool CheckActive(NPC npc)
     {
-        if (disableNaturalDespawning)
+        if (DisableNaturalDespawning)
             return false;
         return true;
     }

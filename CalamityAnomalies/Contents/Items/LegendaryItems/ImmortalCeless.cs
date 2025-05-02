@@ -1,7 +1,7 @@
 ﻿using System;
 using CalamityAnomalies.Contents.Items.ItemRarities;
 using CalamityAnomalies.Contents.Projectiles.LegendaryItems;
-using CalamityAnomalies.Systems;
+using CalamityAnomalies.GlobalInstances.CAPlayer;
 using CalamityAnomalies.Utilities;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -120,11 +120,11 @@ public class ImmortalCeless : LegendaryItem, ILocalizedModType
     public override void SetPower(Player player) => HasPower = player.Ocean().Celesgod;
     #endregion
 
-    private readonly int projAmount = 5;
+    private readonly int _projAmount = 5;
 
     //private static readonly int projVoid = ModContent.ProjectileType<ImmortalVoidRain>();
-    private static readonly int projIce = ModContent.ProjectileType<ImmortalIceRain>();
-    private static readonly int projBlood = ModContent.ProjectileType<ImmortalBloodRain>();
+    private static readonly int ProjIce = ModContent.ProjectileType<ImmortalIceRain>();
+    private static readonly int ProjBlood = ModContent.ProjectileType<ImmortalBloodRain>();
     //private static readonly int godType = ModContent.ProjectileType<ImmortalGod>();
 
     public new string LocalizationCategory => "Items.LegendaryItems";
@@ -142,7 +142,7 @@ public class ImmortalCeless : LegendaryItem, ILocalizedModType
         Item.useStyle = ItemUseStyleID.Shoot;
         Item.noMelee = true;
         Item.autoReuse = true;
-        Item.shoot = projIce;
+        Item.shoot = ProjIce;
         Item.shootSpeed = 1f;
     }
 
@@ -177,20 +177,20 @@ public class ImmortalCeless : LegendaryItem, ILocalizedModType
     {
         if (player.altFunctionUse == 2)
         {
-            Projectile.NewProjectile(source, position, velocity.ToCustomLength(10f), projBlood, damage * 3, knockback * 3f, -1, 0, 0, 0);
+            TOActivator.NewProjectileAction(source, position, velocity.ToCustomLength(10f), ProjIce, damage * 3, knockback * 3f, -1, p => p.velocity = new PolarVector2(15f, Main.rand.NextFloat(0f, MathHelper.TwoPi)));
         }
         else
         {
-            TOActivator.RotatedProj(projAmount, MathHelper.TwoPi / projAmount, source, player.Center, new Vector2(0f, -15f), type, damage, knockback, -1, p => p.ai[2] = 15f); //ai[2]传递速度信息
+            TOActivator.RotatedProj(_projAmount, MathHelper.TwoPi / _projAmount, source, player.Center, new Vector2(0f, -15f), type, damage, knockback, -1, p => p.ai[2] = 15f); //ai[2]传递速度信息
 
             float offsetangle;
-            for (int i = 0; i < projAmount * 2; i++)
+            for (int i = 0; i < _projAmount * 2; i++)
             {
                 float velocity2 = Main.rand.NextFloat(4f, 10f);
                 int t = Main.rand.Next(i, i * 4);
                 offsetangle = (float)Math.Pow(t + 1, 2) + t * 3;
                 Vector2 velocity3 = new PolarVector2(velocity2, offsetangle);
-                Projectile.NewProjectile(source, player.Center, velocity3, type, damage, knockback, -1, 0, 0, velocity2);
+                TOActivator.NewProjectileAction(source, player.Center, velocity3, type, damage, knockback, -1, p => p.ai[2] = velocity2); //ai[2]传递速度信息
             }
         }
 

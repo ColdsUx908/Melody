@@ -10,13 +10,12 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
-using Transoceanic;
 using Transoceanic.Core;
 using Transoceanic.Core.GameData;
 using Transoceanic.Core.IL;
 using Transoceanic.GlobalInstances.GlobalNPCs;
 
-namespace CalamityAnomalies.Contents.AnomalyNPCs;
+namespace CalamityAnomalies.Contents.AnomalyMode.NPCs;
 
 public enum OrigMethodType
 {
@@ -39,7 +38,6 @@ public enum OrigCalMethodType
 /// </summary>
 public abstract class AnomalyNPCOverride
 {
-    #region 实成员
     /// <summary>
     /// Override对象当前应用的NPC。
     /// </summary>
@@ -60,11 +58,6 @@ public abstract class AnomalyNPCOverride
     } = null;
 
     /// <summary>
-    /// Override对象当前应用的NPC的 <see cref="TOCGlobalNPC"/> 实例。
-    /// <br/>在值为 <see langword="null"/> 时会尝试定位 <see cref="NPC"/> 对应的实例。
-    /// </summary>
-
-    /// <summary>
     /// Override对象当前应用的NPC的 <see cref="CAGlobalNPC"/> 实例。
     /// <br/>在值为 <see langword="null"/> 时会尝试定位 <see cref="NPC"/> 对应的实例。
     /// </summary>
@@ -83,28 +76,6 @@ public abstract class AnomalyNPCOverride
         get => field ?? (NPC.whoAmI < Main.maxNPCs ? field = NPC.Calamity() : Main.npc[Main.maxNPCs].Calamity());
         set;
     } = null;
-
-    public int OverrideCount() => TOMain.ActiveNPCs.Count(k => k.type == OverrideNPCType);
-
-    /// <summary>
-    /// 判定世界上是否有且只有一个指定Boss存活。
-    /// </summary>
-    /// <returns></returns>
-    public bool ExceptionalOverride() => OverrideCount() == 1;
-
-    /// <summary>
-    /// 更改 <see cref="AnomalyNPC"/> 的 <see cref="CAGlobalNPC.AnomalyAI"/> 数据值。
-    /// <br>含自动Net同步。</br>
-    /// </summary>
-    /// <param name="value">设置的值。</param>
-    /// <param name="index">待设置的索引值。</param>
-    /// <exception cref="IndexOutOfRangeException"></exception>
-    public void SetAnomalyAI(float value, int index)
-    {
-        AnomalyNPC.AnomalyAI[index] = value;
-        AnomalyNPC.ShouldSyncAnomalyAI[index] = true;
-        //NPC.SyncAnomalyAI(index);
-    }
 
     /// <summary>
     /// 尝试将Override对象连接到指定NPC。同步更新 <see cref="NPC"/>、<see cref="AnomalyNPC"/> 和 <see cref="CalamityNPC"/>。
@@ -129,9 +100,21 @@ public abstract class AnomalyNPCOverride
         AnomalyNPC = null;
         CalamityNPC = null;
     }
-    #endregion
 
-    #region 虚成员
+    /// <summary>
+    /// 更改 <see cref="AnomalyNPC"/> 的 <see cref="CAGlobalNPC.AnomalyAI"/> 数据值。
+    /// <br>含自动Net同步。</br>
+    /// </summary>
+    /// <param name="value">设置的值。</param>
+    /// <param name="index">待设置的索引值。</param>
+    /// <exception cref="IndexOutOfRangeException"></exception>
+    public void SetAnomalyAI(float value, int index)
+    {
+        AnomalyNPC.AnomalyAI[index] = value;
+        AnomalyNPC.ShouldSyncAnomalyAI[index] = true;
+        //NPC.SyncAnomalyAI(index);
+    }
+
     /// <summary>
     /// 覆写的目标NPCID。
     /// </summary>
@@ -149,12 +132,13 @@ public abstract class AnomalyNPCOverride
     public virtual bool AllowOrigCalMethod(OrigCalMethodType type) => true;
 
     /// <summary>
-    /// Whether the NPC should use the boss immunity cooldown slot. Defaults to true.
+    /// NPC是否应用Boss无敌帧。
+    /// <br/>默认返回 <see langword="null"/>，即沿用默认设置。
     /// </summary>
-    public virtual bool UseBossImmunityCooldownID => true;
+    public virtual bool? UseBossImmunityCooldownID => null;
 
     /// <summary>
-    /// Use this to set custom defaults for the npc. This runs after every other mod's.
+    /// 设置额外的属性。
     /// <br/><see cref="NPC"/> 等属性会在调用前自动更新，调用后自动清除。
     /// </summary>
     public virtual void SetDefaults() { }
@@ -167,10 +151,32 @@ public abstract class AnomalyNPCOverride
     public virtual void OnSpawn(IEntitySource source) { }
 
     /// <summary>
-    /// 异象模式AI。
+    /// AI。
+    /// <br/>在 <see cref="CAGlobalNPC.PreAI(NPC)"/> 中调用
     /// <br/><see cref="NPC"/> 等属性会在调用前自动更新，调用后自动清除。
     /// </summary>
-    public virtual void AnomalyAI() { }
+    public virtual void PreAI() { }
+
+    /// <summary>
+    /// AI。
+    /// <br/>在 <see cref="CAGlobalNPC.AI(NPC)"/> 中调用
+    /// <br/><see cref="NPC"/> 等属性会在调用前自动更新，调用后自动清除。
+    public virtual void AI() { }
+
+    /// <summary>
+    /// AI。
+    /// <br/>在 <see cref="CAGlobalNPC.PostAI(NPC)"/> 中调用
+    /// <br/><see cref="NPC"/> 等属性会在调用前自动更新，调用后自动清除。
+    public virtual void PostAI() { }
+
+    public virtual void BossHeadSlot(ref int index) { }
+
+    /// <summary>
+    /// Whether or not to run the code for checking whether an NPC will remain active. Return false to stop the NPC from being despawned
+    /// and to stop the NPC from counting towards the limit for how many NPCs can exist near a player. Returns true by default.
+    /// </summary>
+    /// <returns></returns>
+    public virtual bool CheckDead() => true;
 
     /// <summary>
     /// 设置NPC当前帧。
@@ -214,40 +220,29 @@ public abstract class AnomalyNPCOverride
     /// <param name="spriteBatch"></param>
     /// <param name="x"></param>
     /// <param name="y"></param>
-    public virtual void PreDrawCalBossBar(CANPCHook.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) { }
+    public virtual void PreDrawCalBossBar(CalBossBarDetour.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) { }
 
     /// <summary>
     /// 
     /// <br/><see cref="NPC"/> 等属性会在调用前自动更新，调用后自动清除。
     /// </summary>
-    /// <param name="bar"></param>
+    /// <param name="newBar"></param>
     /// <param name="spriteBatch"></param>
     /// <param name="x"></param>
     /// <param name="y"></param>
-    public virtual void PostDrawCalBossBar(CANPCHook.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) { }
-
-    /// <summary>
-    /// Whether or not to run the code for checking whether an NPC will remain active. Return false to stop the NPC from being despawned
-    /// and to stop the NPC from counting towards the limit for how many NPCs can exist near a player. Returns true by default.
-    /// </summary>
-    /// <returns></returns>
-    public virtual bool CheckDead() => true;
-
-    public virtual void BossHeadSlot(ref int index) { }
-
-    #endregion
+    public virtual void PostDrawCalBossBar(CalBossBarDetour.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) { }
 }
 
-public class AnomalyNPCOverrideHelper : ITOLoader
+public sealed class AnomalyNPCOverrideHelper : ITOLoader
 {
-    internal static Dictionary<int, AnomalyNPCOverride> NPCOverrideSet { get; } = [];
+    internal static Dictionary<int, AnomalyNPCOverride> AnomalyNPCOverrideSet { get; } = [];
 
     /// <summary>
     /// 判定指定NPCID是否已注册。
     /// </summary>
     /// <param name="npcID"></param>
     /// <returns></returns>
-    public static bool Registered(int npcID, out AnomalyNPCOverride anomalyNPCOverride) => NPCOverrideSet.TryGetValue(npcID, out anomalyNPCOverride);
+    public static bool Registered(int npcID, out AnomalyNPCOverride anomalyNPCOverride) => AnomalyNPCOverrideSet.TryGetValue(npcID, out anomalyNPCOverride);
 
     /// <summary>
     /// 判定指定ModNPC类型是否已注册。
@@ -259,11 +254,11 @@ public class AnomalyNPCOverrideHelper : ITOLoader
     void ITOLoader.PostSetupContent()
     {
         foreach (AnomalyNPCOverride anomalyNPCOverride in TOReflectionUtils.GetTypeInstancesDerivedFrom<AnomalyNPCOverride>(CAMain.Assembly))
-            NPCOverrideSet[anomalyNPCOverride.OverrideNPCType] = anomalyNPCOverride;
+            AnomalyNPCOverrideSet[anomalyNPCOverride.OverrideNPCType] = anomalyNPCOverride;
     }
 
     void ITOLoader.OnModUnload()
     {
-        NPCOverrideSet.Clear();
+        AnomalyNPCOverrideSet.Clear();
     }
 }

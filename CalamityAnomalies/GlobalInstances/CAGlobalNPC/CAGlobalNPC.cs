@@ -4,13 +4,11 @@ namespace CalamityAnomalies.GlobalInstances;
 
 public partial class CAGlobalNPC : GlobalNPC
 {
-    public int AnomalyKilltime = 0;
+    public int AnomalyKilltime { get; private set; } = 0;
 
-    public bool disableNaturalDespawning = false;
+    public bool DisableNaturalDespawning { get; set; } = true;
 
-    public bool shouldMinimizeCalamityAI = true;
-
-    public bool shouldRunAnomalyAI = true;
+    public bool ShouldRunAnomalyAI { get; set; } = true;
 
     private const int MaxAISlots = 50;
 
@@ -25,6 +23,8 @@ public partial class CAGlobalNPC : GlobalNPC
     public int AnomalyUltraBarTimer { get; private set; } = 0;
 
     public bool IsRunningAnomalyAI => AnomalyAITimer > 0;
+
+    public int BossRushAITimer { get; private set; } = 0;
 
     public override bool InstancePerEntity => true;
 }

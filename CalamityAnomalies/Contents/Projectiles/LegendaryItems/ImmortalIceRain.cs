@@ -36,10 +36,10 @@ public class ImmortalIceRain : ModProjectile, ILocalizedModType
     {
         get
         {
-            int temp = (int)Projectile.ai[3];
+            int temp = (int)Projectile.localAI[0];
             return temp >= 0 && temp < Main.maxNPCs ? Main.npc[temp] : null;
         }
-        set => Projectile.ai[3] = value?.whoAmI ?? -1;
+        set => Projectile.localAI[0] = value?.whoAmI ?? -1;
     }
 
     public override void SetDefaults()
@@ -55,6 +55,8 @@ public class ImmortalIceRain : ModProjectile, ILocalizedModType
         Projectile.DamageType = DamageClass.Magic;
         Projectile.penetrate = 1;
         Projectile.timeLeft = 1230; //追踪10秒
+
+        AI_NPCTarget = null;
     }
 
     public override void AI()
@@ -71,7 +73,7 @@ public class ImmortalIceRain : ModProjectile, ILocalizedModType
                 AI_Timer = 0;
                 break;
             case 1: //逐渐减速
-                Projectile.velocity.ToCustomLength(AI_InitialVelocity * (20 - AI_Timer) / 20);
+                Projectile.velocity = Projectile.velocity.ToCustomLength(AI_InitialVelocity * (20 - AI_Timer) / 20);
                 if (AI_Timer == 20)
                 {
                     AI_Phase = 2;

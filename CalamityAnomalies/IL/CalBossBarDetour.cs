@@ -2,13 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using CalamityAnomalies.Contents.AnomalyNPCs;
+using CalamityAnomalies.Contents.AnomalyMode.NPCs;
+using CalamityAnomalies.Contents.BossRushMode;
 using CalamityAnomalies.GlobalInstances;
 using CalamityAnomalies.Utilities;
 using CalamityMod;
 using CalamityMod.Events;
+using CalamityMod.NPCs.CeaselessVoid;
 using CalamityMod.NPCs.ExoMechs.Apollo;
 using CalamityMod.NPCs.ExoMechs.Artemis;
+using CalamityMod.NPCs.Ravager;
+using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -24,11 +28,15 @@ using Transoceanic.Core;
 using Transoceanic.Core.ExtraData.Maths;
 using Transoceanic.Core.GameData;
 using Transoceanic.Core.IL;
-using static CalamityMod.UI.BossHealthBarManager; //灾厄的嵌套类构造会使不用using static的代码十分丑陋
+using static CalamityMod.UI.BossHealthBarManager;
 
 namespace CalamityAnomalies.IL;
 
-public partial class CANPCHook : ITODetourProvider, ITOLoader
+/// <summary>
+/// 钩子。
+/// <br/>应用类：<see cref="BossHealthBarManager"/>
+/// </summary>
+public class CalBossBarDetour : ITODetourProvider, ITOLoader
 {
     /// <summary>
     /// 改进的Boss血条UI类。
@@ -54,6 +62,8 @@ public partial class CANPCHook : ITODetourProvider, ITOLoader
         public bool Valid { get; private set; } = true;
 
         public new NPC AssociatedNPC => Main.npc[NPCIndex]; //在新的实例化机制中，NPCIndex不可能越界
+
+        public CAGlobalNPC AssociatedAnomalyNPC => field ??= AssociatedNPC.Anomaly();
 
         public new int NPCType => AssociatedNPC.type;
 
@@ -127,9 +137,9 @@ public partial class CANPCHook : ITODetourProvider, ITOLoader
         {
             if (!(Valid = valid))
             {
-                EnrageTimer = Math.Max(EnrageTimer - 4, 0);
-                IncreasingDefenseOrDRTimer = Math.Max(EnrageTimer - 4, 0);
-                CloseAnimationTimer = Math.Min(CloseAnimationTimer + 1, 120);
+                EnrageTimer = Math.Clamp(EnrageTimer - 4, 0, 120);
+                IncreasingDefenseOrDRTimer = Math.Clamp(EnrageTimer - 4, 0, 120);
+                CloseAnimationTimer++;
                 return;
             }
 
@@ -145,10 +155,10 @@ public partial class CANPCHook : ITODetourProvider, ITOLoader
             if (ComboDamageCountdown > 0)
                 ComboDamageCountdown--;
 
-            CloseAnimationTimer = Math.Max(CloseAnimationTimer - 2, 0);
-            OpenAnimationTimer = Math.Min(OpenAnimationTimer + 1, 120); //由80改为120
-            EnrageTimer = Math.Min(EnrageTimer + NPCIsEnraged.ToDirectionInt(), 120);
-            IncreasingDefenseOrDRTimer = Math.Min(IncreasingDefenseOrDRTimer + NPCIsIncreasingDefenseOrDR.ToDirectionInt(), 120);
+            CloseAnimationTimer = Math.Clamp(CloseAnimationTimer - 2, 0, 120);
+            OpenAnimationTimer = Math.Clamp(OpenAnimationTimer + 1, 0, 120); //由80改为120
+            EnrageTimer = Math.Clamp(EnrageTimer + NPCIsEnraged.ToDirectionInt(), 0, 120);
+            IncreasingDefenseOrDRTimer = Math.Clamp(IncreasingDefenseOrDRTimer + NPCIsIncreasingDefenseOrDR.ToDirectionInt(), 0, 120);
 
             CustomOneToMany.Clear();
             if (HasOneToMany)
@@ -164,21 +174,6 @@ public partial class CANPCHook : ITODetourProvider, ITOLoader
 
         public new void Draw(SpriteBatch spriteBatch, int x, int y)
         {
-            //只在异象模式下生效。
-            //后续可 能将强制异象判定移除。
-            if (!CAWorld.Anomaly)
-            {
-                base.Draw(spriteBatch, x, y);
-                return;
-            }
-
-            CAGlobalNPC anomalyNPC = AssociatedNPC.Anomaly();
-            if (!anomalyNPC.IsRunningAnomalyAI)
-            {
-                base.Draw(spriteBatch, x, y);
-                return;
-            }
-
             bool registered = AnomalyNPCOverrideHelper.Registered(NPCType, out AnomalyNPCOverride anomalyNPCOverride);
             if (registered)
             {
@@ -218,7 +213,8 @@ public partial class CANPCHook : ITODetourProvider, ITOLoader
                 spriteBatch.Draw(BossComboHPBar, new Rectangle(x + mainBarWidth, y + 28, comboHPBarWidth, BossComboHPBar.Height), Color.White);
             }
 
-            Color color = (CAWorld.Anomaly ? Color.Lerp(baseColor, Color.HotPink, Math.Max(anomalyNPC.AnomalyAITimer, 120) / 120f)
+            Color color = (CAWorld.Anomaly ? Color.Lerp(baseColor, Color.HotPink, Math.Clamp(AssociatedAnomalyNPC.AnomalyAITimer / 120f, 0f, 1f))
+                : CAWorld.BossRush ? Color.Lerp(baseColor, Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, animationCompletionRatio * 0.4f), Math.Clamp(AssociatedAnomalyNPC.BossRushAITimer / 120f, 0f, 1f))
                 : NPCIsEnraged ? Color.Lerp(baseColor, Color.Red * 0.5f, EnrageTimer / 120f)
                 : NPCIsIncreasingDefenseOrDR ? Color.Lerp(baseColor, Color.LightGray * 0.5f, IncreasingDefenseOrDRTimer / 120f) : baseColor) * animationCompletionRatio;
             spriteBatch.Draw(BossSeperatorBar, new Rectangle(x, y + 18, 400, 6), color);
@@ -231,7 +227,7 @@ public partial class CANPCHook : ITODetourProvider, ITOLoader
             Vector2 npcNameSize = mouseFont.MeasureString(npcName);
             Vector2 baseDrawPosition = new(x + 400 - npcNameSize.X, y + 23 - npcNameSize.Y);
             float borderDelta = (MathF.Sin(Main.GlobalTimeWrappedHourly * 4.5f) + 1f) * 0.5f;
-            if (CAWorld.AnomalyUltramundane && anomalyNPC.AnomalyUltraBarTimer > 0)
+            if (CAWorld.AnomalyUltramundane && AssociatedAnomalyNPC.AnomalyUltraBarTimer > 0)
             {
                 DrawBorderStringEightWay_Loop(
                     spriteBatch,
@@ -243,7 +239,21 @@ public partial class CANPCHook : ITODetourProvider, ITOLoader
                     Color.White * animationCompletionRatio2,
                     Color.Black * 0.2f * animationCompletionRatio2,
                     8,
-                    anomalyNPC.AnomalyUltraBarTimer / 120f + borderDelta);
+                    AssociatedAnomalyNPC.AnomalyUltraBarTimer / 120f + borderDelta);
+            }
+            else if (CAWorld.BossRush)
+            {
+                DrawBorderStringEightWay_Loop(
+                spriteBatch,
+                mouseFont,
+                npcName,
+                baseDrawPosition,
+                Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, animationCompletionRatio * 0.45f) * animationCompletionRatio2,
+                Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, animationCompletionRatio * 0.55f) * animationCompletionRatio2,
+                Color.White * animationCompletionRatio2,
+                Color.Black * 0.2f * animationCompletionRatio2,
+                8,
+                Math.Clamp(AssociatedAnomalyNPC.BossRushAITimer, 0f, 120f) / 120f + borderDelta * 2f);
             }
             else if (NPCIsEnraged && EnrageTimer > 0)
             {
@@ -329,10 +339,10 @@ public partial class CANPCHook : ITODetourProvider, ITOLoader
     private const int MaxBars = 6;
     private const int MaxActiveBars = 4;
 
-    internal static Type Type_BossHealthBarManager => typeof(BossHealthBarManager);
+    internal static Type Type_BossHealthBarManager { get; } = typeof(BossHealthBarManager);
 
-    internal static MethodInfo Method_BossHealthBarManager_Draw => Type_BossHealthBarManager.GetMethod("Draw", TOMain.UniversalBindingFlags);
-    internal static MethodInfo Method_BossHealthBarManager_Update => Type_BossHealthBarManager.GetMethod("Update", TOMain.UniversalBindingFlags);
+    internal static MethodInfo Method_BossHealthBarManager_Draw { get; } = Type_BossHealthBarManager.GetMethod("Draw", TOMain.UniversalBindingFlags);
+    internal static MethodInfo Method_BossHealthBarManager_Update { get; } = Type_BossHealthBarManager.GetMethod("Update", TOMain.UniversalBindingFlags);
 
     internal delegate void Orig_BossHealthBarManager_Draw(BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info);
     internal delegate void Orig_BossHealthBarManager_Update(BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info);
@@ -347,12 +357,6 @@ public partial class CANPCHook : ITODetourProvider, ITOLoader
     /// <param name="info"></param>
     internal static void On_BossHealthBarManager_Draw(Orig_BossHealthBarManager_Draw orig, BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info)
     {
-        if (!CAWorld.Anomaly)
-        {
-            orig(self, spriteBatch, currentBar, info);
-            return;
-        }
-
         int x = Main.screenWidth -
             (Main.playerInventory || Main.invasionType > 0 || Main.pumpkinMoon || Main.snowMoon || DD2Event.Ongoing || AcidRainEvent.AcidRainEventIsOngoing ? 670 : 420);
         int y = Main.screenHeight - 100;
@@ -378,12 +382,6 @@ public partial class CANPCHook : ITODetourProvider, ITOLoader
     /// <param name="info"></param>
     internal static void On_BossHealthBarManager_Update(Orig_BossHealthBarManager_Update orig, BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info)
     {
-        if (!CAWorld.Anomaly)
-        {
-            orig(self, currentBar, ref info);
-            return;
-        }
-
         List<ulong> validIdentifiers = [];
 
         foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(k => !BossExclusionList.Contains(k.type)))
@@ -432,4 +430,76 @@ public partial class CANPCHook : ITODetourProvider, ITOLoader
             borderColor2,
             scale);
     }
+
+    Dictionary<MethodInfo, Delegate> ITODetourProvider.DetoursToApply => new()
+    {
+        [Method_BossHealthBarManager_Draw] = On_BossHealthBarManager_Draw,
+        [Method_BossHealthBarManager_Update] = On_BossHealthBarManager_Update,
+    };
+
+    void ITOLoader.PostSetupContent()
+    {
+        MinibossHPBarList.Add(NPCID.LunarTowerVortex);
+        MinibossHPBarList.Add(NPCID.LunarTowerStardust);
+        MinibossHPBarList.Add(NPCID.LunarTowerNebula);
+        MinibossHPBarList.Add(NPCID.LunarTowerSolar);
+        MinibossHPBarList.Add(NPCID.PirateShip);
+        OneToMany[NPCID.SkeletronHead] = [NPCID.SkeletronHand];
+        OneToMany[NPCID.SkeletronPrime] = [NPCID.PrimeSaw, NPCID.PrimeVice, NPCID.PrimeCannon, NPCID.PrimeLaser];
+        OneToMany[NPCID.Golem] = [NPCID.GolemFistLeft, NPCID.GolemFistRight, NPCID.GolemHead, NPCID.GolemHeadFree];
+        OneToMany[NPCID.BrainofCthulhu] = [NPCID.Creeper];
+        OneToMany[NPCID.MartianSaucerCore] = [NPCID.MartianSaucerTurret, NPCID.MartianSaucerCannon];
+        OneToMany[NPCID.PirateShip] = [NPCID.PirateShipCannon];
+        OneToMany[ModContent.NPCType<CeaselessVoid>()] = [ModContent.NPCType<DarkEnergy>()];
+        OneToMany[ModContent.NPCType<RavagerBody>()] =
+        [
+            ModContent.NPCType<RavagerClawRight>(),
+            ModContent.NPCType<RavagerClawLeft>(),
+            ModContent.NPCType<RavagerLegRight>(),
+            ModContent.NPCType<RavagerLegLeft>(),
+            ModContent.NPCType<RavagerHead>()
+        ];
+        OneToMany[ModContent.NPCType<EbonianPaladin>()] = [];
+        OneToMany[ModContent.NPCType<CrimulanPaladin>()] = [];
+    }
+
+    void ITOLoader.OnModUnload()
+    {
+        MinibossHPBarList.Remove(NPCID.LunarTowerVortex);
+        MinibossHPBarList.Remove(NPCID.LunarTowerStardust);
+        MinibossHPBarList.Remove(NPCID.LunarTowerNebula);
+        MinibossHPBarList.Remove(NPCID.LunarTowerSolar);
+        MinibossHPBarList.Remove(NPCID.PirateShip);
+        OneToMany[NPCID.SkeletronHead] = [NPCID.SkeletronHead, NPCID.SkeletronHand];
+        OneToMany[NPCID.SkeletronPrime] = [NPCID.SkeletronPrime, NPCID.PrimeSaw, NPCID.PrimeVice, NPCID.PrimeCannon, NPCID.PrimeLaser];
+        OneToMany[NPCID.Golem] = [NPCID.Golem, NPCID.GolemFistLeft, NPCID.GolemFistRight, NPCID.GolemHead, NPCID.GolemHeadFree];
+        OneToMany[NPCID.BrainofCthulhu] = [NPCID.BrainofCthulhu, NPCID.Creeper];
+        OneToMany[NPCID.MartianSaucerCore] = [NPCID.MartianSaucerCore, NPCID.MartianSaucerTurret, NPCID.MartianSaucerCannon];
+        OneToMany[NPCID.PirateShip] = [NPCID.PirateShip, NPCID.PirateShipCannon];
+        OneToMany[ModContent.NPCType<CeaselessVoid>()] =
+        [
+            ModContent.NPCType<CeaselessVoid>(),
+            ModContent.NPCType<DarkEnergy>()
+        ];
+        OneToMany[ModContent.NPCType<RavagerBody>()] =
+        [
+            ModContent.NPCType<RavagerBody>(),
+            ModContent.NPCType<RavagerClawRight>(),
+            ModContent.NPCType<RavagerClawLeft>(),
+            ModContent.NPCType<RavagerLegRight>(),
+            ModContent.NPCType<RavagerLegLeft>(),
+            ModContent.NPCType<RavagerHead>()
+        ];
+        OneToMany[ModContent.NPCType<EbonianPaladin>()] = OneToMany[ModContent.NPCType<CrimulanPaladin>()] =
+        [
+            ModContent.NPCType<EbonianPaladin>(),
+            ModContent.NPCType<SplitEbonianPaladin>(),
+            ModContent.NPCType<CrimulanPaladin>(),
+            ModContent.NPCType<SplitCrimulanPaladin>()
+        ];
+    }
+
+    void ITOLoader.OnWorldLoad() => _trackingBars.Clear();
+
+    void ITOLoader.OnWorldUnload() => _trackingBars.Clear();
 }

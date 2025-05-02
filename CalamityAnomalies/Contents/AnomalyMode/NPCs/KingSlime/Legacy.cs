@@ -10,7 +10,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Transoceanic.Core.GameData;
 
-namespace CalamityAnomalies.Contents.AnomalyNPCs.KingSlime;
+namespace CalamityAnomalies.Contents.AnomalyMode.NPCs.KingSlime;
 
 class Legacy
 {

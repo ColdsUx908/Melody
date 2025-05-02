@@ -13,7 +13,7 @@ namespace CalamityAnomalies.GlobalInstances.AnomalyBosses.KingSlime;
 
 public partial class AnomalyKingSlime
 {
-    public override void AnomalyAI()
+    public override void PreAI()
     {
         #region 主体
 
@@ -46,7 +46,7 @@ public partial class AnomalyKingSlime
 
         #region 仇恨与脱战
         Player target = null;
-        AnomalyNPC.disableNaturalDespawning = true;
+        AnomalyNPC.DisableNaturalDespawning = true;
         if (AI_CurrentAttack != AttackType.Despawn)
         {
             if (!NPC.TargetClosestIfTargetIsInvalid(out target, true, Constant.despawnDistance))

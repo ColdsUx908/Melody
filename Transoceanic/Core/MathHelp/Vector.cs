@@ -38,22 +38,6 @@ public static partial class TOMathHelper
     };
 
     /// <summary>
-    /// 获取向量的顺时针旋转角。
-    /// </summary>
-    /// <param name="value"></param>
-    /// <returns>零向量返回0，否则返回 [0, <see cref="MathHelper.TwoPi"/>) 范围内的浮点值。按顺时针方向。</returns>
-    public static float ToAngleClockwise(this Vector2 value)
-    {
-        float angle = value.ToAngle();
-
-        return angle switch
-        {
-            0f => 0f,
-            _ => MathHelper.TwoPi - angle
-        };
-    }
-
-    /// <summary>
     /// 获取模为特定值的原向量同向向量。不改变原向量值。
     /// </summary>
     /// <param name="value"></param>

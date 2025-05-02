@@ -9,7 +9,7 @@ namespace CalamityAnomalies;
 
 public class CalamityAnomalies : Mod
 {
-    internal static CalamityAnomalies Instance;
+    internal static CalamityAnomalies Instance { get; private set; }
 
     public override void Load()
     {

@@ -31,7 +31,7 @@ using Terraria.ModLoader.IO;
 using Transoceanic.Core.GameData;
 using Transoceanic.Systems;
 
-namespace CalamityAnomalies.Systems;
+namespace CalamityAnomalies.GlobalInstances.CAPlayer;
 
 public class PlayerDownedBossCalamity : PlayerDownedBoss
 {

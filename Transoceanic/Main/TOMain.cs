@@ -13,9 +13,9 @@ public partial class TOMain
 {
     public static int GeneralTimer { get; internal set; }
 
-    public static readonly Assembly Assembly = Transoceanic.Instance.Code;
+    public static Assembly Assembly { get; } = Transoceanic.Instance.Code;
 
-    public static readonly Type MainType = typeof(Main);
+    public static Type MainType { get; } = typeof(Main);
 
     public static GameModeData GameModeData => (GameModeData)MainType.GetField("_currentGameModeInfo", UniversalBindingFlags).GetValue(null);
 
@@ -36,7 +36,21 @@ public partial class TOMain
 
     public static bool BossActive { get; internal set; } = false;
 
+    /// <summary>
+    /// 是否为“真正的”大师模式（即创建世界时选择“大师难度”）。
+    /// </summary>
     public static bool TrueMasterMode { get; internal set; } = false;
+
+    /// <summary>
+    /// 是否为旅行大师模式（即将敌人难度调整至3.0x的旅行模式）。
+    /// </summary>
+    public static bool JourneyMasterMode { get; internal set; } = false;
+
+    /// <summary>
+    /// 是否为大师模式。
+    /// <br/>同时检查 <see cref="TrueMasterMode"/> 和 <see cref="JourneyMasterMode"/>。
+    /// </summary>
+    public static bool MasterMode => TrueMasterMode || JourneyMasterMode;
 
     public static bool LegendaryMode { get; internal set; } = false;
 
@@ -62,9 +76,9 @@ public partial class TOMain
 
     //public static string ConfigPath => Path.Combine(Main.SavePath, "ModConfigs", "Transoceanic_TOConfig.json");
 
-    public static readonly Color TODebugErrorColor = new(0xFF, 0x00, 0x00);
+    public static Color TODebugErrorColor { get; } = new(0xFF, 0x00, 0x00);
 
-    public static readonly Color CelestialColor = new(0xAF, 0xFF, 0xFF);
+    public static Color CelestialColor { get; } = new(0xAF, 0xFF, 0xFF);
 
     public const int CelestialValue = 25000000;
     #endregion

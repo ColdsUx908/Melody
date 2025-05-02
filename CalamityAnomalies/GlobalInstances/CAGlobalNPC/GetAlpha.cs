@@ -1,4 +1,4 @@
-﻿using CalamityAnomalies.Contents.AnomalyNPCs;
+﻿using CalamityAnomalies.Contents.AnomalyMode.NPCs;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;

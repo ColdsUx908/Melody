@@ -1,0 +1,13 @@
+CAClientConfig: {
+	DisplayName: 客户端设置
+	Headers.Content: 内容设置
+
+	BossRushDifficulty: {
+		Label: BossRush难度
+		Tooltip:
+			'''
+			在游戏中添加BossRush难度
+			可选内容
+			'''
+	}
+}

@@ -1,5 +1,6 @@
 ﻿using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
+using Transoceanic.Commands;
 
 namespace Transoceanic.GlobalInstances.TOPlayer;
 
@@ -47,6 +48,8 @@ public partial class TOGlobalPlayer : ModPlayer
     /// 玩家未受击时间。在<see cref="LifeOverdrawing"/>类中更新。
     /// </summary>
     public int TimeWithoutHurt { get; set; } = 0;
+
+    public CommandCallInfo CommandCallInfo { get; internal set; } = null;
     #endregion
 
 

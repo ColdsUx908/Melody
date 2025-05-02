@@ -1,4 +1,4 @@
-﻿using CalamityAnomalies.Contents.AnomalyNPCs;
+﻿using CalamityAnomalies.Contents.AnomalyMode.NPCs;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -10,14 +10,16 @@ public partial class CAGlobalNPC : GlobalNPC
 {
     public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        if (!CAWorld.Anomaly
-            || !AnomalyNPCOverrideHelper.Registered(npc.type, out AnomalyNPCOverride anomalyNPCOverride)
-            || !shouldRunAnomalyAI) //只在需要时运行异象AI
-            return true;
+        if (CAWorld.Anomaly
+            && AnomalyNPCOverrideHelper.Registered(npc.type, out AnomalyNPCOverride anomalyNPCOverride)
+            && ShouldRunAnomalyAI)
+        {
+            anomalyNPCOverride.TryConnectWithNPC(npc);
+            anomalyNPCOverride.PreDraw(spriteBatch, screenPos, drawColor);
+            anomalyNPCOverride.ClearNPCInstances();
+            return anomalyNPCOverride.AllowOrigMethod(OrigMethodType.Draw);
+        }
 
-        anomalyNPCOverride.TryConnectWithNPC(npc);
-        anomalyNPCOverride.PreDraw(spriteBatch, screenPos, drawColor);
-        anomalyNPCOverride.ClearNPCInstances();
-        return anomalyNPCOverride.AllowOrigMethod(OrigMethodType.Draw);
+        return true;
     }
 }

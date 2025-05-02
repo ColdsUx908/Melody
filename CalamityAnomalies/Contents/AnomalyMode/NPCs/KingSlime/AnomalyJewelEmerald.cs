@@ -2,7 +2,7 @@
 using Terraria;
 using Terraria.ModLoader;
 
-namespace CalamityAnomalies.Contents.AnomalyNPCs.KingSlime;
+namespace CalamityAnomalies.Contents.AnomalyMode.NPCs.KingSlime;
 
 public class AnomalyJewelEmerald : AnomalyNPCOverride
 {
@@ -14,7 +14,7 @@ public class AnomalyJewelEmerald : AnomalyNPCOverride
         _ => true,
     };
 
-    public override void AnomalyAI()
+    public override void PreAI()
     {
         return; //TODO: 移植未完成
 

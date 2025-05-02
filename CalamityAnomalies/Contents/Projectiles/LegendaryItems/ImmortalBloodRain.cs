@@ -18,19 +18,19 @@ public class ImmortalBloodRain : ModProjectile, ILocalizedModType
 
     private const float homingDistance = 10000f;
 
-    private int AIPhase
+    private int AI_Phase
     {
         get => (int)Projectile.ai[0];
         set => Projectile.ai[0] = value;
     }
 
-    private int AITimer
+    private int AI_Timer
     {
         get => (int)Projectile.ai[1];
         set => Projectile.ai[1] = value;
     }
 
-    private Player PlayerTarget
+    private Player AI_PlayerTarget
     {
         get
         {
@@ -40,14 +40,14 @@ public class ImmortalBloodRain : ModProjectile, ILocalizedModType
         set => Projectile.ai[2] = value?.whoAmI ?? -1;
     }
 
-    private NPC NPCTarget
+    private NPC AI_NPCTarget
     {
         get
         {
-            int temp = (int)Projectile.ai[3];
+            int temp = (int)Projectile.localAI[0];
             return temp >= 0 && temp < Main.maxNPCs ? Main.npc[temp] : null;
         }
-        set => Projectile.ai[3] = value?.whoAmI ?? -1;
+        set => Projectile.localAI[0] = value?.whoAmI ?? -1;
     }
 
     private static readonly HashSet<int> InstantKill =
@@ -70,29 +70,32 @@ public class ImmortalBloodRain : ModProjectile, ILocalizedModType
         Projectile.penetrate = 1;
         Projectile.timeLeft = 930; //追踪5秒
         Projectile.extraUpdates = 2; //速度UpUp
+
+        AI_PlayerTarget = null;
+        AI_NPCTarget = null;
     }
 
     public override void AI()
     {
         Lighting.AddLight((int)((Projectile.position.X + Projectile.width / 2) / 16f), (int)((Projectile.position.Y + Projectile.height / 2) / 16f), 175f / 255f, 1f, 1f);
 
-        switch (AIPhase)
+        switch (AI_Phase)
         {
             case 0: //初始化
                 Projectile.VelocityToRotation();
-                AIPhase = 1;
-                AITimer = 0;
+                AI_Phase = 1;
+                AI_Timer = 0;
                 break;
             case 1: //寻找目标并追踪，优先追踪玩家；在追踪超过3秒后加速，速度显著更高
-                AITimer++;
-                if (!Projectile.Homing(PlayerTarget, rotating: true))
+                AI_Timer++;
+                if (!Projectile.Homing(AI_PlayerTarget, rotating: true))
                 {
-                    if ((PlayerTarget = TOKinematicUtils.GetPvPPlayerTarget(Main.player[Projectile.owner], Projectile.Center, homingDistance, true, PriorityType.LifeMax)) != null)
+                    if ((AI_PlayerTarget = TOKinematicUtils.GetPvPPlayerTarget(Main.player[Projectile.owner], Projectile.Center, homingDistance, true, PriorityType.LifeMax)) != null)
                         break;
-                    if (!Projectile.Homing(NPCTarget, rotating: true))
-                        NPCTarget = TOKinematicUtils.GetNPCTarget(Projectile.Center, homingDistance, true, true, PriorityType.LifeMax);
+                    if (!Projectile.Homing(AI_NPCTarget, rotating: true))
+                        AI_NPCTarget = TOKinematicUtils.GetNPCTarget(Projectile.Center, homingDistance, true, true, PriorityType.LifeMax);
                 }
-                if (AITimer > 360)
+                if (AI_Timer > 360)
                     Projectile.velocity *= 1.0013f;
                 break;
         }

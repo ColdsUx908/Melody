@@ -26,21 +26,19 @@ public interface ITOCommand
 
 public class TOCommandHelper : ITOLoader
 {
-    internal static Dictionary<(string Command, CommandType Type), Action<CommandCaller, string[]>> CommandSet { get; private set; }
+    internal static Dictionary<string, (CommandType Type, Action<CommandCaller, string[]> Action)> CommandSet { get; } = [];
 
     void ITOLoader.PostSetupContent()
     {
-        CommandSet = [];
         foreach (ITOCommand commandContainer in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOCommand>())
         {
             if (!commandContainer.Command.Equals("help", StringComparison.CurrentCultureIgnoreCase)) //不加载关键字为"help"的命令
-                CommandSet[(commandContainer.Command.ToLower(), commandContainer.Type)] = commandContainer.Action;
+                CommandSet[commandContainer.Command.ToLower()] = (commandContainer.Type, commandContainer.Action);
         }
     }
 
     void ITOLoader.OnModUnload()
     {
         CommandSet.Clear();
-        CommandSet = null;
     }
 }

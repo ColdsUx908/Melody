@@ -22,48 +22,144 @@ public static class TOKinematicUtils
     /// <returns>若未找到目标，null；否则，NPC实例。</returns>
     public static NPC GetNPCTarget(Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, bool bossPriority = false, PriorityType priorityType = PriorityType.Closest)
     {
+        float maxDistanceToCheckSquared = maxDistanceToCheck * maxDistanceToCheck;
+        NPC target = null;
+        bool hasPriority = false;
         switch (priorityType)
         {
             case PriorityType.LifeMax:
-                return TOIteratorFactory.NewActiveNPCIterator(
-                    ignoreTiles ? k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheck * maxDistanceToCheck
-                    : k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheck * maxDistanceToCheck && Collision.CanHit(origin, 1, 1, k.Center, 1, 1))
-                    .CustomCompareFrom(
-                        bossPriority ?
-                        (NPC left, NPC right) => TOMathHelper.GetTwoBooleanStatus(left.IsBossTO(), right.IsBossTO()) switch
+                if (bossPriority)
+                {
+                    foreach (NPC npc in
+                        TOIteratorFactory.NewNPCIterator(
+                            ignoreTiles ? k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
+                            : k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                    {
+                        if (target is null)
                         {
-                            TwoBooleanStatus.ATrue => false,
-                            TwoBooleanStatus.BTrue => true,
-                            _ => left.lifeMax < right.lifeMax
-                        } :
-                        (NPC left, NPC right) => left.lifeMax < right.lifeMax);
+                            target = npc;
+                            continue;
+                        }
+                        switch (TOMathHelper.GetTwoBooleanStatus(hasPriority, npc.IsBossTO()))
+                        {
+                            case TwoBooleanStatus.ATrue:
+                                break;
+                            case TwoBooleanStatus.BTrue:
+                                target = npc;
+                                hasPriority = true;
+                                break;
+                            case TwoBooleanStatus.Both:
+                            case TwoBooleanStatus.Neither:
+                                if (npc.lifeMax > target.lifeMax)
+                                    target = npc;
+                                break;
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (NPC npc in
+                        TOIteratorFactory.NewNPCIterator(
+                            ignoreTiles ? k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
+                            : k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                    {
+                        if (target is null || npc.lifeMax < target.lifeMax)
+                            target = npc;
+                    }
+                }
+                return target;
             case PriorityType.Life:
-                return TOIteratorFactory.NewActiveNPCIterator(
-                    ignoreTiles ? k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheck * maxDistanceToCheck
-                    : k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheck * maxDistanceToCheck && Collision.CanHit(origin, 1, 1, k.Center, 1, 1))
-                    .CustomCompareFrom(
-                        bossPriority ?
-                        (NPC left, NPC right) => TOMathHelper.GetTwoBooleanStatus(left.IsBossTO(), right.IsBossTO()) switch
+                if (bossPriority)
+                {
+                    foreach (NPC npc in
+                        TOIteratorFactory.NewNPCIterator(
+                            ignoreTiles ? k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
+                            : k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                    {
+                        if (target is null)
                         {
-                            TwoBooleanStatus.ATrue => false,
-                            TwoBooleanStatus.BTrue => true,
-                            _ => left.life < right.life
-                        } :
-                        (NPC left, NPC right) => left.life < right.life);
+                            target = npc;
+                            continue;
+                        }
+                        switch (TOMathHelper.GetTwoBooleanStatus(hasPriority, npc.IsBossTO()))
+                        {
+                            case TwoBooleanStatus.ATrue:
+                                break;
+                            case TwoBooleanStatus.BTrue:
+                                target = npc;
+                                hasPriority = true;
+                                break;
+                            case TwoBooleanStatus.Both:
+                            case TwoBooleanStatus.Neither:
+                                if (npc.life > target.life)
+                                    target = npc;
+                                break;
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (NPC npc in
+                        TOIteratorFactory.NewNPCIterator(
+                            ignoreTiles ? k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
+                            : k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                    {
+                        if (target is null || npc.life < target.life)
+                            target = npc;
+                    }
+                }
+                return target;
             default:
-                NPC target = TOIteratorFactory.NewActiveNPCIterator(
-                    ignoreTiles ? k => k.CanBeChasedBy()
-                    : k => k.CanBeChasedBy() && Collision.CanHit(origin, 1, 1, k.Center, 1, 1))
-                    .CustomCompareFrom(
-                        bossPriority ?
-                        (NPC left, NPC right) => TOMathHelper.GetTwoBooleanStatus(left.IsBossTO(), right.IsBossTO()) switch
+                float distanceTemp1 = 0f;
+                float distanceTemp2 = maxDistanceToCheckSquared;
+                if (bossPriority)
+                {
+                    foreach (NPC npc in
+                        TOIteratorFactory.NewNPCIterator(
+                            ignoreTiles ? k => k.CanBeChasedBy() && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared
+                            : k => k.CanBeChasedBy() && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                    {
+                        if (target is null)
                         {
-                            TwoBooleanStatus.ATrue => false,
-                            TwoBooleanStatus.BTrue => true,
-                            _ => left.life < right.life
-                        } :
-                        (NPC left, NPC right) => left.life < right.life);
-                return Vector2.DistanceSquared(origin, target.Center) <= maxDistanceToCheck * maxDistanceToCheck ? target : null;
+                            target = npc;
+                            distanceTemp2 = distanceTemp1;
+                            continue;
+                        }
+                        switch (TOMathHelper.GetTwoBooleanStatus(hasPriority, npc.IsBossTO()))
+                        {
+                            case TwoBooleanStatus.ATrue:
+                                break;
+                            case TwoBooleanStatus.BTrue:
+                                target = npc;
+                                distanceTemp2 = distanceTemp1;
+                                hasPriority = true;
+                                break;
+                            case TwoBooleanStatus.Both:
+                            case TwoBooleanStatus.Neither:
+                                if (distanceTemp1 < distanceTemp2)
+                                {
+                                    target = npc;
+                                    distanceTemp2 = distanceTemp1;
+                                }
+                                break;
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (NPC npc in
+                        TOIteratorFactory.NewNPCIterator(
+                            ignoreTiles ? k => k.CanBeChasedBy() && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared
+                            : k => k.CanBeChasedBy() && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                    {
+                        if (target is null || distanceTemp1 < distanceTemp2)
+                        {
+                            target = npc;
+                            distanceTemp2 = distanceTemp1;
+                        }
+                    }
+                }
+                return target;
         }
     }
 
@@ -79,24 +175,49 @@ public static class TOKinematicUtils
     /// <returns>若未找到目标；null；否则返回玩家实例。</returns>
     public static Player GetPlayerTarget(Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, PriorityType priorityType = PriorityType.Closest)
     {
+        float maxDistanceToCheckSquared = maxDistanceToCheck * maxDistanceToCheck;
+
+        if (Main.netMode == NetmodeID.SinglePlayer)
+            return Main.LocalPlayer.IsAlive() && Vector2.DistanceSquared(origin, Main.LocalPlayer.Center) <= maxDistanceToCheckSquared ? Main.LocalPlayer : null;
+
+        Player target = null;
         switch (priorityType)
         {
             case PriorityType.LifeMax:
-                return TOIteratorFactory.NewActivePlayerIterator(
-                    ignoreTiles ? k => k.IsAlive() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheck * maxDistanceToCheck
-                    : k => k.IsAlive() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheck * maxDistanceToCheck && Collision.CanHit(origin, 1, 1, k.Center, 1, 1))
-                    .CustomCompareFrom((Player left, Player right) => left.statLifeMax2 < right.statLifeMax2);
+                foreach (Player player in
+                    TOIteratorFactory.NewActivePlayerIterator(
+                        ignoreTiles ? k => k.IsAlive() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
+                        : k => k.IsAlive() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                {
+                    if (target is null || player.statLifeMax2 > target.statLifeMax2)
+                        target = player;
+                }
+                return target;
             case PriorityType.Life:
-                return TOIteratorFactory.NewActivePlayerIterator(
-                    ignoreTiles ? k => k.IsAlive() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheck * maxDistanceToCheck
-                    : k => k.IsAlive() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheck * maxDistanceToCheck && Collision.CanHit(origin, 1, 1, k.Center, 1, 1))
-                    .CustomCompareFrom((Player left, Player right) => left.statLifeMax2 < right.statLifeMax2);
+                foreach (Player player in
+                    TOIteratorFactory.NewActivePlayerIterator(
+                        ignoreTiles ? k => k.IsAlive() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
+                        : k => k.IsAlive() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                {
+                    if (target is null || player.statLife > target.statLife)
+                        target = player;
+                }
+                return target;
             default:
-                Player target = TOIteratorFactory.NewActivePlayerIterator(
-                    ignoreTiles ? k => k.IsAlive()
-                    : k => k.IsAlive() && Collision.CanHit(origin, 1, 1, k.Center, 1, 1))
-                    .CustomCompareFrom((Player left, Player right) => Vector2.DistanceSquared(origin, left.Center) > Vector2.DistanceSquared(origin, right.Center));
-                return Vector2.DistanceSquared(origin, target.Center) <= maxDistanceToCheck * maxDistanceToCheck ? target : null;
+                float distanceTemp1 = 0f;
+                float distanceTemp2 = maxDistanceToCheckSquared;
+                foreach (Player player in
+                    TOIteratorFactory.NewActivePlayerIterator(
+                        ignoreTiles ? k => k.IsAlive() && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared
+                        : k => k.IsAlive() && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                {
+                    if (target is null || distanceTemp1 < distanceTemp2)
+                    {
+                        target = player;
+                        distanceTemp2 = distanceTemp1;
+                    }
+                }
+                return target;
         }
     }
 
@@ -115,24 +236,46 @@ public static class TOKinematicUtils
         if (Main.netMode == NetmodeID.SinglePlayer || !owner.active || !owner.hostile)
             return null;
 
+        float maxDistanceToCheckSquared = maxDistanceToCheck * maxDistanceToCheck;
+        Player target = null;
+
         switch (priorityType)
         {
             case PriorityType.LifeMax:
-                return TOIteratorFactory.NewActivePlayerIterator(
-                    ignoreTiles ? k => k.IsPvP() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheck * maxDistanceToCheck
-                    : k => k.IsPvP() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheck * maxDistanceToCheck && Collision.CanHit(origin, 1, 1, k.Center, 1, 1))
-                    .CustomCompareFrom((Player left, Player right) => left.statLifeMax2 < right.statLifeMax2);
+                foreach (Player player in
+                    TOIteratorFactory.NewActivePlayerIterator(
+                        ignoreTiles ? k => k.IsPvP() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
+                        : k => k.IsPvP() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1), owner))
+                {
+                    if (target is null || player.statLifeMax2 > target.statLifeMax2)
+                        target = player;
+                }
+                return target;
             case PriorityType.Life:
-                return TOIteratorFactory.NewActivePlayerIterator(
-                    ignoreTiles ? k => k.IsPvP() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheck * maxDistanceToCheck
-                    : k => k.IsPvP() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheck * maxDistanceToCheck && Collision.CanHit(origin, 1, 1, k.Center, 1, 1))
-                    .CustomCompareFrom((Player left, Player right) => left.statLifeMax2 < right.statLifeMax2);
+                foreach (Player player in
+                    TOIteratorFactory.NewActivePlayerIterator(
+                        ignoreTiles ? k => k.IsPvP() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
+                        : k => k.IsPvP() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1), owner))
+                {
+                    if (target is null || player.statLife > target.statLife)
+                        target = player;
+                }
+                return target;
             default:
-                Player target = TOIteratorFactory.NewActivePlayerIterator(
-                    ignoreTiles ? k => k.IsPvP()
-                    : k => k.IsPvP() && Collision.CanHit(origin, 1, 1, k.Center, 1, 1))
-                    .CustomCompareFrom((Player left, Player right) => Vector2.DistanceSquared(origin, left.Center) > Vector2.DistanceSquared(origin, right.Center));
-                return Vector2.DistanceSquared(origin, target.Center) <= maxDistanceToCheck * maxDistanceToCheck ? target : null;
+                float distanceTemp1 = 0f;
+                float distanceTemp2 = maxDistanceToCheckSquared;
+                foreach (Player player in
+                    TOIteratorFactory.NewActivePlayerIterator(
+                        ignoreTiles ? k => k.IsPvP() && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared
+                        : k => k.IsPvP() && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1), owner))
+                {
+                    if (target is null || distanceTemp1 < distanceTemp2)
+                    {
+                        target = player;
+                        distanceTemp2 = distanceTemp1;
+                    }
+                }
+                return target;
         }
     }
 
@@ -166,7 +309,7 @@ public static class TOKinematicUtils
             {
                 projectile.velocity = Vector2.SmoothStep(projectile.velocity, distanceVector2, homingRatio);
                 if (keepVelocity)
-                    TOMathHelper.ToCustomLength(projectile.velocity, velocityLength);
+                    projectile.velocity = projectile.velocity.ToCustomLength(velocityLength);
             }
 
             if (rotating)

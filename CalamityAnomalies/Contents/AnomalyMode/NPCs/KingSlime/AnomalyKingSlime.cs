@@ -1,4 +1,4 @@
-﻿using CalamityAnomalies.Contents.AnomalyNPCs;
+﻿using CalamityAnomalies.Contents.AnomalyMode.NPCs;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

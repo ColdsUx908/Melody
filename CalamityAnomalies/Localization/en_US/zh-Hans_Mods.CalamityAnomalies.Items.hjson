@@ -1,0 +1,11 @@
+LegendaryItems: {
+	AscendantWings: {
+		DisplayName: 上界之翼
+		Tooltip: 飞翔于天空的传奇之翼
+	}
+
+	ImmortalCeless: {
+		DisplayName: 不朽之天渊
+		Tooltip: 传奇亘古，盛世笙歌
+	}
+}

@@ -9,7 +9,7 @@ namespace Transoceanic;
 
 public class Transoceanic : Mod
 {
-    internal static Transoceanic Instance;
+    internal static Transoceanic Instance { get; private set; }
 
     public override void Load()
     {

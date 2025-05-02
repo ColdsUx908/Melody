@@ -217,9 +217,13 @@ dotnet_naming_rule.非字段成员_should_be_帕斯卡拼写法.severity = warni
 dotnet_naming_rule.非字段成员_should_be_帕斯卡拼写法.symbols = 非字段成员
 dotnet_naming_rule.非字段成员_should_be_帕斯卡拼写法.style = 帕斯卡拼写法
 
-dotnet_naming_rule.私有字段_should_be_以下划线开始的驼峰拼写法.severity = warning
-dotnet_naming_rule.私有字段_should_be_以下划线开始的驼峰拼写法.symbols = 私有字段
-dotnet_naming_rule.私有字段_should_be_以下划线开始的驼峰拼写法.style = 以下划线开始的驼峰拼写法
+dotnet_naming_rule.实例字段_should_be_以下划线开始的驼峰拼写法.severity = warning
+dotnet_naming_rule.实例字段_should_be_以下划线开始的驼峰拼写法.symbols = 实例字段
+dotnet_naming_rule.实例字段_should_be_以下划线开始的驼峰拼写法.style = 以下划线开始的驼峰拼写法
+
+dotnet_naming_rule.静态字段_should_be_以下划线开始的驼峰拼写法.severity = none
+dotnet_naming_rule.静态字段_should_be_以下划线开始的驼峰拼写法.symbols = 静态字段
+dotnet_naming_rule.静态字段_should_be_以下划线开始的驼峰拼写法.style = 以下划线开始的驼峰拼写法
 
 # 符号规范
 
@@ -235,9 +239,13 @@ dotnet_naming_symbols.非字段成员.applicable_kinds = property, event, method
 dotnet_naming_symbols.非字段成员.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
 dotnet_naming_symbols.非字段成员.required_modifiers = 
 
-dotnet_naming_symbols.私有字段.applicable_kinds = field
-dotnet_naming_symbols.私有字段.applicable_accessibilities = private
-dotnet_naming_symbols.私有字段.required_modifiers = 
+dotnet_naming_symbols.实例字段.applicable_kinds = field
+dotnet_naming_symbols.实例字段.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
+dotnet_naming_symbols.实例字段.required_modifiers = 
+
+dotnet_naming_symbols.静态字段.applicable_kinds = field
+dotnet_naming_symbols.静态字段.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
+dotnet_naming_symbols.静态字段.required_modifiers = static
 
 # 命名样式
 

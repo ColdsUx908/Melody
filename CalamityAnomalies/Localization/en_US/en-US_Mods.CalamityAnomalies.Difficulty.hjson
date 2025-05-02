@@ -1,10 +1,10 @@
-Difficulty: {
+AnomalyMode: {
 	Anomaly: Anomaly
 	AnomalyShortInfo: "[c/FFCFFF:Extreme]"
 	AnomalyExpandedInfo: "[c/FF0000:>:(]"
 	AnomalyActivate: Anomaly is active... are you serious?
 	AnomalyDeactivate: Anomaly is not active; wise choice.
-	AnomalyIllegal: Anomaly is only available in Master Mode.
+	AnomalyIllegal: Anomaly is only available in TRUE Master difficulty.
 	AnomalyIllegalNotLegendary: Anomaly Ultramundane is only available in TRUE Legendary difficulty.
 	AnomalyIllegalZenith: Anomaly Ultramundane is not supported in Get fixed boi worlds.
 	AnomalyUltramundaneActivate:
@@ -19,24 +19,14 @@ Difficulty: {
 		'''
 }
 
-Items: {
-	LegendaryItems: {
-		AscendantWings: {
-			DisplayName: Ascendant Wings
-			Tooltip: Legendary wings that soar through the sky
-		}
-
-		ImmortalCeless: {
-			DisplayName: Immortal Celess
-			Tooltip: ""
-		}
-	}
-}
-
-Projectiles: {
-	LegendaryItems: {
-		ImmortalBloodRain.DisplayName: Immortal Blood Rain
-		ImmortalIceRain.DisplayName: Immortal Ice Rain
-		ImmortalVoidRain.DisplayName: Immortal Void Rain
-	}
+BossRushMode: {
+	BossRush: BossRush
+	BossRushShortInfo: Full BossRush experience
+	BossRushExpandedInfo:
+		'''
+		All bosses use AI from BossRush
+		You can choose to enable BossRush filter effects
+		'''
+	BossRushActivate: BossRush mode is active, pure LUNATIC!
+	BossRushDeactivate: BossRush mode is not active, calm as usual.
 }

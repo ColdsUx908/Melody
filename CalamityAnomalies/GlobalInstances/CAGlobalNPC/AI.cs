@@ -1,5 +1,5 @@
 ﻿using System;
-using CalamityAnomalies.Contents.AnomalyNPCs;
+using CalamityAnomalies.Contents.AnomalyMode.NPCs;
 using CalamityMod;
 using CalamityMod.Buffs.StatDebuffs;
 using CalamityMod.NPCs;
@@ -16,50 +16,76 @@ public partial class CAGlobalNPC : GlobalNPC
     {
         CalamityGlobalNPC calamityNPC = npc.Calamity();
 
-        if (!CAWorld.Anomaly
-            || !AnomalyNPCOverrideHelper.Registered(npc.type, out AnomalyNPCOverride anomalyNPCOverride)
-            || !shouldRunAnomalyAI) //只在需要时运行异象AI
+        if (CAWorld.Anomaly
+            && AnomalyNPCOverrideHelper.Registered(npc.type, out AnomalyNPCOverride anomalyNPCOverride)
+            && ShouldRunAnomalyAI)
         {
-            AnomalyAITimer = 0;
-            return true;
+            #region
+            //禁用灾厄动态伤害减免。
+            if (calamityNPC.KillTime >= 1 && calamityNPC.AITimer < calamityNPC.KillTime)
+                calamityNPC.AITimer = calamityNPC.KillTime;
+
+            // Disable netOffset effects.
+            npc.netOffset = Vector2.Zero;
+
+            // Disable the effects of certain unpredictable freeze debuffs.
+            // Time Bolt and a few other weapon-specific debuffs are not counted here since those are more deliberate weapon mechanics.
+            // That said, I don't know a single person who uses Time Bolt so it's probably irrelevant either way lol.
+            npc.buffImmune[ModContent.BuffType<Eutrophication>()] = true;
+            npc.buffImmune[ModContent.BuffType<GalvanicCorrosion>()] = true;
+            npc.buffImmune[ModContent.BuffType<GlacialState>()] = true;
+            npc.buffImmune[ModContent.BuffType<TemporalSadness>()] = true;
+            npc.buffImmune[BuffID.Webbed] = true;
+
+            AnomalyAITimer++;
+            if (CAWorld.AnomalyUltramundane)
+            {
+                AnomalyUltraAITimer++;
+                AnomalyUltraBarTimer = Math.Clamp(AnomalyUltraBarTimer + 1, 0, 120);
+            }
+            else
+            {
+                AnomalyUltraAITimer = 0;
+                AnomalyUltraBarTimer = Math.Clamp(AnomalyUltraBarTimer - 4, 0, 120);
+            }
+            anomalyNPCOverride.TryConnectWithNPC(npc);
+            anomalyNPCOverride.PreAI();
+            anomalyNPCOverride.ClearNPCInstances();
+            return anomalyNPCOverride.AllowOrigMethod(OrigMethodType.AI);
         }
 
-        #region
-        //禁用灾厄动态伤害减免。
-        if (calamityNPC.KillTime >= 1 && calamityNPC.AITimer < calamityNPC.KillTime)
-            calamityNPC.AITimer = calamityNPC.KillTime;
+        AnomalyAITimer = 0;
 
-        // Disable netOffset effects.
-        npc.netOffset = Vector2.Zero;
-
-        // Disable the effects of certain unpredictable freeze debuffs.
-        // Time Bolt and a few other weapon-specific debuffs are not counted here since those are more deliberate weapon mechanics.
-        // That said, I don't know a single person who uses Time Bolt so it's probably irrelevant either way lol.
-        npc.buffImmune[ModContent.BuffType<Eutrophication>()] = true;
-        npc.buffImmune[ModContent.BuffType<GalvanicCorrosion>()] = true;
-        npc.buffImmune[ModContent.BuffType<GlacialState>()] = true;
-        npc.buffImmune[ModContent.BuffType<TemporalSadness>()] = true;
-        npc.buffImmune[BuffID.Webbed] = true;
-
-        AnomalyAITimer++;
-        if (CAWorld.AnomalyUltramundane)
-        {
-            AnomalyUltraAITimer++;
-            AnomalyUltraBarTimer = Math.Min(AnomalyUltraBarTimer + 1, 120);
-        }
+        if (CAWorld.BossRush)
+            BossRushAITimer++;
         else
-        {
-            AnomalyUltraAITimer = 0;
-            AnomalyUltraBarTimer = Math.Max(AnomalyUltraBarTimer - 4, 0);
-        }
-        anomalyNPCOverride.TryConnectWithNPC(npc);
-        anomalyNPCOverride.AnomalyAI();
-        anomalyNPCOverride.ClearNPCInstances();
-        return anomalyNPCOverride.AllowOrigMethod(OrigMethodType.AI);
+            BossRushAITimer = 0;
+
+        return true;
         #endregion
     }
 
     public override void AI(NPC npc)
     {
+        if (CAWorld.Anomaly
+            && AnomalyNPCOverrideHelper.Registered(npc.type, out AnomalyNPCOverride anomalyNPCOverride)
+            && ShouldRunAnomalyAI)
+        {
+            anomalyNPCOverride.TryConnectWithNPC(npc);
+            anomalyNPCOverride.AI();
+            anomalyNPCOverride.ClearNPCInstances();
+        }
+    }
+
+    public override void PostAI(NPC npc)
+    {
+        if (CAWorld.Anomaly
+            && AnomalyNPCOverrideHelper.Registered(npc.type, out AnomalyNPCOverride anomalyNPCOverride)
+            && ShouldRunAnomalyAI)
+        {
+            anomalyNPCOverride.TryConnectWithNPC(npc);
+            anomalyNPCOverride.PostAI();
+            anomalyNPCOverride.ClearNPCInstances();
+        }
     }
 }
