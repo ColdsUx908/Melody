@@ -85,6 +85,7 @@ public sealed class AnomalyManagement : ModSystem
 
             CalamityWorld.revenge = true;
             CalamityWorld.death = true;
+            CAWorld.BossRush = false;
 
             switch (TOMathHelper.GetTwoBooleanStatus(!TOMain.LegendaryMode, Main.zenithWorld))
             {

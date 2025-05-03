@@ -81,11 +81,9 @@ public sealed class BossRushMode : DifficultyMode, ITOLoader
 
 public sealed class BossRushManageMent : ModSystem
 {
-    public static bool RealBossRushEventActive { get; private set; } = false;
-
     public override void PreUpdateEntities()
     {
-        RealBossRushEventActive = BossRushEvent.BossRushActive;
+        CAWorld.RealBossRushEventActive = BossRushEvent.BossRushActive;
 
         if (CAWorld.BossRush)
         {

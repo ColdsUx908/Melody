@@ -31,7 +31,7 @@ BossRushMode: {
 	BossRushExpandedInfo:
 		'''
 		所有Boss应用BossRush中的AI
-		可选择开启BossRush滤镜效果
+		[c/FF0000:会禁止使用终末石开启真正的BossRush]
 		你的面前是登神长阶，还是无尽深渊？
 		'''
 	BossRushActivate: BossRush模式已开启，纯粹的疯狂！

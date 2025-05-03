@@ -1,6 +1,6 @@
 ﻿namespace Transoceanic.Core;
 
-public enum LoadMethodType
+public enum LoaderMethodType
 {
     Load,
     PostSetupContent,
@@ -60,9 +60,10 @@ public interface ITOLoader
     public virtual void OnWorldUnload() { }
 
     /// <summary>
-    /// 加载优先级，越大越先加载。
+    /// 优先级，越大越早执行。
     /// <br/>如对加载顺序不敏感，不要覆写此属性。
+    /// <remarks>请确保同时处理加载和卸载优先级，以避免出现问题。</remarks>
     /// </summary>
-    /// <param name="loadMethodType">加载方法类型。</param>
-    public virtual double GetLoadPriority(LoadMethodType loadMethodType) => 0.0;
+    /// <param name="type">加载方法类型。</param>
+    public virtual decimal GetPriority(LoaderMethodType type) => 0m;
 }

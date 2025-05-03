@@ -25,7 +25,7 @@ BossRushMode: {
 	BossRushExpandedInfo:
 		'''
 		All bosses use AI from BossRush
-		You can choose to enable BossRush filter effects
+		DISABLE Terminus
 		'''
 	BossRushActivate: BossRush mode is active, pure LUNATIC!
 	BossRushDeactivate: BossRush mode is not active, calm as usual.

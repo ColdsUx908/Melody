@@ -21,6 +21,11 @@ public class CAWorld
     /// BossRush模式。
     /// </summary>
     public static bool BossRush { get; set; } = false;
+
+    /// <summary>
+    /// 在BossRush模式下，是否处于真实的BossRush事件中。
+    /// </summary>
+    public static bool RealBossRushEventActive { get; internal set; } = false;
 }
 
 public class CAWorldSavingSystem : ModSystem

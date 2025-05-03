@@ -13,14 +13,14 @@ public partial class TOGlobalNPC : GlobalNPC
     /// NPC的标识符。
     /// <br/>若NPC在进入世界后生成，则标识符为正数。
     /// </summary>
-    public ulong Identifier { get; private set; }
+    public ulong Identifier { get; internal set; } = 0;
     /// <summary>
     /// 标识符分配器。
     /// <br/>进入世界时重置为0。
     /// </summary>
     internal static ulong _identifierAllocator;
 
-    public int SpawnTime { get; private set; } = -1;
+    public ulong SpawnTime { get; internal set; } = 0;
 
     public override bool InstancePerEntity => true;
 

@@ -11,7 +11,7 @@ namespace Transoceanic;
 
 public partial class TOMain
 {
-    public static int GeneralTimer { get; internal set; }
+    public static ulong GeneralTimer { get; internal set; } = 0;
 
     public static Assembly Assembly { get; } = Transoceanic.Instance.Code;
 
@@ -42,7 +42,7 @@ public partial class TOMain
     public static bool TrueMasterMode { get; internal set; } = false;
 
     /// <summary>
-    /// 是否为旅行大师模式（即将敌人难度调整至3.0x的旅行模式）。
+    /// 是否为旅行大师模式（即将敌人难度调整至3.0的旅行模式）。
     /// </summary>
     public static bool JourneyMasterMode { get; internal set; } = false;
 

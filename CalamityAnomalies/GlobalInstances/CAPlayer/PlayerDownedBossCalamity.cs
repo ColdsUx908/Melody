@@ -400,7 +400,7 @@ public class PlayerDownedBossCalamity : PlayerDownedBoss
                     case NPCID.EyeofCthulhu:
                         EyeOfCthulhu = true;
                         break;
-                    case int _ when TONPCUtils.IsDefeatingEoW(npc):
+                    case NPCID.EaterofWorldsHead or NPCID.EaterofWorldsBody or NPCID.EaterofWorldsTail when npc.boss:
                         EaterOfWorld = true;
                         break;
                     case NPCID.BrainofCthulhu:

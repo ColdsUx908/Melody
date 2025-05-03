@@ -17,7 +17,7 @@ public class Transoceanic : Mod
         TOMain.GeneralTimer = 0;
         TOGlobalNPC._identifierAllocator = 0ul;
         foreach ((Type type, ITOLoader loader) in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(TOMain.Assembly)
-            .OrderByDescending(k => k.instance.GetLoadPriority(LoadMethodType.Load)))
+            .OrderByDescending(k => k.instance.GetPriority(LoaderMethodType.Load)))
         {
             if (!type.MustHaveRealMethodWith("Load", "Unload", TOMain.UniversalBindingFlags))
                 throw new Exception($"[{type.Name}] must implement Unload with Load implemented.");
@@ -29,7 +29,7 @@ public class Transoceanic : Mod
     public override void PostSetupContent()
     {
         foreach ((Type type, ITOLoader loader) in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>()
-            .OrderByDescending(k => k.instance.GetLoadPriority(LoadMethodType.PostSetupContent)))
+            .OrderByDescending(k => k.instance.GetPriority(LoaderMethodType.PostSetupContent)))
         {
             if (!type.MustHaveRealMethodWith("PostSetUpContents", "OnModUnload", TOMain.UniversalBindingFlags))
                 throw new Exception($"[{type.Name}] must implement OnModUnload with PostSetupContent implemented.");
@@ -41,7 +41,7 @@ public class Transoceanic : Mod
     public override void Unload()
     {
         foreach (ITOLoader loader in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOLoader>(TOMain.Assembly)
-            .OrderByDescending(k => k.GetLoadPriority(LoadMethodType.UnLoad)))
+            .OrderByDescending(k => k.GetPriority(LoaderMethodType.UnLoad)))
             loader.UnLoad();
 
         TOGlobalNPC._identifierAllocator = 0ul;

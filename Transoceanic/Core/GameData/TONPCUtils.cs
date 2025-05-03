@@ -26,14 +26,6 @@ public static class TONPCUtils
 
     public static bool IsSpazmatism(this NPC npc) => npc.type == NPCID.Spazmatism;
 
-    public static bool IsDefeatingEoW(NPC npc) => npc.type switch
-    {
-        NPCID.EaterofWorldsHead => TOIteratorFactory.NewActiveNPCIterator(IsEoW, npc).Count() <= 1,
-        NPCID.EaterofWorldsBody => TOIteratorFactory.NewActiveNPCIterator(IsEoW, npc).Count() <= 2,
-        NPCID.EaterofWorldsTail => TOIteratorFactory.NewActiveNPCIterator(IsEoW, npc).Count() <= 1,
-        _ => false
-    };
-
     public static bool IsDefeatingTwins(NPC npc) => npc.type switch
     {
         NPCID.Retinazer => !TOMain.ActiveNPCs.Any(IsSpazmatism),

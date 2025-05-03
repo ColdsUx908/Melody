@@ -220,7 +220,7 @@ public abstract class AnomalyNPCOverride
     /// <param name="spriteBatch"></param>
     /// <param name="x"></param>
     /// <param name="y"></param>
-    public virtual void PreDrawCalBossBar(CalBossBarDetour.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) { }
+    public virtual void PreDrawCalBossBar(On_BossHealthBarManager.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) { }
 
     /// <summary>
     /// 
@@ -230,7 +230,7 @@ public abstract class AnomalyNPCOverride
     /// <param name="spriteBatch"></param>
     /// <param name="x"></param>
     /// <param name="y"></param>
-    public virtual void PostDrawCalBossBar(CalBossBarDetour.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) { }
+    public virtual void PostDrawCalBossBar(On_BossHealthBarManager.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) { }
 }
 
 public sealed class AnomalyNPCOverrideHelper : ITOLoader

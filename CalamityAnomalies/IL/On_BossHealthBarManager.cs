@@ -36,7 +36,7 @@ namespace CalamityAnomalies.IL;
 /// 钩子。
 /// <br/>应用类：<see cref="BossHealthBarManager"/>
 /// </summary>
-public class CalBossBarDetour : ITODetourProvider, ITOLoader
+public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
 {
     /// <summary>
     /// 改进的Boss血条UI类。
@@ -47,7 +47,7 @@ public class CalBossBarDetour : ITODetourProvider, ITOLoader
 
         public int[] CustomOneToManyIndexes { get; }
 
-        /*
+        /* TODO
          * 这个字典是未完成的。
          * 在未来的异象模式中，Boss生成时会绑定自己的所有体节NPC。
          */
@@ -164,7 +164,7 @@ public class CalBossBarDetour : ITODetourProvider, ITOLoader
             if (HasOneToMany)
             {
                 foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(k => CustomOneToManyIndexes.Contains(k.type)))
-                    CustomOneToMany.Add(npc.Ocean().Identifier, npc);
+                    CustomOneToMany.TryAdd(npc.Ocean().Identifier, npc);
             }
 
             long combinedNPCMaxLife = CombinedNPCMaxLife;
@@ -339,14 +339,6 @@ public class CalBossBarDetour : ITODetourProvider, ITOLoader
     private const int MaxBars = 6;
     private const int MaxActiveBars = 4;
 
-    internal static Type Type_BossHealthBarManager { get; } = typeof(BossHealthBarManager);
-
-    internal static MethodInfo Method_BossHealthBarManager_Draw { get; } = Type_BossHealthBarManager.GetMethod("Draw", TOMain.UniversalBindingFlags);
-    internal static MethodInfo Method_BossHealthBarManager_Update { get; } = Type_BossHealthBarManager.GetMethod("Update", TOMain.UniversalBindingFlags);
-
-    internal delegate void Orig_BossHealthBarManager_Draw(BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info);
-    internal delegate void Orig_BossHealthBarManager_Update(BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info);
-
     /// <summary>
     /// 灾厄Boss血条总控绘制钩子。
     /// </summary>
@@ -355,10 +347,10 @@ public class CalBossBarDetour : ITODetourProvider, ITOLoader
     /// <param name="spriteBatch"></param>
     /// <param name="currentBar"></param>
     /// <param name="info"></param>
-    internal static void On_BossHealthBarManager_Draw(Orig_BossHealthBarManager_Draw orig, BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info)
+    internal static void Hook_BossHealthBarManager_Draw(Orig_BossHealthBarManager_Draw orig, BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info)
     {
-        int x = Main.screenWidth -
-            (Main.playerInventory || Main.invasionType > 0 || Main.pumpkinMoon || Main.snowMoon || DD2Event.Ongoing || AcidRainEvent.AcidRainEventIsOngoing ? 670 : 420);
+        int x = Main.screenWidth
+            - (Main.playerInventory || Main.invasionType > 0 || Main.pumpkinMoon || Main.snowMoon || DD2Event.Ongoing || AcidRainEvent.AcidRainEventIsOngoing ? 670 : 420);
         int y = Main.screenHeight - 100;
 
         foreach (BetterBossHPUI newBar in
@@ -380,7 +372,7 @@ public class CalBossBarDetour : ITODetourProvider, ITOLoader
     /// <param name="self"></param>
     /// <param name="currentBar"></param>
     /// <param name="info"></param>
-    internal static void On_BossHealthBarManager_Update(Orig_BossHealthBarManager_Update orig, BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info)
+    internal static void Hook_BossHealthBarManager_Update(Orig_BossHealthBarManager_Update orig, BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info)
     {
         List<ulong> validIdentifiers = [];
 
@@ -393,10 +385,11 @@ public class CalBossBarDetour : ITODetourProvider, ITOLoader
 
             if (_trackingBars.ContainsKey(fromNPC) && npc.active)
                 validIdentifiers.Add(fromNPC);
-            else if (_trackingBars.Values.Count < MaxBars
+            else if ((_trackingBars.Values.Count < MaxBars
                 && _trackingBars.Values.Count(newBar => newBar.Valid) < MaxActiveBars
-                && ((npc.IsABoss() && !(npc.type is NPCID.EaterofWorldsBody or NPCID.EaterofWorldsTail || npc.type == ModContent.NPCType<Artemis>()))
-                || MinibossHPBarList.Contains(npc.type) || npc.Calamity().CanHaveBossHealthBar))
+                && npc.IsABoss()
+                && !(npc.type is NPCID.EaterofWorldsBody or NPCID.EaterofWorldsTail || npc.type == ModContent.NPCType<Artemis>()))
+                || MinibossHPBarList.Contains(npc.type) || npc.Calamity().CanHaveBossHealthBar)
                 _trackingBars.Add(fromNPC, new(npc.whoAmI, overridingName));
         }
 
@@ -430,12 +423,6 @@ public class CalBossBarDetour : ITODetourProvider, ITOLoader
             borderColor2,
             scale);
     }
-
-    Dictionary<MethodInfo, Delegate> ITODetourProvider.DetoursToApply => new()
-    {
-        [Method_BossHealthBarManager_Draw] = On_BossHealthBarManager_Draw,
-        [Method_BossHealthBarManager_Update] = On_BossHealthBarManager_Update,
-    };
 
     void ITOLoader.PostSetupContent()
     {
@@ -502,4 +489,20 @@ public class CalBossBarDetour : ITODetourProvider, ITOLoader
     void ITOLoader.OnWorldLoad() => _trackingBars.Clear();
 
     void ITOLoader.OnWorldUnload() => _trackingBars.Clear();
+
+    #region Detour
+    internal static Type Type_BossHealthBarManager { get; } = typeof(BossHealthBarManager);
+
+    internal static MethodInfo Method_BossHealthBarManager_Draw { get; } = Type_BossHealthBarManager.GetMethod("Draw", TOMain.UniversalBindingFlags);
+    internal static MethodInfo Method_BossHealthBarManager_Update { get; } = Type_BossHealthBarManager.GetMethod("Update", TOMain.UniversalBindingFlags);
+
+    internal delegate void Orig_BossHealthBarManager_Draw(BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info);
+    internal delegate void Orig_BossHealthBarManager_Update(BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info);
+
+    Dictionary<MethodInfo, Delegate> ITODetourProvider.DetoursToApply => new()
+    {
+        [Method_BossHealthBarManager_Draw] = Hook_BossHealthBarManager_Draw,
+        [Method_BossHealthBarManager_Update] = Hook_BossHealthBarManager_Update,
+    };
+    #endregion
 }
