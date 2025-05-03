@@ -276,7 +276,7 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
                     mouseFont,
                     npcName,
                     baseDrawPosition,
-                    Color.Red * 0.6f * animationCompletionRatio2,
+                    Color.LightGray * 0.6f * animationCompletionRatio2,
                     Color.Black * 0.2f * animationCompletionRatio2,
                     Color.White * animationCompletionRatio2,
                     Color.Black * 0.2f * animationCompletionRatio2,

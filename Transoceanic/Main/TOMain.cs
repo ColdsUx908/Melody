@@ -15,9 +15,9 @@ public partial class TOMain
 
     public static Assembly Assembly { get; } = Transoceanic.Instance.Code;
 
-    public static Type MainType { get; } = typeof(Main);
+    public static Type Type_Main { get; } = typeof(Main);
 
-    public static GameModeData GameModeData => (GameModeData)MainType.GetField("_currentGameModeInfo", UniversalBindingFlags).GetValue(null);
+    public static GameModeData GameModeData => (GameModeData)Type_Main.GetField("_currentGameModeInfo", UniversalBindingFlags).GetValue(null);
 
 
     public static TOIterator<NPC> ActiveNPCs => TOIteratorFactory.NewActiveNPCIterator();
