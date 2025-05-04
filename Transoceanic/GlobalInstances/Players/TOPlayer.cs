@@ -2,9 +2,9 @@
 using Terraria.ModLoader.IO;
 using Transoceanic.Commands;
 
-namespace Transoceanic.GlobalInstances.TOPlayer;
+namespace Transoceanic.GlobalInstances.Players;
 
-public partial class TOGlobalPlayer : ModPlayer
+public partial class TOPlayer : ModPlayer
 {
     #region 特殊事件
     public bool Celesgod { get; set; } = false;
@@ -44,30 +44,10 @@ public partial class TOGlobalPlayer : ModPlayer
 
     public int GameTime { get; set; } = 0;
 
-    /// <summary>
-    /// 玩家未受击时间。在<see cref="LifeOverdrawing"/>类中更新。
-    /// </summary>
+    public bool IsHurt { get; set; } = false;
+
     public int TimeWithoutHurt { get; set; } = 0;
 
     public CommandCallInfo CommandCallInfo { get; internal set; } = null;
     #endregion
-
-
-    public override void OnEnterWorld()
-    {
-        GameTime = 0;
-    }
-
-    public override void PreUpdate()
-    {
-        GameTime++;
-    }
-
-    public override void SaveData(TagCompound tag)
-    {
-    }
-
-    public override void LoadData(TagCompound tag)
-    {
-    }
 }

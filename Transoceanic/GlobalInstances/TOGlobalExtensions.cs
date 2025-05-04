@@ -2,13 +2,13 @@
 using Transoceanic.GlobalInstances.GlobalItems;
 using Transoceanic.GlobalInstances.GlobalNPCs;
 using Transoceanic.GlobalInstances.GlobalProjectiles;
-using Transoceanic.GlobalInstances.TOPlayer;
+using Transoceanic.GlobalInstances.Players;
 
-namespace Transoceanic.Core.GameData;
+namespace Transoceanic.GlobalInstances;
 
-public static class TOGeneralExtentions
+public static class TOGlobalExtentions
 {
-    public static TOGlobalPlayer Ocean(this Player player) => player.GetModPlayer<TOGlobalPlayer>();
+    public static TOPlayer Ocean(this Player player) => player.GetModPlayer<TOPlayer>();
     public static TOGlobalNPC Ocean(this NPC npc) => npc.GetGlobalNPC<TOGlobalNPC>();
     public static TOGlobalProjectile Ocean(this Projectile projectile) => projectile.GetGlobalProjectile<TOGlobalProjectile>();
     public static TOGlobalItem Ocean(this Item item) => item.GetGlobalItem<TOGlobalItem>();

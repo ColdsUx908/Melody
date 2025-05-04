@@ -7,8 +7,8 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Transoceanic;
-using Transoceanic.Core.GameData;
 using Transoceanic.Core.Visual;
+using Transoceanic.GlobalInstances;
 using Transoceanic.Systems;
 
 namespace CalamityAnomalies.Contents.Items.LegendaryItems;

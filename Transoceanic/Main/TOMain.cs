@@ -30,6 +30,8 @@ public partial class TOMain
 
     public static TOIterator<Player> ActivePlayers => TOIteratorFactory.NewActivePlayerIterator();
 
+    public static TOExclusiveIterator<Player> Teammates => TOIteratorFactory.NewActivePlayerIterator(TOPlayerUtils.IsTeammate, Main.LocalPlayer);
+
     public static TOIterator<Player> PVPPlayers => TOIteratorFactory.NewActivePlayerIterator(TOPlayerUtils.IsPvP);
 
     public static List<NPC> BossList { get; internal set; }
@@ -73,8 +75,6 @@ public partial class TOMain
     /// 包含所有所需Flag。
     /// </summary>
     public const BindingFlags UniversalBindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
-
-    //public static string ConfigPath => Path.Combine(Main.SavePath, "ModConfigs", "Transoceanic_TOConfig.json");
 
     public static Color TODebugErrorColor { get; } = new(0xFF, 0x00, 0x00);
 

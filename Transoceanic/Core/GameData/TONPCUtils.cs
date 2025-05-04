@@ -22,6 +22,8 @@ public static class TONPCUtils
 
     public static bool IsWallOfFleshEye(this NPC npc) => npc.type == NPCID.WallofFleshEye;
 
+    public static bool IsDestroyer(this NPC npc) => npc.type is NPCID.TheDestroyer or NPCID.TheDestroyerBody or NPCID.TheDestroyerTail;
+
     public static bool IsRetinazer(this NPC npc) => npc.type == NPCID.Retinazer;
 
     public static bool IsSpazmatism(this NPC npc) => npc.type == NPCID.Spazmatism;

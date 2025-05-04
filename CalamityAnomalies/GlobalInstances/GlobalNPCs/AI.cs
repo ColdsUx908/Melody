@@ -8,7 +8,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityAnomalies.GlobalInstances;
+namespace CalamityAnomalies.GlobalInstances.GlobalNPCs;
 
 public partial class CAGlobalNPC : GlobalNPC
 {
@@ -50,8 +50,7 @@ public partial class CAGlobalNPC : GlobalNPC
             }
             anomalyNPCOverride.TryConnectWithNPC(npc);
             anomalyNPCOverride.PreAI();
-            anomalyNPCOverride.ClearNPCInstances();
-            return anomalyNPCOverride.AllowOrigMethod(OrigMethodType.AI);
+            return anomalyNPCOverride.ClearNPCInstances(anomalyNPCOverride.AllowOrigMethod(OrigMethodType.AI));
         }
 
         AnomalyAITimer = 0;

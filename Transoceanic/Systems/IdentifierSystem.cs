@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Terraria;
 using Terraria.ModLoader;
-using Transoceanic.Core.GameData;
+using Transoceanic.GlobalInstances;
 using Transoceanic.GlobalInstances.GlobalNPCs;
 
 namespace Transoceanic.Systems;

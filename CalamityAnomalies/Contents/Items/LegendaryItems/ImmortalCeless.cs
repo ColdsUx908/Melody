@@ -1,8 +1,7 @@
 ﻿using System;
 using CalamityAnomalies.Contents.Items.ItemRarities;
 using CalamityAnomalies.Contents.Projectiles.LegendaryItems;
-using CalamityAnomalies.GlobalInstances.CAPlayer;
-using CalamityAnomalies.Utilities;
+using CalamityAnomalies.GlobalInstances;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
@@ -12,6 +11,7 @@ using Transoceanic;
 using Transoceanic.Core.ExtraData.Maths;
 using Transoceanic.Core.GameData;
 using Transoceanic.Core.MathHelp;
+using Transoceanic.GlobalInstances;
 using Transoceanic.Systems;
 
 namespace CalamityAnomalies.Contents.Items.LegendaryItems;
@@ -177,7 +177,7 @@ public class ImmortalCeless : LegendaryItem, ILocalizedModType
     {
         if (player.altFunctionUse == 2)
         {
-            TOActivator.NewProjectileAction(source, position, velocity.ToCustomLength(10f), ProjIce, damage * 3, knockback * 3f, -1, p => p.velocity = new PolarVector2(15f, Main.rand.NextFloat(0f, MathHelper.TwoPi)));
+            TOActivator.NewProjectileAction(source, position, velocity.ToCustomLength(10f), ProjBlood, damage * 3, knockback * 3f, -1, p => p.velocity = new PolarVector2(15f, Main.rand.NextFloat(0f, MathHelper.TwoPi)));
         }
         else
         {

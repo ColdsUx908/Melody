@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using CalamityAnomalies.GlobalInstances;
+using CalamityAnomalies.GlobalInstances.GlobalNPCs;
 using CalamityAnomalies.IL;
-using CalamityAnomalies.Utilities;
 using CalamityMod;
 using CalamityMod.NPCs;
 using Microsoft.Xna.Framework;
@@ -10,9 +10,10 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ModLoader;
+using Transoceanic;
 using Transoceanic.Core;
-using Transoceanic.Core.GameData;
 using Transoceanic.Core.IL;
+using Transoceanic.GlobalInstances;
 using Transoceanic.GlobalInstances.GlobalNPCs;
 
 namespace CalamityAnomalies.Contents.AnomalyMode.NPCs;
@@ -43,7 +44,7 @@ public abstract class AnomalyNPCOverride
     /// </summary>
     public NPC NPC
     {
-        get => field ?? Main.npc[Main.maxNPCs];
+        get => field ?? TOMain.DummyNPC;
         set;
     } = null;
 
@@ -90,7 +91,7 @@ public abstract class AnomalyNPCOverride
     }
 
     /// <summary>
-    /// 清除Override对象的NPC实例。同步更新 <see cref="NPC"/>、<see cref="AnomalyNPC"/> 和 <see cref="CalamityNPC"/>。
+    /// 清除Override对象的NPC实例。同步更新 <see cref="NPC"/>、<see cref="OceanNPC"/>、<see cref="AnomalyNPC"/>、和 <see cref="CalamityNPC"/>。
     /// <br>在 <see langword="return"/> 语句中使用，以同时终止方法。</br>
     /// </summary>
     public void ClearNPCInstances()
@@ -99,6 +100,19 @@ public abstract class AnomalyNPCOverride
         OceanNPC = null;
         AnomalyNPC = null;
         CalamityNPC = null;
+    }
+
+    /// <summary>
+    /// 清除Override对象的NPC实例。同步更新 <see cref="NPC"/>、<see cref="OceanNPC"/>、<see cref="AnomalyNPC"/>、和 <see cref="CalamityNPC"/>。
+    /// <br>在 <see langword="return"/> 语句中使用，以同时终止方法。</br>
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="result"></param>
+    /// <returns></returns>
+    public T ClearNPCInstances<T>(T result)
+    {
+        ClearNPCInstances();
+        return result;
     }
 
     /// <summary>
@@ -111,8 +125,34 @@ public abstract class AnomalyNPCOverride
     public void SetAnomalyAI(float value, int index)
     {
         AnomalyNPC.AnomalyAI[index] = value;
-        AnomalyNPC.ShouldSyncAnomalyAI[index] = true;
-        //NPC.SyncAnomalyAI(index);
+        AnomalyNPC.AnomalyAISync[index] = true;
+    }
+
+    /// <summary>
+    /// 小型计时器1。
+    /// </summary>
+    public int AI_Timer1
+    {
+        get => (int)AnomalyNPC.AnomalyAI[61];
+        set => SetAnomalyAI(value, 61);
+    }
+
+    /// <summary>
+    /// 小型计时器2。
+    /// </summary>
+    public int AI_Timer2
+    {
+        get => (int)AnomalyNPC.AnomalyAI[62];
+        set => SetAnomalyAI(value, 62);
+    }
+
+    /// <summary>
+    /// 小型计时器3。
+    /// </summary>
+    public int AI_Timer3
+    {
+        get => (int)AnomalyNPC.AnomalyAI[63];
+        set => SetAnomalyAI(value, 63);
     }
 
     /// <summary>
@@ -136,6 +176,12 @@ public abstract class AnomalyNPCOverride
     /// <br/>默认返回 <see langword="null"/>，即沿用默认设置。
     /// </summary>
     public virtual bool? UseBossImmunityCooldownID => null;
+
+    /// <summary>
+    /// 设置静态属性。
+    /// <br/><see cref="NPC"/> 等属性会在调用前自动更新，调用后自动清除。
+    /// </summary>
+    public virtual void SetStaticDefaults() { }
 
     /// <summary>
     /// 设置额外的属性。

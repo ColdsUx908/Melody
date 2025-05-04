@@ -5,7 +5,7 @@ using System.Reflection;
 using CalamityAnomalies.Contents.AnomalyMode.NPCs;
 using CalamityAnomalies.Contents.BossRushMode;
 using CalamityAnomalies.GlobalInstances;
-using CalamityAnomalies.Utilities;
+using CalamityAnomalies.GlobalInstances.GlobalNPCs;
 using CalamityMod;
 using CalamityMod.Events;
 using CalamityMod.NPCs.CeaselessVoid;
@@ -28,6 +28,7 @@ using Transoceanic.Core;
 using Transoceanic.Core.ExtraData.Maths;
 using Transoceanic.Core.GameData;
 using Transoceanic.Core.IL;
+using Transoceanic.GlobalInstances;
 using static CalamityMod.UI.BossHealthBarManager;
 
 namespace CalamityAnomalies.IL;
@@ -192,6 +193,8 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
             float animationCompletionRatio2 = CloseAnimationTimer > 0
                 ? 1f - MathHelper.Clamp(CloseAnimationTimer / 80f, 0f, 1f)
                 : MathHelper.Clamp(OpenAnimationTimer / 120f, 0f, 1f);
+            float timeRatio = MathF.Sin(Main.GlobalTimeWrappedHourly * 4.5f);
+            float timeRatio2 = (timeRatio + 1f) * 0.5f; //范围为[0.5, 1]
 
             #region 基础条
             float whiteColorAlpha = OpenAnimationTimer switch
@@ -213,7 +216,7 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
                 spriteBatch.Draw(BossComboHPBar, new Rectangle(x + mainBarWidth, y + 28, comboHPBarWidth, BossComboHPBar.Height), Color.White);
             }
 
-            Color color = (CAWorld.Anomaly ? Color.Lerp(baseColor, Color.HotPink, Math.Clamp(AssociatedAnomalyNPC.AnomalyAITimer / 120f, 0f, 1f))
+            Color color = (CAWorld.Anomaly ? Color.Lerp(Color.HotPink, CAMain.AnomalyUltramundaneColor, AssociatedAnomalyNPC.AnomalyUltraBarTimer / 120f * timeRatio2 * 0.5f)
                 : CAWorld.BossRush ? Color.Lerp(baseColor, Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, animationCompletionRatio * 0.4f), Math.Clamp(AssociatedAnomalyNPC.BossRushAITimer / 120f, 0f, 1f))
                 : NPCIsEnraged ? Color.Lerp(baseColor, Color.Red * 0.5f, EnrageTimer / 120f)
                 : NPCIsIncreasingDefenseOrDR ? Color.Lerp(baseColor, Color.LightGray * 0.5f, IncreasingDefenseOrDRTimer / 120f) : baseColor) * animationCompletionRatio;
@@ -226,8 +229,7 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
             string npcName = OverridingName ?? AssociatedNPC.FullName;
             Vector2 npcNameSize = mouseFont.MeasureString(npcName);
             Vector2 baseDrawPosition = new(x + 400 - npcNameSize.X, y + 23 - npcNameSize.Y);
-            float borderDelta = (MathF.Sin(Main.GlobalTimeWrappedHourly * 4.5f) + 1f) * 0.5f;
-            if (CAWorld.AnomalyUltramundane && AssociatedAnomalyNPC.AnomalyUltraBarTimer > 0)
+            if (AssociatedAnomalyNPC.IsRunningAnomalyAI)
             {
                 DrawBorderStringEightWay_Loop(
                     spriteBatch,
@@ -235,11 +237,11 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
                     npcName,
                     baseDrawPosition,
                     Color.HotPink * 0.6f * animationCompletionRatio2,
-                    Color.Red * 0.2f * animationCompletionRatio2,
+                    Color.Lerp(Color.HotPink, CAMain.AnomalyUltramundaneColor, AssociatedAnomalyNPC.AnomalyUltraBarTimer / 120f * timeRatio) * animationCompletionRatio2,
                     Color.White * animationCompletionRatio2,
                     Color.Black * 0.2f * animationCompletionRatio2,
                     8,
-                    AssociatedAnomalyNPC.AnomalyUltraBarTimer / 120f + borderDelta);
+                    Math.Clamp(AssociatedAnomalyNPC.AnomalyAITimer / 120f, 0f, 1f) + timeRatio2);
             }
             else if (CAWorld.BossRush)
             {
@@ -253,7 +255,7 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
                 Color.White * animationCompletionRatio2,
                 Color.Black * 0.2f * animationCompletionRatio2,
                 8,
-                Math.Clamp(AssociatedAnomalyNPC.BossRushAITimer, 0f, 120f) / 120f + borderDelta * 2f);
+                Math.Clamp(AssociatedAnomalyNPC.BossRushAITimer, 0f, 120f) / 120f + timeRatio2 * 2f);
             }
             else if (NPCIsEnraged && EnrageTimer > 0)
             {
@@ -267,7 +269,7 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
                     Color.White * animationCompletionRatio2,
                     Color.Black * 0.2f * animationCompletionRatio2,
                     8,
-                    EnrageTimer / 80f + borderDelta * 2f);
+                    EnrageTimer / 80f + timeRatio2 * 2f);
             }
             else if (NPCIsIncreasingDefenseOrDR && IncreasingDefenseOrDRTimer > 0)
             {
@@ -281,7 +283,7 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
                     Color.White * animationCompletionRatio2,
                     Color.Black * 0.2f * animationCompletionRatio2,
                     8,
-                    EnrageTimer / 80f + borderDelta * 2f);
+                    EnrageTimer / 80f + timeRatio2 * 2f);
             }
             else
             {

@@ -132,16 +132,16 @@ public static partial class TOActivator
     /// 生成一个新的Dust，并在生成后执行一个Action。
     /// </summary>
     /// <param name="position">生成位置。<br>注意：该参数表示生成中心，而不是左上角。</br></param>
-    /// <param name="offsetX">X偏移最大值。</param>
-    /// <param name="offsetY">Y偏移最大值。</param>
+    /// <param name="width">X偏移最大值。</param>
+    /// <param name="height">Y偏移最大值。</param>
     /// <param name="type">类型。</param>
     /// <param name="alpha">透明度。</param>
     /// <param name="newColor">覆盖颜色。</param>
     /// <param name="scale">尺寸。</param>
     /// <param name="action">执行的行为。仅当成功生成Dust时生效。</param>
-    public static void NewDustAction(Vector2 position, int offsetX, int offsetY, int type, int alpha = 0, Color newColor = default, Action<Dust> action = null)
+    public static void NewDustAction(Vector2 position, int width, int height, int type, int alpha = 0, Color newColor = default, Action<Dust> action = null)
     {
-        int index = Dust.NewDust(position - new Vector2(offsetX, offsetY), offsetX * 2, offsetY * 2, type, Alpha: alpha, newColor: newColor);
+        int index = Dust.NewDust(position - new Vector2(width / 2f, height / 2f), width, height, type, Alpha: alpha, newColor: newColor);
         if (index < Main.maxDust)
             action?.Invoke(Main.dust[index]);
     }

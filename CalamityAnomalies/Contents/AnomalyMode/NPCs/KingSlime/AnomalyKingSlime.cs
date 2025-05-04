@@ -16,6 +16,8 @@ public partial class AnomalyKingSlime : AnomalyNPCOverride
     {
         Despawn = -1,
 
+        None = 0,
+
         NormalJump_Phase1 = 1,
         HighJump_Phase1 = 2,
         RapidJump_Phase1 = 3,
@@ -61,31 +63,22 @@ public partial class AnomalyKingSlime : AnomalyNPCOverride
         set => SetAnomalyAI(value, 2);
     }
 
-    /// <summary>
-    /// 小型计时器，用于攻击运行和AI转换。
-    /// </summary>
-    public int AI_CurrentAttackTimer
+    public int AI_JewelSpawn
     {
         get => (int)AnomalyNPC.AnomalyAI[3];
         set => SetAnomalyAI(value, 3);
     }
 
-    public int AI_JewelSpawn
+    public int AI_LastSpawnSlimeLife
     {
         get => (int)AnomalyNPC.AnomalyAI[4];
         set => SetAnomalyAI(value, 4);
     }
 
-    public int AI_LastSpawnSlimeLife
+    public float AI_TeleportTimer
     {
-        get => (int)AnomalyNPC.AnomalyAI[5];
+        get => AnomalyNPC.AnomalyAI[5];
         set => SetAnomalyAI(value, 5);
-    }
-
-    public int AI_TeleportTimer
-    {
-        get => (int)AnomalyNPC.AnomalyAI[6];
-        set => SetAnomalyAI(value, 6);
     }
 
     /// <summary>
@@ -94,8 +87,8 @@ public partial class AnomalyKingSlime : AnomalyNPCOverride
     /// </summary>
     public NPC AI_JewelEmerald
     {
-        get => Main.npc[(int)AnomalyNPC.AnomalyAI[7]];
-        set => SetAnomalyAI(value.whoAmI, 7);
+        get => Main.npc[(int)AnomalyNPC.AnomalyAI[6]];
+        set => SetAnomalyAI(value.whoAmI, 6);
     }
 
     /// <summary>
@@ -104,8 +97,8 @@ public partial class AnomalyKingSlime : AnomalyNPCOverride
     /// </summary>
     public NPC AI_JewelRuby
     {
-        get => Main.npc[(int)AnomalyNPC.AnomalyAI[8]];
-        set => SetAnomalyAI(value.whoAmI, 8);
+        get => Main.npc[(int)AnomalyNPC.AnomalyAI[7]];
+        set => SetAnomalyAI(value.whoAmI, 7);
     }
 
     /// <summary>
@@ -114,8 +107,14 @@ public partial class AnomalyKingSlime : AnomalyNPCOverride
     /// </summary>
     public NPC AI_JewelSapphire
     {
-        get => Main.npc[(int)AnomalyNPC.AnomalyAI[9]];
-        set => SetAnomalyAI(value.whoAmI, 9);
+        get => Main.npc[(int)AnomalyNPC.AnomalyAI[8]];
+        set => SetAnomalyAI(value.whoAmI, 8);
+    }
+
+    public int AI_SmallJumpCounter
+    {
+        get => (int)AnomalyNPC.AnomalyAI[9];
+        set => SetAnomalyAI(value, 9);
     }
 
     public int AI_ChangedVelocityDirectionWhenJump
@@ -163,6 +162,8 @@ public partial class AnomalyKingSlime : AnomalyNPCOverride
             NPC.lifeMax = (int)(NPC.lifeMax * 1.5f);
             NPC.Calamity().DR += 0.1f;
         }
+
+        AI_TeleportScaleMultiplier = 1f;
 
         AI_JewelEmerald = TOMain.DummyNPC;
         AI_JewelRuby = TOMain.DummyNPC;

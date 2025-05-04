@@ -1,13 +1,12 @@
-﻿using CalamityAnomalies.Utilities;
-using CalamityMod;
+﻿using CalamityMod;
 using CalamityMod.NPCs.Abyss;
 using Terraria;
 using Terraria.ModLoader;
 using Transoceanic;
 
-namespace CalamityAnomalies.GlobalInstances;
+namespace CalamityAnomalies.GlobalInstances.GlobalNPCs;
 
-public partial class CAGlobalNPC
+public partial class CAGlobalNPC : GlobalNPC
 {
     public override void OnKill(NPC npc)
     {

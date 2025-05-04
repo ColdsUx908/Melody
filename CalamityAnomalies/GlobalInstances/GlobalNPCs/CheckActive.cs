@@ -1,7 +1,7 @@
 ﻿using Terraria;
 using Terraria.ModLoader;
 
-namespace CalamityAnomalies.GlobalInstances;
+namespace CalamityAnomalies.GlobalInstances.GlobalNPCs;
 
 public partial class CAGlobalNPC : GlobalNPC
 {

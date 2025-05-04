@@ -122,9 +122,4 @@ public static class TOReflectionUtils
             where type.IsAssignableTo(typeof(T)) && !type.IsAbstract
             select type
         select (type, (T)Activator.CreateInstance(type));
-
-    public static IEnumerable<T> GetMethodsFromEnum<T>(this Type type) where T : Enum =>
-        from (T flag, string name) value in TOMathHelper.GetEverySingleFlagAndName<T>()
-        where type.HasRealMethod(value.name, TOMain.UniversalBindingFlags)
-        select value.flag;
 }

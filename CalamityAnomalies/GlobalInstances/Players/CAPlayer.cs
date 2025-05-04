@@ -1,9 +1,9 @@
 ﻿using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
-namespace CalamityAnomalies.GlobalInstances.CAPlayer;
+namespace CalamityAnomalies.GlobalInstances.Players;
 
-public class CAPlayer : ModPlayer
+public partial class CAPlayer : ModPlayer
 {
     public PlayerDownedBossCalamity PlayerDownedBossCalamity { get; } = new();
     public PlayerDownedBossCalamity PlayerDownedBossAnomaly { get; } = new();

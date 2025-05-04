@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using Microsoft.Xna.Framework;
 using Terraria.ModLoader;
 using Transoceanic;
 using Transoceanic.Core;
@@ -15,6 +16,8 @@ public class CAMain
     public static Type Type_CalamityMod { get; } = typeof(CalamityMod.CalamityMod);
 
     public static Mod CalamityModInstance { get; internal set; }
+
+    public static Color AnomalyUltramundaneColor { get; } = new(0xE8, 0x97, 0xFF);
 }
 
 public class CAMainHelper : ITOLoader

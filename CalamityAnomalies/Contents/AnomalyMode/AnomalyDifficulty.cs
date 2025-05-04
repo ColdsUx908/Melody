@@ -47,7 +47,7 @@ public sealed class AnomalyMode : DifficultyMode, ITOLoader
     {
         Texture = ModContent.Request<Texture2D>("CalamityAnomalies/Contents/Textures/UI/ModeIndicator_Anomaly", AssetRequestMode.AsyncLoad);
         DifficultyScale = 2.49147E23f;
-        Name = Language.GetText(prefix+ "Anomaly");
+        Name = Language.GetText(prefix + "Anomaly");
         ShortDescription = Language.GetText(prefix + "AnomalyShortInfo");
         ActivationTextKey = prefix + "AnomalyActivate";
         DeactivationTextKey = prefix + "AnomalyDeactivate";
@@ -87,22 +87,22 @@ public sealed class AnomalyManagement : ModSystem
             CalamityWorld.death = true;
             CAWorld.BossRush = false;
 
-            switch (TOMathHelper.GetTwoBooleanStatus(!TOMain.LegendaryMode, Main.zenithWorld))
+            switch (TOMathHelper.GetTwoBooleanStatus(TOMain.LegendaryMode, !Main.zenithWorld))
             {
-                case TwoBooleanStatus.ATrue when CAWorld.AnomalyUltramundane:
+                case TwoBooleanStatus.BTrue when CAWorld.AnomalyUltramundane: //不是传奇难度，不在GFB世界
                     NotLegendaryInfo();
                     DisableUltra();
                     break;
-                case TwoBooleanStatus.BTrue when CAWorld.AnomalyUltramundane:
+                case TwoBooleanStatus.ATrue when CAWorld.AnomalyUltramundane: //是传奇难度，在GFB世界
                     ZenithInfo();
                     DisableUltra();
                     break;
-                case TwoBooleanStatus.Both when CAWorld.AnomalyUltramundane:
+                case TwoBooleanStatus.Neither when CAWorld.AnomalyUltramundane: //不是传奇难度，且在GFB世界
                     NotLegendaryInfo();
                     ZenithInfo();
                     DisableUltra();
                     break;
-                case TwoBooleanStatus.Neither when !CAWorld.AnomalyUltramundane:
+                case TwoBooleanStatus.Both when !CAWorld.AnomalyUltramundane: //是传奇难度，且不在GFB世界，应开启异象超凡
                     EnableUltra();
                     break;
                 default:
@@ -114,36 +114,34 @@ public sealed class AnomalyManagement : ModSystem
             if (CAWorld.AnomalyUltramundane)
                 DisableUltra();
         }
+    }
 
-        #region 本地函数
-        void DisableAnomaly()
-        {
-            TOLocalizationUtils.ChatLocalizedText(prefix + "AnomalyIllegal", Color.Red);
-            CAWorld.Anomaly = false;
-        }
+    private static void DisableUltra()
+    {
+        TOLocalizationUtils.ChatLocalizedText(prefix + "AnomalyUltramundaneDeactivate", Color.Red);
+        CAWorld.AnomalyUltramundane = false;
+    }
 
-        void NotLegendaryInfo()
-        {
-            TOLocalizationUtils.ChatLocalizedText(prefix + "AnomalyIllegalNotLegendary", Color.Red);
-        }
+    private static void EnableUltra()
+    {
+        TOLocalizationUtils.ChatLocalizedText(prefix + "AnomalyUltramundaneActivate", Color.Red);
+        CAWorld.AnomalyUltramundane = true;
+    }
 
-        void ZenithInfo()
-        {
-            TOLocalizationUtils.ChatLocalizedText(prefix + "AnomalyIllegalZenith", Color.HotPink);
-            //SoundEngine.PlaySound();
-        }
+    private static void ZenithInfo()
+    {
+        TOLocalizationUtils.ChatLocalizedText(prefix + "AnomalyIllegalZenith", Color.HotPink);
+        //SoundEngine.PlaySound();
+    }
 
-        void EnableUltra()
-        {
-            TOLocalizationUtils.ChatLocalizedText(prefix + "AnomalyUltramundaneActivate", Color.Red);
-            CAWorld.AnomalyUltramundane = true;
-        }
+    private static void NotLegendaryInfo()
+    {
+        TOLocalizationUtils.ChatLocalizedText(prefix + "AnomalyIllegalNotLegendary", Color.Red);
+    }
 
-        void DisableUltra()
-        {
-            TOLocalizationUtils.ChatLocalizedText(prefix + "AnomalyUltramundaneDeactivate", Color.Red);
-            CAWorld.AnomalyUltramundane = false;
-        }
-        #endregion
+    private static void DisableAnomaly()
+    {
+        TOLocalizationUtils.ChatLocalizedText(prefix + "AnomalyIllegal", Color.Red);
+        CAWorld.Anomaly = false;
     }
 }

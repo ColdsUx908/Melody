@@ -35,36 +35,6 @@ public static partial class TOMathHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TwoBooleanStatus GetTwoBooleanStatus(bool A, bool B) => A ? B ? TwoBooleanStatus.Both : TwoBooleanStatus.ATrue : B ? TwoBooleanStatus.BTrue : TwoBooleanStatus.Neither;
 
-    public static IEnumerable<T> GetEverySingleFlag<T>() where T : Enum
-    {
-        if (!typeof(T).IsDefined(typeof(FlagsAttribute), false))
-            throw new ArgumentException("Type is not a flag enum.", nameof(T));
-        return from T value in Enum.GetValues(typeof(T)).Cast<T>()
-               let valueToInteger = Convert.ToUInt64(value)
-               where valueToInteger != 0 && (valueToInteger & (valueToInteger - 1)) == 0
-               select value;
-    }
-
-    public static IEnumerable<string> GetEverySingleFlagName<T>() where T : Enum
-    {
-        if (!typeof(T).IsDefined(typeof(FlagsAttribute), false))
-            throw new ArgumentException("Type is not a flag enum.", nameof(T));
-        return from T value in Enum.GetValues(typeof(T)).Cast<T>()
-               let valueToInteger = Convert.ToUInt64(value)
-               where valueToInteger != 0 && (valueToInteger & (valueToInteger - 1)) == 0
-               select value.ToString();
-    }
-
-    public static IEnumerable<(T flag, string name)> GetEverySingleFlagAndName<T>() where T : Enum
-    {
-        if (!typeof(T).IsDefined(typeof(FlagsAttribute), false))
-            throw new ArgumentException("Type is not a flag enum.", nameof(T));
-        return from T value in Enum.GetValues(typeof(T)).Cast<T>()
-               let valueToInteger = Convert.ToUInt64(value)
-               where valueToInteger != 0 && (valueToInteger & (valueToInteger - 1)) == 0
-               select (value, value.ToString());
-    }
-
     /// <summary>
     /// 计算一点到矩形的最短距离。
     /// </summary>
@@ -74,4 +44,14 @@ public static partial class TOMathHelper
     public static Vector2 MinDistanceFromPointToRectangle(Vector2 point, Rectangle rect) => new(
         Math.Clamp(point.X, rect.Left, rect.Right) - point.X,
         Math.Clamp(point.Y, rect.Top, rect.Bottom) - point.Y);
+
+    public static float Map(float oldMin, float oldMax, float newMin, float newMax, float value)
+    {
+        if (oldMin > oldMax)
+            throw new ArgumentOutOfRangeException($"{nameof(oldMin)}, {nameof(oldMax)}", "oldMin must be less than or equal to oldMax.");
+        if (newMin > newMax)
+            throw new ArgumentOutOfRangeException($"{nameof(newMin)}, {nameof(newMax)}", "newMin must be less than or equal to newMax.");
+
+        return (value - oldMin) / (oldMax - oldMin) * (newMax - newMin) + newMin;
+    }
 }

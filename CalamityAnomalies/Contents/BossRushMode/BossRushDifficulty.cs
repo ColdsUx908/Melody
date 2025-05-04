@@ -70,11 +70,8 @@ public sealed class BossRushMode : DifficultyMode, ITOLoader
 
     void ITOLoader.OnModUnload()
     {
-        if (DifficultyModeSystem.Difficulties.Contains(Instance))
-        {
-            DifficultyModeSystem.Difficulties.Remove(Instance);
-            DifficultyModeSystem.CalculateDifficultyData();
-        }
+        DifficultyModeSystem.Difficulties.Remove(Instance);
+        DifficultyModeSystem.CalculateDifficultyData();
         Instance = null;
     }
 }

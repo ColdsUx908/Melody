@@ -1,7 +1,7 @@
 ﻿using System;
 using Terraria.ModLoader;
-using Transoceanic.Core.GameData;
 using Transoceanic.Core.Localization;
+using Transoceanic.GlobalInstances;
 
 namespace Transoceanic.Commands;
 

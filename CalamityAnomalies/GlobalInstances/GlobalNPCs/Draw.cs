@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace CalamityAnomalies.GlobalInstances;
+namespace CalamityAnomalies.GlobalInstances.GlobalNPCs;
 
 public partial class CAGlobalNPC : GlobalNPC
 {
@@ -16,8 +16,7 @@ public partial class CAGlobalNPC : GlobalNPC
         {
             anomalyNPCOverride.TryConnectWithNPC(npc);
             anomalyNPCOverride.PreDraw(spriteBatch, screenPos, drawColor);
-            anomalyNPCOverride.ClearNPCInstances();
-            return anomalyNPCOverride.AllowOrigMethod(OrigMethodType.Draw);
+            return anomalyNPCOverride.ClearNPCInstances(anomalyNPCOverride.AllowOrigMethod(OrigMethodType.Draw));
         }
 
         return true;

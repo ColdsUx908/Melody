@@ -4,7 +4,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
-namespace CalamityAnomalies.GlobalInstances;
+namespace CalamityAnomalies.GlobalInstances.GlobalNPCs;
 
 public partial class CAGlobalNPC : GlobalNPC
 {
@@ -13,10 +13,10 @@ public partial class CAGlobalNPC : GlobalNPC
         Dictionary<byte, float> values = [];
         for (int i = 0; i < MaxAISlots; i++)
         {
-            if (ShouldSyncAnomalyAI[i])
+            if (AnomalyAISync[i])
             {
                 values[(byte)i] = AnomalyAI[i];
-                ShouldSyncAnomalyAI[i] = false;
+                AnomalyAISync[i] = false;
             }
         }
         binaryWriter.Write((byte)values.Count);

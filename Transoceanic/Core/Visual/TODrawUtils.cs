@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Graphics;
+using Terraria;
 using Terraria.ModLoader;
 using Transoceanic.Core.ExtraData.Maths;
 
@@ -8,6 +9,12 @@ namespace Transoceanic.Core.Visual;
 
 public static class TODrawUtils
 {
+    public static Vector2 ScreenSize => new(Main.screenWidth, Main.screenHeight);
+
+    public static Vector2 ScreenCenter => Main.screenPosition + ScreenSize / 2f;
+
+    public static Vector2 ScreenCenterTile => ScreenCenter / 16f;
+
     /// <summary>
     /// 在物品栏中绘制特定大小的物品贴图，不受物品栏自动缩放限制。
     /// 在 <see cref="ModItem.PreDrawInInventory(SpriteBatch, Vector2, Rectangle, Color, Color, Vector2, float)"/> 方法中使用。

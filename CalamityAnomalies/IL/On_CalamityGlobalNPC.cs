@@ -37,7 +37,7 @@ namespace CalamityAnomalies.IL;
 /// </summary>
 public class On_CalamityGlobalNPC : ITODetourProvider
 {
-    internal static void Hook_CalamityGlobalNPC_SetDefaults(Orig_CalamityGlobalNPC_SetDefaults orig, CalamityGlobalNPC self, NPC NPC)
+    internal static void Hook_CalamityGlobalNPC_SetDefaults(Orig_CalamityGlobalNPC_SetDefaults orig, CalamityGlobalNPC self, NPC npc)
     {
         if (CAWorld.BossRush)
         {
@@ -45,133 +45,134 @@ public class On_CalamityGlobalNPC : ITODetourProvider
             BossRushEvent.BossRushActive = CAWorld.RealBossRushEventActive;
 
             //针对特殊NPC的修改，主要是血量
-            switch (NPC.ModNPC)
+            switch (npc.ModNPC)
             {
                 case CrabShroom:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 8000 : (CalamityWorld.LegendaryMode && CalamityWorld.revenge) ? 180 : 30;
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 8000 : (CalamityWorld.LegendaryMode && CalamityWorld.revenge) ? 180 : 30;
                     if (Main.getGoodWorld)
-                        NPC.lifeMax *= 2;
-                    Adjust(NPC, true);
+                        npc.lifeMax *= 2;
+                    Adjust(npc, true);
                     break;
                 case HiveBlob:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 1300 : (CalamityWorld.LegendaryMode && CalamityWorld.revenge) ? 180 : 30;
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 1300 : (CalamityWorld.LegendaryMode && CalamityWorld.revenge) ? 180 : 30;
                     if (Main.getGoodWorld)
-                        NPC.lifeMax *= 2;
-                    Adjust(NPC, false);
+                        npc.lifeMax *= 2;
+                    Adjust(npc, false);
                     break;
                 case HiveBlob2:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 1300 : 75;
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 1300 : 75;
                     if (Main.getGoodWorld)
-                        NPC.lifeMax *= 2;
-                    Adjust(NPC, false);
+                        npc.lifeMax *= 2;
+                    Adjust(npc, false);
                     break;
                 case DankCreeper:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 2000 : 120;
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 2000 : 120;
                     if (Main.getGoodWorld)
-                        NPC.lifeMax *= 4;
-                    Adjust(NPC, true);
+                        npc.lifeMax *= 4;
+                    npc.knockBackResist = 0.3f;
+                    Adjust(npc, true);
                     break;
                 case DarkHeart:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 1800 : 75;
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 1800 : 75;
                     if (Main.getGoodWorld)
-                        NPC.lifeMax *= 4;
-                    Adjust(NPC, false);
+                        npc.lifeMax *= 4;
+                    Adjust(npc, false);
                     break;
                 case PerforatorBodyMedium or PerforatorTailMedium:
-                    NPC.LifeMaxNERB(180, 216, 7000);
+                    npc.LifeMaxNERB(180, 216, 7000);
                     if (Main.zenithWorld)
-                        NPC.lifeMax *= 4;
-                    Adjust(NPC, true);
+                        npc.lifeMax *= 4;
+                    Adjust(npc, true);
                     break;
                 case CorruptSlimeSpawn:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 10000 : (CalamityWorld.LegendaryMode && CalamityWorld.revenge) ? 360 : 180;
-                    Adjust(NPC, true);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 10000 : (CalamityWorld.LegendaryMode && CalamityWorld.revenge) ? 360 : 180;
+                    Adjust(npc, true);
                     break;
                 case CorruptSlimeSpawn2:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 5000 : (CalamityWorld.LegendaryMode && CalamityWorld.revenge) ? 180 : 90;
-                    Adjust(NPC, true);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 5000 : (CalamityWorld.LegendaryMode && CalamityWorld.revenge) ? 180 : 90;
+                    Adjust(npc, true);
                     break;
                 case CrimsonSlimeSpawn:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 10000 : (CalamityWorld.LegendaryMode && CalamityWorld.revenge) ? 220 : 110;
-                    Adjust(NPC, true);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 10000 : (CalamityWorld.LegendaryMode && CalamityWorld.revenge) ? 220 : 110;
+                    Adjust(npc, true);
                     break;
                 case CrimsonSlimeSpawn2:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 12000 : (CalamityWorld.LegendaryMode && CalamityWorld.revenge) ? 260 : 130;
-                    Adjust(NPC, false);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 12000 : (CalamityWorld.LegendaryMode && CalamityWorld.revenge) ? 260 : 130;
+                    Adjust(npc, false);
                     break;
                 case CryogenShield:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 10000 : CalamityWorld.death ? 700 : 1400;
-                    Adjust(NPC, false);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 10000 : CalamityWorld.death ? 700 : 1400;
+                    Adjust(npc, false);
                     break;
                 case Brimling:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 10000 : 1000;
-                    Adjust(NPC, false);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 10000 : 1000;
+                    Adjust(npc, false);
                     break;
                 case SoulSeeker:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 15000 : CalamityWorld.death ? 1500 : 2500;
-                    Adjust(NPC, true);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 15000 : CalamityWorld.death ? 1500 : 2500;
+                    Adjust(npc, true);
                     break;
                 case AquaticAberration:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 10000 : 600;
-                    Adjust(NPC, true);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 10000 : 600;
+                    Adjust(npc, true);
                     break;
                 case AnahitasIceShield:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 1000 : 650;
-                    Adjust(NPC, false);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 1000 : 650;
+                    Adjust(npc, false);
                     break;
                 case PlagueHomingMissile:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 5000 : 500;
-                    Adjust(NPC, true);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 5000 : 500;
+                    Adjust(npc, true);
                     break;
                 case PlagueMine:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 10000 : 1000;
-                    Adjust(NPC, true);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 10000 : 1000;
+                    Adjust(npc, true);
                     break;
                 case ProfanedRocks:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? ProfanedRocks.MaxBossRushHP : ProfanedRocks.MaxHP;
-                    Adjust(NPC, false);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? ProfanedRocks.MaxBossRushHP : ProfanedRocks.MaxHP;
+                    Adjust(npc, false);
                     break;
                 case Bumblefuck2:
-                    NPC.LifeMaxNERB(9375, 11250, 5000);
-                    Adjust(NPC, true);
+                    npc.LifeMaxNERB(9375, 11250, 5000);
+                    Adjust(npc, true);
                     break;
                 case ProvSpawnHealer:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 20000 : 15000;
-                    Adjust(NPC, true);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 20000 : 15000;
+                    Adjust(npc, true);
                     break;
                 case ProvSpawnDefense:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 30000 : 18750;
-                    Adjust(NPC, true);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 30000 : 18750;
+                    Adjust(npc, true);
                     break;
                 case ProvSpawnOffense:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 40000 : 31875;
-                    Adjust(NPC, true);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 40000 : 31875;
+                    Adjust(npc, true);
                     break;
                 case DarkEnergy:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? DarkEnergy.MaxBossRushHP : DarkEnergy.MaxHP;
-                    Adjust(NPC, true);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? DarkEnergy.MaxBossRushHP : DarkEnergy.MaxHP;
+                    Adjust(npc, true);
                     break;
                 case OldDukeToothBall:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 16000 : 8000;
-                    Adjust(NPC, true);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 16000 : 8000;
+                    Adjust(npc, true);
                     break;
                 case SulphurousSharkron:
-                    NPC.lifeMax = BossRushEvent.BossRushActive ? 10000 : 6000;
-                    Adjust(NPC, true);
+                    npc.lifeMax = BossRushEvent.BossRushActive ? 10000 : 6000;
+                    Adjust(npc, true);
                     break;
                 case AresBody or AresLaserCannon or AresTeslaCannon or AresGaussNuke or AresPlasmaFlamethrower:
-                    NPC.LifeMaxNERB(1250000, 1495000, 650000);
-                    Adjust(NPC, false);
+                    npc.LifeMaxNERB(1250000, 1495000, 650000);
+                    Adjust(npc, false);
                     break;
             }
 
-            orig(self, NPC);
+            orig(self, npc);
             BossRushEvent.BossRushActive = temp;
 
             return;
         }
 
-        orig(self, NPC);
+        orig(self, npc);
     }
 
     private static void Adjust(NPC npc, bool shouldAdjustStatScaling)

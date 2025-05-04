@@ -1,6 +1,6 @@
 ﻿using Terraria.ModLoader;
 
-namespace CalamityAnomalies.Contents.Items.CAGlobalItem;
+namespace CalamityAnomalies.GlobalInstances.GlobalItems;
 
 public class CAGlobalItem : GlobalItem
 {
