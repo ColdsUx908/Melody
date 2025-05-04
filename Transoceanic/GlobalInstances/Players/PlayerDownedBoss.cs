@@ -3,7 +3,7 @@ using Terraria;
 using Terraria.ModLoader.IO;
 using Transoceanic.Core.MathHelp;
 
-namespace Transoceanic.Systems;
+namespace Transoceanic.GlobalInstances.Players;
 
 public abstract class PlayerDownedBoss
 {

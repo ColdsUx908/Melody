@@ -29,7 +29,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader.IO;
 using Transoceanic.Core.GameData;
-using Transoceanic.Systems;
+using Transoceanic.GlobalInstances.Players;
 
 namespace CalamityAnomalies.GlobalInstances;
 
