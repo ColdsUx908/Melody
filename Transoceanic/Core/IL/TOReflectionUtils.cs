@@ -20,6 +20,10 @@ public static class TOReflectionUtils
     public static bool HasRealMethod(this Type type, string methodName, BindingFlags bindingAttr) =>
         type.HasRealMethod(methodName, bindingAttr, out _);
 
+    /// <summary>
+    /// 适用于 <paramref name="mainMethod"/> 依赖于 <paramref name="otherMethod"/> 的情况，判定是否有正确的方法关系。
+    /// </summary>
+    /// <returns>仅在 <paramref name="mainMethod"/> 存在而 <paramref name="otherMethod"/> 不存在时返回 <see langword="false"/>。</returns>
     public static bool MustHaveRealMethodWith(this Type type, string methodNameA, string methodNameB, BindingFlags bindingAttr, out MethodInfo mainMethod, out MethodInfo otherMethod) =>
         TOMathHelper.GetTwoBooleanStatus(type.HasRealMethod(methodNameA, bindingAttr, out mainMethod),
                                          type.HasRealMethod(methodNameB, bindingAttr, out otherMethod))
@@ -60,16 +64,14 @@ public static class TOReflectionUtils
     /// <typeparam name="T"></typeparam>
     /// <param name="assemblyToSearch"></param>
     /// <returns></returns>
-    public static IEnumerable<Type> GetTypesDerivedFrom<T>(Assembly assemblyToSearch) =>
-        GetTypesDerivedFrom(typeof(T), assemblyToSearch);
+    public static IEnumerable<Type> GetTypesDerivedFrom<T>(Assembly assemblyToSearch) => GetTypesDerivedFrom(typeof(T), assemblyToSearch);
 
     /// <summary>
     /// 获取指定基类型的所有派生类或实现类。
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    public static IEnumerable<Type> GetTypesDerivedFrom<T>() =>
-        GetTypesDerivedFrom(typeof(T));
+    public static IEnumerable<Type> GetTypesDerivedFrom<T>() => GetTypesDerivedFrom(typeof(T));
 
     /// <summary>
     /// 获取指定基类型在指定程序集中的所有派生类或实现类的对应实例。

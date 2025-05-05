@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Xna.Framework;
 using Terraria.ModLoader;
 using Transoceanic.Core.Localization;
 using Transoceanic.GlobalInstances;
@@ -9,7 +10,7 @@ public class TOGeneralChatCommand : ModCommand
 {
     public override CommandType Type => CommandType.Chat;
 
-    public override string Command => "//1"; //需要使用的指令是"///1"（三个斜杠）
+    public override string Command => "/chat"; //需要使用的指令是"//chat"（两个斜杠）
 
     private const string commandPrefix = TOMain.ModLocalizationPrefix + "Commands.GeneralCommand.";
 
@@ -36,10 +37,18 @@ public class TOGeneralChatCommand : ModCommand
 
     private static void TryExecute(CommandCaller caller, string command, string[] args)
     {
-        if (TOCommandHelper.CommandSet.TryGetValue(command, out (CommandType Type, Action<CommandCaller, string[]> Action) value) && value.Type.HasFlag(CommandType.Chat))
+        if (TOCommandHelper.CommandSet.TryGetValue(command, out ITOCommand value) && value.Type.HasFlag(CommandType.Chat))
         {
-            caller.Player.Ocean().CommandCallInfo = new CommandCallInfo(caller, CommandType.Chat, command, args);
-            value.Action?.Invoke(caller, args);
+            try
+            {
+                caller.Player.Ocean().CommandCallInfo = new CommandCallInfo(caller, CommandType.Chat, command, args);
+                value.Action(caller, args);
+            }
+            catch
+            {
+                caller.ReplyLocalizedText(commandPrefix + "InvalidArguments", Color.Red);
+                value.Help(caller, args);
+            }
         }
         else
             caller.ReplyLocalizedText(TOMain.ModLocalizationPrefix + "Commands.GeneralCommand.Helper2");

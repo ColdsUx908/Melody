@@ -10,40 +10,33 @@ namespace Transoceanic.Commands;
 /// </summary>
 public class DebugModeCommand : ITOCommand
 {
-    CommandType ITOCommand.Type => CommandType.Chat;
+    public CommandType Type => CommandType.Chat;
 
-    string ITOCommand.Command => "debug";
+    public string Command => "debug";
 
     private const string commandPrefix = TOMain.ModLocalizationPrefix + "Commands.DebugMode.";
 
-    void ITOCommand.Action(CommandCaller caller, string[] args)
+    public void Action(CommandCaller caller, string[] args)
     {
-        try
+        if (args.Length == 0)
+            caller.ReplyLocalizedTextWith(commandPrefix + "Status", Color.White, TOMain.DEBUG);
+        else
         {
-            if (args.Length == 0)
-                caller.ReplyLocalizedTextWith(commandPrefix + "Status", Color.White, TOMain.DEBUG);
-            else
+            switch (args[0])
             {
-                switch (args[0])
-                {
-                    case "on":
-                    case "1":
-                        TOMain.DEBUG = true;
-                        caller.ReplyLocalizedText(commandPrefix + "On");
-                        break;
-                    case "off":
-                    case "0":
-                        TOMain.DEBUG = false;
-                        caller.ReplyLocalizedText(commandPrefix + "Off");
-                        break;
-                    default:
-                        throw new ArgumentException("InvalidArgument");
-                }
+                case "on":
+                case "1":
+                    TOMain.DEBUG = true;
+                    caller.ReplyLocalizedText(commandPrefix + "On");
+                    break;
+                case "off":
+                case "0":
+                    TOMain.DEBUG = false;
+                    caller.ReplyLocalizedText(commandPrefix + "Off");
+                    break;
+                default:
+                    throw new ArgumentException("InvalidArgument");
             }
-        }
-        catch
-        {
-            caller.ReplyLocalizedText(commandPrefix + "Invalid");
         }
     }
 }

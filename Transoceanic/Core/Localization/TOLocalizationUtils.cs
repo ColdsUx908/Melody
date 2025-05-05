@@ -93,6 +93,8 @@ public static partial class TOLocalizationUtils
 
     public static void AppendLocalized(this StringBuilder stringBuilder, string key) => stringBuilder.Append(Language.GetTextValue(key));
 
+    public static void AppendLocalizedWith(this StringBuilder stringBuilder, string key, params object[] args) => stringBuilder.Append(GetTextFormat(key, args));
+
     public static void AppendLocalizedTO(this StringBuilder stringBuilder, string key) => stringBuilder.Append(Language.GetTextValue(TOMain.ModLocalizationPrefix + key));
 
     public static StringBuilder CreateWithDebugHeader()

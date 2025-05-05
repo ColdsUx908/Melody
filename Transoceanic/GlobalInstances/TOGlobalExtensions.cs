@@ -6,7 +6,7 @@ using Transoceanic.GlobalInstances.Players;
 
 namespace Transoceanic.GlobalInstances;
 
-public static class TOGlobalExtentions
+public static class TOGlobalExtensions
 {
     public static TOPlayer Ocean(this Player player) => player.GetModPlayer<TOPlayer>();
     public static TOGlobalNPC Ocean(this NPC npc) => npc.GetGlobalNPC<TOGlobalNPC>();
