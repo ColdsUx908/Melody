@@ -19,7 +19,7 @@ public class Transoceanic : Mod
         foreach ((Type type, ITOLoader loader) in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(TOMain.Assembly)
             .OrderByDescending(k => k.instance.GetPriority(LoaderMethodType.Load)))
         {
-            if (!type.MustHaveRealMethodWith("Load", "Unload", TOMain.UniversalBindingFlags))
+            if (!type.MustHaveRealMethodWith("Load", "Unload", TOReflectionUtils.UniversalBindingFlags))
                 throw new Exception($"[{type.Name}] must implement Unload with Load implemented.");
             else
                 loader.Load();
@@ -31,7 +31,7 @@ public class Transoceanic : Mod
         foreach ((Type type, ITOLoader loader) in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>()
             .OrderByDescending(k => k.instance.GetPriority(LoaderMethodType.PostSetupContent)))
         {
-            if (!type.MustHaveRealMethodWith("PostSetUpContents", "OnModUnload", TOMain.UniversalBindingFlags))
+            if (!type.MustHaveRealMethodWith("PostSetUpContents", "OnModUnload", TOReflectionUtils.UniversalBindingFlags))
                 throw new Exception($"[{type.Name}] must implement OnModUnload with PostSetupContent implemented.");
             else
                 loader.PostSetupContent();

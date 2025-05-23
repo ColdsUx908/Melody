@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using CalamityAnomalies.Contents.AnomalyMode.NPCs;
-using CalamityAnomalies.Contents.BossRushMode;
+using CalamityAnomalies.Contents.Difficulties;
 using CalamityAnomalies.GlobalInstances;
 using CalamityAnomalies.GlobalInstances.GlobalNPCs;
+using CalamityAnomalies.Override;
 using CalamityMod;
 using CalamityMod.Events;
 using CalamityMod.NPCs.CeaselessVoid;
@@ -23,9 +22,8 @@ using Terraria.GameContent.Events;
 using Terraria.GameContent.UI.BigProgressBar;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Transoceanic;
 using Transoceanic.Core;
-using Transoceanic.Core.ExtraData.Maths;
+using Transoceanic.Core.ExtraMathData;
 using Transoceanic.Core.GameData;
 using Transoceanic.Core.IL;
 using Transoceanic.GlobalInstances;
@@ -33,11 +31,8 @@ using static CalamityMod.UI.BossHealthBarManager;
 
 namespace CalamityAnomalies.IL;
 
-/// <summary>
-/// 钩子。
-/// <br/>应用类：<see cref="BossHealthBarManager"/>
-/// </summary>
-public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
+[TODetour(typeof(BossHealthBarManager))]
+public class On_BossHealthBarManager : ITOLoader
 {
     /// <summary>
     /// 改进的Boss血条UI类。
@@ -58,30 +53,32 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
 
         public NPCSpecialHPGetFunction HPGetFunction { get; } = null;
 
-        public ulong Identifier { get; }
-
         public bool Valid { get; private set; } = true;
 
-        public new NPC AssociatedNPC => Main.npc[NPCIndex]; //在新的实例化机制中，NPCIndex不可能越界
+        public new NPC AssociatedNPC => throw new NotImplementedException("BetterBossHPUI.AssociatedNPC should not be used. Use BetterBossHPUI.NPC instead.");
 
-        public CAGlobalNPC AssociatedAnomalyNPC => field ??= AssociatedNPC.Anomaly();
+        public NPC NPC { get; }
 
-        public new int NPCType => AssociatedNPC.type;
+        public ulong Identifier { get; }
+
+        public CAGlobalNPC AnomalyNPC { get; }
+
+        public new int NPCType => NPC.type;
 
         public new long CombinedNPCLife
         {
             get
             {
-                if (AssociatedNPC == null || !AssociatedNPC.active)
+                if (NPC == null || !NPC.active)
                     return 0L;
 
                 foreach ((NPCSpecialHPGetRequirement requirement, NPCSpecialHPGetFunction func) in SpecialHPRequirements)
                 {
-                    if (requirement(AssociatedNPC))
-                        return func(AssociatedNPC, checkingForMaxLife: false);
+                    if (requirement(NPC))
+                        return func(NPC, checkingForMaxLife: false);
                 }
 
-                long result = NPCType == NPCID.PirateShip ? 0L : AssociatedNPC.life;
+                long result = NPCType == NPCID.PirateShip ? 0L : NPC.life;
                 foreach ((ulong identifier, NPC npc) in CustomOneToMany)
                 {
                     if (npc.Ocean().Identifier == identifier && npc.active && npc.life > 0)
@@ -96,16 +93,16 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
         {
             get
             {
-                if (AssociatedNPC == null || !AssociatedNPC.active)
+                if (NPC == null || !NPC.active)
                     return 0L;
 
                 foreach ((NPCSpecialHPGetRequirement requirement, NPCSpecialHPGetFunction func) in SpecialHPRequirements)
                 {
-                    if (requirement(AssociatedNPC))
-                        return func(AssociatedNPC, checkingForMaxLife: true);
+                    if (requirement(NPC))
+                        return func(NPC, checkingForMaxLife: true);
                 }
 
-                long result = NPCType == NPCID.PirateShip ? 0L : AssociatedNPC.lifeMax;
+                long result = NPCType == NPCID.PirateShip ? 0L : NPC.lifeMax;
                 foreach ((ulong identifier, NPC npc) in CustomOneToMany)
                 {
                     if (npc.Ocean().Identifier == identifier && npc.active && npc.lifeMax > 0)
@@ -117,14 +114,16 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
 
         public BetterBossHPUI(int npcIndex, string overridingName = null) : base(npcIndex, overridingName)
         {
-            Identifier = AssociatedNPC.Ocean().Identifier;
+            NPC = Main.npc[NPCIndex];
+            Identifier = NPC.Ocean().Identifier;
+            AnomalyNPC = NPC.Anomaly();
 
             HasOneToMany = OneToMany.TryGetValue(NPCType, out int[] value);
             CustomOneToManyIndexes = value;
 
             foreach ((NPCSpecialHPGetRequirement requirement, NPCSpecialHPGetFunction func) in SpecialHPRequirements)
             {
-                if (requirement(AssociatedNPC))
+                if (requirement(NPC))
                 {
                     HasSpecialLifeRequirement = true;
                     HPGetFunction = func;
@@ -132,7 +131,7 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
             }
         }
 
-        public new void Update() => throw new NotImplementedException("BetterBossHPUI.Update() should not be called directly. Use Update(bool valid) instead.");
+        public new void Update() => throw new NotImplementedException("BetterBossHPUI.Update() should not be called directly. Use BetterBossHPUI.Update(bool valid) instead.");
 
         public void Update(bool valid)
         {
@@ -175,11 +174,12 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
 
         public new void Draw(SpriteBatch spriteBatch, int x, int y)
         {
-            bool registered = AnomalyNPCOverrideHelper.Registered(NPCType, out AnomalyNPCOverride anomalyNPCOverride);
-            if (registered)
+            bool registered;
+
+            if (registered = NPC.HasNPCOverride(out CANPCOverride npcOverride))
             {
-                anomalyNPCOverride.PreDrawCalBossBar(this, spriteBatch, x, y);
-                if (!anomalyNPCOverride.AllowOrigCalMethod(OrigCalMethodType.DrawBossBar))
+                npcOverride.PreDrawCalBossBar(this, spriteBatch, x, y);
+                if (!npcOverride.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.DrawBossBar))
                     return;
             }
 
@@ -216,8 +216,8 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
                 spriteBatch.Draw(BossComboHPBar, new Rectangle(x + mainBarWidth, y + 28, comboHPBarWidth, BossComboHPBar.Height), Color.White);
             }
 
-            Color color = (CAWorld.Anomaly ? Color.Lerp(Color.HotPink, CAMain.AnomalyUltramundaneColor, AssociatedAnomalyNPC.AnomalyUltraBarTimer / 120f * timeRatio2 * 0.5f)
-                : CAWorld.BossRush ? Color.Lerp(baseColor, Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, animationCompletionRatio * 0.4f), Math.Clamp(AssociatedAnomalyNPC.BossRushAITimer / 120f, 0f, 1f))
+            Color color = (CAWorld.Anomaly ? Color.Lerp(Color.HotPink, CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * timeRatio2 * 0.5f)
+                : CAWorld.BossRush ? Color.Lerp(baseColor, Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, animationCompletionRatio * 0.4f), Math.Clamp(AnomalyNPC.BossRushAITimer / 120f, 0f, 1f))
                 : NPCIsEnraged ? Color.Lerp(baseColor, Color.Red * 0.5f, EnrageTimer / 120f)
                 : NPCIsIncreasingDefenseOrDR ? Color.Lerp(baseColor, Color.LightGray * 0.5f, IncreasingDefenseOrDRTimer / 120f) : baseColor) * animationCompletionRatio;
             spriteBatch.Draw(BossSeperatorBar, new Rectangle(x, y + 18, 400, 6), color);
@@ -226,10 +226,10 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
             //为了避免NPC名称过长遮挡大生命值数字，二者的绘制顺序在此处被调换了。
 
             #region NPC名称
-            string npcName = OverridingName ?? AssociatedNPC.FullName;
+            string npcName = OverridingName ?? NPC.FullName;
             Vector2 npcNameSize = mouseFont.MeasureString(npcName);
             Vector2 baseDrawPosition = new(x + 400 - npcNameSize.X, y + 23 - npcNameSize.Y);
-            if (AssociatedAnomalyNPC.IsRunningAnomalyAI)
+            if (AnomalyNPC.IsRunningAnomalyAI)
             {
                 DrawBorderStringEightWay_Loop(
                     spriteBatch,
@@ -237,11 +237,11 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
                     npcName,
                     baseDrawPosition,
                     Color.HotPink * 0.6f * animationCompletionRatio2,
-                    Color.Lerp(Color.HotPink, CAMain.AnomalyUltramundaneColor, AssociatedAnomalyNPC.AnomalyUltraBarTimer / 120f * timeRatio) * animationCompletionRatio2,
+                    Color.Lerp(Color.HotPink, CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * timeRatio) * animationCompletionRatio2,
                     Color.White * animationCompletionRatio2,
                     Color.Black * 0.2f * animationCompletionRatio2,
                     8,
-                    Math.Clamp(AssociatedAnomalyNPC.AnomalyAITimer / 120f, 0f, 1f) + timeRatio2);
+                    Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f) + timeRatio2);
             }
             else if (CAWorld.BossRush)
             {
@@ -255,7 +255,7 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
                 Color.White * animationCompletionRatio2,
                 Color.Black * 0.2f * animationCompletionRatio2,
                 8,
-                Math.Clamp(AssociatedAnomalyNPC.BossRushAITimer, 0f, 120f) / 120f + timeRatio2 * 2f);
+                Math.Clamp(AnomalyNPC.BossRushAITimer, 0f, 120f) / 120f + timeRatio2 * 2f);
             }
             else if (NPCIsEnraged && EnrageTimer > 0)
             {
@@ -333,13 +333,15 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
             #endregion
 
             if (registered)
-                anomalyNPCOverride.PostDrawCalBossBar(this, spriteBatch, x, y);
+                npcOverride.PostDrawCalBossBar(this, spriteBatch, x, y);
         }
     }
 
     private static readonly Dictionary<ulong, BetterBossHPUI> _trackingBars = [];
     private const int MaxBars = 6;
     private const int MaxActiveBars = 4;
+
+    internal delegate void Orig_Draw(BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info);
 
     /// <summary>
     /// 灾厄Boss血条总控绘制钩子。
@@ -349,7 +351,7 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
     /// <param name="spriteBatch"></param>
     /// <param name="currentBar"></param>
     /// <param name="info"></param>
-    internal static void Hook_BossHealthBarManager_Draw(Orig_BossHealthBarManager_Draw orig, BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info)
+    internal static void Detour_Draw(Orig_Draw orig, BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info)
     {
         int x = Main.screenWidth
             - (Main.playerInventory || Main.invasionType > 0 || Main.pumpkinMoon || Main.snowMoon || DD2Event.Ongoing || AcidRainEvent.AcidRainEventIsOngoing ? 670 : 420);
@@ -366,6 +368,8 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
         }
     }
 
+    internal delegate void Orig_Update(BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info);
+
     /// <summary>
     /// 灾厄Boss血条总控更新钩子。
     /// <br/>修复了“卡血条”问题。
@@ -374,7 +378,7 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
     /// <param name="self"></param>
     /// <param name="currentBar"></param>
     /// <param name="info"></param>
-    internal static void Hook_BossHealthBarManager_Update(Orig_BossHealthBarManager_Update orig, BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info)
+    internal static void Detour_Update(Orig_Update orig, BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info)
     {
         List<ulong> validIdentifiers = [];
 
@@ -491,20 +495,4 @@ public class On_BossHealthBarManager : ITODetourProvider, ITOLoader
     void ITOLoader.OnWorldLoad() => _trackingBars.Clear();
 
     void ITOLoader.OnWorldUnload() => _trackingBars.Clear();
-
-    #region Detour
-    internal static Type Type_BossHealthBarManager { get; } = typeof(BossHealthBarManager);
-
-    internal static MethodInfo Method_BossHealthBarManager_Draw { get; } = Type_BossHealthBarManager.GetMethod("Draw", TOMain.UniversalBindingFlags);
-    internal static MethodInfo Method_BossHealthBarManager_Update { get; } = Type_BossHealthBarManager.GetMethod("Update", TOMain.UniversalBindingFlags);
-
-    internal delegate void Orig_BossHealthBarManager_Draw(BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info);
-    internal delegate void Orig_BossHealthBarManager_Update(BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info);
-
-    Dictionary<MethodInfo, Delegate> ITODetourProvider.DetoursToApply => new()
-    {
-        [Method_BossHealthBarManager_Draw] = Hook_BossHealthBarManager_Draw,
-        [Method_BossHealthBarManager_Update] = Hook_BossHealthBarManager_Update,
-    };
-    #endregion
 }

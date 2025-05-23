@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Terraria.ModLoader;
 using Transoceanic.Core.Localization;
 using Transoceanic.GlobalInstances;
@@ -41,16 +40,16 @@ public class TOGeneralChatCommand : ModCommand
         {
             try
             {
-                caller.Player.Ocean().CommandCallInfo = new CommandCallInfo(caller, CommandType.Chat, command, args);
+                caller.Player.Ocean().CommandCallInfo = new CommandCallInfo(CommandType.Chat, command, caller, args);
                 value.Action(caller, args);
             }
-            catch
+            catch (CommandArgumentException e)
             {
-                caller.ReplyLocalizedText(commandPrefix + "InvalidArguments", Color.Red);
+                caller.ReplyLocalizedTextWith(commandPrefix + "InvalidArguments", Color.Red, e);
                 value.Help(caller, args);
             }
         }
         else
-            caller.ReplyLocalizedText(TOMain.ModLocalizationPrefix + "Commands.GeneralCommand.Helper2");
+            caller.ReplyLocalizedText(commandPrefix + "Helper2");
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System;
-using CalamityAnomalies.Contents.AnomalyMode.NPCs;
+using CalamityAnomalies.Override;
 using CalamityMod;
 using CalamityMod.Buffs.StatDebuffs;
 using CalamityMod.NPCs;
@@ -16,9 +16,7 @@ public partial class CAGlobalNPC : GlobalNPC
     {
         CalamityGlobalNPC calamityNPC = npc.Calamity();
 
-        if (CAWorld.Anomaly
-            && AnomalyNPCOverrideHelper.Registered(npc.type, out AnomalyNPCOverride anomalyNPCOverride)
-            && ShouldRunAnomalyAI)
+        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
         {
             #region
             //禁用灾厄动态伤害减免。
@@ -48,9 +46,10 @@ public partial class CAGlobalNPC : GlobalNPC
                 AnomalyUltraAITimer = 0;
                 AnomalyUltraBarTimer = Math.Clamp(AnomalyUltraBarTimer - 4, 0, 120);
             }
-            anomalyNPCOverride.TryConnectWithNPC(npc);
-            anomalyNPCOverride.PreAI();
-            return anomalyNPCOverride.ClearNPCInstances(anomalyNPCOverride.AllowOrigMethod(OrigMethodType.AI));
+
+            if (!npcOverride.PreAI())
+                return false;
+            #endregion
         }
 
         AnomalyAITimer = 0;
@@ -61,30 +60,17 @@ public partial class CAGlobalNPC : GlobalNPC
             BossRushAITimer = 0;
 
         return true;
-        #endregion
     }
 
     public override void AI(NPC npc)
     {
-        if (CAWorld.Anomaly
-            && AnomalyNPCOverrideHelper.Registered(npc.type, out AnomalyNPCOverride anomalyNPCOverride)
-            && ShouldRunAnomalyAI)
-        {
-            anomalyNPCOverride.TryConnectWithNPC(npc);
-            anomalyNPCOverride.AI();
-            anomalyNPCOverride.ClearNPCInstances();
-        }
+        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+            npcOverride.AI();
     }
 
     public override void PostAI(NPC npc)
     {
-        if (CAWorld.Anomaly
-            && AnomalyNPCOverrideHelper.Registered(npc.type, out AnomalyNPCOverride anomalyNPCOverride)
-            && ShouldRunAnomalyAI)
-        {
-            anomalyNPCOverride.TryConnectWithNPC(npc);
-            anomalyNPCOverride.PostAI();
-            anomalyNPCOverride.ClearNPCInstances();
-        }
+        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+            npcOverride.PostAI();
     }
 }

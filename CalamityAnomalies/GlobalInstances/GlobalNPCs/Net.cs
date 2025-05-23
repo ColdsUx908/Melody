@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
+using Transoceanic.Core.Net;
 
 namespace CalamityAnomalies.GlobalInstances.GlobalNPCs;
 
@@ -10,27 +10,12 @@ public partial class CAGlobalNPC : GlobalNPC
 {
     public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
     {
-        Dictionary<byte, float> values = [];
-        for (int i = 0; i < MaxAISlots; i++)
-        {
-            if (AnomalyAISync[i])
-            {
-                values[(byte)i] = AnomalyAI[i];
-                AnomalyAISync[i] = false;
-            }
-        }
-        binaryWriter.Write((byte)values.Count);
-        foreach ((byte index, float value) in values)
-        {
-            binaryWriter.Write(index);
-            binaryWriter.Write(value);
-        }
+        TONetUtils.SendAI(AnomalyAI, AIChanged, binaryWriter);
     }
 
     public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
     {
-        for (int i = 0; i < binaryReader.ReadByte(); i++)
-            AnomalyAI[binaryReader.ReadByte()] = binaryReader.ReadSingle();
+        TONetUtils.ReceiveAI(AnomalyAI, binaryReader);
     }
 
 }

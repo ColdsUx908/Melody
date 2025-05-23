@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
-using Transoceanic.Core.ExtraData.Maths;
+using Transoceanic.Core.ExtraMathData;
 
 namespace Transoceanic.Core.MathHelp;
 
@@ -54,4 +52,7 @@ public static partial class TOMathHelper
 
         return (value - oldMin) / (oldMax - oldMin) * (newMax - newMin) + newMin;
     }
+
+    public static float ClampMap(float oldMin, float oldMax, float newMin, float newMax, float value) =>
+        ClampMap(oldMin, oldMax, newMin, newMax, Math.Clamp(value, oldMin, oldMax));
 }

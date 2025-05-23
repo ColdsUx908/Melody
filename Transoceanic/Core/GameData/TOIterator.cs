@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.ID;
-using Transoceanic.Core.ExtraData.Maths;
 
 namespace Transoceanic.Core.GameData;
 
@@ -23,7 +22,7 @@ public readonly ref struct TOIterator<T> where T : class
     private readonly ReadOnlySpan<T> _span;
     private readonly Predicate<T> _predicate;
 
-    internal TOIterator(ReadOnlySpan<T> span, Predicate<T> predicate)
+    public TOIterator(ReadOnlySpan<T> span, Predicate<T> predicate)
     {
         _span = span;
         _predicate = predicate;
@@ -160,14 +159,14 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
     private readonly Predicate<T> _predicate;
     private readonly HashSet<T> _exclusions;
 
-    internal TOExclusiveIterator(ReadOnlySpan<T> span, Predicate<T> predicate, HashSet<T> exceptions)
+    public TOExclusiveIterator(ReadOnlySpan<T> span, Predicate<T> predicate, HashSet<T> exceptions)
     {
         _span = span;
         _predicate = predicate;
         _exclusions = exceptions;
     }
 
-    internal TOExclusiveIterator(ReadOnlySpan<T> span, Predicate<T> predicate, params T[] exceptionIndexes)
+    public TOExclusiveIterator(ReadOnlySpan<T> span, Predicate<T> predicate, params T[] exceptionIndexes)
     {
         _span = span;
         _predicate = predicate;

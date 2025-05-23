@@ -35,7 +35,7 @@ public class DebugModeCommand : ITOCommand
                     caller.ReplyLocalizedText(commandPrefix + "Off");
                     break;
                 default:
-                    throw new ArgumentException("InvalidArgument");
+                    throw new CommandArgumentException(this, caller, args);
             }
         }
     }

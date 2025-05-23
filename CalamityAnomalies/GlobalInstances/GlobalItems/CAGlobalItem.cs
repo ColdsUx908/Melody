@@ -2,7 +2,7 @@
 
 namespace CalamityAnomalies.GlobalInstances.GlobalItems;
 
-public class CAGlobalItem : GlobalItem
+public partial class CAGlobalItem : GlobalItem
 {
     public override bool InstancePerEntity => true;
 }

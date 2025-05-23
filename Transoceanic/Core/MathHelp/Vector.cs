@@ -1,6 +1,6 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
-using Transoceanic.Core.ExtraData.Maths;
+using Transoceanic.Core.ExtraMathData;
 
 namespace Transoceanic.Core.MathHelp;
 

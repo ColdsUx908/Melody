@@ -1,25 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CalamityAnomalies.Override;
 using CalamityMod.Events;
 using CalamityMod.Projectiles;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
-using Transoceanic;
-using Transoceanic.Core;
 using Transoceanic.Core.IL;
+using static CalamityMod.Projectiles.CalamityGlobalProjectile;
 
 namespace CalamityAnomalies.IL;
 
-/// <summary>
-/// 钩子。
-/// <br/>应用类：<see cref="CalamityGlobalProjectile"/>。
-/// </summary>
-public class On_CalamityGlobalProjectile : ITODetourProvider
+[TODetour(typeof(CalamityGlobalProjectile))]
+public class On_CalamityGlobalProjectile
 {
-    internal static void Hook_CalamityGlobalProjectile_SetDefaults(Orig_CalamityGlobalProjectile_SetDefaults orig, CalamityGlobalProjectile self, Projectile projectile)
+    internal delegate void Orig_SetDefaults(CalamityGlobalProjectile self, Projectile projectile);
+
+    internal static void Detour_SetDefaults(Orig_SetDefaults orig, CalamityGlobalProjectile self, Projectile projectile)
     {
         if (CAWorld.BossRush)
         {
@@ -33,36 +28,53 @@ public class On_CalamityGlobalProjectile : ITODetourProvider
         orig(self, projectile);
     }
 
-    internal static bool Hook_CalamityGlobalProjectile_PreAI(Orig_CalamityGlobalProjectile_PreAI orig, CalamityGlobalProjectile self, Projectile projectile)
+    internal delegate bool Orig_PreAI(CalamityGlobalProjectile self, Projectile projectile);
+
+    internal static bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalProjectile self, Projectile projectile)
     {
+        if (projectile.HasProjectileOverride(out CAProjectileOverride projectileOverride))
+        {
+            if (!projectileOverride.AllowOrigCalMethod(OrigMethodType_CalamityGlobalProjectile.PreAI))
+                return true;
+        }
+
         if (CAWorld.BossRush)
             BossRushEvent.BossRushActive = true;
 
         return orig(self, projectile);
     }
 
-    internal static void Hook_CalamityGlobalProjectile_PostAI(Orig_CalamityGlobalProjectile_PostAI orig, CalamityGlobalProjectile self, Projectile projectile)
+    internal delegate void Orig_PostAI(CalamityGlobalProjectile self, Projectile projectile);
+
+    internal static void Detour_PostAI(Orig_PostAI orig, CalamityGlobalProjectile self, Projectile projectile)
     {
         orig(self, projectile);
         BossRushEvent.BossRushActive = CAWorld.RealBossRushEventActive;
     }
 
-    #region Detour
-    internal static Type Type_CalamityGlobalProjectile { get; } = typeof(CalamityGlobalProjectile);
+    internal delegate Color? Orig_GetAlpha(CalamityGlobalProjectile self, Projectile projectile, Color lightColor);
 
-    internal static MethodInfo Method_CalamityGlobalProjectile_SetDefaults { get; } = Type_CalamityGlobalProjectile.GetMethod("SetDefaults", TOMain.UniversalBindingFlags);
-    internal static MethodInfo Method_CalamityGlobalProjectile_PreAI { get; } = Type_CalamityGlobalProjectile.GetMethod("PreAI", TOMain.UniversalBindingFlags);
-    internal static MethodInfo Method_CalamityGlobalProjectile_PostAI { get; } = Type_CalamityGlobalProjectile.GetMethod("PostAI", TOMain.UniversalBindingFlags);
-
-    internal delegate void Orig_CalamityGlobalProjectile_SetDefaults(CalamityGlobalProjectile self, Projectile projectile);
-    internal delegate bool Orig_CalamityGlobalProjectile_PreAI(CalamityGlobalProjectile self, Projectile projectile);
-    internal delegate void Orig_CalamityGlobalProjectile_PostAI(CalamityGlobalProjectile self, Projectile projectile);
-
-    Dictionary<MethodInfo, Delegate> ITODetourProvider.DetoursToApply => new()
+    internal static Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalProjectile self, Projectile projectile, Color lightColor)
     {
-        [Method_CalamityGlobalProjectile_SetDefaults] = Hook_CalamityGlobalProjectile_SetDefaults,
-        [Method_CalamityGlobalProjectile_PreAI] = Hook_CalamityGlobalProjectile_PreAI,
-        [Method_CalamityGlobalProjectile_PostAI] = Hook_CalamityGlobalProjectile_PostAI,
-    };
-    #endregion
+        if (projectile.HasProjectileOverride(out CAProjectileOverride projectileOverride))
+        {
+            if (!projectileOverride.AllowOrigCalMethod(OrigMethodType_CalamityGlobalProjectile.GetAlpha))
+                return null;
+        }
+
+        return orig(self, projectile, lightColor);
+    }
+
+    internal delegate bool Orig_PreDraw(CalamityGlobalProjectile self, Projectile projectile, ref Color lightColor);
+
+    internal static bool Detour_PreDraw(Orig_PreDraw orig, CalamityGlobalProjectile self, Projectile projectile, ref Color lightColor)
+    {
+        if (projectile.HasProjectileOverride(out CAProjectileOverride projectileOverride))
+        {
+            if (!projectileOverride.AllowOrigCalMethod(OrigMethodType_CalamityGlobalProjectile.PreDraw))
+                return true;
+        }
+
+        return orig(self, projectile, ref lightColor);
+    }
 }

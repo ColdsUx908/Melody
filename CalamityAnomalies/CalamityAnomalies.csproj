@@ -15,6 +15,24 @@
 	    <HintPath>..\..\..\..\..\..\..\..\CalamityMod\CalamityMod.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Contents\Tweaks\10_PostML\" />
+	  <Folder Include="Contents\Tweaks\11_PostProvidence\" />
+	  <Folder Include="Contents\Tweaks\12_PostPolterghast\" />
+	  <Folder Include="Contents\Tweaks\13_PostDoG\" />
+	  <Folder Include="Contents\Tweaks\14_PostYharon\" />
+	  <Folder Include="Contents\Tweaks\15_LastBoss\" />
+	  <Folder Include="Contents\Tweaks\16_Focus\" />
+	  <Folder Include="Contents\Tweaks\1_Beginning\" />
+	  <Folder Include="Contents\Tweaks\2_PostEvil1\" />
+	  <Folder Include="Contents\Tweaks\3_PostEvil2\" />
+	  <Folder Include="Contents\Tweaks\4_PostSkeletron\" />
+	  <Folder Include="Contents\Tweaks\5_Hardmode\" />
+	  <Folder Include="Contents\Tweaks\6_PostMachine\" />
+	  <Folder Include="Contents\Tweaks\7_PostPlantera\" />
+	  <Folder Include="Contents\Tweaks\8_PostGolem\" />
+	  <Folder Include="Contents\Tweaks\9_PostCultist\" />
+	</ItemGroup>
 
 	<!-- References -->
 

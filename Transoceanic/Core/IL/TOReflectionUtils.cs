@@ -2,15 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ReLogic.Utilities;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
-using Transoceanic.Core.ExtraData.Maths;
 using Transoceanic.Core.MathHelp;
+using Transoceanic.Core.ExtraMathData;
 
 namespace Transoceanic.Core.IL;
 
 public static class TOReflectionUtils
 {
+    /// <summary>
+    /// 包含所有所需Flag。
+    /// </summary>
+    public const BindingFlags UniversalBindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
+
     public static bool HasRealMethod(this Type type, string methodName, BindingFlags bindingAttr, out MethodInfo methodInfo)
     {
         methodInfo = type.GetMethod(methodName, bindingAttr);
@@ -32,6 +38,11 @@ public static class TOReflectionUtils
     public static bool MustHaveRealMethodWith(this Type type, string mainMethod, string otherMethod, BindingFlags bindingAttr) =>
         type.MustHaveRealMethodWith(mainMethod, otherMethod, bindingAttr, out _, out _);
 
+    public static IEnumerable<Type> GetAllTypes() =>
+        from mod in ModLoader.Mods
+        from type in AssemblyManager.GetLoadableTypes(mod.Code)
+        select type;
+
     /// <summary>
     /// 获取指定基类型在指定程序集中的所有派生类或实现类。
     /// </summary>
@@ -39,7 +50,7 @@ public static class TOReflectionUtils
     /// <param name="assemblyToSearch"></param>
     /// <returns></returns>
     public static IEnumerable<Type> GetTypesDerivedFrom(Type baseType, Assembly assemblyToSearch) =>
-        from Type type in AssemblyManager.GetLoadableTypes(assemblyToSearch)
+        from type in AssemblyManager.GetLoadableTypes(assemblyToSearch)
         where baseType.IsAssignableTo(type) && !type.IsAbstract
         select type;
 
@@ -51,11 +62,8 @@ public static class TOReflectionUtils
     /// <param name="baseType"></param>
     /// <returns></returns>
     public static IEnumerable<Type> GetTypesDerivedFrom(Type baseType) =>
-        from Mod mod in ModLoader.Mods
-        from Type type in
-            from Type type in AssemblyManager.GetLoadableTypes(mod.Code)
-            where baseType.IsAssignableTo(type) && !type.IsAbstract
-            select type
+        from type in GetAllTypes()
+        where baseType.IsAssignableTo(type) && !type.IsAbstract
         select type;
 
     /// <summary>
@@ -80,7 +88,7 @@ public static class TOReflectionUtils
     /// <param name="assemblyToSearch"></param>
     /// <returns></returns>
     public static IEnumerable<T> GetTypeInstancesDerivedFrom<T>(Assembly assemblyToSearch) =>
-        from Type type in AssemblyManager.GetLoadableTypes(assemblyToSearch)
+        from type in AssemblyManager.GetLoadableTypes(assemblyToSearch)
         where type.IsAssignableTo(typeof(T)) && !type.IsAbstract
         select (T)Activator.CreateInstance(type);
 
@@ -92,11 +100,8 @@ public static class TOReflectionUtils
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     public static IEnumerable<T> GetTypeInstancesDerivedFrom<T>() =>
-        from Mod mod in ModLoader.Mods
-        from Type type in
-            from Type type in AssemblyManager.GetLoadableTypes(mod.Code)
-            where type.IsAssignableTo(typeof(T)) && !type.IsAbstract
-            select type
+        from type in GetAllTypes()
+        where type.IsAssignableTo(typeof(T)) && !type.IsAbstract
         select (T)Activator.CreateInstance(type);
 
     /// <summary>
@@ -106,7 +111,7 @@ public static class TOReflectionUtils
     /// <param name="assemblyToSearch"></param>
     /// <returns></returns>
     public static IEnumerable<(Type type, T instance)> GetTypesAndInstancesDerivedFrom<T>(Assembly assemblyToSearch) =>
-        from Type type in AssemblyManager.GetLoadableTypes(assemblyToSearch)
+        from type in AssemblyManager.GetLoadableTypes(assemblyToSearch)
         where type.IsAssignableTo(typeof(T)) && !type.IsAbstract
         select (type, (T)Activator.CreateInstance(type));
 
@@ -118,10 +123,21 @@ public static class TOReflectionUtils
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     public static IEnumerable<(Type type, T instance)> GetTypesAndInstancesDerivedFrom<T>() =>
-        from Mod mod in ModLoader.Mods
-        from Type type in
-            from Type type in AssemblyManager.GetLoadableTypes(mod.Code)
-            where type.IsAssignableTo(typeof(T)) && !type.IsAbstract
-            select type
+        from type in GetAllTypes()
+        where type.IsAssignableTo(typeof(T)) && !type.IsAbstract
         select (type, (T)Activator.CreateInstance(type));
+
+    public static IEnumerable<(Type type, T attribute)> GetTypesWithAttribute<T>(Assembly assemblyToSearch) where T : Attribute =>
+        from type in AssemblyManager.GetLoadableTypes(assemblyToSearch)
+        let attribute = type.GetAttribute<T>()
+        where attribute is not null
+        select (type, attribute);
+
+    public static IEnumerable<(Type type, T attribute)> GetTypesWithAttribute<T>() where T : Attribute =>
+        from type in GetAllTypes()
+        let attribute = type.GetAttribute<T>()
+        where attribute is not null
+        select (type, attribute);
+
+    public static IEnumerable<MethodInfo> GetRealMethods(this Type type, BindingFlags flags) => type.GetMethods(flags).Where(k => k.DeclaringType == type);
 }

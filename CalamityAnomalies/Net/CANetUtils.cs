@@ -1,8 +1,10 @@
-﻿namespace CalamityAnomalies.Net;
+﻿using Terraria.ModLoader;
+
+namespace CalamityAnomalies.Net;
 
 public static class CANetUtils
 {
-    //private static ModPacket GetCAPacket() => CalamityAnomalies.Instance.GetPacket();
+    private static ModPacket GetCAPacket() => CalamityAnomalies.Instance.GetPacket();
 
     /*
     public static void SyncAnomalyAI(this NPC npc)

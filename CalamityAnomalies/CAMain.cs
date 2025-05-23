@@ -2,8 +2,8 @@
 using System.Reflection;
 using Microsoft.Xna.Framework;
 using Terraria.ModLoader;
-using Transoceanic;
 using Transoceanic.Core;
+using Transoceanic.Core.IL;
 
 namespace CalamityAnomalies;
 
@@ -24,7 +24,7 @@ public class CAMainHelper : ITOLoader
 {
     void ITOLoader.PostSetupContent()
     {
-        CAMain.CalamityModInstance = (Mod)CAMain.Type_CalamityMod.GetField("Instance", TOMain.UniversalBindingFlags).GetValue(null);
+        CAMain.CalamityModInstance = (Mod)CAMain.Type_CalamityMod.GetField("Instance", TOReflectionUtils.UniversalBindingFlags).GetValue(null);
     }
 
     void ITOLoader.OnModUnload()

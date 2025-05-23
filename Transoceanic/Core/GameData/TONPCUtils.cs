@@ -79,24 +79,36 @@ public static class TONPCUtils
     }
 
     /// <summary>
-    /// 如果现有目标不合法，获取新的目标。
+    /// 如果现有目标无效，获取新的目标。
     /// </summary>
     /// <param name="npc"></param>
     /// <param name="faceTarget"></param>
     /// <param name="distanceThreshold"></param>
-    /// <returns>获取目标后的目标是否合法。</returns>
-    public static bool TargetClosestIfTargetIsInvalid(this NPC npc, out Player target, bool faceTarget = true, float distanceThreshold = 4000f)
+    /// <returns>获取目标后的目标是否有效。</returns>
+    public static bool TargetClosestIfInvalid(this NPC npc, bool faceTarget = true, float distanceThreshold = 4000f)
     {
         if (!npc.HasValidTarget)
             npc.TargetClosest(faceTarget);
 
-        Player targetTracked = Main.player[npc.target];
+        Player target = Main.player[npc.target];
 
-        if (distanceThreshold >= 0f && !npc.WithinRange(targetTracked.Center, distanceThreshold - targetTracked.aggro))
+        if (distanceThreshold >= 0f && !npc.WithinRange(target.Center, distanceThreshold - target.aggro))
             npc.TargetClosest(faceTarget);
 
-        target = Main.player[npc.target];
-
         return npc.HasValidTarget && npc.WithinRange(target.Center, distanceThreshold - target.aggro);
+    }
+
+    public static void SafeChangeScale(this NPC npc, int width, int height, float scale)
+    {
+        if (npc.scale == scale)
+            return;
+
+        npc.position.X += npc.width / 2;
+        npc.position.Y += npc.height;
+        npc.scale = scale;
+        npc.width = (int)(width * npc.scale);
+        npc.height = (int)(height * npc.scale);
+        npc.position.X -= npc.width / 2;
+        npc.position.Y -= npc.height;
     }
 }

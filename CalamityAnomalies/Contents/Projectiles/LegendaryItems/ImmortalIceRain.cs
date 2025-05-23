@@ -6,7 +6,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Transoceanic;
-using Transoceanic.Core.ExtraData;
+using Transoceanic.Core.ExtraGameData;
 using Transoceanic.Core.GameData;
 using Transoceanic.Core.MathHelp;
 
@@ -130,10 +130,12 @@ public class ImmortalIceRain : ModProjectile, ILocalizedModType
         //SoundEngine.PlaySound(SoundID.Item27 with { Volume = SoundID.Item27.Volume * 0.25f }, Projectile.Center);
         for (int j = 0; j < 3; j++)
         {
-            int snowDust = Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.Snow, 0f, 0f, 0, default, 1f);
-            Main.dust[snowDust].noGravity = true;
-            Main.dust[snowDust].noLight = true;
-            Main.dust[snowDust].scale = 0.7f;
+            TOActivator.NewDustAction(Projectile.Center, Projectile.width, Projectile.height, DustID.Snow, action: d =>
+            {
+                d.noGravity = true;
+                d.noLight = true;
+                d.scale = 0.7f;
+            });
         }
     }
 

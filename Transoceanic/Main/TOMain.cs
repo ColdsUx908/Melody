@@ -5,7 +5,9 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
+using Transoceanic.Core.ExtraGameData;
 using Transoceanic.Core.GameData;
+using Transoceanic.Core.IL;
 
 namespace Transoceanic;
 
@@ -17,8 +19,9 @@ public partial class TOMain
 
     public static Type Type_Main { get; } = typeof(Main);
 
-    public static GameModeData GameModeData => (GameModeData)Type_Main.GetField("_currentGameModeInfo", UniversalBindingFlags).GetValue(null);
+    public static TerrariaTime TerrariaTime { get; internal set; }
 
+    public static GameModeData GameModeData => (GameModeData)Type_Main.GetField("_currentGameModeInfo", TOReflectionUtils.UniversalBindingFlags).GetValue(null);
 
     public static TOIterator<NPC> ActiveNPCs => TOIteratorFactory.NewActiveNPCIterator();
 
@@ -64,17 +67,16 @@ public partial class TOMain
 
     public static NPC DummyNPC => Main.npc[Main.maxNPCs];
 
+    public static Projectile DummyProjectile => Main.projectile[Main.maxProjectiles];
+
+    public static Player Server => Main.player[Main.maxPlayers];
+
     #region Constant
     public const string ModLocalizationPrefix = "Mods.Transoceanic.";
 
     public const string DebugPrefix = ModLocalizationPrefix + "DEBUG.";
 
     public const string DebugErrorMessageKey = ModLocalizationPrefix + "DEBUG.ErrorMessage";
-
-    /// <summary>
-    /// 包含所有所需Flag。
-    /// </summary>
-    public const BindingFlags UniversalBindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
 
     public static Color TODebugErrorColor { get; } = new(0xFF, 0x00, 0x00);
 

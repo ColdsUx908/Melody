@@ -1,5 +1,4 @@
 ﻿using Terraria.ModLoader;
-using Terraria.ModLoader.IO;
 using Transoceanic.Commands;
 
 namespace Transoceanic.GlobalInstances.Players;

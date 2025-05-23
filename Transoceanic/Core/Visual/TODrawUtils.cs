@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Graphics;
 using Terraria;
 using Terraria.ModLoader;
-using Transoceanic.Core.ExtraData.Maths;
+using Transoceanic.Core.ExtraMathData;
 
 namespace Transoceanic.Core.Visual;
 

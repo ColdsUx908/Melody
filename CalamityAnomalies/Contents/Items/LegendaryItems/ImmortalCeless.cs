@@ -8,7 +8,7 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Transoceanic;
-using Transoceanic.Core.ExtraData.Maths;
+using Transoceanic.Core.ExtraMathData;
 using Transoceanic.Core.GameData;
 using Transoceanic.Core.MathHelp;
 using Transoceanic.GlobalInstances;
@@ -120,7 +120,20 @@ public class ImmortalCeless : LegendaryItem, ILocalizedModType
     public override void SetPower(Player player) => HasPower = player.Ocean().Celesgod;
     #endregion
 
-    private readonly int _projAmount = 5;
+    private int ProjAmount
+    {
+        get
+        {
+            if (HasPower)
+            {
+                return 10;
+            }
+            else
+            {
+                return 5;
+            }
+        }
+    }
 
     //private static readonly int projVoid = ModContent.ProjectileType<ImmortalVoidRain>();
     private static readonly int ProjIce = ModContent.ProjectileType<ImmortalIceRain>();
@@ -181,10 +194,10 @@ public class ImmortalCeless : LegendaryItem, ILocalizedModType
         }
         else
         {
-            TOActivator.RotatedProj(_projAmount, MathHelper.TwoPi / _projAmount, source, player.Center, new Vector2(0f, -15f), type, damage, knockback, -1, p => p.ai[2] = 15f); //ai[2]传递速度信息
+            TOActivator.RotatedProj(ProjAmount, MathHelper.TwoPi / ProjAmount, source, player.Center, new Vector2(0f, -15f), type, damage, knockback, -1, p => p.ai[2] = 15f); //ai[2]传递速度信息
 
             float offsetangle;
-            for (int i = 0; i < _projAmount * 2; i++)
+            for (int i = 0; i < ProjAmount * 2; i++)
             {
                 float velocity2 = Main.rand.NextFloat(4f, 10f);
                 int t = Main.rand.Next(i, i * 4);

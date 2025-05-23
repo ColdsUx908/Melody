@@ -9,7 +9,12 @@ GeneralCommand: {
 		Command not found.
 		Use help keyword to see all available commands.
 		'''
-	InvalidArguments: Invalid arguments.
+	InvalidArguments:
+		'''
+		Invalid arguments.
+		Exception Message:
+		{0}
+		'''
 }
 
 DebugMode: {

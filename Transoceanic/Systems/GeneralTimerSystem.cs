@@ -6,6 +6,5 @@ public class GeneralTimerSystem : ModSystem
 {
     public override void PreUpdateEntities()
     {
-        TOMain.GeneralTimer++;
     }
 }

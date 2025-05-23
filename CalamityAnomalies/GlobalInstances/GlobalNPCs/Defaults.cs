@@ -1,4 +1,5 @@
-﻿using CalamityAnomalies.Contents.AnomalyMode.NPCs;
+﻿using System;
+using CalamityAnomalies.Override;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -8,23 +9,21 @@ public partial class CAGlobalNPC : GlobalNPC
 {
     public override void SetStaticDefaults()
     {
-        foreach (AnomalyNPCOverride anomalyNPCOverride in AnomalyNPCOverrideHelper.AnomalyNPCOverrideSet.Values)
-            anomalyNPCOverride.SetStaticDefaults();
+        foreach (CANPCOverride npcOverride in CAOverrideHelper.NPCOverrides.Values)
+            npcOverride.SetStaticDefaults();
     }
 
     public override void SetDefaults(NPC npc)
     {
-        //初始化anomalyAI数组
-        for (int i = 0; i < AnomalyAI.Length; i++)
-            AnomalyAI[i] = 0f;
+        Array.Fill(AnomalyAI, 0f);
 
-        if (CAWorld.Anomaly
-            && AnomalyNPCOverrideHelper.Registered(npc.type, out AnomalyNPCOverride anomalyNPCOverride)
-            && ShouldRunAnomalyAI)
-        {
-            anomalyNPCOverride.TryConnectWithNPC(npc);
-            anomalyNPCOverride.SetDefaults();
-            anomalyNPCOverride.ClearNPCInstances();
-        }
+        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+            npcOverride.SetDefaults();
+    }
+
+    public override void SetDefaultsFromNetId(NPC npc)
+    {
+        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+            npcOverride.SetDefaultsFromNetId();
     }
 }

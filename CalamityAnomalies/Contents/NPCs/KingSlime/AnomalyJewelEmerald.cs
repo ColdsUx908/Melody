@@ -1,0 +1,209 @@
+﻿using System;
+using CalamityAnomalies.Override;
+using CalamityMod;
+using CalamityMod.NPCs.NormalNPCs;
+using Microsoft.Xna.Framework;
+using Terraria;
+using Terraria.Audio;
+using Terraria.ID;
+using Terraria.ModLoader;
+using Transoceanic.Core.GameData;
+
+namespace CalamityAnomalies.Contents.NPCs.KingSlime;
+
+public class AnomalyJewelEmerald : AnomalyNPCOverride
+{
+    #region 枚举、常量、属性
+    public enum AttackType
+    {
+        Despawn = -1,
+
+        FollowTarget = 0,
+        Charge = 1,
+    }
+
+    private static class Constant
+    {
+        public const float despawnDistance = 5000f;
+
+        public const int chargePhaseGateValue = 90;
+        public const int chargeGateValue = 40;
+    }
+
+    public AttackType AI_CurrentAttack
+    {
+        get => (AttackType)(int)AnomalyNPC.AnomalyAI[1];
+        set => AnomalyNPC.SetAnomalyAI((int)value, 1);
+    }
+
+    public int AI_CurrentAttackPhase
+    {
+        get => (int)AnomalyNPC.AnomalyAI[2];
+        set => AnomalyNPC.SetAnomalyAI(value, 2);
+    }
+    #endregion
+
+    public override int OverrideType => ModContent.NPCType<KingSlimeJewelEmerald>();
+
+    public override bool PreAI()
+    {
+        #region 主体
+        //如果找不到所属史莱姆王，直接脱战
+        if (!OceanNPC.TryGetMaster(NPCID.KingSlime, out NPC master))
+        {
+            AI_CurrentAttack = AttackType.Despawn;
+            Despawn();
+            return false;
+        }
+
+        Lighting.AddLight(NPC.Center, 0f, 0.8f, 0f);
+
+        if (!TargetClosestIfInvalid(true, Constant.despawnDistance))
+        {
+            NPC.Center = master.Top - new Vector2(0, master.height);
+            return false;
+        }
+
+        switch (AI_CurrentAttack)
+        {
+            case AttackType.Despawn:
+                Despawn();
+                return false;
+            case AttackType.FollowTarget:
+                FollowTarget();
+                break;
+            case AttackType.Charge:
+                Charge();
+                break;
+        }
+
+        NPC.netUpdate = true;
+
+        return false;
+        #endregion
+    }
+
+    private void MakeDust(int amount)
+    {
+        for (int i = 0; i < amount; i++)
+        {
+            TOActivator.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.GemEmerald, 0, default, d =>
+            {
+                d.velocity = NPC.SafeDirectionTo(Target.Center + Target.velocity * 20f, -Vector2.UnitY) * Main.rand.NextFloat(-4f, -1f) * Main.rand.NextFloat(1f, 2f);
+                d.noGravity = true;
+                if (Main.rand.NextBool())
+                {
+                    d.scale = 0.5f;
+                    d.fadeIn = 1f + Main.rand.Next(10) * 0.1f;
+                }
+            });
+        }
+    }
+
+    private void Despawn()
+    {
+        NPC.life = 0;
+        NPC.HitEffect();
+        NPC.active = false;
+        NPC.netUpdate = true;
+    }
+
+    private void FollowTarget()
+    {
+        NPC.damage = 0;
+
+        NPC.knockBackResist = 0.7f;
+
+        NPC.rotation = NPC.velocity.X / 15f;
+
+        float maxVelocityX = 8f;
+        float maxVelocityY = 5f;
+        float acceleration = 0.2f;
+
+        switch (NPC.Center.X - Target.Center.X)
+        {
+            case > 200f:
+                if (NPC.velocity.X > 0f)
+                    NPC.velocity.X *= 0.98f;
+                NPC.velocity.X = Math.Min(NPC.velocity.X - acceleration, maxVelocityX);
+                break;
+            case < -200f:
+                if (NPC.velocity.X < 0f)
+                    NPC.velocity.X *= 0.98f;
+                NPC.velocity.X = Math.Max(NPC.velocity.X + acceleration, -maxVelocityX);
+                break;
+        }
+
+        switch (NPC.Center.Y - Target.Center.Y)
+        {
+            case > -200f:
+                if (NPC.velocity.Y > 0f)
+                    NPC.velocity.Y *= 0.98f;
+                NPC.velocity.Y = Math.Min(NPC.velocity.Y - acceleration, maxVelocityY);
+                break;
+            case < -300f:
+                if (NPC.velocity.Y < 0f)
+                    NPC.velocity.Y *= 0.98f;
+                NPC.velocity.Y = Math.Max(NPC.velocity.Y + acceleration, -maxVelocityY);
+                break;
+        }
+
+        AI_Timer2++;
+        if (AI_Timer2 >= Constant.chargePhaseGateValue)
+        {
+            AI_Timer2 = 0;
+            AI_CurrentAttack = AttackType.Charge;
+            NPC.netUpdate = true;
+        }
+    }
+
+    private void Charge()
+    {
+        NPC.knockBackResist = 0f;
+
+        switch (AI_CurrentAttackPhase)
+        {
+            case 0: //停止，旋转
+                NPC.damage = 0;
+                NPC.velocity *= 0.94f;
+                AI_Timer1++;
+                NPC.rotation += (0.1f + AI_Timer1 / Constant.chargeGateValue * 0.4f) * NPC.direction;
+                if (AI_Timer1 >= Constant.chargeGateValue)
+                {
+                    MakeDust(10);
+
+                    SoundEngine.PlaySound(SoundID.Item38, NPC.Center);
+
+                    AI_CurrentAttackPhase = 1;
+                    AI_Timer1 = 0;
+                    NPC.netUpdate = true;
+                }
+                break;
+            case 1: //冲刺
+                NPC.damage = NPC.defDamage;
+                float chargeSpeed = 24f;
+                NPC.velocity = NPC.SafeDirectionTo(Target.Center + Target.velocity * 20f, -Vector2.UnitY) * chargeSpeed;
+                NPC.rotation = NPC.velocity.ToRotation() + MathHelper.PiOver2;
+                AI_CurrentAttackPhase = 2;
+                AI_Timer1 = 0;
+                NPC.netSpam = 0;
+                NPC.netUpdate = true;
+                break;
+            case 2: //冲刺中
+                NPC.damage = NPC.defDamage;
+                AI_Timer1++;
+                if (AI_Timer1 >= Constant.chargeGateValue)
+                {
+                    NPC.damage = 0;
+                    MakeDust(10);
+                    SoundEngine.PlaySound(SoundID.Item8, NPC.Center);
+                    AI_CurrentAttackPhase = 0;
+                    AI_Timer1 = 0;
+                    AI_CurrentAttack = AttackType.FollowTarget;
+                    NPC.netUpdate = true;
+                    NPC.velocity = Vector2.Zero;
+                }
+                break;
+        }
+    }
+}

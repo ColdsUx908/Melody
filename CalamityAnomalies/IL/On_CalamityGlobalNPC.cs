@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using CalamityAnomalies.Contents.AnomalyMode.NPCs;
+using CalamityAnomalies.Override;
 using CalamityMod;
 using CalamityMod.Events;
 using CalamityMod.NPCs;
@@ -25,19 +23,17 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ModLoader;
-using Transoceanic;
 using Transoceanic.Core.IL;
 using static CalamityMod.NPCs.CalamityGlobalNPC;
 
 namespace CalamityAnomalies.IL;
 
-/// <summary>
-/// 钩子。
-/// <br/>应用类：<see cref="CalamityGlobalNPC"/>。
-/// </summary>
-public class On_CalamityGlobalNPC : ITODetourProvider
+[TODetour(typeof(CalamityGlobalNPC))]
+public class On_CalamityGlobalNPC
 {
-    internal static void Hook_CalamityGlobalNPC_SetDefaults(Orig_CalamityGlobalNPC_SetDefaults orig, CalamityGlobalNPC self, NPC npc)
+    internal delegate void Orig_SetDefaults(CalamityGlobalNPC self, NPC npc);
+
+    internal static void Detour_SetDefaults(Orig_SetDefaults orig, CalamityGlobalNPC self, NPC npc)
     {
         if (CAWorld.BossRush)
         {
@@ -182,7 +178,9 @@ public class On_CalamityGlobalNPC : ITODetourProvider
             npc.lifeMax = (int)Math.Round(npc.lifeMax * MasterModeEnemyHPMultiplier); //只更改血量，因为攻击已经在ModNPC的SetDefaults()中处理了
     }
 
-    internal static void Hook_CalamityGlobalNPC_ModifyIncomingHit(Orig_CalamityGlobalNPC_ModifyIncomingHit orig, CalamityGlobalNPC self, NPC npc, ref NPC.HitModifiers modifiers)
+    internal delegate void Orig_ModifyIncomingHit(CalamityGlobalNPC self, NPC npc, ref NPC.HitModifiers modifiers);
+
+    internal static void Detour_ModifyIncomingHit(Orig_ModifyIncomingHit orig, CalamityGlobalNPC self, NPC npc, ref NPC.HitModifiers modifiers)
     {
         if (CAWorld.BossRush)
         {
@@ -196,11 +194,15 @@ public class On_CalamityGlobalNPC : ITODetourProvider
         orig(self, npc, ref modifiers);
     }
 
-    internal static bool Hook_CalamityGlobalNPC_PreAI(Orig_CalamityGlobalNPC_PreAI orig, CalamityGlobalNPC self, NPC npc)
+    internal delegate bool Orig_PreAI(CalamityGlobalNPC self, NPC npc);
+
+    internal static bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalNPC self, NPC npc)
     {
-        if (CAWorld.Anomaly && AnomalyNPCOverrideHelper.Registered(npc.type, out AnomalyNPCOverride anomalyNPCOverride)
-            && !anomalyNPCOverride.AllowOrigCalMethod(OrigCalMethodType.PreAI))
-            return true;
+        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+        {
+            if (!npcOverride.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.PreAI))
+                return true;
+        }
 
         if (CAWorld.BossRush)
             BossRushEvent.BossRushActive = true;
@@ -208,31 +210,43 @@ public class On_CalamityGlobalNPC : ITODetourProvider
         return orig(self, npc);
     }
 
-    internal static void Hook_CalamityGlobalNPC_PostAI(Orig_CalamityGlobalNPC_PostAI orig, CalamityGlobalNPC self, NPC npc)
+    internal delegate void Orig_PostAI(CalamityGlobalNPC self, NPC npc);
+
+    internal static void Detour_PostAI(Orig_PostAI orig, CalamityGlobalNPC self, NPC npc)
     {
         orig(self, npc);
         BossRushEvent.BossRushActive = CAWorld.RealBossRushEventActive;
     }
 
-    internal static Color? Hook_CalamityGlobalNPC_GetAlpha(Orig_CalamityGlobalNPC_GetAlpha orig, CalamityGlobalNPC self, NPC npc, Color drawColor)
+    internal delegate Color? Orig_GetAlpha(CalamityGlobalNPC self, NPC npc, Color drawColor);
+
+    internal static Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalNPC self, NPC npc, Color drawColor)
     {
-        if (CAWorld.Anomaly && AnomalyNPCOverrideHelper.Registered(npc.type, out AnomalyNPCOverride anomalyNPCOverride)
-            && !anomalyNPCOverride.AllowOrigCalMethod(OrigCalMethodType.GetAlpha))
-            return null;
+        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+        {
+            if (!npcOverride.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.GetAlpha))
+                return null;
+        }
 
         return orig(self, npc, drawColor);
     }
 
-    internal static bool Hook_CalamityGlobalNPC_PreDraw(Orig_CalamityGlobalNPC_Predraw orig, CalamityGlobalNPC self, NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
+    internal delegate bool Orig_Predraw(CalamityGlobalNPC self, NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor);
+
+    internal static bool Detour_PreDraw(Orig_Predraw orig, CalamityGlobalNPC self, NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        if (CAWorld.Anomaly && AnomalyNPCOverrideHelper.Registered(npc.type, out AnomalyNPCOverride anomalyNPCOverride)
-            && anomalyNPCOverride.AllowOrigCalMethod(OrigCalMethodType.PreDraw))
-            return true;
+        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+        {
+            if (npcOverride.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.PreDraw))
+                return true;
+        }
 
         return orig(self, npc, spriteBatch, screenPos, drawColor);
     }
 
-    internal static void Hook_CalamityGlobalNPC_BossRushForceDespawnOtherNPCs(Orig_CalamityGlobalNPC_BossRushForceDespawnOtherNPCs orig, CalamityGlobalNPC self, NPC npc, Mod mod)
+    internal delegate void Orig_BossRushForceDespawnOtherNPCs(CalamityGlobalNPC self, NPC npc, Mod mod);
+
+    internal static void Detour_BossRushForceDespawnOtherNPCs(Orig_BossRushForceDespawnOtherNPCs orig, CalamityGlobalNPC self, NPC npc, Mod mod)
     {
         if (CAWorld.BossRush && !CAWorld.RealBossRushEventActive)
             return;
@@ -240,7 +254,9 @@ public class On_CalamityGlobalNPC : ITODetourProvider
         orig(self, npc, mod);
     }
 
-    internal static void Hook_CalamityGlobalNPC_OnKill(Orig_CalamityGlobalNPC_OnKill orig, CalamityGlobalNPC self, NPC npc)
+    internal delegate void Orig_OnKill(CalamityGlobalNPC self, NPC npc);
+
+    internal static void Detour_OnKill(Orig_OnKill orig, CalamityGlobalNPC self, NPC npc)
     {
         if (CAWorld.BossRush)
         {
@@ -253,38 +269,4 @@ public class On_CalamityGlobalNPC : ITODetourProvider
 
         orig(self, npc);
     }
-
-    #region Detour
-    private static Type Type_CalamityGlobalNPC { get; } = typeof(CalamityGlobalNPC);
-
-    internal static MethodInfo Method_CalamityGlobalNPC_SetDefaults { get; } = Type_CalamityGlobalNPC.GetMethod("SetDefaults", TOMain.UniversalBindingFlags);
-    internal static MethodInfo Method_CalamityGlobalNPC_ModifyIncomingHit { get; } = Type_CalamityGlobalNPC.GetMethod("ApplyDR", TOMain.UniversalBindingFlags);
-    internal static MethodInfo Method_CalamityGlobalNPC_PreAI { get; } = Type_CalamityGlobalNPC.GetMethod("PreAI", TOMain.UniversalBindingFlags);
-    internal static MethodInfo Method_CalamityGlobalNPC_PostAI { get; } = Type_CalamityGlobalNPC.GetMethod("PostAI", TOMain.UniversalBindingFlags);
-    internal static MethodInfo Method_CalamityGlobalNPC_GetAlpha { get; } = Type_CalamityGlobalNPC.GetMethod("GetAlpha", TOMain.UniversalBindingFlags);
-    internal static MethodInfo Method_CalamityGlobalNPC_PreDraw { get; } = Type_CalamityGlobalNPC.GetMethod("PreDraw", TOMain.UniversalBindingFlags);
-    internal static MethodInfo Method_CalamityGlobalNPC_BossRushForceDespawnOtherNPCs { get; } = Type_CalamityGlobalNPC.GetMethod("BossRushForceDespawnOtherNPCs", TOMain.UniversalBindingFlags);
-    internal static MethodInfo Method_CalamityGlobalNPC_OnKill { get; } = Type_CalamityGlobalNPC.GetMethod("OnKill", TOMain.UniversalBindingFlags);
-
-    internal delegate void Orig_CalamityGlobalNPC_SetDefaults(CalamityGlobalNPC self, NPC npc);
-    internal delegate void Orig_CalamityGlobalNPC_ModifyIncomingHit(CalamityGlobalNPC self, NPC npc, ref NPC.HitModifiers modifiers);
-    internal delegate bool Orig_CalamityGlobalNPC_PreAI(CalamityGlobalNPC self, NPC npc);
-    internal delegate void Orig_CalamityGlobalNPC_PostAI(CalamityGlobalNPC self, NPC npc);
-    internal delegate Color? Orig_CalamityGlobalNPC_GetAlpha(CalamityGlobalNPC self, NPC npc, Color drawColor);
-    internal delegate bool Orig_CalamityGlobalNPC_Predraw(CalamityGlobalNPC self, NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor);
-    internal delegate void Orig_CalamityGlobalNPC_BossRushForceDespawnOtherNPCs(CalamityGlobalNPC self, NPC npc, Mod mod);
-    internal delegate void Orig_CalamityGlobalNPC_OnKill(CalamityGlobalNPC self, NPC npc);
-
-    Dictionary<MethodInfo, Delegate> ITODetourProvider.DetoursToApply => new()
-    {
-        [Method_CalamityGlobalNPC_SetDefaults] = Hook_CalamityGlobalNPC_SetDefaults,
-        [Method_CalamityGlobalNPC_ModifyIncomingHit] = Hook_CalamityGlobalNPC_ModifyIncomingHit,
-        [Method_CalamityGlobalNPC_PreAI] = Hook_CalamityGlobalNPC_PreAI,
-        [Method_CalamityGlobalNPC_PostAI] = Hook_CalamityGlobalNPC_PostAI,
-        [Method_CalamityGlobalNPC_GetAlpha] = Hook_CalamityGlobalNPC_GetAlpha,
-        [Method_CalamityGlobalNPC_PreDraw] = Hook_CalamityGlobalNPC_PreDraw,
-        [Method_CalamityGlobalNPC_BossRushForceDespawnOtherNPCs] = Hook_CalamityGlobalNPC_BossRushForceDespawnOtherNPCs,
-        [Method_CalamityGlobalNPC_OnKill] = Hook_CalamityGlobalNPC_OnKill,
-    };
-    #endregion
 }

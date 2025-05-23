@@ -1,9 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
-using Transoceanic.Core.ExtraData;
-using Transoceanic.Core.ExtraData.Maths;
+using Transoceanic.Core.ExtraGameData;
 using Transoceanic.Core.MathHelp;
+using Transoceanic.Core.ExtraMathData;
 
 namespace Transoceanic.Core.GameData;
 

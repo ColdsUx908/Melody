@@ -13,7 +13,7 @@ public class TOLoaderSystem : ModSystem
         foreach ((Type type, ITOLoader loader) in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>()
             .OrderByDescending(k => k.instance.GetPriority(LoaderMethodType.PostAddRecipes)))
         {
-            if (!type.MustHaveRealMethodWith("PostAddRecipes", "OnModUnload", TOMain.UniversalBindingFlags))
+            if (!type.MustHaveRealMethodWith("PostAddRecipes", "OnModUnload", TOReflectionUtils.UniversalBindingFlags))
                 throw new Exception($"[{type.Name}] must implement OnModUnload with PostAddRecipes implemented.");
             else
                 loader.PostAddRecipes();
@@ -32,7 +32,7 @@ public class TOLoaderSystem : ModSystem
         foreach ((Type type, ITOLoader loader) in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>()
             .OrderByDescending(k => k.instance.GetPriority(LoaderMethodType.OnWorldLoad)))
         {
-            if (!type.MustHaveRealMethodWith("OnWorldLoad", "OnWorldUnload", TOMain.UniversalBindingFlags))
+            if (!type.MustHaveRealMethodWith("OnWorldLoad", "OnWorldUnload", TOReflectionUtils.UniversalBindingFlags))
                 throw new Exception($"[{type.Name}] must implement OnWorldUnload with OnWorldLoad implemented.");
             else
                 loader.OnWorldLoad();
