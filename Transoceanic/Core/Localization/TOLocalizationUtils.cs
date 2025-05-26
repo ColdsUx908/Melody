@@ -130,4 +130,15 @@ public static partial class TOLocalizationUtils
         caller.ReplyLocalizedTextWith(key, TOMain.TODebugErrorColor, args);
         caller.ReplyLocalizedText(TOMain.DebugErrorMessageKey, TOMain.TODebugErrorColor);
     }
+
+    /*
+    public static string Translation(string Chinese = null, string English = null, string Spanish = null, string Russian = null) => Language.ActiveCulture.LegacyId switch
+    {
+        7 => Chinese,
+        6 => Russian,
+        5 => Spanish,
+        1 => English ?? "Invalid String.",
+        _ => English ?? "Invalid String."
+    };
+    */
 }

@@ -11,18 +11,18 @@ public class TOGeneralChatCommand : ModCommand
 
     public override string Command => "/chat"; //需要使用的指令是"//chat"（两个斜杠）
 
-    private const string commandPrefix = TOMain.ModLocalizationPrefix + "Commands.GeneralCommand.";
+    private const string localizationPrefix = TOMain.ModLocalizationPrefix + "Commands.GeneralCommand.";
 
     public override void Action(CommandCaller caller, string input, string[] args)
     {
         if (args.Length == 0 || string.IsNullOrEmpty(args[0]))
-            caller.ReplyLocalizedText(commandPrefix + "Helper");
+            caller.ReplyLocalizedText(localizationPrefix + "Helper");
         switch (args[0].ToLower())
         {
             case "help":
             case "h":
             case "?":
-                caller.ReplyLocalizedText(commandPrefix + "Helper");
+                caller.ReplyLocalizedText(localizationPrefix + "Helper");
                 break;
             case "redo":
                 CommandCallInfo commandCallInfo = caller.Player.Ocean().CommandCallInfo;
@@ -45,11 +45,11 @@ public class TOGeneralChatCommand : ModCommand
             }
             catch (CommandArgumentException e)
             {
-                caller.ReplyLocalizedTextWith(commandPrefix + "InvalidArguments", Color.Red, e);
+                caller.ReplyLocalizedTextWith(localizationPrefix + "InvalidArguments", Color.Red, e);
                 value.Help(caller, args);
             }
         }
         else
-            caller.ReplyLocalizedText(commandPrefix + "Helper2");
+            caller.ReplyLocalizedText(localizationPrefix + "Helper2");
     }
 }

@@ -8,6 +8,8 @@ public static class TOProjectileUtils
 {
     public static T GetModProjectile<T>(this Projectile projectile) where T : ModProjectile => projectile.ModProjectile as T;
 
+    public static bool OnOwnerClient(this Projectile projectile) => projectile.owner == Main.myPlayer;
+
     /// <summary>
     /// 将弹幕速度设置为指定值，同时更新旋转。
     /// <br>为性能考虑，不要在不改变方向的情况中重复调用该方法。</br>
@@ -21,7 +23,7 @@ public static class TOProjectileUtils
     }
 
     /// <summary>
-    /// 适用于贴图方向向上的弹幕，用于将 <see cref="GameData.velocity"/> 转换为 <see cref="Projectile.rotation"/>，并应用于弹幕。
+    /// 适用于贴图方向向上的弹幕，用于将 <see cref="Entity.velocity"/> 转换为 <see cref="Projectile.rotation"/>，并应用于弹幕。
     /// </summary>
     public static void VelocityToRotation(this Projectile projectile)
     {

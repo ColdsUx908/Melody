@@ -18,7 +18,6 @@ using CalamityMod.NPCs.OldDuke;
 using CalamityMod.NPCs.Polterghast;
 using CalamityMod.NPCs.ProfanedGuardians;
 using CalamityMod.NPCs.SupremeCalamitas;
-using CalamityMod.NPCs.TownNPCs;
 using CalamityMod.NPCs.Yharon;
 using CalamityMod.Projectiles.Melee;
 using Microsoft.Xna.Framework;
@@ -27,9 +26,9 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Transoceanic;
 using Transoceanic.Core.GameData.Utilities;
 using Transoceanic.Core.IL;
-using Transoceanic.Core.MathHelp;
 using Transoceanic.GlobalInstances;
 
 namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
@@ -49,7 +48,7 @@ public sealed class MurasamaOverride : CAItemTweak<Murasama>
             }
         }
 
-        float finalDamage = CAWorld.LR ? 20f : 15f;
+        float baseDamage = CAWorld.LR ? 20f : 15f;
         float multiplier = 1f;
         if (NPC.downedBoss1)
             multiplier += 0.2f;
@@ -63,8 +62,10 @@ public sealed class MurasamaOverride : CAItemTweak<Murasama>
             multiplier += 1f;
         if (Main.hardMode)
             multiplier += 4f;
-        if (DownedBossSystem.downedCalamitasClone || NPC.downedPlantBoss)
-            multiplier += 3f;
+        if (DownedBossSystem.downedCalamitasClone)
+            multiplier += 1f;
+        if (NPC.downedPlantBoss)
+            multiplier += 2f;
         if (NPC.downedGolemBoss)
             multiplier += 3f;
         if (NPC.downedAncientCultist)
@@ -78,13 +79,16 @@ public sealed class MurasamaOverride : CAItemTweak<Murasama>
         if (DownedBossSystem.downedDoG)
             multiplier += 60f;
         if (DownedBossSystem.downedYharon)
-            multiplier += 80f;
+            multiplier += 100f;
         if (DownedBossSystem.downedExoMechs)
             multiplier += 50f;
         if (DownedBossSystem.downedCalamitas)
             multiplier += 50f;
+        if (DownedBossSystem.downedExoMechs && DownedBossSystem.downedCalamitas)
+            multiplier += 150f;
 
-        damage.Base = -Item.damage + finalDamage * multiplier;
+        float finalDamage = CAWorld.RealBossRushEventActive ? 20001f : baseDamage * multiplier;
+        damage.Base = -Item.damage + finalDamage;
     }
 
     public override void ModifyWeaponKnockback(Player player, ref StatModifier knockback)
@@ -119,9 +123,7 @@ public sealed class MurasamaSlashOverride : CAProjectileTweak<MurasamaSlash>
         bool adrenalineModeActive = calamityPlayer.adrenalineModeActive;
 
         Projectile.scale = isSam ? (CAWorld.LR && rageModeActive && adrenalineModeActive ? 4f : 2f) : 1f;
-
-        if (rageModeActive || adrenalineModeActive)
-            Projectile.extraUpdates = 1;
+        Projectile.extraUpdates = rageModeActive || adrenalineModeActive ? 1 : 0;
 
         if (ModProjectile.time == 0)
         {
@@ -170,15 +172,13 @@ public sealed class MurasamaSlashOverride : CAProjectileTweak<MurasamaSlash>
         //Frames and crap
         Projectile.frameCounter++;
         if (Projectile.frameCounter % 3 == 0)
-        {
             Projectile.frame = (Projectile.frame + 1) % Main.projFrames[ModProjectile.Type];
-        }
 
         Vector2 origin = Projectile.Center + Projectile.velocity * 3f;
         Lighting.AddLight(origin, Color.Red.ToVector3() * (ModProjectile.Slashing == true ? 3.5f : 2f));
 
         Vector2 playerRotatedPoint = Owner.RotatedRelativePoint(Owner.MountedCenter, true);
-        if (Main.myPlayer == Projectile.owner)
+        if (Projectile.OnOwnerClient())
         {
             if (!Owner.CantUseHoldout())
                 ModProjectile.HandleChannelMovement(Owner, playerRotatedPoint);
@@ -191,16 +191,14 @@ public sealed class MurasamaSlashOverride : CAProjectileTweak<MurasamaSlash>
 
         // Rotation and directioning.
         if (ModProjectile.Slashing || ModProjectile.Slash1)
-        {
-            float velocityAngle = Projectile.velocity.ToRotation();
-            Projectile.rotation = velocityAngle + (Projectile.direction == -1).ToInt() * MathHelper.Pi;
-        }
-        float velocityAngle2 = Projectile.velocity.ToRotation();
-        Projectile.direction = (Math.Cos(velocityAngle2) > 0).ToDirectionInt();
+            Projectile.rotation = Projectile.velocity.ToRotation() + (Projectile.direction == -1).ToInt() * MathHelper.Pi;
+
+        float velocityAngle = Projectile.velocity.ToRotation();
+        Projectile.direction = (Math.Cos(velocityAngle) > 0).ToDirectionInt();
 
         // Positioning close to the end of the player's arm.
         float offset = 80f * Projectile.scale;
-        Projectile.Center = playerRotatedPoint + velocityAngle2.ToRotationVector2() * offset;
+        Projectile.Center = playerRotatedPoint + velocityAngle.ToRotationVector2() * offset;
 
         // Sprite and player directioning.
         Owner.ChangeDir(Projectile.direction);
@@ -447,53 +445,87 @@ public static class MurasamaUtils
 {
     public static bool IsSam(Player player) => player.name.Contains("Jetstream Sam");
 
-    public static bool Unlocked(Player player) => DownedBossSystem.downedDoG || IsSam(player);
+    public static bool Unlocked(Player player) => DownedBossSystem.downedDoG || IsSam(player) || TOMain.IsDEBUGPlayer(player);
 }
 
-/*
- * 鬼妖村正（传奇复仇彩蛋加强）对下列敌怪具有特殊效果：
- * 彩虹史莱姆 - 秒杀
- * 黄沙恶虫 - 300%伤害
- * 真菌孢子（生物） - 秒杀
- * 噬魂怪 - 秒杀
- * 沼泽之眼 - 秒杀
- * 魔教徒 - 秒杀
- * 火焰小鬼 - 秒杀
- * 毁灭者 - 150%伤害
- * 探测怪 - 200%伤害
- * 机械骷髅王手臂 - 200%伤害
- * 极地之灵的冰川护盾 - 秒杀
- * 极地之灵 - 150%伤害
- * 渊海灾虫 - 200%伤害
- * 硫磺火元素 - 200%伤害
- * 小硫火灵 - 200%伤害
- * 灾厄之影 - 150%伤害
- * 灾难，灾祸构造体 - 250%伤害
- * 世纪之花触手（脱离前&脱离后） - 200%伤害
- * 阿娜希塔的冰护盾 - 秒杀
- * 阿娜希塔 - 130%伤害
- * 利维坦 - 150%伤害
- * 深海吞食者 - 300%伤害
- * 白金星舰 - 130%伤害
- * 小白星 - 秒杀
- * 石巨人之拳 - 200%伤害
- * 石巨人头（脱离前&脱离后） - 150%伤害
- * 幻影弓龙 - 秒杀
- * 月亮领主心脏 - 130%伤害
- * 神石守卫 - 200%伤害
- * 统御守卫 - 150%伤害
- * 痴愚金龙 - 秒杀（仅在璀璨华焰或至尊山猪（GFB）存活时）
- * 癫狂龙裔 - 秒杀
- * 风暴编织者 - 无视头部和身体的减伤 TODO
- * 暗能量 - 150%伤害
- * 无尽虚空 - 若低于20%生命值，则秒杀
- * 花灵（噬魂幽花召唤） - 秒杀
- * 硫海遗爵 - 清除其速度，并击退一段距离 TODO
- * 神明吞噬者 - 200%伤害
- * 星宇护卫 - 600%伤害
- * 塔纳托斯 - 150%伤害
- * 阿尔忒弥斯和阿波罗 - 130%伤害
- * 硫磺火心 - 200%伤害
- * 灾坟魔物头部和尾部（GFB）- 150%伤害
- * 灾难，灾祸 - 130%伤害
+/* 改动
+ * 
+ * 全局
+ * 怒气或肾上腺素开启时，攻击速度翻倍。
+ * 
+ * 无彩蛋
+ * 击败犽戎后，基础伤害提升至3000。
+ * 
+ * 彩蛋（玩家名含"Jetstream Sam"）
+ * 1) 基础伤害改为15，但随击败Boss提升倍率：（所有倍率提升相加后作用于基础伤害）
+ *  括号内数值：（总倍率, 基础伤害, 传奇复仇加强下的基础伤害）
+ *   克苏鲁之眼 - 20%（1.2x, 18, 24）
+ *   世界吞噬者或克苏鲁之脑 - 40%（1.6x, 24, 32）
+ *   腐巢意志或血肉宿主 - 60%（2.2x, 33, 44）
+ *   骷髅王 - 80%（3x, 45, 60）
+ *   史莱姆之神 - 100%（4x, 60, 80）
+ *   血肉墙 - 400%（8x, 120, 160）
+ *   灾厄之影 - 100%（9x, 135, 180）
+ *   世纪之花 - 200%（11x, 165, 220）
+ *   石巨人 - 300%（14x, 210, 280）
+ *   拜月教邪教徒 - 400%（18x, 270, 360）
+ *   月亮领主 - 3200%（50x, 750, 1000）
+ *   亵渎天神 - 2000%（70x, 1050, 1400）
+ *   噬魂幽花 - 2000%（90x, 1350, 1800）
+ *   神明吞噬者 - 6000%（150x, 2250, 3000）
+ *   犽戎 - 10000%（250x, 3750, 5000）
+ *   星流巨械 - 5000%（300x, 4500, 6000）
+ *   灾厄 - 5000%（350x, 5250, 7000）
+ *   同时击败星流巨械和灾厄 - 15000%（500x, 7500, 10000）
+ * 2) 若处于BossRush事件中，基础伤害改为20001（真实力量回归！）。
+ * 
+ * 彩蛋（传奇复仇加强）
+ * 1) 基础伤害提升1/3（20）。
+ * 2) 击退翻倍（13）。
+ * 3) 怒气和肾上腺素同时开启时，刀刃增大一倍，为原版的四倍。
+ * 4) 对下列敌怪具有特殊效果：
+ *   彩虹史莱姆 - 秒杀
+ *   黄沙恶虫 - 300%伤害
+ *   真菌孢子（生物） - 秒杀
+ *   噬魂怪 - 秒杀
+ *   沼泽之眼 - 秒杀
+ *   魔教徒 - 秒杀
+ *   火焰小鬼 - 秒杀
+ *   毁灭者 - 150%伤害
+ *   探测怪 - 200%伤害
+ *   机械骷髅王手臂 - 200%伤害
+ *   极地之灵的冰川护盾 - 秒杀
+ *   极地之灵 - 150%伤害
+ *   渊海灾虫 - 200%伤害
+ *   硫磺火元素 - 200%伤害
+ *   小硫火灵 - 200%伤害
+ *   灾厄之影 - 150%伤害
+ *   灾难，灾祸构造体 - 250%伤害
+ *   世纪之花触手（脱离前&脱离后） - 200%伤害
+ *   阿娜希塔的冰护盾 - 秒杀
+ *   阿娜希塔 - 130%伤害
+ *   利维坦 - 150%伤害
+ *   深海吞食者 - 300%伤害
+ *   白金星舰 - 130%伤害
+ *   小白星 - 秒杀
+ *   石巨人之拳 - 200%伤害
+ *   石巨人头（脱离前&脱离后） - 150%伤害
+ *   幻影弓龙 - 秒杀
+ *   月亮领主心脏 - 130%伤害
+ *   神石守卫 - 200%伤害
+ *   统御守卫 - 150%伤害
+ *   痴愚金龙 - 秒杀（璀璨华焰或至尊山猪（GFB）存活时）
+ *   癫狂龙裔 - 秒杀
+ *   风暴编织者 - 无视头部和身体的减伤 未完成
+ *   暗能量 - 150%伤害
+ *   无尽虚空 - 秒杀（生命值低于20%时）
+ *   花灵（噬魂幽花召唤） - 秒杀
+ *   硫海遗爵 - 清除其速度，并击退一段距离 未完成
+ *   神明吞噬者 - 200%伤害
+ *   星宇护卫 - 600%伤害
+ *   塔纳托斯 - 150%伤害
+ *   阿尔忒弥斯和阿波罗 - 130%伤害
+ *   硫磺火心 - 200%伤害
+ *   灾坟魔物头部和尾部（GFB）- 150%伤害
+ *   灾难，灾祸 - 130%伤害
  */

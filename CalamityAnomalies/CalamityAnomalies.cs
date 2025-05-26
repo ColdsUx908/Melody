@@ -16,10 +16,6 @@ public class CalamityAnomalies : Mod
         Instance = this;
     }
 
-    public override void PostSetupContent()
-    {
-    }
-
     public override void HandlePacket(BinaryReader reader, int whoAmI)
     {
         switch (reader.ReadByte())

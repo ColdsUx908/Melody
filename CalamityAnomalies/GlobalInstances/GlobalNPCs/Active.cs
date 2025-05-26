@@ -44,11 +44,11 @@ public partial class CAGlobalNPC : GlobalNPC
     {
         if (npc.TryGetOverride(out CANPCOverride npcOverride))
         {
-            if (!npcOverride.SpecialOnKill())
-                return false;
+            if (npcOverride.SpecialOnKill())
+                return true;
         }
 
-        return true;
+        return false;
     }
 
     public override bool PreKill(NPC npc)

@@ -48,6 +48,12 @@ public partial class CAGlobalNPC : GlobalNPC
             npcOverride.PostDraw(spriteBatch, screenPos, drawColor);
     }
 
+    public override void DrawBehind(NPC npc, int index)
+    {
+        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+            npcOverride.DrawBehind(index);
+    }
+
     public override void BossHeadSlot(NPC npc, ref int index)
     {
         if (npc.TryGetOverride(out CANPCOverride npcOverride))

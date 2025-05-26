@@ -16,7 +16,7 @@ namespace CalamityAnomalies.Difficulties;
 
 public sealed class AnomalyMode : DifficultyMode, ITOLoader
 {
-    private const string prefix = CAMain.ModLocalizationPrefix + "Difficulty.AnomalyMode.";
+    private const string localizationPrefix = CAMain.ModLocalizationPrefix + "Difficulty.AnomalyMode.";
 
     internal static AnomalyMode Instance { get; set; }
 
@@ -28,7 +28,7 @@ public sealed class AnomalyMode : DifficultyMode, ITOLoader
 
     public override Asset<Texture2D> Texture { get; }
 
-    public override LocalizedText ExpandedDescription => Language.GetText(prefix + "AnomalyExpandedInfo");
+    public override LocalizedText ExpandedDescription => Language.GetText(localizationPrefix + "AnomalyExpandedInfo");
 
     public override int FavoredDifficultyAtTier(int tier)
     {
@@ -45,10 +45,10 @@ public sealed class AnomalyMode : DifficultyMode, ITOLoader
     {
         Texture = ModContent.Request<Texture2D>("CalamityAnomalies/Textures/UI/ModeIndicator_Anomaly", AssetRequestMode.AsyncLoad);
         DifficultyScale = 2.49147E23f;
-        Name = Language.GetText(prefix + "Anomaly");
-        ShortDescription = Language.GetText(prefix + "AnomalyShortInfo");
-        ActivationTextKey = prefix + "AnomalyActivate";
-        DeactivationTextKey = prefix + "AnomalyDeactivate";
+        Name = Language.GetText(localizationPrefix + "Anomaly");
+        ShortDescription = Language.GetText(localizationPrefix + "AnomalyShortInfo");
+        ActivationTextKey = localizationPrefix + "AnomalyActivate";
+        DeactivationTextKey = localizationPrefix + "AnomalyDeactivate";
         ActivationSound = SupremeCalamitas.BulletHellEndSound;
         ChatTextColor = Color.HotPink;
     }
@@ -69,7 +69,7 @@ public sealed class AnomalyMode : DifficultyMode, ITOLoader
 
 public sealed class AnomalyManagement : ModSystem
 {
-    private const string prefix = CAMain.ModLocalizationPrefix + "Difficulty.AnomalyMode.";
+    private const string localizationPrefix = CAMain.ModLocalizationPrefix + "Difficulty.AnomalyMode.";
 
     public override void PreUpdateWorld()
     {
@@ -116,30 +116,30 @@ public sealed class AnomalyManagement : ModSystem
 
     private static void DisableUltra()
     {
-        TOLocalizationUtils.ChatLocalizedText(prefix + "AnomalyUltramundaneDeactivate", Color.Red);
+        TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyUltramundaneDeactivate", Color.Red);
         CAWorld.AnomalyUltramundane = false;
     }
 
     private static void EnableUltra()
     {
-        TOLocalizationUtils.ChatLocalizedText(prefix + "AnomalyUltramundaneActivate", Color.Red);
+        TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyUltramundaneActivate", Color.Red);
         CAWorld.AnomalyUltramundane = true;
     }
 
     private static void ZenithInfo()
     {
-        TOLocalizationUtils.ChatLocalizedText(prefix + "AnomalyIllegalZenith", Color.HotPink);
+        TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyIllegalZenith", Color.HotPink);
         //SoundEngine.PlaySound();
     }
 
     private static void NotLegendaryInfo()
     {
-        TOLocalizationUtils.ChatLocalizedText(prefix + "AnomalyIllegalNotLegendary", Color.Red);
+        TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyIllegalNotLegendary", Color.Red);
     }
 
     private static void DisableAnomaly()
     {
-        TOLocalizationUtils.ChatLocalizedText(prefix + "AnomalyIllegal", Color.Red);
+        TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyIllegal", Color.Red);
         CAWorld.Anomaly = false;
     }
 }

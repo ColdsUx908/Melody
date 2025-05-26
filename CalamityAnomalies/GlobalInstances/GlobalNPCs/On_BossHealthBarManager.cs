@@ -177,8 +177,7 @@ public class On_BossHealthBarManager : ITOLoader
 
             if (shouldOverride = NPC.TryGetOverride(out CANPCOverride npcOverride))
             {
-                npcOverride.PreDrawCalBossBar(this, spriteBatch, x, y);
-                if (!npcOverride.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.DrawBossBar))
+                if (!npcOverride.PreDrawCalBossBar(this, spriteBatch, x, y))
                     return;
             }
 

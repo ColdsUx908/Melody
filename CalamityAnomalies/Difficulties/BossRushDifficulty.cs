@@ -19,7 +19,7 @@ namespace CalamityAnomalies.Difficulties;
 /// </summary>
 public sealed class BossRushMode : DifficultyMode, ITOLoader
 {
-    private const string prefix = CAMain.ModLocalizationPrefix + "Difficulty.BossRushMode.";
+    private const string localizationPrefix = CAMain.ModLocalizationPrefix + "Difficulty.BossRushMode.";
 
     public static readonly Color BossRushModeColor = new(0xF0, 0x80, 0x80);
 
@@ -33,7 +33,7 @@ public sealed class BossRushMode : DifficultyMode, ITOLoader
 
     public override Asset<Texture2D> Texture { get; }
 
-    public override LocalizedText ExpandedDescription => Language.GetText(prefix + "BossRushExpandedInfo");
+    public override LocalizedText ExpandedDescription => Language.GetText(localizationPrefix + "BossRushExpandedInfo");
 
     public override int FavoredDifficultyAtTier(int tier)
     {
@@ -50,10 +50,10 @@ public sealed class BossRushMode : DifficultyMode, ITOLoader
     {
         Texture = ModContent.Request<Texture2D>("CalamityAnomalies/Textures/UI/ModeIndicator_BossRush", AssetRequestMode.AsyncLoad);
         DifficultyScale = 2f;
-        Name = Language.GetText(prefix + "BossRush");
-        ShortDescription = Language.GetText(prefix + "BossRushShortInfo");
-        ActivationTextKey = prefix + "BossRushActivate";
-        DeactivationTextKey = prefix + "BossRushDeactivate";
+        Name = Language.GetText(localizationPrefix + "BossRush");
+        ShortDescription = Language.GetText(localizationPrefix + "BossRushShortInfo");
+        ActivationTextKey = localizationPrefix + "BossRushActivate";
+        DeactivationTextKey = localizationPrefix + "BossRushDeactivate";
         ActivationSound = SupremeCalamitas.SpawnSound;
         ChatTextColor = BossRushModeColor;
     }

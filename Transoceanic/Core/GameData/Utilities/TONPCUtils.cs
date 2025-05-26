@@ -71,7 +71,7 @@ public static class TONPCUtils
     }
 
     /// <summary>
-    /// 适用于贴图方向向上的NPC，用于将 <see cref="GameData.velocity"/> 转换为 <see cref="NPC.rotation"/>，并应用于NPC。
+    /// 适用于贴图方向向上的NPC，用于将 <see cref="Entity.velocity"/> 转换为 <see cref="NPC.rotation"/>，并应用于NPC。
     /// </summary>
     public static void VelocityToRotation(this NPC npc)
     {
