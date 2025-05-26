@@ -8,7 +8,7 @@ public partial class CAGlobalProjectile : GlobalProjectile
 {
     public override bool PreAI(Projectile projectile)
     {
-        if (projectile.HasProjectileOverride(out CAProjectileOverride projectileOverride))
+        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
         {
             if (!projectileOverride.PreAI())
                 return false;
@@ -19,13 +19,13 @@ public partial class CAGlobalProjectile : GlobalProjectile
 
     public override void AI(Projectile projectile)
     {
-        if (projectile.HasProjectileOverride(out CAProjectileOverride projectileOverride))
+        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
             projectileOverride.AI();
     }
 
     public override void PostAI(Projectile projectile)
     {
-        if (projectile.HasProjectileOverride(out CAProjectileOverride projectileOverride))
+        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
             projectileOverride.PostAI();
     }
 }

@@ -10,7 +10,7 @@ namespace Transoceanic.Core.Localization;
 
 public static partial class TOLocalizationUtils
 {
-    public static string GetTextFormat(string key, object[] args) => Language.GetText(key).Format(args);
+    public static string GetTextFormat(string key, params object[] args) => Language.GetText(key).Format(args);
 
     public static void ChatLiteralText(string text, Color? textColor = null)
     {
@@ -77,37 +77,37 @@ public static partial class TOLocalizationUtils
         }
     }
 
-    public static void ChatStringBuilder(StringBuilder stringBuilder, Color? textcolor = null)
+    public static void ChatStringBuilder(StringBuilder builder, Color? textcolor = null)
     {
         if (Main.netMode == NetmodeID.SinglePlayer)
-            Main.NewText(stringBuilder.ToString(), textcolor ?? Color.White);
+            Main.NewText(builder.ToString(), textcolor ?? Color.White);
         else
-            ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(stringBuilder.ToString()), textcolor ?? Color.White);
+            ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(builder.ToString()), textcolor ?? Color.White);
     }
 
     public static void ReplyLocalizedText(this CommandCaller commandCaller, string key, Color? textColor = null) => commandCaller.Reply(Language.GetTextValue(key), textColor ?? Color.White);
 
     public static void ReplyLocalizedTextWith(this CommandCaller commandCaller, string key, Color? textColor = null, params object[] args) => commandCaller.Reply(GetTextFormat(key, args), textColor ?? Color.White);
 
-    public static void ReplyStringBuilder(this CommandCaller commandCaller, StringBuilder stringBuilder, Color? textColor = null) => commandCaller.Reply(stringBuilder.ToString(), textColor ?? Color.White);
+    public static void ReplyStringBuilder(this CommandCaller commandCaller, StringBuilder builder, Color? textColor = null) => commandCaller.Reply(builder.ToString(), textColor ?? Color.White);
 
-    public static void AppendLocalized(this StringBuilder stringBuilder, string key) => stringBuilder.Append(Language.GetTextValue(key));
+    public static void AppendLocalized(this StringBuilder builder, string key) => builder.Append(Language.GetTextValue(key));
 
-    public static void AppendLocalizedWith(this StringBuilder stringBuilder, string key, params object[] args) => stringBuilder.Append(GetTextFormat(key, args));
+    public static void AppendLocalizedWith(this StringBuilder builder, string key, params object[] args) => builder.Append(GetTextFormat(key, args));
 
-    public static void AppendLocalizedTO(this StringBuilder stringBuilder, string key) => stringBuilder.Append(Language.GetTextValue(TOMain.ModLocalizationPrefix + key));
+    public static void AppendLocalizedTO(this StringBuilder builder, string key) => builder.Append(Language.GetTextValue(TOMain.ModLocalizationPrefix + key));
 
     public static StringBuilder CreateWithDebugHeader()
     {
-        StringBuilder stringBuilder = new();
-        stringBuilder.Append("[Transoceanic ERROR]\n");
-        return stringBuilder;
+        StringBuilder builder = new();
+        builder.Append("[Transoceanic ERROR]\n");
+        return builder;
     }
 
-    public static void AppendTODebugErrorMessage(this StringBuilder stringBuilder)
+    public static void AppendTODebugErrorMessage(this StringBuilder builder)
     {
-        stringBuilder.Append('\n');
-        stringBuilder.AppendLocalized(TOMain.DebugErrorMessageKey);
+        builder.Append('\n');
+        builder.AppendLocalized(TOMain.DebugErrorMessageKey);
     }
 
     public static void ChatDebugErrorMessage(string key, Player receiver, params object[] args)

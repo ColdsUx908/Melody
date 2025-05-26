@@ -10,6 +10,10 @@ namespace Transoceanic;
 public class Transoceanic : Mod
 {
     internal static Transoceanic Instance { get; private set; }
+    /// <summary>
+    /// 是否已加载 <see cref="Instance"/>，亦即 <see cref="Load"/> 方法已被调用。
+    /// </summary>
+    internal static bool InstanceLoaded => Instance is not null;
 
     public override void Load()
     {
@@ -40,12 +44,15 @@ public class Transoceanic : Mod
 
     public override void Unload()
     {
-        foreach (ITOLoader loader in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOLoader>(TOMain.Assembly)
-            .OrderByDescending(k => k.GetPriority(LoaderMethodType.UnLoad)))
-            loader.UnLoad();
+        if (InstanceLoaded)
+        {
+            foreach (ITOLoader loader in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOLoader>(TOMain.Assembly)
+                .OrderByDescending(k => k.GetPriority(LoaderMethodType.UnLoad)))
+                loader.UnLoad();
 
-        TOGlobalNPC._identifierAllocator = 0ul;
-        TOMain.GeneralTimer = 0;
-        Instance = null;
+            TOGlobalNPC._identifierAllocator = 0ul;
+            TOMain.GeneralTimer = 0;
+            Instance = null;
+        }
     }
 }

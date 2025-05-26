@@ -12,7 +12,7 @@ public partial class CAGlobalNPC : GlobalNPC
 {
     public override void OnSpawn(NPC npc, IEntitySource source)
     {
-        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCOverride npcOverride))
         {
             npcOverride.OnSpawn(source);
         }
@@ -20,7 +20,7 @@ public partial class CAGlobalNPC : GlobalNPC
 
     public override bool CheckActive(NPC npc)
     {
-        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCOverride npcOverride))
         {
             if (!npcOverride.CheckActive())
                 return false;
@@ -31,7 +31,7 @@ public partial class CAGlobalNPC : GlobalNPC
 
     public override bool CheckDead(NPC npc)
     {
-        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCOverride npcOverride))
         {
             if (!npcOverride.CheckDead())
                 return false;
@@ -42,7 +42,7 @@ public partial class CAGlobalNPC : GlobalNPC
 
     public override bool SpecialOnKill(NPC npc)
     {
-        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCOverride npcOverride))
         {
             if (!npcOverride.SpecialOnKill())
                 return false;
@@ -53,7 +53,7 @@ public partial class CAGlobalNPC : GlobalNPC
 
     public override bool PreKill(NPC npc)
     {
-        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCOverride npcOverride))
         {
             if (!npcOverride.PreKill())
                 return false;
@@ -64,7 +64,7 @@ public partial class CAGlobalNPC : GlobalNPC
 
     public override void OnKill(NPC npc)
     {
-        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCOverride npcOverride))
         {
             npcOverride.OnKill();
         }

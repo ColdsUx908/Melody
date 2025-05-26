@@ -1,5 +1,4 @@
-﻿using System.IO;
-using CalamityAnomalies.Override;
+﻿using CalamityAnomalies.Override;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -15,7 +14,13 @@ public partial class CAGlobalItem : GlobalItem
 
     public override void SetDefaults(Item item)
     {
-        if (item.HasItemOverride(out CAItemOverride itemOverride))
+        if (item.TryGetOverride(out CAItemOverride itemOverride))
             itemOverride.SetDefaults();
+    }
+
+    public override void AddRecipes()
+    {
+        foreach (CAItemOverride itemOverride in CAOverrideHelper.ItemOverrides.Values)
+            itemOverride.AddRecipes();
     }
 }

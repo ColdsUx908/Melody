@@ -17,13 +17,13 @@ public partial class CAGlobalNPC : GlobalNPC
     {
         Array.Fill(AnomalyAI, 0f);
 
-        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCOverride npcOverride))
             npcOverride.SetDefaults();
     }
 
     public override void SetDefaultsFromNetId(NPC npc)
     {
-        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCOverride npcOverride))
             npcOverride.SetDefaultsFromNetId();
     }
 }

@@ -9,9 +9,11 @@ public partial class CAGlobalItem : GlobalItem
 {
     public override bool? CanHitNPC(Item item, Player player, NPC target)
     {
-        if (item.HasItemOverride(out CAItemOverride itemOverride))
+        if (item.TryGetOverride(out CAItemOverride itemOverride))
         {
-            return itemOverride.CanHitNPC(player, target);
+            bool? result = itemOverride.CanHitNPC(player, target);
+            if (result is not null)
+                return result;
         }
 
         return null;
@@ -19,9 +21,11 @@ public partial class CAGlobalItem : GlobalItem
 
     public override bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, Player player, NPC target)
     {
-        if (item.HasItemOverride(out CAItemOverride itemOverride))
+        if (item.TryGetOverride(out CAItemOverride itemOverride))
         {
-            return itemOverride.CanMeleeAttackCollideWithNPC(meleeAttackHitbox, player, target);
+            bool? result = itemOverride.CanMeleeAttackCollideWithNPC(meleeAttackHitbox, player, target);
+            if (result is not null)
+                return result;
         }
 
         return null;
@@ -29,7 +33,7 @@ public partial class CAGlobalItem : GlobalItem
 
     public override void ModifyHitNPC(Item item, Player player, NPC target, ref NPC.HitModifiers modifiers)
     {
-        if (item.HasItemOverride(out CAItemOverride itemOverride))
+        if (item.TryGetOverride(out CAItemOverride itemOverride))
         {
             itemOverride.ModifyHitNPC(player, target, ref modifiers);
         }
@@ -37,7 +41,7 @@ public partial class CAGlobalItem : GlobalItem
 
     public override void OnHitNPC(Item item, Player player, NPC target, NPC.HitInfo hit, int damageDone)
     {
-        if (item.HasItemOverride(out CAItemOverride itemOverride))
+        if (item.TryGetOverride(out CAItemOverride itemOverride))
         {
             itemOverride.OnHitNPC(player, target, hit, damageDone);
         }
@@ -45,9 +49,11 @@ public partial class CAGlobalItem : GlobalItem
 
     public override bool CanHitPvp(Item item, Player player, Player target)
     {
-        if (item.HasItemOverride(out CAItemOverride itemOverride))
+        if (item.TryGetOverride(out CAItemOverride itemOverride))
         {
-            return itemOverride.CanHitPvp(player, target);
+            bool result = itemOverride.CanHitPvp(player, target);
+            if (!result)
+                return false;
         }
 
         return true;
@@ -55,7 +61,7 @@ public partial class CAGlobalItem : GlobalItem
 
     public override void ModifyHitPvp(Item item, Player player, Player target, ref Player.HurtModifiers modifiers)
     {
-        if (item.HasItemOverride(out CAItemOverride itemOverride))
+        if (item.TryGetOverride(out CAItemOverride itemOverride))
         {
             itemOverride.ModifyHitPvp(player, target, ref modifiers);
         }
@@ -63,7 +69,7 @@ public partial class CAGlobalItem : GlobalItem
 
     public override void OnHitPvp(Item item, Player player, Player target, Player.HurtInfo hurtInfo)
     {
-        if (item.HasItemOverride(out CAItemOverride itemOverride))
+        if (item.TryGetOverride(out CAItemOverride itemOverride))
         {
             itemOverride.OnHitPvp(player, target, hurtInfo);
         }

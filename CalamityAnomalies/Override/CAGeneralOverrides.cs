@@ -31,9 +31,9 @@ public sealed class CAOverrideHelper : ITOLoader
 
 public static class CAOverrideExtensions
 {
-    public static bool HasNPCOverride(this NPC npc, out CANPCOverride npcOverride) => CAOverrideHelper.NPCOverrides.TryGetValue(npc, out npcOverride);
+    public static bool TryGetOverride(this NPC npc, out CANPCOverride npcOverride) => CAOverrideHelper.NPCOverrides.TryGetOverride(npc, out npcOverride);
 
-    public static bool HasProjectileOverride(this Projectile projectile, out CAProjectileOverride projectileOverride) => CAOverrideHelper.ProjectileOverrides.TryGetValue(projectile, out projectileOverride);
+    public static bool TryGetOverride(this Projectile projectile, out CAProjectileOverride projectileOverride) => CAOverrideHelper.ProjectileOverrides.TryGetOverride(projectile, out projectileOverride);
 
-    public static bool HasItemOverride(this Item item, out CAItemOverride itemOverride) => CAOverrideHelper.ItemOverrides.TryGetValue(item, out itemOverride);
+    public static bool TryGetOverride(this Item item, out CAItemOverride itemOverride) => CAOverrideHelper.ItemOverrides.TryGetOverride(item, out itemOverride);
 }

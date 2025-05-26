@@ -28,7 +28,7 @@ using CalamityMod.NPCs.Yharon;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader.IO;
-using Transoceanic.Core.GameData;
+using Transoceanic.Core.GameData.Utilities;
 using Transoceanic.GlobalInstances.Players;
 
 namespace CalamityAnomalies.GlobalInstances;
@@ -504,7 +504,7 @@ public class PlayerDownedBossCalamity : PlayerDownedBoss
             case CalamitasClone _:
                 CalamitasClone = true;
                 break;
-            case var _ when CAUtils.IsDefeatingLeviathan(npc):
+            case var _ when CANPCUtils.IsDefeatingLeviathan(npc):
                 Leviathan = true;
                 break;
             case AstrumAureus _:
@@ -519,7 +519,7 @@ public class PlayerDownedBossCalamity : PlayerDownedBoss
             case AstrumDeusHead:
                 AstrumDeus = true;
                 break;
-            case var _ when CAUtils.IsDefeatingProfanedGuardians(npc):
+            case var _ when CANPCUtils.IsDefeatingProfanedGuardians(npc):
                 Guardians = true;
                 break;
             case Bumblefuck:
@@ -549,7 +549,7 @@ public class PlayerDownedBossCalamity : PlayerDownedBoss
             case Yharon _:
                 Yharon = true;
                 break;
-            case var _ when CAUtils.IsDefeatingExoMechs(npc):
+            case var _ when CANPCUtils.IsDefeatingExoMechs(npc):
                 ExoMechs = true;
                 break;
             case SupremeCalamitas:

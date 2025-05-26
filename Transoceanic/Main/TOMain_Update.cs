@@ -12,26 +12,26 @@ public sealed class TOMain_Update : ModSystem
     {
         GeneralTimer++;
 
-        TerrariaTime = new(Main.time, Main.GetMoonPhase());
+        TerrariaTime = new(Time24Hour, Main.GetMoonPhase());
 
         GameModeData gameModeData = TOMain.GameModeData;
         TrueMasterMode = gameModeData.IsMasterMode;
 
         if (gameModeData.IsJourneyMode)
         {
-            bool journeyMaster = false;
             CreativePowers.DifficultySliderPower power = CreativePowerManager.Instance.GetPower<CreativePowers.DifficultySliderPower>();
             bool currentJourneyMaster = power.StrengthMultiplierToGiveNPCs == 3f;
             if (power.GetIsUnlocked())
-                journeyMaster = currentJourneyMaster;
+                JourneyMasterMode = currentJourneyMaster;
             else if (!currentJourneyMaster)
-                journeyMaster = false;
-            JourneyMasterMode = journeyMaster;
+                JourneyMasterMode = false;
         }
         else
             JourneyMasterMode = false;
 
         LegendaryMode = Main.getGoodWorld && MasterMode;
+
+        DiscoColor = new(Main.DiscoR, Main.DiscoG, Main.DiscoB, Main.DiscoR);
     }
 
     public override void PostUpdateNPCs()

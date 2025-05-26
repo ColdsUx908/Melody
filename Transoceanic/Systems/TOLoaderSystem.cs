@@ -41,8 +41,11 @@ public class TOLoaderSystem : ModSystem
 
     public override void OnWorldUnload()
     {
-        foreach (ITOLoader loader in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOLoader>(TOMain.Assembly)
+        if (Transoceanic.InstanceLoaded)
+        {
+            foreach (ITOLoader loader in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOLoader>(TOMain.Assembly)
             .OrderByDescending(k => k.GetPriority(LoaderMethodType.OnWorldUnload)))
             loader.OnWorldUnload();
+        }
     }
 }

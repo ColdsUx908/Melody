@@ -1,6 +1,11 @@
-CAClientConfig: {
-	DisplayName: Client Settings
+CAServerConfig: {
+	DisplayName: Server Settings
 	Headers.Content: Content Settings
+
+	TweaksEnabled: {
+		Label: Enable Balance Tweaks
+		Tooltip: ""
+	}
 
 	BossRushDifficulty: {
 		Label: BossRush Difficulty

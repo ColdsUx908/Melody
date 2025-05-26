@@ -16,9 +16,8 @@ public partial class CAGlobalNPC : GlobalNPC
     {
         CalamityGlobalNPC calamityNPC = npc.Calamity();
 
-        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCOverride npcOverride))
         {
-            #region
             //禁用灾厄动态伤害减免。
             if (calamityNPC.KillTime >= 1 && calamityNPC.AITimer < calamityNPC.KillTime)
                 calamityNPC.AITimer = calamityNPC.KillTime;
@@ -49,7 +48,6 @@ public partial class CAGlobalNPC : GlobalNPC
 
             if (!npcOverride.PreAI())
                 return false;
-            #endregion
         }
 
         AnomalyAITimer = 0;
@@ -64,13 +62,13 @@ public partial class CAGlobalNPC : GlobalNPC
 
     public override void AI(NPC npc)
     {
-        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCOverride npcOverride))
             npcOverride.AI();
     }
 
     public override void PostAI(NPC npc)
     {
-        if (npc.HasNPCOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCOverride npcOverride))
             npcOverride.PostAI();
     }
 }

@@ -1,4 +1,6 @@
-﻿using Terraria.ModLoader;
+﻿using CalamityMod.World;
+using Terraria;
+using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
 namespace CalamityAnomalies;
@@ -26,6 +28,26 @@ public class CAWorld
     /// 在BossRush模式下，是否处于真实的BossRush事件中。
     /// </summary>
     public static bool RealBossRushEventActive { get; internal set; } = false;
+
+    /// <summary>
+    /// 传奇复仇。
+    /// </summary>
+    public static bool LR => CalamityWorld.LegendaryMode && CalamityWorld.revenge;
+
+    /// <summary>
+    /// 传奇死亡。
+    /// </summary>
+    public static bool LD => CalamityWorld.LegendaryMode && CalamityWorld.death;
+
+    /// <summary>
+    /// 传奇复仇GFB。
+    /// </summary>
+    public static bool LRG => CalamityWorld.LegendaryMode && CalamityWorld.revenge && Main.zenithWorld;
+
+    /// <summary>
+    /// 传奇死亡GFB。
+    /// </summary>
+    public static bool LDG => CalamityWorld.LegendaryMode && CalamityWorld.death && Main.zenithWorld;
 }
 
 public class CAWorldSavingSystem : ModSystem

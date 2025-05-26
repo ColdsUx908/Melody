@@ -17,7 +17,7 @@ public partial class CAGlobalProjectile : GlobalProjectile
     {
         Array.Fill(AnomalyAI, 0f);
 
-        if (projectile.HasProjectileOverride(out CAProjectileOverride projectileOverride))
+        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
             projectileOverride.SetDefaults();
     }
 }

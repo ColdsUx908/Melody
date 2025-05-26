@@ -16,22 +16,20 @@
 	  </Reference>
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="Contents\Tweaks\10_PostML\" />
-	  <Folder Include="Contents\Tweaks\11_PostProvidence\" />
-	  <Folder Include="Contents\Tweaks\12_PostPolterghast\" />
-	  <Folder Include="Contents\Tweaks\13_PostDoG\" />
-	  <Folder Include="Contents\Tweaks\14_PostYharon\" />
-	  <Folder Include="Contents\Tweaks\15_LastBoss\" />
-	  <Folder Include="Contents\Tweaks\16_Focus\" />
-	  <Folder Include="Contents\Tweaks\1_Beginning\" />
-	  <Folder Include="Contents\Tweaks\2_PostEvil1\" />
-	  <Folder Include="Contents\Tweaks\3_PostEvil2\" />
-	  <Folder Include="Contents\Tweaks\4_PostSkeletron\" />
-	  <Folder Include="Contents\Tweaks\5_Hardmode\" />
-	  <Folder Include="Contents\Tweaks\6_PostMachine\" />
-	  <Folder Include="Contents\Tweaks\7_PostPlantera\" />
-	  <Folder Include="Contents\Tweaks\8_PostGolem\" />
-	  <Folder Include="Contents\Tweaks\9_PostCultist\" />
+	  <Folder Include="Tweaks\4_1_PostML\" />
+	  <Folder Include="Tweaks\4_2_PostProvidence\" />
+	  <Folder Include="Tweaks\4_3_PostPolterghast\" />
+	  <Folder Include="Tweaks\5_2_PostYharon\" />
+	  <Folder Include="Tweaks\5_3_LastBoss\" />
+	  <Folder Include="Tweaks\6_Endgame\" />
+	  <Folder Include="Tweaks\1_1_Beginning\" />
+	  <Folder Include="Tweaks\1_2_PostEvil1\" />
+	  <Folder Include="Tweaks\1_3_PostEvil2\" />
+	  <Folder Include="Tweaks\2_1_Hardmode\" />
+	  <Folder Include="Tweaks\2_2_PostMechanics\" />
+	  <Folder Include="Tweaks\3_1_PostPlantera\" />
+	  <Folder Include="Tweaks\3_2_PostGolem\" />
+	  <Folder Include="Tweaks\3_3_PostCultist\" />
 	</ItemGroup>
 
 	<!-- References -->

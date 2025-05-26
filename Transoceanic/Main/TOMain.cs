@@ -7,6 +7,7 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Transoceanic.Core.ExtraGameData;
 using Transoceanic.Core.GameData;
+using Transoceanic.Core.GameData.Utilities;
 using Transoceanic.Core.IL;
 
 namespace Transoceanic;
@@ -18,6 +19,8 @@ public partial class TOMain
     public static Assembly Assembly { get; } = Transoceanic.Instance.Code;
 
     public static Type Type_Main { get; } = typeof(Main);
+
+    public static double Time24Hour => (Main.dayTime ? 4.5 : 19.5) + Main.time / 3600.0;
 
     public static TerrariaTime TerrariaTime { get; internal set; }
 
@@ -64,7 +67,10 @@ public partial class TOMain
     /// </summary>
     public static bool GeneralClient => Main.netMode != NetmodeID.MultiplayerClient;
 
-
+    /// <summary>
+    /// 假人NPC。
+    /// <br/>对应 <see cref="Main.maxNPCs"/> 的最后一个NPC。
+    /// </summary>
     public static NPC DummyNPC => Main.npc[Main.maxNPCs];
 
     public static Projectile DummyProjectile => Main.projectile[Main.maxProjectiles];
@@ -81,6 +87,8 @@ public partial class TOMain
     public static Color TODebugErrorColor { get; } = new(0xFF, 0x00, 0x00);
 
     public static Color CelestialColor { get; } = new(0xAF, 0xFF, 0xFF);
+
+    public static Color DiscoColor { get; internal set; } = new(Main.DiscoR, Main.DiscoG, Main.DiscoB, Main.DiscoR);
 
     public const int CelestialValue = 25000000;
     #endregion

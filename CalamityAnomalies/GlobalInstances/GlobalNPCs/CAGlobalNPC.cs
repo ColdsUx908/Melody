@@ -35,4 +35,6 @@ public partial class CAGlobalNPC : GlobalNPC
         AnomalyAI[index] = value;
         AIChanged[index] = true;
     }
+
+    public bool NeverTrippy { get; set; } = false;
 }

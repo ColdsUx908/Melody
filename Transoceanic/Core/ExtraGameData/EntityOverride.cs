@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Terraria;
-using Transoceanic.Core.GameData;
+using Transoceanic.Core.GameData.Utilities;
 using Transoceanic.Core.IL;
 
 namespace Transoceanic.Core.ExtraGameData;
@@ -36,10 +37,16 @@ public class EntityOverrideDictionary<TEntity, TOverride> : Dictionary<int, List
         from overrideInstance in overrides
         select overrideInstance;
 
-    public bool TryGetValue(TEntity entity, out TOverride overrideInstance)
+    /// <summary>
+    /// 尝试获取指定实体的Override实例。
+    /// <br/>按照 <see cref="EntityOverride{TEntity}.Priority"/> 降序依次尝试获取通过 <see cref="EntityOverride{TEntity}.ShouldProcess"/> 检测的Override实例。
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <param name="overrideInstance"></param>
+    /// <returns></returns>
+    public bool TryGetOverride(TEntity entity, [NotNullWhen(true)] out TOverride overrideInstance)
     {
-        int type = entity.GetEntityType();
-        if (TryGetValue(type, out List<TOverride> overrideList))
+        if (TryGetValue(entity.GetEntityType(), out List<TOverride> overrideList))
         {
             foreach (TOverride temp in overrideList)
             {

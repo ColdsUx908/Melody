@@ -1,16 +1,15 @@
-﻿using System;
-using CalamityAnomalies.GlobalInstances;
+﻿using CalamityAnomalies.GlobalInstances;
 using CalamityAnomalies.GlobalInstances.GlobalNPCs;
-using CalamityAnomalies.IL;
 using CalamityMod;
 using CalamityMod.NPCs;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.ModLoader;
 using Transoceanic;
 using Transoceanic.Core.ExtraGameData;
-using Transoceanic.Core.GameData;
+using Transoceanic.Core.GameData.Utilities;
 using Transoceanic.GlobalInstances;
 using Transoceanic.GlobalInstances.GlobalNPCs;
 
@@ -26,70 +25,28 @@ public enum OrigMethodType_CalamityGlobalNPC
 
 public abstract class CANPCOverride : EntityOverride<NPC>
 {
-    /*
-    private sealed class NPCContainer
-    {
-        public NPC NPC { get; set; }
-
-        public int Index { get; set; }
-
-        public TOGlobalNPC OceanNPC { get; set; }
-
-        public CAGlobalNPC AnomalyNPC { get; set; }
-
-        public CalamityGlobalNPC CalamityNPC { get; set; }
-
-        public NPCContainer(NPC npc)
-        {
-            ArgumentNullException.ThrowIfNull(npc, nameof(npc));
-            NPC = npc;
-            Index = npc.whoAmI;
-            OceanNPC = npc.Ocean();
-            AnomalyNPC = npc.Anomaly();
-            CalamityNPC = npc.Calamity();
-        }
-    }
-    */
-
     #region 实成员
-    public static int UltraIndex => CAWorld.AnomalyUltramundane.ToInt();
-
-    /// <summary>
-    /// Override对象当前应用的NPC。
-    /// </summary>
     protected NPC NPC
     {
         get => field ?? TOMain.DummyNPC;
         set;
     } = null;
 
-    /// <summary>
-    /// Override对象当前应用的NPC的 <see cref="TOGlobalNPC"/> 实例。
-    /// <br/>在值为 <see langword="null"/> 时会尝试定位 <see cref="NPC"/> 对应的实例。
-    /// </summary>
     protected TOGlobalNPC OceanNPC
     {
-        get => field ?? (NPC.whoAmI < Main.maxNPCs ? field = NPC.Ocean() : NPC.Ocean());
+        get => field ?? (NPC.whoAmI < Main.maxNPCs ? (field = NPC.Ocean()) : NPC.Ocean());
         set;
     } = null;
 
-    /// <summary>
-    /// Override对象当前应用的NPC的 <see cref="CAGlobalNPC"/> 实例。
-    /// <br/>在值为 <see langword="null"/> 时会尝试定位 <see cref="NPC"/> 对应的实例。
-    /// </summary>
     protected CAGlobalNPC AnomalyNPC
     {
-        get => field ?? (NPC.whoAmI < Main.maxNPCs ? field = NPC.Anomaly() : NPC.Anomaly());
+        get => field ?? (NPC.whoAmI < Main.maxNPCs ? (field = NPC.Anomaly()) : NPC.Anomaly());
         set;
     } = null;
 
-    /// <summary>
-    /// Override对象当前应用的NPC的 <see cref="CalamityGlobalNPC"/> 实例。
-    /// <br/>在值为 <see langword="null"/> 时会尝试定位 <see cref="NPC"/> 对应的实例。
-    /// </summary>
     protected CalamityGlobalNPC CalamityNPC
     {
-        get => field ?? (NPC.whoAmI < Main.maxNPCs ? field = NPC.Calamity() : NPC.Calamity());
+        get => field ?? (NPC.whoAmI < Main.maxNPCs ? (field = NPC.Calamity()) : NPC.Calamity());
         set;
     } = null;
 
@@ -155,6 +112,46 @@ public abstract class CANPCOverride : EntityOverride<NPC>
     /// 设置负数type的NPC的额外属性。
     /// </summary>
     public virtual void SetDefaultsFromNetId() { }
+    #endregion
+
+    #region Active
+    /// <summary>
+    /// 生成时执行的代码。
+    /// </summary>
+    /// <param name="source"></param>
+    public virtual void OnSpawn(IEntitySource source) { }
+
+    /// <summary>
+    /// Whether or not to run the code for checking whether an NPC will remain active. Return false to stop the NPC from being despawned and to stop the NPC from counting towards the limit for how many NPCs can exist near a player. Returns true by default.
+    /// </summary>
+    /// <returns></returns>
+    public virtual bool CheckActive() => true;
+
+    /// <summary>
+    /// Whether or not an NPC should be killed when it reaches 0 health. You may program extra effects in this hook (for example, how Golem's head lifts up for the second phase of its fight). Return false to stop the NPC from being killed. Returns true by default.
+    /// </summary>
+    /// <returns></returns>
+    public virtual bool CheckDead() => true;
+
+    /// <summary>
+    /// Allows you to call OnKill on your own when the NPC dies, rather then letting vanilla call it on its own. Returns false by default.
+    /// </summary>
+    /// <returns>Return true to stop vanilla from calling OnKill on its own. Do this if you call OnKill yourself.</returns>
+    public virtual bool SpecialOnKill() => false;
+
+    /// <summary>
+    /// Allows you to determine whether or not this NPC will do anything upon death (besides dying). This method can also be used to dynamically prevent specific item loot using <see cref="NPCLoader.blockLoot"/>, but editing the drop rules themselves is usually the better approach.
+    /// <para/> Returning false will skip dropping loot, the <see cref="NPCLoader.OnKill(NPC)"/> methods, and logic setting boss flags (<see cref="NPC.DoDeathEvents"/>).
+    /// <para/> Returns true by default. 
+    /// </summary>
+    /// <returns></returns>
+    public virtual bool PreKill() => true;
+
+    /// <summary>
+    /// Allows you to make things happen when this NPC dies (for example, dropping items manually and setting ModSystem fields).
+    /// <br/>This hook runs on the server/single player. For client-side effects, such as dust, gore, and sounds, see HitEffect.
+    /// </summary>
+    public virtual void OnKill() { }
     #endregion
 
     #region AI
@@ -242,50 +239,40 @@ public abstract class CANPCOverride : EntityOverride<NPC>
     /// <param name="y"></param>
     public virtual void PostDrawCalBossBar(On_BossHealthBarManager.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) { }
     #endregion
-
-    #region Active
-    /// <summary>
-    /// 生成时执行的代码。
-    /// </summary>
-    /// <param name="source"></param>
-    public virtual void OnSpawn(IEntitySource source) { }
-
-    /// <summary>
-    /// Whether or not to run the code for checking whether an NPC will remain active. Return false to stop the NPC from being despawned and to stop the NPC from counting towards the limit for how many NPCs can exist near a player. Returns true by default.
-    /// </summary>
-    /// <returns></returns>
-    public virtual bool CheckActive() => true;
-
-    /// <summary>
-    /// Whether or not an NPC should be killed when it reaches 0 health. You may program extra effects in this hook (for example, how Golem's head lifts up for the second phase of its fight). Return false to stop the NPC from being killed. Returns true by default.
-    /// </summary>
-    /// <returns></returns>
-    public virtual bool CheckDead() => true;
-
-    /// <summary>
-    /// Allows you to call OnKill on your own when the NPC dies, rather then letting vanilla call it on its own. Returns false by default.
-    /// </summary>
-    /// <returns>Return true to stop vanilla from calling OnKill on its own. Do this if you call OnKill yourself.</returns>
-    public virtual bool SpecialOnKill() => false;
-
-    /// <summary>
-    /// Allows you to determine whether or not this NPC will do anything upon death (besides dying). This method can also be used to dynamically prevent specific item loot using <see cref="NPCLoader.blockLoot"/>, but editing the drop rules themselves is usually the better approach.
-    /// <para/> Returning false will skip dropping loot, the <see cref="NPCLoader.OnKill(NPC)"/> methods, and logic setting boss flags (<see cref="NPC.DoDeathEvents"/>).
-    /// <para/> Returns true by default. 
-    /// </summary>
-    /// <returns></returns>
-    public virtual bool PreKill() => true;
-
-    /// <summary>
-    /// Allows you to make things happen when this NPC dies (for example, dropping items manually and setting ModSystem fields).
-    /// <br/>This hook runs on the server/single player. For client-side effects, such as dust, gore, and sounds, see HitEffect.
-    /// </summary>
-    public virtual void OnKill() { }
-    #endregion
     #endregion
 }
 
+public abstract class CANPCOverride<T> : CANPCOverride where T : ModNPC
+{
+    protected T ModNPC
+    {
+        get => field ?? (NPC.whoAmI < Main.maxNPCs ? (field = NPC.GetModNPC<T>()) : NPC.GetModNPC<T>());
+        set;
+    }
+
+    public override int OverrideType => ModContent.NPCType<T>();
+
+    public override void Connect(NPC npc)
+    {
+        base.Connect(npc);
+        ModNPC = npc.GetModNPC<T>();
+    }
+
+    public override void Disconnect()
+    {
+        base.Disconnect();
+        ModNPC = null;
+    }
+}
+
 public abstract class AnomalyNPCOverride : CANPCOverride
+{
+    public override decimal Priority => 10m;
+
+    public override bool ShouldProcess => CAWorld.Anomaly;
+}
+
+public abstract class AnomalyNPCOverride<T> : CANPCOverride<T> where T : ModNPC
 {
     public override decimal Priority => 10m;
 

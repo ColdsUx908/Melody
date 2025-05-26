@@ -1,6 +1,11 @@
-CAClientConfig: {
-	DisplayName: 客户端设置
+CAServerConfig: {
+	DisplayName: 服务器设置
 	Headers.Content: 内容设置
+
+	TweaksEnabled: {
+		Label: 启用平衡修改
+		Tooltip: ""
+	}
 
 	BossRushDifficulty: {
 		Label: BossRush难度

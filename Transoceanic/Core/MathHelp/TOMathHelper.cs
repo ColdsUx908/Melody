@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
-using Transoceanic.Core.ExtraMathData;
 
 namespace Transoceanic.Core.MathHelp;
 
@@ -23,15 +21,6 @@ public static partial class TOMathHelper
 
         return false;
     }
-    /// <summary>
-    /// 获取两个布尔值的逻辑状态，用于控制语句。
-    /// </summary>
-    /// <param name="A"></param>
-    /// <param name="B"></param>
-    /// <remarks>警告：须确保参数的传递顺序符合需求。</remarks>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TwoBooleanStatus GetTwoBooleanStatus(bool A, bool B) => A ? B ? TwoBooleanStatus.Both : TwoBooleanStatus.ATrue : B ? TwoBooleanStatus.BTrue : TwoBooleanStatus.Neither;
 
     /// <summary>
     /// 计算一点到矩形的最短距离。
@@ -54,5 +43,5 @@ public static partial class TOMathHelper
     }
 
     public static float ClampMap(float oldMin, float oldMax, float newMin, float newMax, float value) =>
-        ClampMap(oldMin, oldMax, newMin, newMax, Math.Clamp(value, oldMin, oldMax));
+        Map(oldMin, oldMax, newMin, newMax, Math.Clamp(value, oldMin, oldMax));
 }
