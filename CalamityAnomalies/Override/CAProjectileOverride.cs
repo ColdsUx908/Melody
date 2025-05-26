@@ -39,7 +39,7 @@ public abstract class CAProjectileOverride : EntityOverride<Projectile>
 
     protected CAGlobalProjectile AnomalyProjectile
     {
-        get => field ?? (Projectile.whoAmI < Main.maxProjectiles ? (field = Projectile.Anomaly()    ) : Projectile.Anomaly());
+        get => field ?? (Projectile.whoAmI < Main.maxProjectiles ? (field = Projectile.Anomaly()) : Projectile.Anomaly());
         set;
     } = null;
 

@@ -45,7 +45,7 @@ public class TOLoaderSystem : ModSystem
         {
             foreach (ITOLoader loader in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOLoader>(TOMain.Assembly)
             .OrderByDescending(k => k.GetPriority(LoaderMethodType.OnWorldUnload)))
-            loader.OnWorldUnload();
+                loader.OnWorldUnload();
         }
     }
 }

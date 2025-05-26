@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using CalamityAnomalies.Difficulties;
-using CalamityAnomalies.GlobalInstances;
 using CalamityAnomalies.Override;
 using CalamityMod;
 using CalamityMod.Events;
