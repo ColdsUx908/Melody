@@ -3908,6 +3908,10 @@ public abstract class GlobalInfoDisplayDetour<T> : ModTypeDetour<T> where T : Gl
 
 public abstract class GlobalItemDetour<T> : GlobalTypeDetour<Item, GlobalItem, T> where T : GlobalItem
 {
+    public override bool Detour_AppliesToEntity(Orig_AppliesToEntity orig, T self, Item item, bool lateInstantiation) => base.Detour_AppliesToEntity(orig, self, item, lateInstantiation);
+
+    public override void Detour_SetDefaults(Orig_SetDefaults orig, T self, Item item) => base.Detour_SetDefaults(orig, self, item);
+
     // OnCreated
     public delegate void Orig_OnCreated(T self, Item item, ItemCreationContext context);
     public virtual void Detour_OnCreated(Orig_OnCreated orig, T self, Item item, ItemCreationContext context) => orig(self, item, context);
@@ -4476,6 +4480,10 @@ public abstract class GlobalItemDetour<T> : GlobalTypeDetour<Item, GlobalItem, T
 
 public abstract class GlobalNPCDetour<T> : GlobalTypeDetour<NPC, GlobalNPC, T> where T : GlobalNPC
 {
+    public override bool Detour_AppliesToEntity(Orig_AppliesToEntity orig, T self, NPC npc, bool lateInstantiation) => base.Detour_AppliesToEntity(orig, self, npc, lateInstantiation);
+
+    public override void Detour_SetDefaults(Orig_SetDefaults orig, T self, NPC npc) => base.Detour_SetDefaults(orig, self, npc);
+
     // SetDefaultsFromNetId
     public delegate void Orig_SetDefaultsFromNetId(T self, NPC npc);
     public virtual void Detour_SetDefaultsFromNetId(Orig_SetDefaultsFromNetId orig, T self, NPC npc) => orig(self, npc);
@@ -4894,6 +4902,10 @@ public abstract class GlobalNPCDetour<T> : GlobalTypeDetour<NPC, GlobalNPC, T> w
 
 public abstract class GlobalProjectileDetour<T> : GlobalTypeDetour<Projectile, GlobalProjectile, T> where T : GlobalProjectile
 {
+    public override bool Detour_AppliesToEntity(Orig_AppliesToEntity orig, T self, Projectile projectile, bool lateInstantiation) => base.Detour_AppliesToEntity(orig, self, projectile, lateInstantiation);
+
+    public override void Detour_SetDefaults(Orig_SetDefaults orig, T self, Projectile projectile) => base.Detour_SetDefaults(orig, self, projectile);
+
     // OnSpawn
     public delegate void Orig_OnSpawn(T self, Projectile projectile, IEntitySource source);
     public virtual void Detour_OnSpawn(Orig_OnSpawn orig, T self, Projectile projectile, IEntitySource source) => orig(self, projectile, source);
@@ -5308,20 +5320,20 @@ public abstract class GlobalWallDetour<T> : GlobalBlockTypeDetour<T> where T : G
 #region Load
 public class TypeDetourHelper : ITOLoader
 {
-    internal static List<TypeDetour> Detours { get; } = [];
+    internal static List<TypeDetour> DetourInstances { get; } = [];
 
     void ITOLoader.PostSetupContent()
     {
         foreach (TypeDetour detour in TOReflectionUtils.GetTypeInstancesDerivedFrom<TypeDetour>())
         {
-            Detours.Add(detour);
+            DetourInstances.Add(detour);
             detour.Load();
         }
     }
 
     void ITOLoader.OnModUnload()
     {
-        Detours.Clear();
+        DetourInstances.Clear();
     }
 }
 #endregion

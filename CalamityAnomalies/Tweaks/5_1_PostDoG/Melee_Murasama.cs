@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using CalamityAnomalies.Configs;
 using CalamityAnomalies.Utilities;
 using CalamityMod;
 using CalamityMod.CalPlayer;
@@ -34,7 +35,7 @@ namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
 
 //鬼妖村正
 
-public sealed class MurasamaOverride : CAItemTweak<Murasama>
+public sealed class MurasamaTweak : CAItemTweak<Murasama>
 {
     public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
     {
@@ -118,7 +119,7 @@ public sealed class MurasamaOverride : CAItemTweak<Murasama>
     }
 }
 
-public sealed class MurasamaSlashOverride : CAProjectileTweak<MurasamaSlash>
+public sealed class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
 {
     public override bool PreAI()
     {
@@ -222,8 +223,11 @@ public sealed class MurasamaSlashOverride : CAProjectileTweak<MurasamaSlash>
 
     public override void ModifyDamageHitbox(ref Rectangle hitbox)
     {
-        int hitboxBonus = ModProjectile.Slash3 ? 130 : 70;
-        hitbox.Inflate(hitboxBonus, hitboxBonus);
+        if (MurasamaUtils.IsSam(Owner))
+        {
+            int hitboxBonus = ModProjectile.Slash3 ? 130 : 70;
+            hitbox.Inflate(hitboxBonus, hitboxBonus);
+        }
     }
 
     public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
@@ -352,17 +356,15 @@ public sealed class MurasamaSlashOverride : CAProjectileTweak<MurasamaSlash>
                 break;
         }
     }
-
-    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
-    {
-        return base.Colliding(projHitbox, targetHitbox);
-    }
 }
 
 public sealed class MurasamaDetour : ModItemDetour<Murasama>
 {
     public override bool Detour_PreDrawInInventory(Orig_PreDrawInInventory orig, Murasama self, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
     {
+        if (!CAServerConfig.Instance.TweaksEnabled)
+            return orig(self, spriteBatch, position, frame, drawColor, itemColor, origin, scale);
+
         Texture2D texture;
 
         if (MurasamaUtils.Unlocked(Main.LocalPlayer))
@@ -382,6 +384,9 @@ public sealed class MurasamaDetour : ModItemDetour<Murasama>
 
     public override bool Detour_PreDrawInWorld(Orig_PreDrawInWorld orig, Murasama self, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
     {
+        if (!CAServerConfig.Instance.TweaksEnabled)
+            return orig(self, spriteBatch, lightColor, alphaColor, ref rotation, ref scale, whoAmI);
+
         Texture2D texture;
 
         if (MurasamaUtils.Unlocked(Main.LocalPlayer))
@@ -400,6 +405,12 @@ public sealed class MurasamaDetour : ModItemDetour<Murasama>
 
     public override void Detour_PostDrawInWorld(Orig_PostDrawInWorld orig, Murasama self, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, float rotation, float scale, int whoAmI)
     {
+        if (!CAServerConfig.Instance.TweaksEnabled)
+        {
+            orig(self, spriteBatch, lightColor, alphaColor, rotation, scale, whoAmI);
+            return;
+        }
+
         if (!MurasamaUtils.Unlocked(Main.LocalPlayer))
             return;
 
@@ -409,6 +420,9 @@ public sealed class MurasamaDetour : ModItemDetour<Murasama>
 
     public override bool Detour_CanUseItem(Orig_CanUseItem orig, Murasama self, Player player)
     {
+        if (!CAServerConfig.Instance.TweaksEnabled)
+            return orig(self, player);
+
         if (player.ownedProjectileCounts[self.Item.shoot] > 0)
             return false;
 

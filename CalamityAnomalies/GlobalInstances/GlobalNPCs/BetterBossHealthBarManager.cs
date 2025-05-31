@@ -28,8 +28,8 @@ using static CalamityMod.UI.BossHealthBarManager;
 
 namespace CalamityAnomalies.GlobalInstances.GlobalNPCs;
 
-[DetourClassTo(typeof(BossHealthBarManager))]
-public class On_BossHealthBarManager : ITOLoader
+[DetourClassTo<BossHealthBarManager>]
+public class BetterBossHealthBarManager : ITOLoader
 {
     /// <summary>
     /// 改进的Boss血条UI类。
@@ -337,7 +337,7 @@ public class On_BossHealthBarManager : ITOLoader
     private const int MaxBars = 6;
     private const int MaxActiveBars = 4;
 
-    internal delegate void Orig_Draw(BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info);
+    public delegate void Orig_Draw(BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info);
 
     /// <summary>
     /// 灾厄Boss血条总控绘制钩子。
@@ -347,7 +347,7 @@ public class On_BossHealthBarManager : ITOLoader
     /// <param name="spriteBatch"></param>
     /// <param name="currentBar"></param>
     /// <param name="info"></param>
-    internal static void Detour_Draw(Orig_Draw orig, BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info)
+    public static void Detour_Draw(Orig_Draw orig, BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info)
     {
         int x = Main.screenWidth
             - (Main.playerInventory || Main.invasionType > 0 || Main.pumpkinMoon || Main.snowMoon || DD2Event.Ongoing || AcidRainEvent.AcidRainEventIsOngoing ? 670 : 420);
@@ -364,7 +364,7 @@ public class On_BossHealthBarManager : ITOLoader
         }
     }
 
-    internal delegate void Orig_Update(BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info);
+    public delegate void Orig_Update(BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info);
 
     /// <summary>
     /// 灾厄Boss血条总控更新钩子。
@@ -374,7 +374,7 @@ public class On_BossHealthBarManager : ITOLoader
     /// <param name="self"></param>
     /// <param name="currentBar"></param>
     /// <param name="info"></param>
-    internal static void Detour_Update(Orig_Update orig, BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info)
+    public static void Detour_Update(Orig_Update orig, BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info)
     {
         List<ulong> validIdentifiers = [];
 

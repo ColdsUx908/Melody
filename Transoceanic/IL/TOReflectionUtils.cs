@@ -184,6 +184,20 @@ public static class TOReflectionUtils
         where attribute is not null
         select (type, attribute);
 
+    public static IEnumerable<(MethodInfo method, T attribute)> GetMethodsWithAttribute<T>(Assembly assemblyToSearch) where T : Attribute =>
+        from type in AssemblyManager.GetLoadableTypes(assemblyToSearch)
+        from method in type.GetRealMethods(UniversalBindingFlags)
+        let attribute = method.GetAttribute<T>()
+        where attribute is not null
+        select (method, attribute);
+
+    public static IEnumerable<(MethodInfo method, T attribute)> GetMethodsWithAttribute<T>() where T : Attribute =>
+        from type in GetAllTypes()
+        from method in type.GetRealMethods(UniversalBindingFlags)
+        let attribute = method.GetAttribute<T>()
+        where attribute is not null
+        select (method, attribute);
+
     public static bool IsOverrideOf(this MethodInfo method, Type baseType)
     {
         MethodInfo baseDefinition = method.GetBaseDefinition();

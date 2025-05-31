@@ -50,9 +50,10 @@ public class EntityOverrideDictionary<TEntity, TOverride> : Dictionary<int, List
 
     /// <summary>
     /// 尝试获取指定实体的Override实例。
-    /// <br/>按照 <see cref="EntityOverride{TEntity}.Priority"/> 降序依次尝试获取通过 <see cref="EntityOverride{TEntity}.ShouldProcess"/> 检测的Override实例。
+    /// <br/>按照 <see cref="EntityOverride{TEntity}.Priority"/> 降序依次尝试获取通过 <see cref="EntityOverride{TEntity}.ShouldProcess"/> 检测和方法名检测的Override实例。
     /// </summary>
     /// <param name="entity"></param>
+    /// <param name="methodName"></param>
     /// <param name="overrideInstance"></param>
     /// <returns></returns>
     public bool TryGetOverride(TEntity entity, string methodName, [NotNullWhen(true)] out TOverride overrideInstance)

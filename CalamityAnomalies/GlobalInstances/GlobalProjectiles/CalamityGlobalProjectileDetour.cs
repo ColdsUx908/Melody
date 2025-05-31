@@ -1,17 +1,15 @@
 ﻿using CalamityMod.Events;
+using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.Projectiles;
 using Microsoft.Xna.Framework;
 using Terraria;
-using Transoceanic.IL;
+using Transoceanic.ExtraGameData;
 
 namespace CalamityAnomalies.GlobalInstances.GlobalProjectiles;
 
-[DetourClassTo(typeof(CalamityGlobalProjectile))]
-public class On_CalamityGlobalProjectile
+public class CalamityGlobalProjectileDetour : GlobalProjectileDetour<CalamityGlobalProjectile>
 {
-    internal delegate void Orig_SetDefaults(CalamityGlobalProjectile self, Projectile projectile);
-
-    internal static void Detour_SetDefaults(Orig_SetDefaults orig, CalamityGlobalProjectile self, Projectile projectile)
+    public override void Detour_SetDefaults(Orig_SetDefaults orig, CalamityGlobalProjectile self, Projectile projectile)
     {
         if (CAWorld.BossRush)
         {
@@ -25,9 +23,7 @@ public class On_CalamityGlobalProjectile
         orig(self, projectile);
     }
 
-    internal delegate bool Orig_PreAI(CalamityGlobalProjectile self, Projectile projectile);
-
-    internal static bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalProjectile self, Projectile projectile)
+    public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalProjectile self, Projectile projectile)
     {
         if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
         {
@@ -41,17 +37,13 @@ public class On_CalamityGlobalProjectile
         return orig(self, projectile);
     }
 
-    internal delegate void Orig_PostAI(CalamityGlobalProjectile self, Projectile projectile);
-
-    internal static void Detour_PostAI(Orig_PostAI orig, CalamityGlobalProjectile self, Projectile projectile)
+    public override void Detour_PostAI(Orig_PostAI orig, CalamityGlobalProjectile self, Projectile projectile)
     {
         orig(self, projectile);
         BossRushEvent.BossRushActive = CAWorld.RealBossRushEventActive;
     }
 
-    internal delegate Color? Orig_GetAlpha(CalamityGlobalProjectile self, Projectile projectile, Color lightColor);
-
-    internal static Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalProjectile self, Projectile projectile, Color lightColor)
+    public override Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalProjectile self, Projectile projectile, Color lightColor)
     {
         if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
         {
@@ -62,9 +54,7 @@ public class On_CalamityGlobalProjectile
         return orig(self, projectile, lightColor);
     }
 
-    internal delegate bool Orig_PreDraw(CalamityGlobalProjectile self, Projectile projectile, ref Color lightColor);
-
-    internal static bool Detour_PreDraw(Orig_PreDraw orig, CalamityGlobalProjectile self, Projectile projectile, ref Color lightColor)
+    public override bool Detour_PreDraw(Orig_PreDraw orig, CalamityGlobalProjectile self, Projectile projectile, ref Color lightColor)
     {
         if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
         {

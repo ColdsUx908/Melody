@@ -21,27 +21,27 @@ public class CalamityAnomalies : Mod
         switch (reader.ReadByte())
         {
             case CANetPacketID.SyncAllAnomalyAI:
-                SyncAllAnomalyAI_Func();
+                SyncAllAnomalyAI_Func(reader);
                 break;
             case CANetPacketID.SyncAnomalyAIWithIndexes:
-                SyncAnomalyAIWithIndexes_Func();
+                SyncAnomalyAIWithIndexes_Func(reader);
                 break;
         }
+    }
 
-        void SyncAllAnomalyAI_Func()
-        {
-            CAGlobalNPC anomalyNPC = Main.npc[reader.ReadByte()].Anomaly();
-            for (int i = 0; i < anomalyNPC.AnomalyAI.Length; i++)
-                anomalyNPC.AnomalyAI[i] = reader.ReadSingle();
-        }
+    private static void SyncAllAnomalyAI_Func(BinaryReader reader)
+    {
+        CAGlobalNPC anomalyNPC = Main.npc[reader.ReadByte()].Anomaly();
+        for (int i = 0; i < anomalyNPC.AnomalyAI.Length; i++)
+            anomalyNPC.AnomalyAI[i] = reader.ReadSingle();
+    }
 
-        void SyncAnomalyAIWithIndexes_Func()
-        {
-            int totalIndexes = reader.ReadByte();
-            CAGlobalNPC anomalyNPC = Main.npc[reader.ReadByte()].Anomaly();
-            for (int i = 0; i < totalIndexes; i++)
-                anomalyNPC.AnomalyAI[reader.ReadByte()] = reader.ReadSingle();
-        }
+    private static void SyncAnomalyAIWithIndexes_Func(BinaryReader reader)
+    {
+        int totalIndexes = reader.ReadByte();
+        CAGlobalNPC anomalyNPC = Main.npc[reader.ReadByte()].Anomaly();
+        for (int i = 0; i < totalIndexes; i++)
+            anomalyNPC.AnomalyAI[reader.ReadByte()] = reader.ReadSingle();
     }
 
     public override void Unload()

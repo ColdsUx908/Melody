@@ -11,18 +11,19 @@
 	  <ProjectReference Include="..\Transoceanic\Transoceanic.csproj" />
 	</ItemGroup>
 	<ItemGroup>
+	  <Reference Include="ACalTweak">
+	    <HintPath>..\..\Users\21334\Documents\My Games\Terraria\tModLoader\ModSources\ACalTweak\ACalTweak.dll</HintPath>
+	  </Reference>
 	  <Reference Include="CalamityMod">
 	    <HintPath>..\..\..\..\..\..\..\..\CalamityMod\CalamityMod.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="Tweaks\4_1_PostML\" />
+	  <Folder Include="Tweaks\1_1_Beginning\" />
 	  <Folder Include="Tweaks\4_2_PostProvidence\" />
 	  <Folder Include="Tweaks\4_3_PostPolterghast\" />
 	  <Folder Include="Tweaks\5_2_PostYharon\" />
-	  <Folder Include="Tweaks\5_3_LastBoss\" />
 	  <Folder Include="Tweaks\6_Endgame\" />
-	  <Folder Include="Tweaks\1_1_Beginning\" />
 	  <Folder Include="Tweaks\1_2_PostEvil1\" />
 	  <Folder Include="Tweaks\1_3_PostEvil2\" />
 	  <Folder Include="Tweaks\2_1_Hardmode\" />

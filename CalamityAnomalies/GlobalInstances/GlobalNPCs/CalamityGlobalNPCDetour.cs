@@ -22,17 +22,15 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ModLoader;
+using Transoceanic.ExtraGameData;
 using Transoceanic.IL;
 using static CalamityMod.NPCs.CalamityGlobalNPC;
 
 namespace CalamityAnomalies.GlobalInstances.GlobalNPCs;
 
-[DetourClassTo(typeof(CalamityGlobalNPC))]
-public class On_CalamityGlobalNPC
+public class CalamityGlobalNPCDetour : GlobalNPCDetour<CalamityGlobalNPC>
 {
-    internal delegate void Orig_SetDefaults(CalamityGlobalNPC self, NPC npc);
-
-    internal static void Detour_SetDefaults(Orig_SetDefaults orig, CalamityGlobalNPC self, NPC npc)
+    public override void Detour_SetDefaults(Orig_SetDefaults orig, CalamityGlobalNPC self, NPC npc)
     {
         if (CAWorld.BossRush)
         {
@@ -177,10 +175,7 @@ public class On_CalamityGlobalNPC
         }
     }
 
-
-    internal delegate void Orig_ModifyIncomingHit(CalamityGlobalNPC self, NPC npc, ref NPC.HitModifiers modifiers);
-
-    internal static void Detour_ModifyIncomingHit(Orig_ModifyIncomingHit orig, CalamityGlobalNPC self, NPC npc, ref NPC.HitModifiers modifiers)
+    public override void Detour_ModifyIncomingHit(Orig_ModifyIncomingHit orig, CalamityGlobalNPC self, NPC npc, ref NPC.HitModifiers modifiers)
     {
         if (CAWorld.BossRush)
         {
@@ -194,9 +189,7 @@ public class On_CalamityGlobalNPC
         orig(self, npc, ref modifiers);
     }
 
-    internal delegate bool Orig_PreAI(CalamityGlobalNPC self, NPC npc);
-
-    internal static bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalNPC self, NPC npc)
+    public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalNPC self, NPC npc)
     {
         if (npc.TryGetOverride(out CANPCOverride npcOverride))
         {
@@ -210,17 +203,14 @@ public class On_CalamityGlobalNPC
         return orig(self, npc);
     }
 
-    internal delegate void Orig_PostAI(CalamityGlobalNPC self, NPC npc);
-
-    internal static void Detour_PostAI(Orig_PostAI orig, CalamityGlobalNPC self, NPC npc)
+    public override void Detour_PostAI(Orig_PostAI orig, CalamityGlobalNPC self, NPC npc)
     {
         orig(self, npc);
         BossRushEvent.BossRushActive = CAWorld.RealBossRushEventActive;
     }
 
-    internal delegate Color? Orig_GetAlpha(CalamityGlobalNPC self, NPC npc, Color drawColor);
 
-    internal static Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalNPC self, NPC npc, Color drawColor)
+    public override Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalNPC self, NPC npc, Color drawColor)
     {
         if (npc.TryGetOverride(out CANPCOverride npcOverride))
         {
@@ -231,9 +221,7 @@ public class On_CalamityGlobalNPC
         return orig(self, npc, drawColor);
     }
 
-    internal delegate bool Orig_Predraw(CalamityGlobalNPC self, NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor);
-
-    internal static bool Detour_PreDraw(Orig_Predraw orig, CalamityGlobalNPC self, NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
+    public override bool Detour_PreDraw(Orig_PreDraw orig, CalamityGlobalNPC self, NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         if (npc.TryGetOverride(out CANPCOverride npcOverride))
         {
@@ -244,29 +232,42 @@ public class On_CalamityGlobalNPC
         return orig(self, npc, spriteBatch, screenPos, drawColor);
     }
 
-    internal delegate void Orig_BossRushForceDespawnOtherNPCs(CalamityGlobalNPC self, NPC npc, Mod mod);
-
-    internal static void Detour_BossRushForceDespawnOtherNPCs(Orig_BossRushForceDespawnOtherNPCs orig, CalamityGlobalNPC self, NPC npc, Mod mod)
-    {
-        if (CAWorld.BossRush && !CAWorld.RealBossRushEventActive)
-            return;
-
-        orig(self, npc, mod);
-    }
-
-    internal delegate void Orig_OnKill(CalamityGlobalNPC self, NPC npc);
-
-    internal static void Detour_OnKill(Orig_OnKill orig, CalamityGlobalNPC self, NPC npc)
+    public override bool Detour_CheckDead(Orig_CheckDead orig, CalamityGlobalNPC self, NPC npc)
     {
         if (CAWorld.BossRush)
         {
             bool temp = BossRushEvent.BossRushActive;
-            BossRushEvent.BossRushActive = CAWorld.RealBossRushEventActive;
+            BossRushEvent.BossRushActive = true;
+            bool result = orig(self, npc);
+            BossRushEvent.BossRushActive = temp;
+            return result;
+        }
+
+        return orig(self, npc);
+    }
+
+    public override void Detour_OnKill(Orig_OnKill orig, CalamityGlobalNPC self, NPC npc)
+    {
+        if (CAWorld.BossRush)
+        {
+            bool temp = BossRushEvent.BossRushActive;
+            BossRushEvent.BossRushActive = true;
             orig(self, npc);
             BossRushEvent.BossRushActive = temp;
             return;
         }
 
         orig(self, npc);
+    }
+
+    public delegate void Orig_BossRushForceDespawnOtherNPCs(CalamityGlobalNPC self, NPC npc, Mod mod);
+
+    [DetourMethodTo<CalamityGlobalNPC>]
+    public static void Detour_BossRushForceDespawnOtherNPCs(Orig_BossRushForceDespawnOtherNPCs orig, CalamityGlobalNPC self, NPC npc, Mod mod)
+    {
+        if (CAWorld.BossRush && !CAWorld.RealBossRushEventActive)
+            return;
+
+        orig(self, npc, mod);
     }
 }

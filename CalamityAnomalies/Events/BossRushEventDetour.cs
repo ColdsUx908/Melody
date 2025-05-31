@@ -3,12 +3,12 @@ using Transoceanic.IL;
 
 namespace CalamityAnomalies.Events;
 
-[DetourClassTo(typeof(BossRushEvent))]
-public class On_BossRushEvent
+[DetourClassTo<BossRushEvent>]
+public class BossRushEventDetour
 {
-    internal delegate void Orig_End();
+    public delegate void Orig_End();
 
-    internal static void Detour_End(Orig_End orig)
+    public static void Detour_End(Orig_End orig)
     {
         orig();
         CAWorld.RealBossRushEventActive = false;

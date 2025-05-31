@@ -76,14 +76,14 @@ public abstract class CANPCOverride : NPCOverride
     /// <param name="x">绘制位置左上角的X坐标。</param>
     /// <param name="y">绘制位置左上角的Y坐标。</param>
     /// <returns>返回 <see langword="false"/> 以阻止默认的绘制血条方法运行。默认返回 <see langword="true"/>。</returns>
-    public virtual bool PreDrawCalBossBar(On_BossHealthBarManager.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) => true;
+    public virtual bool PreDrawCalBossBar(BetterBossHealthBarManager.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) => true;
 
     /// <summary>
     /// 在绘制灾厄的Boss血条之后调用。
     /// </summary>
     /// <param name="x">绘制位置左上角的X坐标。</param>
     /// <param name="y">绘制位置左上角的Y坐标。</param>
-    public virtual void PostDrawCalBossBar(On_BossHealthBarManager.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) { }
+    public virtual void PostDrawCalBossBar(BetterBossHealthBarManager.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) { }
 }
 
 public abstract class CANPCOverride<T> : CANPCOverride where T : ModNPC
@@ -117,6 +117,20 @@ public abstract class AnomalyNPCOverride<T> : CANPCOverride<T> where T : ModNPC
     public override decimal Priority => 10m;
 
     public override bool ShouldProcess => CAWorld.Anomaly;
+}
+
+public abstract class CANPCTweak : CANPCOverride
+{
+    public override decimal Priority => 5m;
+
+    public override bool ShouldProcess => CAServerConfig.Instance.TweaksEnabled;
+}
+
+public abstract class CANPCTweak<T> : CANPCOverride<T> where T : ModNPC
+{
+    public override decimal Priority => 5m;
+
+    public override bool ShouldProcess => CAServerConfig.Instance.TweaksEnabled;
 }
 #endregion
 
