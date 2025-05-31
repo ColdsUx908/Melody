@@ -1,5 +1,4 @@
 ﻿using System;
-using CalamityAnomalies.Override;
 using CalamityMod;
 using CalamityMod.Events;
 using CalamityMod.NPCs;
@@ -23,12 +22,12 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ModLoader;
-using Transoceanic.Core.IL;
+using Transoceanic.IL;
 using static CalamityMod.NPCs.CalamityGlobalNPC;
 
 namespace CalamityAnomalies.GlobalInstances.GlobalNPCs;
 
-[TODetour(typeof(CalamityGlobalNPC))]
+[DetourClassTo(typeof(CalamityGlobalNPC))]
 public class On_CalamityGlobalNPC
 {
     internal delegate void Orig_SetDefaults(CalamityGlobalNPC self, NPC npc);

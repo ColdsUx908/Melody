@@ -2,7 +2,7 @@
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
-using Transoceanic.Core.Net;
+using Transoceanic.Net;
 
 namespace Transoceanic.GlobalInstances.GlobalNPCs;
 

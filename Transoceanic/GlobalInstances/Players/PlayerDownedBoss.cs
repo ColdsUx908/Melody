@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader.IO;
-using Transoceanic.Core.MathHelp;
+using Transoceanic.MathHelp;
 
 namespace Transoceanic.GlobalInstances.Players;
 

@@ -9,8 +9,7 @@ using Terraria;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using Transoceanic;
-using Transoceanic.Core;
-using Transoceanic.Core.Localization;
+using Transoceanic.Localization;
 
 namespace CalamityAnomalies.Difficulties;
 

@@ -1,5 +1,4 @@
-﻿using CalamityAnomalies.Override;
-using CalamityMod;
+﻿using CalamityMod;
 using CalamityMod.NPCs.Abyss;
 using Terraria;
 using Terraria.DataStructures;

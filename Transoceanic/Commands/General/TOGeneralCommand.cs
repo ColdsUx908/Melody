@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Terraria.ModLoader;
-using Transoceanic.Core.Localization;
 using Transoceanic.GlobalInstances;
+using Transoceanic.Localization;
 
 namespace Transoceanic.Commands;
 

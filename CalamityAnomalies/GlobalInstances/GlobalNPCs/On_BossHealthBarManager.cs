@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using CalamityAnomalies.Difficulties;
-using CalamityAnomalies.Override;
 using CalamityMod;
 using CalamityMod.Events;
 using CalamityMod.NPCs.CeaselessVoid;
@@ -20,16 +19,16 @@ using Terraria.GameContent.Events;
 using Terraria.GameContent.UI.BigProgressBar;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Transoceanic.Core;
-using Transoceanic.Core.ExtraMathData;
-using Transoceanic.Core.GameData;
-using Transoceanic.Core.IL;
+using Transoceanic;
+using Transoceanic.ExtraMathData;
+using Transoceanic.GameData;
 using Transoceanic.GlobalInstances;
+using Transoceanic.IL;
 using static CalamityMod.UI.BossHealthBarManager;
 
 namespace CalamityAnomalies.GlobalInstances.GlobalNPCs;
 
-[TODetour(typeof(BossHealthBarManager))]
+[DetourClassTo(typeof(BossHealthBarManager))]
 public class On_BossHealthBarManager : ITOLoader
 {
     /// <summary>

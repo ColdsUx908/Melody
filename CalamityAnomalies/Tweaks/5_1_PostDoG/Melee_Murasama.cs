@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using CalamityAnomalies.Override;
 using CalamityAnomalies.Utilities;
 using CalamityMod;
 using CalamityMod.CalPlayer;
@@ -27,8 +26,8 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Transoceanic;
-using Transoceanic.Core.GameData.Utilities;
-using Transoceanic.Core.IL;
+using Transoceanic.ExtraGameData;
+using Transoceanic.GameData.Utilities;
 using Transoceanic.GlobalInstances;
 
 namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
@@ -48,46 +47,52 @@ public sealed class MurasamaOverride : CAItemTweak<Murasama>
             }
         }
 
-        float baseDamage = CAWorld.LR ? 20f : 15f;
-        float multiplier = 1f;
-        if (NPC.downedBoss1)
-            multiplier += 0.2f;
-        if (NPC.downedBoss2)
-            multiplier += 0.4f;
-        if (CANPCUtils.DownedEvilBossT2)
-            multiplier += 0.6f;
-        if (NPC.downedBoss3)
-            multiplier += 0.8f;
-        if (DownedBossSystem.downedSlimeGod)
-            multiplier += 1f;
-        if (Main.hardMode)
-            multiplier += 4f;
-        if (DownedBossSystem.downedCalamitasClone)
-            multiplier += 1f;
-        if (NPC.downedPlantBoss)
-            multiplier += 2f;
-        if (NPC.downedGolemBoss)
-            multiplier += 3f;
-        if (NPC.downedAncientCultist)
-            multiplier += 4f;
-        if (NPC.downedMoonlord)
-            multiplier += 32f;
-        if (DownedBossSystem.downedProvidence)
-            multiplier += 20f;
-        if (DownedBossSystem.downedPolterghast)
-            multiplier += 20f;
-        if (DownedBossSystem.downedDoG)
-            multiplier += 60f;
-        if (DownedBossSystem.downedYharon)
-            multiplier += 100f;
-        if (DownedBossSystem.downedExoMechs)
-            multiplier += 50f;
-        if (DownedBossSystem.downedCalamitas)
-            multiplier += 50f;
-        if (DownedBossSystem.downedExoMechs && DownedBossSystem.downedCalamitas)
-            multiplier += 150f;
+        float finalDamage;
+        if (CAWorld.RealBossRushEventActive)
+            finalDamage = 20001f;
+        else
+        {
+            float baseDamage = CAWorld.LR ? 20f : 15f;
+            float multiplier = 1f;
+            if (NPC.downedBoss1)
+                multiplier += 0.2f;
+            if (NPC.downedBoss2)
+                multiplier += 0.4f;
+            if (CANPCUtils.DownedEvilBossT2)
+                multiplier += 0.6f;
+            if (NPC.downedBoss3)
+                multiplier += 0.8f;
+            if (DownedBossSystem.downedSlimeGod)
+                multiplier += 1f;
+            if (Main.hardMode)
+                multiplier += 4f;
+            if (DownedBossSystem.downedCalamitasClone)
+                multiplier += 1f;
+            if (NPC.downedPlantBoss)
+                multiplier += 2f;
+            if (NPC.downedGolemBoss)
+                multiplier += 3f;
+            if (NPC.downedAncientCultist)
+                multiplier += 4f;
+            if (NPC.downedMoonlord)
+                multiplier += 32f;
+            if (DownedBossSystem.downedProvidence)
+                multiplier += 20f;
+            if (DownedBossSystem.downedPolterghast)
+                multiplier += 20f;
+            if (DownedBossSystem.downedDoG)
+                multiplier += 60f;
+            if (DownedBossSystem.downedYharon)
+                multiplier += 100f;
+            if (DownedBossSystem.downedExoMechs)
+                multiplier += 50f;
+            if (DownedBossSystem.downedCalamitas)
+                multiplier += 50f;
+            if (DownedBossSystem.downedExoMechs && DownedBossSystem.downedCalamitas)
+                multiplier += 150f;
+            finalDamage = baseDamage * multiplier;
+        }
 
-        float finalDamage = CAWorld.RealBossRushEventActive ? 20001f : baseDamage * multiplier;
         damage.Base = -Item.damage + finalDamage;
     }
 
@@ -213,6 +218,12 @@ public sealed class MurasamaSlashOverride : CAProjectileTweak<MurasamaSlash>
         Owner.itemAnimation = 2;
 
         return false;
+    }
+
+    public override void ModifyDamageHitbox(ref Rectangle hitbox)
+    {
+        int hitboxBonus = ModProjectile.Slash3 ? 130 : 70;
+        hitbox.Inflate(hitboxBonus, hitboxBonus);
     }
 
     public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
@@ -348,12 +359,9 @@ public sealed class MurasamaSlashOverride : CAProjectileTweak<MurasamaSlash>
     }
 }
 
-[TODetour(typeof(Murasama))]
-public sealed class On_Murasama
+public sealed class MurasamaDetour : ModItemDetour<Murasama>
 {
-    internal delegate bool Orig_PreDrawInInventory(Murasama self, SpriteBatch spriteBatch, Vector2 position, Rectangle frameI, Color drawColor, Color itemColor, Vector2 origin, float scale);
-
-    internal static bool Detour_PreDrawInInventory(Orig_PreDrawInInventory orig, Murasama self, SpriteBatch spriteBatch, Vector2 position, Rectangle frameI, Color drawColor, Color itemColor, Vector2 origin, float scale)
+    public override bool Detour_PreDrawInInventory(Orig_PreDrawInInventory orig, Murasama self, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
     {
         Texture2D texture;
 
@@ -372,9 +380,7 @@ public sealed class On_Murasama
         return false;
     }
 
-    internal delegate bool Orig_PreDrawInWorld(Murasama self, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI);
-
-    internal static bool Detour_PreDrawInWorld(Orig_PreDrawInWorld orig, Murasama self, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
+    public override bool Detour_PreDrawInWorld(Orig_PreDrawInWorld orig, Murasama self, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
     {
         Texture2D texture;
 
@@ -392,9 +398,7 @@ public sealed class On_Murasama
         return false;
     }
 
-    internal delegate void Orig_PostDrawInWorld(Murasama self, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, float rotation, float scale, int whoAmI);
-
-    internal static void Detour_PostDrawInWorld(Orig_PostDrawInWorld orig, Murasama self, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, float rotation, float scale, int whoAmI)
+    public override void Detour_PostDrawInWorld(Orig_PostDrawInWorld orig, Murasama self, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, float rotation, float scale, int whoAmI)
     {
         if (!MurasamaUtils.Unlocked(Main.LocalPlayer))
             return;
@@ -403,41 +407,12 @@ public sealed class On_Murasama
         spriteBatch.Draw(texture, self.Item.position - Main.screenPosition, self.Item.GetCurrentFrame(ref self.frame, ref self.frameCounter, 2, 13, false), Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
     }
 
-    internal delegate bool Orig_CanUseItem(Murasama self, Player player);
-
-    internal static bool Detour_CanUseItem(Orig_CanUseItem orig, Murasama self, Player player)
+    public override bool Detour_CanUseItem(Orig_CanUseItem orig, Murasama self, Player player)
     {
         if (player.ownedProjectileCounts[self.Item.shoot] > 0)
             return false;
 
         return MurasamaUtils.Unlocked(player);
-    }
-}
-
-[TODetour(typeof(MurasamaSlash))]
-public sealed class On_MurasamaSlash
-{
-    internal delegate bool Orig_PreDraw(MurasamaSlash self, ref Color lightColor);
-
-    internal static bool Detour_PreDraw(Orig_PreDraw orig, MurasamaSlash self, ref Color lightColor)
-    {
-        if (self.Projectile.frameCounter <= 1)
-            return false;
-
-        Player owner = Main.player[self.Projectile.owner];
-        bool isSam = MurasamaUtils.IsSam(owner);
-        CalamityPlayer calamityPlayer = owner.Calamity();
-        bool rageModeActive = calamityPlayer.rageModeActive;
-        bool adrenalineModeActive = calamityPlayer.adrenalineModeActive;
-
-        float scale = isSam ? (CAWorld.LR && rageModeActive && adrenalineModeActive ? 4f : 2f) : 1f;
-
-        Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[self.Projectile.type].Value;
-        Rectangle frame = texture.Frame(verticalFrames: Main.projFrames[self.Type], frameY: self.Projectile.frame);
-        Vector2 origin = frame.Size() * 0.5f;
-        SpriteEffects spriteEffects = self.Projectile.direction == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-        Main.EntitySpriteDraw(texture, self.Projectile.Center - Main.screenPosition + (self.Projectile.velocity * 0.3f) + new Vector2(0, -32).RotatedBy(self.Projectile.rotation), frame, Color.White, self.Projectile.rotation, origin, scale, spriteEffects, 0);
-        return false;
     }
 }
 
@@ -452,6 +427,7 @@ public static class MurasamaUtils
  * 
  * 全局
  * 怒气或肾上腺素开启时，攻击速度翻倍。
+ * 大小增加。
  * 
  * 无彩蛋
  * 击败犽戎后，基础伤害提升至3000。

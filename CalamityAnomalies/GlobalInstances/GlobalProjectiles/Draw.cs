@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using CalamityAnomalies.Override;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;

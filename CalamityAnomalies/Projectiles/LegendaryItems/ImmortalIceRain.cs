@@ -6,10 +6,10 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Transoceanic;
-using Transoceanic.Core.ExtraGameData;
-using Transoceanic.Core.GameData;
-using Transoceanic.Core.GameData.Utilities;
-using Transoceanic.Core.MathHelp;
+using Transoceanic.ExtraGameData;
+using Transoceanic.GameData;
+using Transoceanic.GameData.Utilities;
+using Transoceanic.MathHelp;
 
 namespace CalamityAnomalies.Projectiles.LegendaryItems;
 

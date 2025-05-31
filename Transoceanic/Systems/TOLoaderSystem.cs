@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Terraria.ModLoader;
-using Transoceanic.Core;
-using Transoceanic.Core.IL;
+using Transoceanic.IL;
 
 namespace Transoceanic.Systems;
 
@@ -24,7 +23,9 @@ public class TOLoaderSystem : ModSystem
     {
         foreach (ITOLoader loader in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOLoader>(TOMain.Assembly)
             .OrderByDescending(k => k.GetPriority(LoaderMethodType.OnModUnload)))
+        {
             loader.OnModUnload();
+        }
     }
 
     public override void OnWorldLoad()
@@ -44,8 +45,10 @@ public class TOLoaderSystem : ModSystem
         if (Transoceanic.InstanceLoaded)
         {
             foreach (ITOLoader loader in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOLoader>(TOMain.Assembly)
-            .OrderByDescending(k => k.GetPriority(LoaderMethodType.OnWorldUnload)))
+                .OrderByDescending(k => k.GetPriority(LoaderMethodType.OnWorldUnload)))
+            {
                 loader.OnWorldUnload();
+            }
         }
     }
 }

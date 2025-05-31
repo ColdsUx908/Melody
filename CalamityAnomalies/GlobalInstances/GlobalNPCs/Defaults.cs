@@ -1,5 +1,4 @@
 ﻿using System;
-using CalamityAnomalies.Override;
 using Terraria;
 using Terraria.ModLoader;
 

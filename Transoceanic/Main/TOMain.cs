@@ -5,10 +5,10 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
-using Transoceanic.Core.ExtraGameData;
-using Transoceanic.Core.GameData;
-using Transoceanic.Core.GameData.Utilities;
-using Transoceanic.Core.IL;
+using Transoceanic.ExtraGameData;
+using Transoceanic.GameData;
+using Transoceanic.GameData.Utilities;
+using Transoceanic.IL;
 
 namespace Transoceanic;
 

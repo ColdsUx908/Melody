@@ -1,5 +1,4 @@
 ﻿using System;
-using CalamityAnomalies.Override;
 using CalamityMod;
 using CalamityMod.Buffs.StatDebuffs;
 using CalamityMod.NPCs;

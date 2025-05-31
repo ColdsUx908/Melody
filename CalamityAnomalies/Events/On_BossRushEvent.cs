@@ -1,9 +1,9 @@
 ﻿using CalamityMod.Events;
-using Transoceanic.Core.IL;
+using Transoceanic.IL;
 
 namespace CalamityAnomalies.Events;
 
-[TODetour(typeof(BossRushEvent))]
+[DetourClassTo(typeof(BossRushEvent))]
 public class On_BossRushEvent
 {
     internal delegate void Orig_End();

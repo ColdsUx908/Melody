@@ -1,5 +1,4 @@
-﻿using CalamityAnomalies.Override;
-using CalamityMod.Projectiles.Rogue;
+﻿using CalamityMod.Projectiles.Rogue;
 using Terraria;
 using Terraria.ID;
 

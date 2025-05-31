@@ -1,5 +1,4 @@
-﻿using CalamityAnomalies.Override;
-using Terraria;
+﻿using Terraria;
 using Terraria.ModLoader;
 
 namespace CalamityAnomalies.GlobalInstances.GlobalProjectiles;

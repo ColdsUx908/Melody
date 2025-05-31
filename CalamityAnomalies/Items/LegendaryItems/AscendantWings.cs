@@ -7,7 +7,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Transoceanic;
-using Transoceanic.Core.Visual;
+using Transoceanic.Drawing;
 using Transoceanic.GlobalInstances;
 using Transoceanic.Systems;
 

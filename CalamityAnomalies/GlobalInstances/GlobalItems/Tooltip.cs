@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using CalamityAnomalies.Override;
 using Terraria;
 using Terraria.Localization;
 using Terraria.ModLoader;

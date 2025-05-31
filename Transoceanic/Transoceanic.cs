@@ -1,9 +1,8 @@
 using System;
 using System.Linq;
 using Terraria.ModLoader;
-using Transoceanic.Core;
-using Transoceanic.Core.IL;
 using Transoceanic.GlobalInstances.GlobalNPCs;
+using Transoceanic.IL;
 
 namespace Transoceanic;
 
@@ -48,7 +47,9 @@ public class Transoceanic : Mod
         {
             foreach (ITOLoader loader in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOLoader>(TOMain.Assembly)
                 .OrderByDescending(k => k.GetPriority(LoaderMethodType.UnLoad)))
+            {
                 loader.UnLoad();
+            }
 
             TOGlobalNPC._identifierAllocator = 0ul;
             TOMain.GeneralTimer = 0;

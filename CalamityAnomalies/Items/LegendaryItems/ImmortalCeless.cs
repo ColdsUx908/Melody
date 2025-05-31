@@ -8,10 +8,10 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Transoceanic;
-using Transoceanic.Core.ExtraMathData;
-using Transoceanic.Core.GameData;
-using Transoceanic.Core.MathHelp;
+using Transoceanic.ExtraMathData;
+using Transoceanic.GameData;
 using Transoceanic.GlobalInstances;
+using Transoceanic.MathHelp;
 using Transoceanic.Systems;
 
 namespace CalamityAnomalies.Items.LegendaryItems;

@@ -1,11 +1,11 @@
 ﻿using CalamityMod;
 using CalamityMod.World;
 using Terraria;
-using Transoceanic.Core.IL;
+using Transoceanic.IL;
 
 namespace CalamityAnomalies.Utilities;
 
-[TODetour(typeof(CalamityUtils))]
+[DetourClassTo(typeof(CalamityUtils))]
 public class On_CalamityUtils
 {
     internal delegate void Orig_KillAllHostileProjectiles();

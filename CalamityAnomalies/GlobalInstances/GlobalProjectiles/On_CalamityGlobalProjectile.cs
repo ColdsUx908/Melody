@@ -1,13 +1,12 @@
-﻿using CalamityAnomalies.Override;
-using CalamityMod.Events;
+﻿using CalamityMod.Events;
 using CalamityMod.Projectiles;
 using Microsoft.Xna.Framework;
 using Terraria;
-using Transoceanic.Core.IL;
+using Transoceanic.IL;
 
 namespace CalamityAnomalies.GlobalInstances.GlobalProjectiles;
 
-[TODetour(typeof(CalamityGlobalProjectile))]
+[DetourClassTo(typeof(CalamityGlobalProjectile))]
 public class On_CalamityGlobalProjectile
 {
     internal delegate void Orig_SetDefaults(CalamityGlobalProjectile self, Projectile projectile);

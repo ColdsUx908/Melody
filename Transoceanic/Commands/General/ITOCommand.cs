@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Terraria.ModLoader;
-using Transoceanic.Core;
-using Transoceanic.Core.IL;
+using Transoceanic.IL;
 
 namespace Transoceanic.Commands;
 

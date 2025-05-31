@@ -1,5 +1,4 @@
 ﻿using System;
-using CalamityAnomalies.Override;
 using CalamityMod;
 using CalamityMod.NPCs.NormalNPCs;
 using Microsoft.Xna.Framework;
@@ -7,7 +6,7 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Transoceanic.Core.GameData;
+using Transoceanic.GameData;
 
 namespace CalamityAnomalies.NPCs.KingSlime;
 

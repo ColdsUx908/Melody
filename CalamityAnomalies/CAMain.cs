@@ -2,8 +2,8 @@
 using System.Reflection;
 using Microsoft.Xna.Framework;
 using Terraria.ModLoader;
-using Transoceanic.Core;
-using Transoceanic.Core.IL;
+using Transoceanic;
+using Transoceanic.IL;
 
 namespace CalamityAnomalies;
 

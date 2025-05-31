@@ -15,8 +15,8 @@ using CalamityMod.NPCs.StormWeaver;
 using CalamityMod.NPCs.SupremeCalamitas;
 using Terraria;
 using Transoceanic;
-using Transoceanic.Core.GameData;
-using Transoceanic.Core.GameData.Utilities;
+using Transoceanic.GameData;
+using Transoceanic.GameData.Utilities;
 
 namespace CalamityAnomalies.Utilities;
 

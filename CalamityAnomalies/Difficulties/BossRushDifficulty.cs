@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria.Localization;
 using Terraria.ModLoader;
-using Transoceanic.Core;
+using Transoceanic;
 
 namespace CalamityAnomalies.Difficulties;
 

@@ -28,7 +28,7 @@ using CalamityMod.NPCs.Yharon;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader.IO;
-using Transoceanic.Core.GameData.Utilities;
+using Transoceanic.GameData.Utilities;
 using Transoceanic.GlobalInstances.Players;
 
 namespace CalamityAnomalies.GlobalInstances;
