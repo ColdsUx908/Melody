@@ -1,6 +1,6 @@
 ﻿using Terraria.ModLoader;
 
-namespace Transoceanic.GlobalInstances.GlobalItems;
+namespace Transoceanic.GlobalInstances;
 
 public partial class TOGlobalItem : GlobalItem
 {

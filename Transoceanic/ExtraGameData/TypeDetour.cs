@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Text.RegularExpressions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -42,12 +43,14 @@ public abstract class TypeDetour<T> : TypeDetour
     /// 尝试将指定的Detour应用到 <see cref="T"/> 类型的方法上。
     /// </summary>
     /// <remarks>这个方法会检查当前类型中是否存在指定的方法，仅在存在时则应用Detour逻辑。</remarks>
-    /// <param name="methodName">待应用Detour的目标方法名。该参数必须是 <c>Detour_{methodName}</c> 的形式，且 <c>methodName</c> 必须与 <see cref="T"/> 类型中存在的方法名匹配。</param>
+    /// <param name="methodName">待应用Detour的目标方法名。该参数必须是 <c>{methodNamePrefix}{methodName}</c> 的形式。</param>
     /// <param name="detour">Detour逻辑的委托。该委托必须与目标方法的签名匹配。</param>
-    protected void TryApplyDetour(string methodName, Delegate detour)
+    /// <param name="methodNamePrefix"><c>methodName</c> 应用的方法名前缀。</param>
+    protected void TryApplyDetour(string methodName, Delegate detour, string methodNamePrefix = "Detour_")
     {
-        if (GetType().HasRealMethod(methodName, TOReflectionUtils.UniversalBindingFlags))
-            TODetourUtils.ModifyMethodWithDetour<T>(methodName.Replace("Detour_", null), detour);
+        Match match = Regex.Match(methodName, $@"{methodNamePrefix}(?<methodName>.*)$");
+        if (match.Success && GetType().HasRealMethod(methodName, TOReflectionUtils.UniversalBindingFlags))
+            TODetourUtils.ModifyMethodWithDetour<T>(match.Groups["methodName"].Value, detour);
     }
 }
 
@@ -5324,16 +5327,13 @@ public class TypeDetourHelper : ITOLoader
 
     void ITOLoader.PostSetupContent()
     {
-        foreach (TypeDetour detour in TOReflectionUtils.GetTypeInstancesDerivedFrom<TypeDetour>())
+        foreach (TypeDetour detourInstance in TOReflectionUtils.GetTypeInstancesDerivedFrom<TypeDetour>())
         {
-            DetourInstances.Add(detour);
-            detour.Load();
+            DetourInstances.Add(detourInstance);
+            detourInstance.Load();
         }
     }
 
-    void ITOLoader.OnModUnload()
-    {
-        DetourInstances.Clear();
-    }
+    void ITOLoader.OnModUnload() => DetourInstances.Clear();
 }
 #endregion

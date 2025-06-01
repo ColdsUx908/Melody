@@ -26,7 +26,7 @@ using Transoceanic.ExtraGameData;
 using Transoceanic.IL;
 using static CalamityMod.NPCs.CalamityGlobalNPC;
 
-namespace CalamityAnomalies.GlobalInstances.GlobalNPCs;
+namespace CalamityAnomalies.GlobalInstances;
 
 public class CalamityGlobalNPCDetour : GlobalNPCDetour<CalamityGlobalNPC>
 {

@@ -1,10 +1,14 @@
 ﻿using System;
+using System.IO;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
+using Transoceanic.Net;
 
-namespace Transoceanic.GlobalInstances.GlobalNPCs;
+namespace Transoceanic.GlobalInstances;
 
-public partial class TOGlobalNPC : GlobalNPC
+public class TOGlobalNPC : GlobalNPC
 {
     public override bool InstancePerEntity => true;
 
@@ -80,4 +84,51 @@ public partial class TOGlobalNPC : GlobalNPC
     public float LifeRatio { get; internal set; } = 0f;
 
     public float LifeRatioReverse { get; internal set; } = 0f;
+
+    #region Defaults
+    public override void SetDefaults(NPC npc)
+    {
+        Array.Fill(OceanAI, 0f);
+
+        Master = Main.maxNPCs;
+    }
+    #endregion
+
+    #region Active
+    public override void OnSpawn(NPC npc, IEntitySource source)
+    {
+        Identifier = ++_identifierAllocator; //城镇NPC这类NPC不会拥有在这里被设置标识符的机会
+        SpawnTime = TOMain.GeneralTimer;
+    }
+    #endregion
+
+    #region AI
+    public override bool PreAI(NPC npc)
+    {
+        LifeRatio = (float)npc.life / npc.lifeMax;
+        LifeRatioReverse = 1f - LifeRatio;
+
+        return true;
+    }
+
+    public override void AI(NPC npc)
+    {
+    }
+
+    public override void PostAI(NPC npc)
+    {
+    }
+    #endregion
+
+    #region Net
+    public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
+    {
+        TONetUtils.SendAI(OceanAI, AIChanged, binaryWriter);
+    }
+
+    public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
+    {
+        TONetUtils.ReceiveAI(OceanAI, binaryReader);
+    }
+    #endregion
 }

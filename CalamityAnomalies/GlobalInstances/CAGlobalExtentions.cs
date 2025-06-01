@@ -1,7 +1,4 @@
 ﻿using CalamityAnomalies.GlobalInstances.GlobalItems;
-using CalamityAnomalies.GlobalInstances.GlobalNPCs;
-using CalamityAnomalies.GlobalInstances.GlobalProjectiles;
-using CalamityAnomalies.GlobalInstances.Players;
 using Terraria;
 
 namespace CalamityAnomalies.GlobalInstances;

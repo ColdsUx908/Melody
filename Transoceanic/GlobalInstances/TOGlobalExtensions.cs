@@ -1,8 +1,4 @@
 ﻿using Terraria;
-using Transoceanic.GlobalInstances.GlobalItems;
-using Transoceanic.GlobalInstances.GlobalNPCs;
-using Transoceanic.GlobalInstances.GlobalProjectiles;
-using Transoceanic.GlobalInstances.Players;
 
 namespace Transoceanic.GlobalInstances;
 

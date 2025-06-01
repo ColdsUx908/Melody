@@ -3,8 +3,7 @@ using System.Runtime.CompilerServices;
 using CalamityAnomalies.Configs;
 using CalamityAnomalies.GlobalInstances;
 using CalamityAnomalies.GlobalInstances.GlobalItems;
-using CalamityAnomalies.GlobalInstances.GlobalNPCs;
-using CalamityAnomalies.GlobalInstances.GlobalProjectiles;
+using CalamityAnomalies.UI;
 using CalamityMod;
 using CalamityMod.Items;
 using CalamityMod.NPCs;
@@ -84,6 +83,12 @@ public abstract class CANPCOverride : NPCOverride
     /// <param name="x">绘制位置左上角的X坐标。</param>
     /// <param name="y">绘制位置左上角的Y坐标。</param>
     public virtual void PostDrawCalBossBar(BetterBossHealthBarManager.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) { }
+
+    /// <summary>
+    /// 使用此方法可以修改灾厄Boss血条的高度。
+    /// <br/>默认为 <c>70</c>。
+    /// </summary>
+    public virtual int CustomCalBossBarHeight(BetterBossHealthBarManager.BetterBossHPUI newBar) => 70;
 }
 
 public abstract class CANPCOverride<T> : CANPCOverride where T : ModNPC
@@ -292,9 +297,9 @@ public sealed class CAOverrideHelper : ITOLoader
 
 public static class CAOverrideExtensions
 {
-    public static bool TryGetOverride(this NPC npc, out CANPCOverride npcOverride, [CallerMemberName] string methodName = null) => CAOverrideHelper.NPCOverrides.TryGetOverride(npc, methodName, out npcOverride);
+    public static bool TryGetOverride(this NPC npc, out CANPCOverride npcOverride, [CallerMemberName] string methodName = null!) => CAOverrideHelper.NPCOverrides.TryGetOverride(npc, methodName, out npcOverride);
 
-    public static bool TryGetOverride(this Projectile projectile, out CAProjectileOverride projectileOverride, [CallerMemberName] string methodName = null) => CAOverrideHelper.ProjectileOverrides.TryGetOverride(projectile, methodName, out projectileOverride);
+    public static bool TryGetOverride(this Projectile projectile, out CAProjectileOverride projectileOverride, [CallerMemberName] string methodName = null!) => CAOverrideHelper.ProjectileOverrides.TryGetOverride(projectile, methodName, out projectileOverride);
 
-    public static bool TryGetOverride(this Item item, out CAItemOverride itemOverride, [CallerMemberName] string methodName = null) => CAOverrideHelper.ItemOverrides.TryGetOverride(item, methodName, out itemOverride);
+    public static bool TryGetOverride(this Item item, out CAItemOverride itemOverride, [CallerMemberName] string methodName = null!) => CAOverrideHelper.ItemOverrides.TryGetOverride(item, methodName, out itemOverride);
 }

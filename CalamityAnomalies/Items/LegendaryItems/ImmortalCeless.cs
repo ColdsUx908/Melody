@@ -25,7 +25,7 @@ public class ImmortalCeless : LegendaryItem, ILocalizedModType
 
     public override void SetPhase(Player player)
     {
-        PlayerDownedBossCalamity downedGet = player.Anomaly().PlayerDownedBossCalamity;
+        CAPlayer.DownedBoss downedGet = player.Anomaly().DownedBossCalamity;
 
         if (downedGet.PrimordialWyrm)
         {

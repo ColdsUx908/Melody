@@ -21,7 +21,7 @@ public class DetourClassToAttribute : Attribute
 
     /// <summary>
     /// 用于标识Detour方法的前缀。
-    /// <br/>若要标记的Detour方法为 <c>Detour_{methodName}</c> 的形式，则前缀为 <c>Detour_</c>。
+    /// <br/>若要标记的Detour方法为 <c>Detour_{methodName}</c> 的形式，则前缀为 <c>"Detour_"</c>。
     /// </summary>
     [NotNull]
     public string DetourPrefix { get; }
@@ -55,7 +55,7 @@ public class MultiDetourClassToAttribute : Attribute
 
     /// <summary>
     /// 用于标识Detour方法的前缀。
-    /// <br/>若要标记的Detour方法为 <c>Detour_{typeName}_{methodName}</c> 的形式，则前缀为 <c>Detour_</c>。
+    /// <br/>若要标记的Detour方法为 <c>{Detour_}{typeName}_{methodName}</c> 的形式，则前缀为 <c>"Detour_"</c>。
     /// </summary>
     [NotNull]
     public string DetourPrefix { get; }
@@ -80,7 +80,7 @@ public class DetourMethodToAttribute : Attribute
 
     /// <summary>
     /// 用于标识Detour方法的前缀。
-    /// <br/>若要标记的Detour方法为 <c>Detour_{methodName}</c> 的形式，则前缀为 <c>Detour_</c>。
+    /// <br/>若要标记的Detour方法为 <c>Detour_{methodName}</c> 的形式，则前缀为 <c>"Detour_"</c>。
     /// </summary>
     [NotNull]
     public string DetourPrefix { get; }
@@ -179,8 +179,8 @@ public static class TODetourUtils
         if (target is not null && detour is not null)
         {
             Hook hook = new(target, detour);
-            hook.Apply();
             TODetourHelper.Detours.Add(hook);
+            hook.Apply();
         }
     }
 
@@ -189,8 +189,8 @@ public static class TODetourUtils
         if (target is not null && detour is not null)
         {
             Hook hook = new(target, detour);
-            hook.Apply();
             TODetourHelper.Detours.Add(hook);
+            hook.Apply();
         }
     }
 

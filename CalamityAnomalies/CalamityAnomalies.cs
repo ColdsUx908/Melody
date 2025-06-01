@@ -1,6 +1,5 @@
 using System.IO;
 using CalamityAnomalies.GlobalInstances;
-using CalamityAnomalies.GlobalInstances.GlobalNPCs;
 using CalamityAnomalies.Net;
 using Terraria;
 using Terraria.ModLoader;

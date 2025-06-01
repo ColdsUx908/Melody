@@ -184,6 +184,12 @@ public static class TOReflectionUtils
         where attribute is not null
         select (type, attribute);
 
+    /// <summary>
+    /// 获取指定程序集中所有指定特性修饰的方法及对应特性实例。
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="assemblyToSearch"></param>
+    /// <returns></returns>
     public static IEnumerable<(MethodInfo method, T attribute)> GetMethodsWithAttribute<T>(Assembly assemblyToSearch) where T : Attribute =>
         from type in AssemblyManager.GetLoadableTypes(assemblyToSearch)
         from method in type.GetRealMethods(UniversalBindingFlags)
@@ -191,6 +197,13 @@ public static class TOReflectionUtils
         where attribute is not null
         select (method, attribute);
 
+    /// <summary>
+    /// 获取指定程序集中所有指定特性修饰的方法及对应特性实例。
+    /// <br/>检测范围为所有已加载的Mod。
+    /// <para/>使用该方法的加载器应在 <see cref="Mod.PostSetupContent"/> 中调用。
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
     public static IEnumerable<(MethodInfo method, T attribute)> GetMethodsWithAttribute<T>() where T : Attribute =>
         from type in GetAllTypes()
         from method in type.GetRealMethods(UniversalBindingFlags)
@@ -198,6 +211,12 @@ public static class TOReflectionUtils
         where attribute is not null
         select (method, attribute);
 
+    /// <summary>
+    /// 判定指定方法是否为指定基类型的重写方法。
+    /// </summary>
+    /// <param name="method"></param>
+    /// <param name="baseType"></param>
+    /// <returns></returns>
     public static bool IsOverrideOf(this MethodInfo method, Type baseType)
     {
         MethodInfo baseDefinition = method.GetBaseDefinition();
@@ -205,8 +224,19 @@ public static class TOReflectionUtils
                !baseDefinition.DeclaringType.IsInterface;
     }
 
+    /// <summary>
+    /// 判定指定方法是否为指定基类型的重写方法。
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="method"></param>
+    /// <returns></returns>
     public static bool IsOverrideOf<T>(this MethodInfo method) => method.IsOverrideOf(typeof(T));
 
+    /// <summary>
+    /// 判定指定方法是否为某个基类型的重写方法。
+    /// </summary>
+    /// <param name="method"></param>
+    /// <returns></returns>
     public static bool IsOverride(this MethodInfo method)
     {
         MethodInfo baseDefinition = method.GetBaseDefinition();
@@ -214,6 +244,12 @@ public static class TOReflectionUtils
                !baseDefinition.DeclaringType.IsInterface;
     }
 
+    /// <summary>
+    /// 判定指定方法是否实现了指定接口类型。
+    /// </summary>
+    /// <param name="method"></param>
+    /// <param name="interfaceType"></param>
+    /// <returns></returns>
     public static bool IsInterfaceImplementionOf(this MethodInfo method, Type interfaceType)
     {
         InterfaceMapping map;
@@ -235,9 +271,38 @@ public static class TOReflectionUtils
         return false;
     }
 
+    /// <summary>
+    /// 判定指定方法是否实现了指定接口类型。
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="method"></param>
+    /// <returns></returns>
     public static bool IsInterfaceImplementionOf<T>(this MethodInfo method) => method.IsInterfaceImplementionOf(typeof(T));
 
+    /// <summary>
+    /// 判定指定方法是否实现了某个接口类型。
+    /// </summary>
+    /// <param name="method"></param>
+    /// <returns></returns>
     public static bool IsInterfaceImplemention(this MethodInfo method) => method.DeclaringType.GetInterfaces().Any(method.IsInterfaceImplementionOf);
 
-    public static IEnumerable<MethodInfo> GetOverridenMethods(this Type type, BindingFlags flags) => type.GetRealMethods(flags).Where(k => k.IsOverride());
+    /// <summary>
+    /// 获取指定类型中所有重写方法。
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="flags"></param>
+    /// <returns></returns>
+    public static IEnumerable<MethodInfo> GetOverrideMethods(this Type type, BindingFlags flags) => type.GetRealMethods(flags).Where(k => k.IsOverride());
+
+    /// <summary>
+    /// 获取指定类型中所有重写方法的名称。
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="flags"></param>
+    /// <returns></returns>
+    public static IEnumerable<string> GetOverrideMethodNames(this Type type, BindingFlags flags) =>
+        from MethodInfo method in type.GetOverrideMethods(flags)
+        select method.IsGenericMethod
+                 ? method.Name + "<" + string.Join(",", method.GetGenericArguments().Select(k => k.Name)) + ">"
+                 : method.Name;
 }

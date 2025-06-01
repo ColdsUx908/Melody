@@ -1,9 +1,138 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Terraria;
+using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
+using Transoceanic.Commands;
 using Transoceanic.MathHelp;
 
-namespace Transoceanic.GlobalInstances.Players;
+namespace Transoceanic.GlobalInstances;
+
+public partial class TOPlayer : ModPlayer
+{
+    #region 特殊事件
+    public bool Celesgod { get; set; } = false;
+    public bool Annigod { get; set; } = false;
+    #endregion
+
+    #region 透支生命值
+    private double overdrawnLifeRegenExponent = 2;
+
+    /// <summary>
+    /// 透支生命值。
+    /// </summary>
+    public double OverdrawnLife { get; set; } = 0;
+    /// <summary>
+    /// 透支生命值的最大值，可超过玩家生命值，默认为零。
+    /// </summary>
+    public double OverdrawnLifeLimit { get; set; } = 0;
+    /// <summary>
+    /// 回复透支生命值所需的最小未受击时间。
+    /// </summary>
+    public int OverdrawnLifeRegenThreshold { get; set; } = 0;
+    /// <summary>
+    /// 每帧回复透支生命值的最大值。
+    /// </summary>
+    public double OverdrawnLifeRegenLimit { get; set; } = 0.5;
+    /// <summary>
+    /// 透支生命值回复乘数。
+    /// </summary>
+    public double OverdrawnLifeRegenMult { get; set; } = 1;
+    /// <summary>
+    /// 透支生命值回复指数。
+    /// </summary>
+    public double OverdrawnLifeRegenExponent { get => overdrawnLifeRegenExponent; set => overdrawnLifeRegenExponent = value; }
+    #endregion
+
+    #region 通用
+
+    public int GameTime { get; set; } = 0;
+
+    public bool IsHurt { get; set; } = false;
+
+    public int TimeWithoutHurt { get; set; } = 0;
+
+    public CommandCallInfo CommandCallInfo { get; internal set; } = null;
+    #endregion
+
+    #region Update
+    public override void PreUpdate()
+    {
+        GameTime++;
+        /*
+        switch (Player.name)
+        {
+            case "Celessalia":
+                Celesgod = Annigod = true;
+                if (GameTime == 300)
+                {
+                    TOLocalizationUtils.ChatLocalizedText(TOMain.ModLocalizationPrefix + "Gods.CelessAlive", TOMain.CelestialColor, Player);
+                    TOLocalizationUtils.ChatLocalizedText(TOMain.ModLocalizationPrefix + "Gods.AnniBehind", TOMain.CelestialColor, Player);
+                }
+                break;
+            case "Anniah":
+                Celesgod = false;
+                Annigod = true;
+                if (GameTime == 300)
+                    TOLocalizationUtils.ChatLocalizedText(TOMain.ModLocalizationPrefix + "Gods.AnniAlive", TOMain.CelestialColor, Player);
+                break;
+            default:
+                Celesgod = Annigod = false;
+                break;
+        }
+        */
+    }
+
+    public override void PostUpdate()
+    {
+        if (IsHurt)
+        {
+            IsHurt = false;
+            TimeWithoutHurt = 0;
+        }
+        else
+            TimeWithoutHurt++;
+        if (OverdrawnLife > OverdrawnLifeLimit && TimeWithoutHurt > OverdrawnLifeRegenThreshold)
+        {
+            OverdrawnLife = Math.Max(0,
+                OverdrawnLife - Math.Min(
+                    Math.Pow(TimeWithoutHurt - OverdrawnLifeRegenThreshold, OverdrawnLifeRegenExponent) / 300 * OverdrawnLifeRegenMult,
+                    OverdrawnLifeRegenLimit));
+        }
+    }
+    #endregion
+
+    #region Hit
+    public override void OnHurt(Player.HurtInfo info)
+    {
+        IsHurt = true;
+        if (OverdrawnLife != 0)
+        {
+            OverdrawnLife = Math.Ceiling(OverdrawnLife);
+            int temp = (int)OverdrawnLife;
+            //if (temp > Player.statLife)
+            //    ;
+            //else
+            info.Damage += temp;
+        }
+    }
+    #endregion
+
+    #region WorldData
+    public override void SaveData(TagCompound tag)
+    {
+    }
+
+    public override void LoadData(TagCompound tag)
+    {
+    }
+
+    public override void OnEnterWorld()
+    {
+        GameTime = 0;
+    }
+    #endregion
+}
 
 public abstract class PlayerDownedBoss
 {
@@ -278,4 +407,3 @@ public abstract class PlayerDownedBoss
             StardustTower = true;
     }
 }
-

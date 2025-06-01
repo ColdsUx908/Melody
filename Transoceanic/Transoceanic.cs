@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using Terraria.ModLoader;
-using Transoceanic.GlobalInstances.GlobalNPCs;
+using Transoceanic.GlobalInstances;
 using Transoceanic.IL;
 
 namespace Transoceanic;

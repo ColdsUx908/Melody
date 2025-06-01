@@ -1,11 +1,123 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
+using Transoceanic.Net;
 
-namespace CalamityAnomalies.GlobalInstances.GlobalProjectiles;
+namespace CalamityAnomalies.GlobalInstances;
 
 public partial class CAGlobalProjectile : GlobalProjectile
 {
+    public override bool InstancePerEntity => true;
+
+    private const int MaxAISlots = 32;
+
+    /// <summary>
+    /// 额外的AI槽位，共32个。
+    /// </summary>
+    public float[] AnomalyAI { get; } = new float[MaxAISlots];
+
+    public bool[] AIChanged { get; } = new bool[MaxAISlots];
+
+    public void SetAnomalyAI(float value, Index index)
+    {
+        AnomalyAI[index] = value;
+        AIChanged[index] = true;
+    }
+
+    #region Defaults
+    public override void SetStaticDefaults()
+    {
+        foreach (CAProjectileOverride projectileOverride in CAOverrideHelper.ProjectileOverrides.Values)
+            projectileOverride.SetStaticDefaults();
+    }
+
+    public override void SetDefaults(Projectile projectile)
+    {
+        Array.Fill(AnomalyAI, 0f);
+
+        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
+            projectileOverride.SetDefaults();
+    }
+    #endregion
+
+    #region AI
+    public override bool PreAI(Projectile projectile)
+    {
+        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
+        {
+            if (!projectileOverride.PreAI())
+                return false;
+        }
+
+        return true;
+    }
+
+    public override void AI(Projectile projectile)
+    {
+        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
+            projectileOverride.AI();
+    }
+
+    public override void PostAI(Projectile projectile)
+    {
+        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
+            projectileOverride.PostAI();
+    }
+    #endregion
+
+    #region Draw
+    public override Color? GetAlpha(Projectile projectile, Color lightColor)
+    {
+        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
+        {
+            Color? result = projectileOverride.GetAlpha(lightColor);
+            if (result is not null)
+                return result;
+        }
+
+        return null;
+    }
+
+    public override bool PreDrawExtras(Projectile projectile)
+    {
+        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
+        {
+            if (!projectileOverride.PreDrawExtras())
+                return false;
+        }
+
+        return true;
+    }
+
+    public override bool PreDraw(Projectile projectile, ref Color lightColor)
+    {
+        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
+        {
+            if (!projectileOverride.PreDraw(ref lightColor))
+                return false;
+        }
+
+        return true;
+    }
+
+    public override void PostDraw(Projectile projectile, Color lightColor)
+    {
+        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
+            projectileOverride.PostDraw(lightColor);
+    }
+
+    public override void DrawBehind(Projectile projectile, int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
+    {
+        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
+            projectileOverride.DrawBehind(index, behindNPCsAndTiles, behindNPCs, behindProjectiles, overPlayers, overWiresUI);
+    }
+    #endregion
+
+    #region Hit
     public override bool? CanCutTiles(Projectile projectile)
     {
         if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
@@ -122,4 +234,17 @@ public partial class CAGlobalProjectile : GlobalProjectile
 
         return null;
     }
+    #endregion
+
+    #region Net
+    public override void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter)
+    {
+        TONetUtils.SendAI(AnomalyAI, AIChanged, binaryWriter);
+    }
+
+    public override void ReceiveExtraAI(Projectile projectile, BitReader bitReader, BinaryReader binaryReader)
+    {
+        TONetUtils.ReceiveAI(AnomalyAI, binaryReader);
+    }
+    #endregion
 }

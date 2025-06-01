@@ -9,16 +9,24 @@ public sealed class SupremeCalamitasDetour : ModNPCDetour<SupremeCalamitas>
 {
     public override bool Detour_CheckDead(Orig_CheckDead orig, SupremeCalamitas self)
     {
+        if (CAWorld.BossRush && self.giveUpCounter <= 0)
+            return true;
+
+        return orig(self);
+    }
+
+    public override void Detour_OnKill(Orig_OnKill orig, SupremeCalamitas self)
+    {
         if (CAWorld.BossRush)
         {
             bool temp = BossRushEvent.BossRushActive;
-            BossRushEvent.BossRushActive = true;
-            bool result = orig(self);
+            BossRushEvent.BossRushActive = CAWorld.RealBossRushEventActive;
+            orig(self);
             BossRushEvent.BossRushActive = temp;
-            return result;
+            return;
         }
 
-        return orig(self);
+        orig(self);
     }
 }
 
@@ -26,10 +34,14 @@ public sealed class SCalBrimstoneGigablastDetour : ModProjectileDetour<SCalBrims
 {
     public override void Detour_OnKill(Orig_OnKill orig, SCalBrimstoneGigablast self, int timeLeft)
     {
-        if (CAWorld.BossRush)
+        if (CAWorld.Anomaly)
+        {
+
+        }
+        else if (CAWorld.BossRush)
         {
             bool temp = BossRushEvent.BossRushActive;
-            BossRushEvent.BossRushActive = temp;
+            BossRushEvent.BossRushActive = true;
             orig(self, timeLeft);
             BossRushEvent.BossRushActive = temp;
             return;
@@ -43,10 +55,14 @@ public sealed class SCalBrimstoneFireblastDetour : ModProjectileDetour<SCalBrims
 {
     public override void Detour_OnKill(Orig_OnKill orig, SCalBrimstoneFireblast self, int timeLeft)
     {
-        if (CAWorld.BossRush)
+        if (CAWorld.Anomaly)
+        {
+
+        }
+        else if (CAWorld.BossRush)
         {
             bool temp = BossRushEvent.BossRushActive;
-            BossRushEvent.BossRushActive = temp;
+            BossRushEvent.BossRushActive = true;
             orig(self, timeLeft);
             BossRushEvent.BossRushActive = temp;
             return;

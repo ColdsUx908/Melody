@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CalamityAnomalies.Difficulties;
+using CalamityAnomalies.GlobalInstances;
 using CalamityMod;
 using CalamityMod.Events;
 using CalamityMod.NPCs.CeaselessVoid;
@@ -26,7 +27,7 @@ using Transoceanic.GlobalInstances;
 using Transoceanic.IL;
 using static CalamityMod.UI.BossHealthBarManager;
 
-namespace CalamityAnomalies.GlobalInstances.GlobalNPCs;
+namespace CalamityAnomalies.UI;
 
 [DetourClassTo<BossHealthBarManager>]
 public class BetterBossHealthBarManager : ITOLoader
@@ -62,52 +63,11 @@ public class BetterBossHealthBarManager : ITOLoader
 
         public new int NPCType => NPC.type;
 
-        public new long CombinedNPCLife
-        {
-            get
-            {
-                if (NPC == null || !NPC.active)
-                    return 0L;
+        public new long CombinedNPCLife { get; private set; } = 0L;
 
-                foreach ((NPCSpecialHPGetRequirement requirement, NPCSpecialHPGetFunction func) in SpecialHPRequirements)
-                {
-                    if (requirement(NPC))
-                        return func(NPC, checkingForMaxLife: false);
-                }
+        public new long CombinedNPCMaxLife { get; private set; } = 0L;
 
-                long result = NPCType == NPCID.PirateShip ? 0L : NPC.life;
-                foreach ((ulong identifier, NPC npc) in CustomOneToMany)
-                {
-                    if (npc.Ocean().Identifier == identifier && npc.active && npc.life > 0)
-                        result += npc.life;
-                }
-                return result;
-            }
-        }
-
-
-        public new long CombinedNPCMaxLife
-        {
-            get
-            {
-                if (NPC == null || !NPC.active)
-                    return 0L;
-
-                foreach ((NPCSpecialHPGetRequirement requirement, NPCSpecialHPGetFunction func) in SpecialHPRequirements)
-                {
-                    if (requirement(NPC))
-                        return func(NPC, checkingForMaxLife: true);
-                }
-
-                long result = NPCType == NPCID.PirateShip ? 0L : NPC.lifeMax;
-                foreach ((ulong identifier, NPC npc) in CustomOneToMany)
-                {
-                    if (npc.Ocean().Identifier == identifier && npc.active && npc.lifeMax > 0)
-                        result += npc.lifeMax;
-                }
-                return result;
-            }
-        }
+        public int Height { get; private set; } = 70;
 
         public BetterBossHPUI(int npcIndex, string overridingName = null) : base(npcIndex, overridingName)
         {
@@ -140,14 +100,16 @@ public class BetterBossHealthBarManager : ITOLoader
                 return;
             }
 
-            long combinedNPCLife = CombinedNPCLife;
-            if (combinedNPCLife != PreviousLife && PreviousLife != 0L)
+            CombinedNPCLife = GetCombinedNPCLife();
+            CombinedNPCMaxLife = GetCombinedNPCMaxLife();
+
+            if (CombinedNPCLife != PreviousLife && PreviousLife != 0L)
             {
                 if (ComboDamageCountdown <= 0)
-                    HealthAtStartOfCombo = combinedNPCLife;
+                    HealthAtStartOfCombo = CombinedNPCLife;
                 ComboDamageCountdown = 30;
             }
-            PreviousLife = combinedNPCLife;
+            PreviousLife = CombinedNPCLife;
 
             if (ComboDamageCountdown > 0)
                 ComboDamageCountdown--;
@@ -164,20 +126,62 @@ public class BetterBossHealthBarManager : ITOLoader
                     CustomOneToMany.TryAdd(npc.Ocean().Identifier, npc);
             }
 
-            long combinedNPCMaxLife = CombinedNPCMaxLife;
-            if (combinedNPCMaxLife != 0L && (InitialMaxLife == 0L || InitialMaxLife < combinedNPCMaxLife))
-                InitialMaxLife = combinedNPCMaxLife;
+            if (CombinedNPCMaxLife != 0L && (InitialMaxLife == 0L || InitialMaxLife < CombinedNPCMaxLife))
+                InitialMaxLife = CombinedNPCMaxLife;
+
+            ModifyCalBossBarHeight();
+        }
+
+        private long GetCombinedNPCLife()
+        {
+            if (!NPC.active || !Valid)
+                return 0L;
+
+            foreach ((NPCSpecialHPGetRequirement requirement, NPCSpecialHPGetFunction func) in SpecialHPRequirements)
+            {
+                if (requirement(NPC))
+                    return func(NPC, checkingForMaxLife: false);
+            }
+
+            long result = NPCType == NPCID.PirateShip ? 0L : NPC.life;
+            foreach ((ulong identifier, NPC npc) in CustomOneToMany)
+            {
+                if (npc.Ocean().Identifier == identifier && npc.active && npc.life > 0)
+                    result += npc.life;
+            }
+            return result;
+        }
+
+        private long GetCombinedNPCMaxLife()
+        {
+            if (!NPC.active)
+                return 0L;
+
+            foreach ((NPCSpecialHPGetRequirement requirement, NPCSpecialHPGetFunction func) in SpecialHPRequirements)
+            {
+                if (requirement(NPC))
+                    return func(NPC, checkingForMaxLife: true);
+            }
+
+            long result = NPCType == NPCID.PirateShip ? 0L : NPC.lifeMax;
+            foreach ((ulong identifier, NPC npc) in CustomOneToMany)
+            {
+                if (npc.Ocean().Identifier == identifier && npc.active && npc.lifeMax > 0)
+                    result += npc.lifeMax;
+            }
+            return result;
+        }
+
+        private void ModifyCalBossBarHeight()
+        {
+            if (NPC.TryGetOverride(out CANPCOverride npcOverride, "CustomCalBossBarHeight"))
+                Height = npcOverride.CustomCalBossBarHeight(this);
         }
 
         public new void Draw(SpriteBatch spriteBatch, int x, int y)
         {
-            bool shouldOverride;
-
-            if (shouldOverride = NPC.TryGetOverride(out CANPCOverride npcOverride))
-            {
-                if (!npcOverride.PreDrawCalBossBar(this, spriteBatch, x, y))
-                    return;
-            }
+            if (!PreDraw(spriteBatch, x, y))
+                return;
 
             Color baseColor = new(240, 240, 255);
             DynamicSpriteFont mouseFont = FontAssets.MouseText.Value;
@@ -328,7 +332,23 @@ public class BetterBossHealthBarManager : ITOLoader
                 0.75f);
             #endregion
 
-            if (shouldOverride)
+            PostDraw(spriteBatch, x, y);
+        }
+
+        private bool PreDraw(SpriteBatch spriteBatch, int x, int y)
+        {
+            if (NPC.TryGetOverride(out CANPCOverride npcOverride, "PreDrawCalBossBar"))
+            {
+                if (!npcOverride.PreDrawCalBossBar(this, spriteBatch, x, y))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private void PostDraw(SpriteBatch spriteBatch, int x, int y)
+        {
+            if (NPC.TryGetOverride(out CANPCOverride npcOverride, "PostDrawCalBossBar"))
                 npcOverride.PostDrawCalBossBar(this, spriteBatch, x, y);
         }
     }
@@ -360,7 +380,7 @@ public class BetterBossHealthBarManager : ITOLoader
             select newBar)
         {
             newBar.Draw(spriteBatch, x, y);
-            y -= 70;
+            y -= newBar.Height;
         }
     }
 
@@ -392,7 +412,9 @@ public class BetterBossHealthBarManager : ITOLoader
                 && npc.IsABoss()
                 && !(npc.type is NPCID.EaterofWorldsBody or NPCID.EaterofWorldsTail || npc.type == ModContent.NPCType<Artemis>())
                 || MinibossHPBarList.Contains(npc.type) || npc.Calamity().CanHaveBossHealthBar)
+            {
                 _trackingBars.Add(fromNPC, new(npc.whoAmI, overridingName));
+            }
         }
 
         foreach ((ulong identifier, BetterBossHPUI newBar) in _trackingBars)

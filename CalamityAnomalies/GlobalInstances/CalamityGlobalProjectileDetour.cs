@@ -1,11 +1,10 @@
 ﻿using CalamityMod.Events;
-using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.Projectiles;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Transoceanic.ExtraGameData;
 
-namespace CalamityAnomalies.GlobalInstances.GlobalProjectiles;
+namespace CalamityAnomalies.GlobalInstances;
 
 public class CalamityGlobalProjectileDetour : GlobalProjectileDetour<CalamityGlobalProjectile>
 {

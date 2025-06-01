@@ -12,9 +12,6 @@ using Terraria.ModLoader;
 using Terraria.Utilities;
 using Transoceanic.GameData.Utilities;
 using Transoceanic.GlobalInstances;
-using Transoceanic.GlobalInstances.GlobalItems;
-using Transoceanic.GlobalInstances.GlobalNPCs;
-using Transoceanic.GlobalInstances.GlobalProjectiles;
 using Transoceanic.IL;
 
 namespace Transoceanic.ExtraGameData;
@@ -39,7 +36,8 @@ public abstract class EntityOverride<TEntity> where TEntity : Entity
     public virtual void SetDefaults() { }
 }
 
-public class EntityOverrideDictionary<TEntity, TOverride> : Dictionary<int, List<(TOverride overrideInstance, HashSet<string> overridenMethods)>>
+public class EntityOverrideDictionary<TEntity, TOverride>
+    : Dictionary<int, List<(TOverride overrideInstance, HashSet<string> overrideMethods)>>
     where TEntity : Entity
     where TOverride : EntityOverride<TEntity>
 {
@@ -50,7 +48,7 @@ public class EntityOverrideDictionary<TEntity, TOverride> : Dictionary<int, List
 
     /// <summary>
     /// 尝试获取指定实体的Override实例。
-    /// <br/>按照 <see cref="EntityOverride{TEntity}.Priority"/> 降序依次尝试获取通过 <see cref="EntityOverride{TEntity}.ShouldProcess"/> 检测和方法名检测的Override实例。
+    /// <br/>按照 <see cref="EntityOverride{TEntity}.Priority"/> 降序寻找通过 <see cref="EntityOverride{TEntity}.ShouldProcess"/> 检测的实现了指定方法的Override实例。
     /// </summary>
     /// <param name="entity"></param>
     /// <param name="methodName"></param>
@@ -60,9 +58,9 @@ public class EntityOverrideDictionary<TEntity, TOverride> : Dictionary<int, List
     {
         if (TryGetValue(entity.GetEntityType(), out List<(TOverride overrideInstance, HashSet<string> overridenMethods)> overrideList))
         {
-            foreach ((TOverride temp, HashSet<string> overridenMethods) in overrideList)
+            foreach ((TOverride temp, HashSet<string> overrideMethods) in overrideList)
             {
-                if (overridenMethods.Contains(methodName))
+                if (overrideMethods.Contains(methodName))
                 {
                     temp.Disconnect();
                     temp.Connect(entity);
@@ -89,7 +87,7 @@ public class EntityOverrideDictionary<TEntity, TOverride> : Dictionary<int, List
                 elementSelector: k =>
                     from overrideInstance in k
                     orderby overrideInstance.Priority
-                    select (overrideInstance, overrideInstance.GetType().GetOverridenMethods(TOReflectionUtils.UniversalBindingFlags).Select(k => k.Name).ToHashSet())))
+                    select (overrideInstance, overrideInstance.GetType().GetOverrideMethodNames(TOReflectionUtils.UniversalBindingFlags).ToHashSet())))
         {
             this[type] = [.. overrides];
         }
