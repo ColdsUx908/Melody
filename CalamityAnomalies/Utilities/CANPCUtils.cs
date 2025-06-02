@@ -65,14 +65,14 @@ public static class CANPCUtils
 
     public static bool DownedEvilBossT2 => DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator;
 
-    public static bool CirrusActive
+    public static bool PermaFrostActive
     {
         get
         {
             if (CalamityGlobalNPC.SCal != -1)
             {
                 NPC supremeCalamitas = Main.npc[CalamityGlobalNPC.SCal];
-                return supremeCalamitas.active && supremeCalamitas.GetModNPC<SupremeCalamitas>().cirrus;
+                return supremeCalamitas.active && supremeCalamitas.GetModNPC<SupremeCalamitas>().permafrost;
             }
             return false;
         }

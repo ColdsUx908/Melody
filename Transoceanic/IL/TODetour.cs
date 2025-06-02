@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using MonoMod.RuntimeDetour;
+using ZLinq;
 
 namespace Transoceanic.IL;
 
@@ -145,7 +146,7 @@ public sealed class TODetourHelper : ITOLoader
                 Match match = regex.Match(detour.Name);
                 if (match.Success)
                 {
-                    Type targetType = targetTypes.FirstOrDefault(k => k.Name == match.Groups["typeName"].Value);
+                    Type targetType = targetTypes.AsValueEnumerable().FirstOrDefault(k => k.Name == match.Groups["typeName"].Value);
                     if (targetType is not null)
                         TODetourUtils.ModifyMethodWithDetour(targetType.GetMethod(match.Groups["methodName"].Value, TOReflectionUtils.UniversalBindingFlags), detour);
                 }

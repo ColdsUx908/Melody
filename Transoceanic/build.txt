@@ -1,6 +1,7 @@
 displayName = Transoceanic
 author = ColdsUx
 version = 0.1
-includeSource = true
+dllReferences = ZLinq
+hideCode = true
 side = Client
 buildIgnore = .vs\*, Properties\*, *.sln, obj\*, bin\*

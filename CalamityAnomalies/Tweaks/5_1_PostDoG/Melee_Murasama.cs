@@ -35,7 +35,7 @@ namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
 
 //鬼妖村正
 
-public sealed class MurasamaTweak : CAItemTweak<Murasama>
+public class MurasamaTweak : CAItemTweak<Murasama>
 {
     public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
     {
@@ -119,7 +119,7 @@ public sealed class MurasamaTweak : CAItemTweak<Murasama>
     }
 }
 
-public sealed class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
+public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
 {
     public override bool PreAI()
     {
@@ -281,7 +281,7 @@ public sealed class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
             case CryogenShield:
             case AnahitasIceShield:
             case AureusSpawn:
-            case Bumblefuck when CANPCUtils.CirrusActive || (TONPCUtils.AnyNPCs<Yharon>(out NPC yharon) && yharon.Ocean().LifeRatio <= 0.55f):
+            case Bumblefuck when CANPCUtils.PermaFrostActive || (TONPCUtils.AnyNPCs<Yharon>(out NPC yharon) && yharon.Ocean().LifeRatio <= 0.55f):
             case Bumblefuck2:
             case CeaselessVoid when target.Ocean().LifeRatio < 0.2f:
             case PhantomFuckYou:
@@ -358,7 +358,7 @@ public sealed class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
     }
 }
 
-public sealed class MurasamaDetour : ModItemDetour<Murasama>
+public class MurasamaDetour : ModItemDetour<Murasama>
 {
     public override bool Detour_PreDrawInInventory(Orig_PreDrawInInventory orig, Murasama self, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
     {

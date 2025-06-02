@@ -1,9 +1,14 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Graphics;
 using Terraria;
 using Terraria.ModLoader;
 using Transoceanic.ExtraMathData;
+using Transoceanic.MathHelp;
 
 namespace Transoceanic.Drawing;
 
@@ -14,6 +19,28 @@ public static class TODrawUtils
     public static Vector2 ScreenCenter => Main.screenPosition + ScreenSize / 2f;
 
     public static Vector2 ScreenCenterTile => ScreenCenter / 16f;
+
+    public static Color LerpMany(this List<Color> colors, float ratio)
+    {
+        if (colors is null)
+            return Color.White;
+        switch (colors.Count)
+        {
+            case 0:
+                return Color.White;
+            case 1:
+                return colors[0];
+            case 2:
+                return Color.Lerp(colors[0], colors[1], ratio);
+            default:
+                if (ratio <= 0f)
+                    return colors[0];
+                if (ratio >= colors.Count - 1)
+                    return colors[^1];
+                (int index, float localRatio) = TOMathHelper.SplitFloat(Math.Clamp(ratio, 0f, colors.Count - 1));
+                return Color.Lerp(colors[index], colors[index + 1], localRatio);
+        }
+    }
 
     /// <summary>
     /// 在物品栏中绘制特定大小的物品贴图，不受物品栏自动缩放限制。

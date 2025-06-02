@@ -8,7 +8,7 @@ using Transoceanic.Net;
 
 namespace Transoceanic.GlobalInstances;
 
-public class TOGlobalNPC : GlobalNPC
+public class TOGlobalNPC : GlobalNPC, ITOLoader
 {
     public override bool InstancePerEntity => true;
 
@@ -24,6 +24,8 @@ public class TOGlobalNPC : GlobalNPC
     internal static ulong _identifierAllocator;
 
     public ulong SpawnTime { get; internal set; } = 0;
+
+    public ulong ActiveTime => TOMain.GameTimer - SpawnTime;
 
     private const int MaxAISlots = 24;
 
@@ -98,7 +100,7 @@ public class TOGlobalNPC : GlobalNPC
     public override void OnSpawn(NPC npc, IEntitySource source)
     {
         Identifier = ++_identifierAllocator; //城镇NPC这类NPC不会拥有在这里被设置标识符的机会
-        SpawnTime = TOMain.GeneralTimer;
+        SpawnTime = TOMain.GameTimer;
     }
     #endregion
 
@@ -129,6 +131,18 @@ public class TOGlobalNPC : GlobalNPC
     public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
     {
         TONetUtils.ReceiveAI(OceanAI, binaryReader);
+    }
+    #endregion
+
+    #region Load
+    void ITOLoader.Load()
+    {
+        _identifierAllocator = 0ul;
+    }
+
+    void ITOLoader.UnLoad()
+    {
+        _identifierAllocator = 0ul;
     }
     #endregion
 }

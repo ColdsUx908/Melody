@@ -1,10 +1,42 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
+using Terraria;
 
 namespace Transoceanic.MathHelp;
 
 public static partial class TOMathHelper
 {
+    /// <summary>
+    /// 生成一个形如 <c>y = A * sin(</c>ω<c>t + </c>φ<c>)</c> 的正弦波。其中 <c>t</c> 随游戏内时间变化，单位是秒。
+    /// </summary>
+    /// <param name="max">A。默认为1。</param>
+    /// <param name="omega">ω。默认为1。</param>
+    /// <param name="primary">φ。默认为0。</param>
+    /// <param name="unsigned">是否将结果转换为非负值。默认为 <see langword="false"/>。</param>
+    public static float GetTimeSin(float max = 1f, float omega = 1f, float primary = 0f, bool unsigned = false) => (MathF.Sin(TOMain.GeneralSeconds * omega + primary) + unsigned.ToInt()) * max;
+
+    /// <summary>
+    /// 生成一个形如 <c>y = A * cos(</c>ω<c>t + </c>φ<c>)</c> 的余弦波。其中 <c>t</c> 随游戏内时间变化，单位是秒。
+    /// </summary>
+    /// <param name="max">A。默认为1。</param>
+    /// <param name="omega">ω。默认为1。</param>
+    /// <param name="primary">φ。默认为0。</param>
+    /// <param name="unsigned">是否将结果转换为非负值。默认为 <see langword="false"/>。</param>
+    public static float GetTimeCos(float max = 1f, float omega = 1f, float primary = 0f, bool unsigned = false) => (MathF.Cos(TOMain.GeneralSeconds * omega + primary) + unsigned.ToInt()) * max;
+
+    /// <summary>
+    /// 生成形如 <c>(sin, cos) = (A * sin(</c>ω<c>t + </c>φ<c>, A * cos(</c>ω<c>t + </c>φ<c>))</c> 的正余弦波。其中 <c>t</c> 随游戏内时间变化，单位是秒。
+    /// </summary>
+    /// <param name="max">A。默认为1。</param>
+    /// <param name="omega">ω。默认为1。</param>
+    /// <param name="primary">φ。默认为0。</param>
+    /// <param name="unsigned">是否将结果转换为非负值。默认为 <see langword="false"/>。</param>
+    public static (float sin, float cos) GetTimeSinCos(float max = 1f, float omega = 1f, float primary = 0f, bool unsigned = false)
+    {
+        (float sin1, float cos1) = MathF.SinCos(TOMain.GeneralSeconds * omega + primary);
+        return ((sin1 + unsigned.ToInt()) * max, (cos1 + unsigned.ToInt()) * max);
+    }
+
     public static bool AtLeastXTrue(int x, params ReadOnlySpan<bool> span)
     {
         if (x <= 0)
@@ -20,6 +52,14 @@ public static partial class TOMathHelper
         }
 
         return false;
+    }
+
+    public static (int integer, float fractional) SplitFloat(float value)
+    {
+        if (float.IsNaN(value) || float.IsInfinity(value))
+            throw new ArgumentOutOfRangeException(nameof(value), "Value must be a finite number.");
+        int integerPart = (int)value;
+        return (integerPart, value - integerPart);
     }
 
     /// <summary>

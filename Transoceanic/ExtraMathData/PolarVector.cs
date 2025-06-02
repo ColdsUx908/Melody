@@ -244,7 +244,7 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
     /// <code>
     /// PolarVector2 ClockOne = PolarVector2.UnitClocks[1] * 5f; //一点钟方向，长度为5
     /// 
-    /// //遍历十二个方向
+    /// //遍历十二个方向（注意第一个元素是0点钟方向，索引为0）
     /// foreach (PolarVector2 vector in PolarVector.UnitClocks)
     /// {
     ///     //代码
@@ -255,7 +255,6 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
         [
         //0点钟方向（同12点钟方向）
         -UnitY,
-
         //1点钟方向 (5π/3)
         new(TOMathHelper.PiOver3 * 5f), 
         //2点钟方向 (11π/6)

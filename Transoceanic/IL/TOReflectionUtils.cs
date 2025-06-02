@@ -5,6 +5,8 @@ using System.Reflection;
 using ReLogic.Utilities;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
+using ZLinq;
+using ZLinq.Linq;
 
 namespace Transoceanic.IL;
 

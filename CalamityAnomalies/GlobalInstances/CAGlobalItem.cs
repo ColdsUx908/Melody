@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using CalamityAnomalies.Items.ItemRarities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,11 +9,13 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 using Terraria.Utilities;
+using ZLinq;
 
 namespace CalamityAnomalies.GlobalInstances.GlobalItems;
 
-public partial class CAGlobalItem : GlobalItem
+public class CAGlobalItem : GlobalItem
 {
     public override bool InstancePerEntity => true;
 
@@ -144,6 +145,18 @@ public partial class CAGlobalItem : GlobalItem
         if (item.TryGetOverride(out CAItemOverride itemOverride))
             itemOverride.UpdateVanity(player);
     }
+
+    public override void UpdateVisibleAccessory(Item item, Player player, bool hideVisual)
+    {
+        if (item.TryGetOverride(out CAItemOverride itemOverride))
+            itemOverride.UpdateVisibleAccessory(player, hideVisual);
+    }
+
+    public override void UpdateItemDye(Item item, Player player, int dye, bool hideVisual)
+    {
+        if (item.TryGetOverride(out CAItemOverride itemOverride))
+            itemOverride.UpdateItemDye(player, dye, hideVisual);
+    }
     #endregion
 
     #region Draw
@@ -270,7 +283,24 @@ public partial class CAGlobalItem : GlobalItem
     #region Use
     public override bool AltFunctionUse(Item item, Player player)
     {
+        if (item.TryGetOverride(out CAItemOverride itemOverride))
+        {
+            if (itemOverride.AltFunctionUse(player))
+                return true;
+        }
+
         return false;
+    }
+
+    public override bool CanUseItem(Item item, Player player)
+    {
+        if (item.TryGetOverride(out CAItemOverride itemOverride))
+        {
+            if (!itemOverride.CanUseItem(player))
+                return false;
+        }
+
+        return true;
     }
 
     public override bool? CanAutoReuseItem(Item item, Player player)
@@ -692,8 +722,8 @@ public partial class CAGlobalItem : GlobalItem
             tooltips.Add(new(CalamityAnomalies.Instance, "OverrideIdentifier", Language.GetTextValue(CAMain.ModLocalizationPrefix + "Tooltips.OverrideIdentifier")));
         }
 
-        TooltipLine nameLine = tooltips.FirstOrDefault(x => x.Name == "ItemName" && x.Mod == "Terraria");
-        if (nameLine != null && item.rare == ModContent.RarityType<Celestial>())
+        TooltipLine nameLine = tooltips.AsValueEnumerable().FirstOrDefault(k => k.Name == "ItemName" && k.Mod == "Terraria");
+        if (nameLine is not null && item.rare == ModContent.RarityType<Celestial>())
         {
             List<Color> colorSet =
             [
@@ -705,7 +735,7 @@ public partial class CAGlobalItem : GlobalItem
                 new(249, 245, 99), // bright yellow
                 new(236, 168, 247), // purplish pink
             ];
-            if (nameLine != null)
+            if (nameLine is not null)
             {
                 int colorIndex = (int)(Main.GlobalTimeWrappedHourly / 2 % colorSet.Count);
                 Color currentColor = colorSet[colorIndex];
@@ -742,6 +772,12 @@ public partial class CAGlobalItem : GlobalItem
     public override void OnConsumeAmmo(Item weapon, Item ammo, Player player) { }
 
     public override void OnConsumedAsAmmo(Item ammo, Item weapon, Player player) { }
+
+    public override string IsArmorSet(Item head, Item body, Item legs) => base.IsArmorSet(head, body, legs);
+
+    public override void UpdateArmorSet(Player player, string set) { }
+
+    public override string IsVanitySet(int head, int body, int legs) => base.IsVanitySet(head, body, legs);
 
     public override void PreUpdateVanitySet(Player player, string set) { }
 
@@ -782,5 +818,11 @@ public partial class CAGlobalItem : GlobalItem
     public override bool IsAnglerQuestAvailable(int type) => true;
 
     public override void AnglerChat(int type, ref string chat, ref string catchLocation) { }
+    #endregion
+
+    #region Data
+    public override void SaveData(Item item, TagCompound tag) { }
+
+    public override void LoadData(Item item, TagCompound tag) { }
     #endregion
 }

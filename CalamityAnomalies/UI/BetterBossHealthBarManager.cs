@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using CalamityAnomalies.Difficulties;
 using CalamityAnomalies.GlobalInstances;
 using CalamityMod;
@@ -25,6 +24,8 @@ using Transoceanic.ExtraMathData;
 using Transoceanic.GameData;
 using Transoceanic.GlobalInstances;
 using Transoceanic.IL;
+using Transoceanic.MathHelp;
+using ZLinq;
 using static CalamityMod.UI.BossHealthBarManager;
 
 namespace CalamityAnomalies.UI;
@@ -37,6 +38,8 @@ public class BetterBossHealthBarManager : ITOLoader
     /// </summary>
     public class BetterBossHPUI : BossHPUI
     {
+        public static Color BaseColor { get; } = new(240, 240, 255);
+
         public bool HasOneToMany { get; }
 
         public int[] CustomOneToManyIndexes { get; }
@@ -67,7 +70,15 @@ public class BetterBossHealthBarManager : ITOLoader
 
         public new long CombinedNPCMaxLife { get; private set; } = 0L;
 
+        public bool Enraged => EnrageTimer > 0;
+
+        public bool IncreasingDefenseOrDR => IncreasingDefenseOrDRTimer > 0;
+
         public int Height { get; private set; } = 70;
+
+        public float AnimationCompletionRatio { get; private set; } = 0f;
+
+        public float AnimationCompletionRatio2 { get; private set; } = 0f;
 
         public BetterBossHPUI(int npcIndex, string overridingName = null) : base(npcIndex, overridingName)
         {
@@ -130,6 +141,13 @@ public class BetterBossHealthBarManager : ITOLoader
                 InitialMaxLife = CombinedNPCMaxLife;
 
             ModifyCalBossBarHeight();
+
+            AnimationCompletionRatio = CloseAnimationTimer > 0
+                ? 1f - MathHelper.Clamp(CloseAnimationTimer / 120f, 0f, 1f)
+                : MathHelper.Clamp(OpenAnimationTimer / 80f, 0f, 1f);
+            AnimationCompletionRatio2 = CloseAnimationTimer > 0
+                ? 1f - MathHelper.Clamp(CloseAnimationTimer / 80f, 0f, 1f)
+                : MathHelper.Clamp(OpenAnimationTimer / 120f, 0f, 1f);
         }
 
         private long GetCombinedNPCLife()
@@ -180,157 +198,36 @@ public class BetterBossHealthBarManager : ITOLoader
 
         public new void Draw(SpriteBatch spriteBatch, int x, int y)
         {
-            if (!PreDraw(spriteBatch, x, y))
-                return;
-
-            Color baseColor = new(240, 240, 255);
-            DynamicSpriteFont mouseFont = FontAssets.MouseText.Value;
-            DynamicSpriteFont itemStackFont = FontAssets.ItemStack.Value;
-
-            float animationCompletionRatio = CloseAnimationTimer > 0
-                ? 1f - MathHelper.Clamp(CloseAnimationTimer / 120f, 0f, 1f)
-                : MathHelper.Clamp(OpenAnimationTimer / 80f, 0f, 1f);
-            float animationCompletionRatio2 = CloseAnimationTimer > 0
-                ? 1f - MathHelper.Clamp(CloseAnimationTimer / 80f, 0f, 1f)
-                : MathHelper.Clamp(OpenAnimationTimer / 120f, 0f, 1f);
-            float timeRatio = MathF.Sin(Main.GlobalTimeWrappedHourly * 4.5f);
-            float timeRatio2 = (timeRatio + 1f) * 0.5f; //范围为[0.5, 1]
-
-            #region 基础条
-            float whiteColorAlpha = OpenAnimationTimer switch
+            if (PreDraw(spriteBatch, x, y))
             {
-                4 or 8 or 16 => Main.rand.NextFloat(0.7f, 0.8f),
-                3 or 7 or 15 => Main.rand.NextFloat(0.4f, 0.5f),
-                _ => animationCompletionRatio
-            };
-            int mainBarWidth = (int)MathHelper.Min(400f * animationCompletionRatio, 400f * NPCLifeRatio);
+                Color color = (CAWorld.Anomaly ? Color.Lerp(Color.HotPink, CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * TOMathHelper.GetTimeSin(1f, 1f, 0f, true))
+                    : CAWorld.BossRush ? Color.Lerp(BaseColor, Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.4f), Math.Clamp(AnomalyNPC.BossRushAITimer / 120f, 0f, 1f))
+                    : Enraged ? Color.Lerp(BaseColor, Color.Red * 0.5f, EnrageTimer / 120f)
+                    : IncreasingDefenseOrDR ? Color.Lerp(BaseColor, Color.LightGray * 0.5f, IncreasingDefenseOrDRTimer / 120f) : BaseColor) * AnimationCompletionRatio;
+                DrawBaseBars(spriteBatch, x, y, null, color);
 
-            spriteBatch.Draw(BossMainHPBar, new Rectangle(x, y + 28, mainBarWidth, BossMainHPBar.Height), Color.White);
+                //为了避免NPC名称过长遮挡大生命值数字，二者的绘制顺序在此处被调换了。
+                Color? mainColor = AnomalyNPC.IsRunningAnomalyAI ? Color.HotPink * 0.6f * AnimationCompletionRatio2
+                    : CAWorld.BossRush ? Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.45f) * AnimationCompletionRatio2
+                    : Enraged ? Color.Red * 0.6f * AnimationCompletionRatio2
+                    : IncreasingDefenseOrDR ? Color.LightGray * 0.6f * AnimationCompletionRatio2
+                    : null;
+                Color? borderColor = AnomalyNPC.IsRunningAnomalyAI ? Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.55f) * AnimationCompletionRatio2
+                    : CAWorld.BossRush ? Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.55f) * AnimationCompletionRatio2
+                    : Enraged ? Color.Black * 0.2f * AnimationCompletionRatio2
+                    : IncreasingDefenseOrDR ? Color.Black * 0.2f * AnimationCompletionRatio2
+                    : null;
+                float borderWidth = AnomalyNPC.IsRunningAnomalyAI ? Math.Clamp(AnomalyNPC.AnomalyAITimer / 80f, 0f, 1.5f) + TOMathHelper.GetTimeSin(2f, 1f, 0f, true)
+                    : CAWorld.BossRush ? Math.Clamp(AnomalyNPC.BossRushAITimer / 80f, 0f, 1.5f) + TOMathHelper.GetTimeSin(2f, 1f, 0f, true)
+                    : Enraged ? EnrageTimer / 80f + TOMathHelper.GetTimeSin(2f, 1f, 0f, true)
+                    : IncreasingDefenseOrDR ? IncreasingDefenseOrDRTimer / 80f + TOMathHelper.GetTimeSin(2f, 1f, 0f, true)
+                    : 0f;
+                DrawNPCName(spriteBatch, x, y, null, mainColor, borderColor, borderWidth);
 
-            if (ComboDamageCountdown > 0)
-            {
-                int comboHPBarWidth = (int)(400 * (float)HealthAtStartOfCombo / InitialMaxLife) - mainBarWidth;
-                if (ComboDamageCountdown < 6)
-                    comboHPBarWidth = comboHPBarWidth * ComboDamageCountdown / 6;
+                DrawBigLifeText(spriteBatch, x, y);
 
-                spriteBatch.Draw(BossComboHPBar, new Rectangle(x + mainBarWidth, y + 28, comboHPBarWidth, BossComboHPBar.Height), Color.White);
+                DrawExtraSmallText(spriteBatch, x, y);
             }
-
-            Color color = (CAWorld.Anomaly ? Color.Lerp(Color.HotPink, CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * timeRatio2 * 0.5f)
-                : CAWorld.BossRush ? Color.Lerp(baseColor, Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, animationCompletionRatio * 0.4f), Math.Clamp(AnomalyNPC.BossRushAITimer / 120f, 0f, 1f))
-                : NPCIsEnraged ? Color.Lerp(baseColor, Color.Red * 0.5f, EnrageTimer / 120f)
-                : NPCIsIncreasingDefenseOrDR ? Color.Lerp(baseColor, Color.LightGray * 0.5f, IncreasingDefenseOrDRTimer / 120f) : baseColor) * animationCompletionRatio;
-            spriteBatch.Draw(BossSeperatorBar, new Rectangle(x, y + 18, 400, 6), color);
-            #endregion
-
-            //为了避免NPC名称过长遮挡大生命值数字，二者的绘制顺序在此处被调换了。
-
-            #region NPC名称
-            string npcName = OverridingName ?? NPC.FullName;
-            Vector2 npcNameSize = mouseFont.MeasureString(npcName);
-            Vector2 baseDrawPosition = new(x + 400 - npcNameSize.X, y + 23 - npcNameSize.Y);
-            if (AnomalyNPC.IsRunningAnomalyAI)
-            {
-                DrawBorderStringEightWay_Loop(
-                    spriteBatch,
-                    mouseFont,
-                    npcName,
-                    baseDrawPosition,
-                    Color.HotPink * 0.6f * animationCompletionRatio2,
-                    Color.Lerp(Color.HotPink, CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * timeRatio) * animationCompletionRatio2,
-                    Color.White * animationCompletionRatio2,
-                    Color.Black * 0.2f * animationCompletionRatio2,
-                    8,
-                    Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f) + timeRatio2);
-            }
-            else if (CAWorld.BossRush)
-            {
-                DrawBorderStringEightWay_Loop(
-                spriteBatch,
-                mouseFont,
-                npcName,
-                baseDrawPosition,
-                Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, animationCompletionRatio * 0.45f) * animationCompletionRatio2,
-                Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, animationCompletionRatio * 0.55f) * animationCompletionRatio2,
-                Color.White * animationCompletionRatio2,
-                Color.Black * 0.2f * animationCompletionRatio2,
-                8,
-                Math.Clamp(AnomalyNPC.BossRushAITimer, 0f, 120f) / 120f + timeRatio2 * 2f);
-            }
-            else if (NPCIsEnraged && EnrageTimer > 0)
-            {
-                DrawBorderStringEightWay_Loop(
-                    spriteBatch,
-                    mouseFont,
-                    npcName,
-                    baseDrawPosition,
-                    Color.Red * 0.6f * animationCompletionRatio2,
-                    Color.Black * 0.2f * animationCompletionRatio2,
-                    Color.White * animationCompletionRatio2,
-                    Color.Black * 0.2f * animationCompletionRatio2,
-                    8,
-                    EnrageTimer / 80f + timeRatio2 * 2f);
-            }
-            else if (NPCIsIncreasingDefenseOrDR && IncreasingDefenseOrDRTimer > 0)
-            {
-                DrawBorderStringEightWay_Loop(
-                    spriteBatch,
-                    mouseFont,
-                    npcName,
-                    baseDrawPosition,
-                    Color.LightGray * 0.6f * animationCompletionRatio2,
-                    Color.Black * 0.2f * animationCompletionRatio2,
-                    Color.White * animationCompletionRatio2,
-                    Color.Black * 0.2f * animationCompletionRatio2,
-                    8,
-                    EnrageTimer / 80f + timeRatio2 * 2f);
-            }
-            else
-            {
-                CalamityUtils.DrawBorderStringEightWay(
-                    spriteBatch,
-                    mouseFont,
-                    npcName,
-                    baseDrawPosition,
-                    Color.White * animationCompletionRatio2,
-                    Color.Black * 0.2f * animationCompletionRatio2);
-            }
-            #endregion
-
-            #region 大生命值数字
-            string bigLifeText = NPCLifeRatio == 0f ? "0%" : (NPCLifeRatio * 100f).ToString("N1") + "%";
-            Vector2 bigLifeTextSize = HPBarFont.MeasureString(bigLifeText);
-            CalamityUtils.DrawBorderStringEightWay(
-                spriteBatch,
-                HPBarFont,
-                bigLifeText,
-                new Vector2(x, y + 22 - bigLifeTextSize.Y),
-                MainColor * animationCompletionRatio2,
-                MainBorderColour * 0.25f * animationCompletionRatio2);
-            #endregion
-
-            #region 小字文本
-            if (!CanDrawExtraSmallText)
-                return;
-            string smallText = "";
-            if (EntityExtensionHandler.TryGetValue(NPCType, out BossEntityExtension extraEntityData))
-            {
-                string extensionName = extraEntityData.NameOfExtensions.ToString();
-                int extraEntities = CalamityUtils.CountNPCsBetter(extraEntityData.TypesToSearchFor);
-                smallText += $"({extensionName}: {extraEntities}) ";
-            }
-            smallText += $"({CombinedNPCLife} / {InitialMaxLife})";
-            CalamityUtils.DrawBorderStringEightWay(
-                spriteBatch,
-                itemStackFont,
-                smallText,
-                new Vector2(
-                    (float)Math.Max(x, x + mainBarWidth - (itemStackFont.MeasureString(smallText) * 0.75f).X),
-                    y + 45),
-                Color.White * whiteColorAlpha,
-                Color.Black * whiteColorAlpha * 0.24f,
-                0.75f);
-            #endregion
 
             PostDraw(spriteBatch, x, y);
         }
@@ -351,7 +248,66 @@ public class BetterBossHealthBarManager : ITOLoader
             if (NPC.TryGetOverride(out CANPCOverride npcOverride, "PostDrawCalBossBar"))
                 npcOverride.PostDrawCalBossBar(this, spriteBatch, x, y);
         }
+
+        #region 公共绘制方法
+        public void DrawBaseBars(SpriteBatch spriteBatch, int x, int y, Color? color1, Color color2)
+        {
+            int mainBarWidth = (int)MathHelper.Min(400f * AnimationCompletionRatio, 400f * NPCLifeRatio);
+            spriteBatch.Draw(BossMainHPBar, new Rectangle(x, y + 28, mainBarWidth, BossMainHPBar.Height), color1 ?? Color.White);
+
+            if (ComboDamageCountdown > 0)
+            {
+                int comboHPBarWidth = (int)(400 * (float)HealthAtStartOfCombo / InitialMaxLife) - mainBarWidth;
+                if (ComboDamageCountdown < 6)
+                    comboHPBarWidth = comboHPBarWidth * ComboDamageCountdown / 6;
+
+                spriteBatch.Draw(BossComboHPBar, new Rectangle(x + mainBarWidth, y + 28, comboHPBarWidth, BossComboHPBar.Height), Color.White);
+            }
+
+            spriteBatch.Draw(BossSeperatorBar, new Rectangle(x, y + 18, 400, 6), color2);
+        }
+
+        public void DrawNPCName(SpriteBatch spriteBatch, int x, int y, string npcName, Color? mainColor, Color? borderColor, float borderWidth)
+        {
+            npcName ??= OverridingName ?? NPC.FullName;
+            Vector2 npcNameSize = MouseFont.MeasureString(npcName);
+            Vector2 baseDrawPosition = new(x + 400 - npcNameSize.X, y + 23 - npcNameSize.Y);
+            DrawBorderStringEightWay_Loop(spriteBatch, MouseFont, npcName, baseDrawPosition, mainColor, borderColor, Color.White * AnimationCompletionRatio2, Color.Black * 0.2f * AnimationCompletionRatio2, 8, borderWidth, 1f);
+        }
+
+        public void DrawBigLifeText(SpriteBatch spriteBatch, int x, int y)
+        {
+            string bigLifeText = NPCLifeRatio == 0f ? "0%" : (NPCLifeRatio * 100f).ToString("N1") + "%";
+            Vector2 bigLifeTextSize = HPBarFont.MeasureString(bigLifeText);
+            CalamityUtils.DrawBorderStringEightWay(spriteBatch, HPBarFont, bigLifeText, new Vector2(x, y + 22 - bigLifeTextSize.Y), MainColor * AnimationCompletionRatio2, MainBorderColour * 0.25f * AnimationCompletionRatio2);
+        }
+
+        public void DrawExtraSmallText(SpriteBatch spriteBatch, int x, int y)
+        {
+            if (!CanDrawExtraSmallText)
+                return;
+            float whiteColorAlpha = OpenAnimationTimer switch
+            {
+                4 or 8 or 16 => Main.rand.NextFloat(0.7f, 0.8f),
+                3 or 7 or 15 => Main.rand.NextFloat(0.4f, 0.5f),
+                _ => AnimationCompletionRatio
+            };
+            int mainBarWidth = (int)MathHelper.Min(400f * AnimationCompletionRatio, 400f * NPCLifeRatio);
+            string smallText = "";
+            if (EntityExtensionHandler.TryGetValue(NPCType, out BossEntityExtension extraEntityData))
+            {
+                string extensionName = extraEntityData.NameOfExtensions.ToString();
+                int extraEntities = CalamityUtils.CountNPCsBetter(extraEntityData.TypesToSearchFor);
+                smallText += $"({extensionName}: {extraEntities}) ";
+            }
+            smallText += $"({CombinedNPCLife} / {InitialMaxLife})";
+            CalamityUtils.DrawBorderStringEightWay(spriteBatch, ItemStackFont, smallText, new Vector2(Math.Max(x, x + mainBarWidth - (ItemStackFont.MeasureString(smallText) * 0.75f).X), y + 45), Color.White * whiteColorAlpha, Color.Black * whiteColorAlpha * 0.24f, 0.75f);
+        }
+        #endregion
     }
+
+    public static DynamicSpriteFont MouseFont { get; } = FontAssets.MouseText.Value;
+    public static DynamicSpriteFont ItemStackFont { get; } = FontAssets.ItemStack.Value;
 
     private static readonly Dictionary<ulong, BetterBossHPUI> _trackingBars = [];
     private const int MaxBars = 6;
@@ -371,16 +327,22 @@ public class BetterBossHealthBarManager : ITOLoader
     {
         int x = Main.screenWidth
             - (Main.playerInventory || Main.invasionType > 0 || Main.pumpkinMoon || Main.snowMoon || DD2Event.Ongoing || AcidRainEvent.AcidRainEventIsOngoing ? 670 : 420);
-        int y = Main.screenHeight - 100;
+        int y = Main.screenHeight - 30;
+
+        int activeCount = 0;
 
         foreach (BetterBossHPUI newBar in
-            from pair in _trackingBars
+            from pair in _trackingBars.AsValueEnumerable()
             let newBar = pair.Value
             orderby newBar.Valid descending, pair.Key ascending
             select newBar)
         {
-            newBar.Draw(spriteBatch, x, y);
             y -= newBar.Height;
+            if (activeCount >= MaxActiveBars && newBar.Valid)
+                continue;
+            newBar.Draw(spriteBatch, x, y);
+            if (newBar.Valid)
+                activeCount++;
         }
     }
 
@@ -408,7 +370,6 @@ public class BetterBossHealthBarManager : ITOLoader
             if (_trackingBars.ContainsKey(fromNPC) && npc.active)
                 validIdentifiers.Add(fromNPC);
             else if (_trackingBars.Values.Count < MaxBars
-                && _trackingBars.Values.Count(newBar => newBar.Valid) < MaxActiveBars
                 && npc.IsABoss()
                 && !(npc.type is NPCID.EaterofWorldsBody or NPCID.EaterofWorldsTail || npc.type == ModContent.NPCType<Artemis>())
                 || MinibossHPBarList.Contains(npc.type) || npc.Calamity().CanHaveBossHealthBar)
@@ -426,26 +387,15 @@ public class BetterBossHealthBarManager : ITOLoader
     }
 
     public static void DrawBorderStringEightWay_Loop(SpriteBatch spriteBatch, DynamicSpriteFont font, string text, Vector2 baseDrawPosition,
-        Color mainColor, Color borderColor, Color mainColor2, Color borderColor2,
+        Color? mainColor, Color? borderColor, Color mainColor2, Color borderColor2,
         int round, float borderWidth, float scale = 1f)
     {
-        for (int i = 0; i < round; i++)
-            CalamityUtils.DrawBorderStringEightWay(
-                spriteBatch,
-                font,
-                text,
-                baseDrawPosition + new PolarVector2(borderWidth, MathHelper.TwoPi / round * i),
-                mainColor,
-                borderColor,
-                scale);
-        CalamityUtils.DrawBorderStringEightWay(
-            spriteBatch,
-            font,
-            text,
-            baseDrawPosition,
-            mainColor2,
-            borderColor2,
-            scale);
+        if (mainColor is not null && borderColor is not null && borderWidth > 0f)
+        {
+            for (int i = 0; i < round; i++)
+                CalamityUtils.DrawBorderStringEightWay(spriteBatch, font, text, baseDrawPosition + new PolarVector2(borderWidth, MathHelper.TwoPi / round * i), mainColor.Value, borderColor.Value, scale);
+        }
+        CalamityUtils.DrawBorderStringEightWay(spriteBatch, font, text, baseDrawPosition, mainColor2, borderColor2, scale);
     }
 
     void ITOLoader.PostSetupContent()

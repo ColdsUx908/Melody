@@ -2,7 +2,7 @@
 
 namespace Transoceanic;
 
-public partial class TOMain
+public sealed partial class TOMain
 {
     public const bool DEBUG_Default = false;
 

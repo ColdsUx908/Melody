@@ -13,6 +13,7 @@ using Terraria.Utilities;
 using Transoceanic.GameData.Utilities;
 using Transoceanic.GlobalInstances;
 using Transoceanic.IL;
+using ZLinq;
 
 namespace Transoceanic.ExtraGameData;
 
@@ -42,9 +43,9 @@ public class EntityOverrideDictionary<TEntity, TOverride>
     where TOverride : EntityOverride<TEntity>
 {
     public new IEnumerable<TOverride> Values =>
-        from overrides in base.Values
-        from temp in overrides
-        select temp.overrideInstance;
+        from overrideList in base.Values
+        from overridePair in overrideList
+        select overridePair.overrideInstance;
 
     /// <summary>
     /// 尝试获取指定实体的Override实例。
@@ -672,6 +673,20 @@ public abstract class ItemOverride : EntityOverride<Item>
     /// Allows you to give effects to this accessory when equipped in a vanity slot. Vanilla uses this for boot effects, wings and merman/werewolf visual flags
     /// </summary>
     public virtual void UpdateVanity(Player player) { }
+
+    /// <summary>
+    /// Allows you to set custom draw flags for this accessory that can be checked in a <see cref="PlayerDrawLayer"/> or other drawcode. Not required if using pre-existing layers (e.g. face, back).
+    /// <para/> <paramref name="hideVisual"/> indicates if the accessory is hidden (in a non-vanity accessory slot that is set to hidden). It sounds counterintuitive for this method to be called on hidden accessories, but this can be used for effects where the visuals of an accessory should be forced despite the player hiding the accessory. For example, wings will always show while in the air and the Shield of Cthulhu will always show while its dash is active even while hidden.
+    /// </summary>
+    public virtual void UpdateVisibleAccessory(Player player, bool hideVisual) { }
+
+    /// <summary>
+    /// Allows tracking custom shader values corresponding to specific items or custom player layers for equipped accessories. <paramref name="dye"/> is the <see cref="Item.dye"/> of the item in the dye slot. <paramref name="hideVisual"/> indicates if this item is in a non-vanity accessory slot that is set to hidden. Most implementations will not assign shaders if the accessory is hidden, but there are rare cases where it is desired to assign the shader regardless of accessory visibility. One example is Hand Of Creation, the player can disable visibility of the accessory to prevent the backpack visuals from showing, but the stool will still be properly dyed by the corresponding dye item when visible.
+    /// </summary>
+    /// <param name="player"></param>
+    /// <param name="dye"></param>
+    /// <param name="hideVisual"></param>
+    public virtual void UpdateItemDye(Player player, int dye, bool hideVisual) { }
     #endregion
 
     #region Draw
@@ -759,6 +774,21 @@ public abstract class ItemOverride : EntityOverride<Item>
     #endregion
 
     #region Use
+    /// <summary>
+    /// Allows you to make this item usable by right-clicking. When this item is used by right-clicking, <see cref="Player.altFunctionUse"/> will be set to 2. Check the value of altFunctionUse in <see cref="UseItem(Player)"/> to apply right-click specific logic. For auto-reusing through right clicking, see also <see cref="ItemID.Sets.ItemsThatAllowRepeatedRightClick"/>.
+    /// <para/> Returns false by default.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="player">The player.</param>
+    /// <returns></returns>
+    public virtual bool AltFunctionUse(Player player) => false;
+
+    /// <summary>
+    /// Returns whether or not any item can be used. Returns true by default. The inability to use a specific item overrides this, so use this to stop an item from being used.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual bool CanUseItem(Player player) => true;
+
     /// <summary>
     /// Allows you to modify the autoswing (auto-reuse) behavior of any item without having to mess with Item.autoReuse.
     /// <br>Useful to create effects like the Feral Claws which makes melee weapons and whips auto-reusable.</br>

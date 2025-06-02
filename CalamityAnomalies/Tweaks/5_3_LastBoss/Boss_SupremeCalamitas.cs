@@ -5,7 +5,7 @@ using Transoceanic.ExtraGameData;
 
 namespace CalamityAnomalies.Tweaks._5_3_LastBoss;
 
-public sealed class SupremeCalamitasDetour : ModNPCDetour<SupremeCalamitas>
+public class SupremeCalamitasDetour : ModNPCDetour<SupremeCalamitas>
 {
     public override bool Detour_CheckDead(Orig_CheckDead orig, SupremeCalamitas self)
     {
@@ -30,7 +30,7 @@ public sealed class SupremeCalamitasDetour : ModNPCDetour<SupremeCalamitas>
     }
 }
 
-public sealed class SCalBrimstoneGigablastDetour : ModProjectileDetour<SCalBrimstoneGigablast>
+public class SCalBrimstoneGigablastDetour : ModProjectileDetour<SCalBrimstoneGigablast>
 {
     public override void Detour_OnKill(Orig_OnKill orig, SCalBrimstoneGigablast self, int timeLeft)
     {
@@ -51,7 +51,7 @@ public sealed class SCalBrimstoneGigablastDetour : ModProjectileDetour<SCalBrims
     }
 }
 
-public sealed class SCalBrimstoneFireblastDetour : ModProjectileDetour<SCalBrimstoneFireblast>
+public class SCalBrimstoneFireblastDetour : ModProjectileDetour<SCalBrimstoneFireblast>
 {
     public override void Detour_OnKill(Orig_OnKill orig, SCalBrimstoneFireblast self, int timeLeft)
     {
