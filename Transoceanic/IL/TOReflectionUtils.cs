@@ -252,7 +252,7 @@ public static class TOReflectionUtils
     /// <param name="method"></param>
     /// <param name="interfaceType"></param>
     /// <returns></returns>
-    public static bool IsInterfaceImplementionOf(this MethodInfo method, Type interfaceType)
+    public static bool IsInterfaceImplementationOf(this MethodInfo method, Type interfaceType)
     {
         InterfaceMapping map;
         try
@@ -279,14 +279,14 @@ public static class TOReflectionUtils
     /// <typeparam name="T"></typeparam>
     /// <param name="method"></param>
     /// <returns></returns>
-    public static bool IsInterfaceImplementionOf<T>(this MethodInfo method) => method.IsInterfaceImplementionOf(typeof(T));
+    public static bool IsInterfaceImplementationOf<T>(this MethodInfo method) => method.IsInterfaceImplementationOf(typeof(T));
 
     /// <summary>
     /// 判定指定方法是否实现了某个接口类型。
     /// </summary>
     /// <param name="method"></param>
     /// <returns></returns>
-    public static bool IsInterfaceImplemention(this MethodInfo method) => method.DeclaringType.GetInterfaces().Any(method.IsInterfaceImplementionOf);
+    public static bool IsInterfaceImplementation(this MethodInfo method) => method.DeclaringType.GetInterfaces().Any(method.IsInterfaceImplementationOf);
 
     /// <summary>
     /// 获取指定类型中所有重写方法。
