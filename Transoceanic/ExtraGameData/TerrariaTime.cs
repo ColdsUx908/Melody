@@ -120,3 +120,132 @@ public readonly struct TerrariaTime : IEquatable<TerrariaTime>
 
     public static TerrariaTime RealTime => new(DateTime.Now);
 }
+
+public struct TerrariaTimer : IEquatable<TerrariaTimer>
+{
+    public int TotalTicks
+    {
+        readonly get;
+        set
+        {
+            if (value < 0)
+                throw new ArgumentOutOfRangeException(nameof(value), "Total ticks must be non-negative.");
+            field = value;
+        }
+    }
+
+    public int Minutes
+    {
+        readonly get => TotalTicks / 3600;
+        set
+        {
+            if (value < 0)
+                throw new ArgumentOutOfRangeException(nameof(value), "Minutes must be non-negative.");
+            TotalTicks = value * 3600 + TotalTicks % 3600;
+        }
+    }
+
+    public int Seconds
+    {
+        readonly get => TotalTicks / 60 % 60;
+        set
+        {
+            if (value is < 0 or >= 60)
+                throw new ArgumentOutOfRangeException(nameof(value), "Seconds must be in the range [0, 60).");
+            TotalTicks = value * 60 + TotalTicks % 60;
+        }
+    }
+
+    public int Ticks
+    {
+        readonly get => TotalTicks % 60;
+        set
+        {
+            if (value is < 0 or >= 60)
+                throw new ArgumentOutOfRangeException(nameof(value), "Ticks must be in the range [0, 60).");
+            TotalTicks = value + TotalTicks / 60 * 60;
+        }
+    }
+
+    public TerrariaTimer() : this(0) { }
+
+    public TerrariaTimer(int totalTicks) => TotalTicks = totalTicks;
+
+    public TerrariaTimer(int minutes = 0, int seconds = 0, int ticks = 0)
+    {
+        Minutes = minutes;
+        Seconds = seconds;
+        Ticks = ticks;
+    }
+
+    public TerrariaTimer(string timeString)
+    {
+        if (string.IsNullOrWhiteSpace(timeString))
+            throw new ArgumentException("Time string cannot be null or empty.", nameof(timeString));
+
+        string[] parts = timeString.Split(':');
+
+        if (parts.Length != 3)
+            throw new FormatException("Time string must be in the format 'MM:SS:TT'.");
+        if (!int.TryParse(parts[0], out int minutes) || !int.TryParse(parts[1], out int seconds) || !int.TryParse(parts[2], out int ticks))
+            throw new FormatException("Time string must contain valid integers.");
+
+        Minutes = minutes;
+        Seconds = seconds;
+        Ticks = ticks;
+    }
+
+    public readonly void Deconstruct(out int totalTicks, out int minutes, out int seconds, out int ticks)
+    {
+        totalTicks = TotalTicks;
+        minutes = Minutes;
+        seconds = Seconds;
+        ticks = Ticks;
+    }
+
+    public override readonly int GetHashCode() => TotalTicks.GetHashCode();
+
+    public override readonly bool Equals(object obj) => obj is TerrariaTimer other && Equals(other);
+
+    public readonly bool Equals(TerrariaTimer other) => TotalTicks == other.TotalTicks;
+
+    public static bool operator ==(TerrariaTimer left, TerrariaTimer right) => left.Equals(right);
+
+    public static bool operator !=(TerrariaTimer left, TerrariaTimer right) => !(left == right);
+
+    public static bool operator >(TerrariaTimer left, TerrariaTimer right) => left.TotalTicks > right.TotalTicks;
+
+    public static bool operator <(TerrariaTimer left, TerrariaTimer right) => left.TotalTicks < right.TotalTicks;
+
+    public static bool operator >=(TerrariaTimer left, TerrariaTimer right) => left.TotalTicks >= right.TotalTicks;
+
+    public static bool operator <=(TerrariaTimer left, TerrariaTimer right) => left.TotalTicks <= right.TotalTicks;
+
+    public static bool operator >(TerrariaTimer left, int right) => left.TotalTicks > right;
+
+    public static bool operator <(TerrariaTimer left, int right) => left.TotalTicks < right;
+
+    public static bool operator >=(TerrariaTimer left, int right) => left.TotalTicks >= right;
+
+    public static bool operator <=(TerrariaTimer left, int right) => left.TotalTicks <= right;
+
+    public static TerrariaTimer operator ++(TerrariaTimer timer) => new(++timer.TotalTicks);
+
+    public static TerrariaTimer operator --(TerrariaTimer timer) => new(--timer.TotalTicks);
+
+    public static TerrariaTimer operator +(TerrariaTimer timer, int ticks) => new(timer.TotalTicks + ticks);
+
+    public static TerrariaTimer operator -(TerrariaTimer timer, int ticks) => new(timer.TotalTicks - ticks);
+
+    public static TerrariaTimer operator +(TerrariaTimer left, TerrariaTimer right) => new(left.TotalTicks + right.TotalTicks);
+
+    public static TerrariaTimer operator -(TerrariaTimer left, TerrariaTimer right) => new(left.TotalTicks - right.TotalTicks);
+
+    public static implicit operator TerrariaTimer(int totalTicks) => new(totalTicks);
+
+    public static implicit operator TerrariaTimer((int minutes, int seconds) time) => new(time.minutes, time.seconds, 0);
+
+    public static implicit operator TerrariaTimer((int minutes, int seconds, int ticks) time) => new(time.minutes, time.seconds, time.ticks);
+
+    public override readonly string ToString() => $"{Minutes}:{Seconds:D2}:{Ticks:D2}";
+}

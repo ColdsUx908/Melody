@@ -117,7 +117,7 @@ public interface ITODetourProvider
     public virtual decimal LoadPriority => 0m;
 }
 
-public sealed class TODetourHelper : ITOLoader
+public class TODetourHelper : ITOLoader
 {
     internal static List<Hook> Detours { get; } = [];
 

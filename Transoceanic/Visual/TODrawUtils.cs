@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Graphics;
@@ -10,7 +8,7 @@ using Terraria.ModLoader;
 using Transoceanic.ExtraMathData;
 using Transoceanic.MathHelp;
 
-namespace Transoceanic.Drawing;
+namespace Transoceanic.Visual;
 
 public static class TODrawUtils
 {

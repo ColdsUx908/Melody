@@ -7,9 +7,9 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Transoceanic;
-using Transoceanic.Drawing;
 using Transoceanic.GlobalInstances;
 using Transoceanic.Systems;
+using Transoceanic.Visual;
 
 namespace CalamityAnomalies.Items.LegendaryItems;
 
@@ -22,7 +22,7 @@ public class AscendantWings : LegendaryItem, ILocalizedModType
     {
         Item.width = 54;
         Item.height = 54;
-        Item.value = TOMain.CelestialValue;
+        Item.value = TOMain.CelestialPrice;
         Item.rare = ModContent.RarityType<Celestial>();
         Item.accessory = true;
     }

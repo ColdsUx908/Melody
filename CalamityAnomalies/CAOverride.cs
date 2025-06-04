@@ -45,24 +45,6 @@ public abstract class CANPCOverride : NPCOverride
         CalamityNPC = null;
     }
 
-    public int AI_Timer1
-    {
-        get => (int)AnomalyNPC.AnomalyAI[^3];
-        set => AnomalyNPC.SetAnomalyAI(value, ^3);
-    }
-
-    public int AI_Timer2
-    {
-        get => (int)AnomalyNPC.AnomalyAI[^2];
-        set => AnomalyNPC.SetAnomalyAI(value, ^2);
-    }
-
-    public int AI_Timer3
-    {
-        get => (int)AnomalyNPC.AnomalyAI[^1];
-        set => AnomalyNPC.SetAnomalyAI(value, ^1);
-    }
-
     /// <summary>
     /// 是否允许灾厄的相关方法执行。
     /// <br/>默认返回 <see langword="true"/>，即全部允许。
@@ -75,20 +57,20 @@ public abstract class CANPCOverride : NPCOverride
     /// <param name="x">绘制位置左上角的X坐标。</param>
     /// <param name="y">绘制位置左上角的Y坐标。</param>
     /// <returns>返回 <see langword="false"/> 以阻止默认的绘制血条方法运行。默认返回 <see langword="true"/>。</returns>
-    public virtual bool PreDrawCalBossBar(BetterBossHealthBarManager.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) => true;
+    public virtual bool PreDrawCalBossBar(BetterBossHealthBar.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) => true;
 
     /// <summary>
     /// 在绘制灾厄的Boss血条之后调用。
     /// </summary>
     /// <param name="x">绘制位置左上角的X坐标。</param>
     /// <param name="y">绘制位置左上角的Y坐标。</param>
-    public virtual void PostDrawCalBossBar(BetterBossHealthBarManager.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) { }
+    public virtual void PostDrawCalBossBar(BetterBossHealthBar.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) { }
 
     /// <summary>
     /// 使用此方法可以修改灾厄Boss血条的高度。
     /// <br/>默认为 <c>70</c>。
     /// </summary>
-    public virtual int CustomCalBossBarHeight(BetterBossHealthBarManager.BetterBossHPUI newBar) => 70;
+    public virtual int CustomCalBossBarHeight(BetterBossHealthBar.BetterBossHPUI newBar) => 70;
 }
 
 public abstract class CANPCOverride<T> : CANPCOverride where T : ModNPC

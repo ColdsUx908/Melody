@@ -20,10 +20,12 @@ public record TOModReferenceContainer
     /// Mod内部名。
     /// </summary>
     public string Name { get; private set; } = "";
+
     /// <summary>
     /// Mod是否已加载。
     /// </summary>
     public bool IsLoaded { get; private set; } = false;
+
     /// <summary>
     /// Mod实例。若 <see cref="IsLoaded"/> 为false，值为null。
     /// </summary>

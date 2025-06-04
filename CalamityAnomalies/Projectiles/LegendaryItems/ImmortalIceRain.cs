@@ -131,7 +131,7 @@ public class ImmortalIceRain : ModProjectile, ILocalizedModType
         //SoundEngine.PlaySound(SoundID.Item27 with { Volume = SoundID.Item27.Volume * 0.25f }, Projectile.Center);
         for (int j = 0; j < 3; j++)
         {
-            TOActivator.NewDustAction(Projectile.Center, Projectile.width, Projectile.height, DustID.Snow, action: d =>
+            TOActivator.NewDustAction(Projectile.Center, Projectile.width, Projectile.height, action: d =>
             {
                 d.noGravity = true;
                 d.noLight = true;

@@ -43,6 +43,12 @@ public class CAGlobalNPC : GlobalNPC
 
     public bool[] AIChanged { get; } = new bool[MaxAISlots];
 
+    public void SetAnomalyAI(float value, int index)
+    {
+        AnomalyAI[index] = value;
+        AIChanged[index] = true;
+    }
+
     public void SetAnomalyAI(float value, Index index)
     {
         AnomalyAI[index] = value;

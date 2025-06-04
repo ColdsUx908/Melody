@@ -28,6 +28,8 @@ public abstract class EntityOverride<TEntity> where TEntity : Entity
 
     public virtual bool ShouldProcess => true;
 
+    public virtual void Load() { }
+
     public abstract void Connect(TEntity entity);
 
     public abstract void Disconnect();
@@ -80,17 +82,20 @@ public class EntityOverrideDictionary<TEntity, TOverride>
     public void FillOverrides(Assembly assemblyToSearch)
     {
         Clear();
-        foreach ((int type, IEnumerable<(TOverride overrideInstance, HashSet<string> overridenMethods)> overrides) in
-            TOReflectionUtils.GetTypeInstancesDerivedFrom<TOverride>(assemblyToSearch)
-            .GroupBy(k => k.OverrideType)
-            .ToDictionary(
-                keySelector: k => k.Key,
-                elementSelector: k =>
-                    from overrideInstance in k
-                    orderby overrideInstance.Priority
-                    select (overrideInstance, overrideInstance.GetType().GetOverrideMethodNames(TOReflectionUtils.UniversalBindingFlags).ToHashSet())))
+
+        IEnumerable<TOverride> overrideInstances = TOReflectionUtils.GetTypeInstancesDerivedFrom<TOverride>(assemblyToSearch);
+
+        foreach (TOverride overrideInstance in overrideInstances)
+            overrideInstance.Load();
+
+        foreach ((int type, List<(TOverride overrideInstance, HashSet<string> overridenMethods)> overrides) in
+            overrideInstances.GroupBy(k => k.OverrideType).ToDictionary(keySelector: k => k.Key, elementSelector: k => (
+                from overrideInstance in k.AsValueEnumerable()
+                orderby overrideInstance.Priority
+                select (overrideInstance, overrideInstance.GetType().GetOverrideMethodNames(TOReflectionUtils.UniversalBindingFlags).ToHashSet())
+                ).ToList()))
         {
-            this[type] = [.. overrides];
+            this[type] = overrides;
         }
     }
 }
@@ -102,14 +107,7 @@ public abstract class NPCOverride : EntityOverride<NPC>
 
     public TOGlobalNPC OceanNPC { get; private set; } = null;
 
-    public Player Target { get; private set; } = null;
-
-    public bool TargetClosestIfInvalid(bool faceTarget = true, float distanceThreshold = 4000f)
-    {
-        bool result = NPC.TargetClosestIfInvalid(faceTarget, distanceThreshold);
-        Target = result ? Main.player[NPC.target] : null;
-        return result;
-    }
+    public Player Target => Main.player[NPC.target];
 
     public override void Connect(NPC npc)
     {
@@ -121,6 +119,24 @@ public abstract class NPCOverride : EntityOverride<NPC>
     {
         NPC = null;
         OceanNPC = null;
+    }
+
+    public int Timer1
+    {
+        get => (int)OceanNPC.OceanAI[^3];
+        set => OceanNPC.SetOceanAI(value, ^4);
+    }
+
+    public int Timer2
+    {
+        get => (int)OceanNPC.OceanAI[^2];
+        set => OceanNPC.SetOceanAI(value, ^3);
+    }
+
+    public int Timer3
+    {
+        get => (int)OceanNPC.OceanAI[^1];
+        set => OceanNPC.SetOceanAI(value, ^2);
     }
     #endregion
 

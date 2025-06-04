@@ -48,7 +48,7 @@ public abstract class TypeDetour<T> : TypeDetour
     /// <param name="methodNamePrefix"><c>methodName</c> 应用的方法名前缀。</param>
     protected void TryApplyDetour(string methodName, Delegate detour, string methodNamePrefix = "Detour_")
     {
-        Match match = Regex.Match(methodName, $@"{methodNamePrefix}(?<methodName>.*)$");
+        Match match = Regex.Match(methodName, methodNamePrefix + @"(?<methodName>.*)$");
         if (match.Success && GetType().HasRealMethod(methodName, TOReflectionUtils.UniversalBindingFlags))
             TODetourUtils.ModifyMethodWithDetour<T>(match.Groups["methodName"].Value, detour);
     }

@@ -7,12 +7,13 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Transoceanic.GameData;
+using Transoceanic.GameData.Utilities;
 
 namespace CalamityAnomalies.NPCs.KingSlime;
 
 public class AnomalyJewelEmerald : AnomalyNPCOverride
 {
-    #region 枚举、常量、属性
+    #region 枚举、数值、属性
     public enum AttackType
     {
         Despawn = -1,
@@ -21,7 +22,7 @@ public class AnomalyJewelEmerald : AnomalyNPCOverride
         Charge = 1,
     }
 
-    private static class Constant
+    private static class Data
     {
         public const float DespawnDistance = 5000f;
 
@@ -29,13 +30,13 @@ public class AnomalyJewelEmerald : AnomalyNPCOverride
         public const int ChargeGateValue = 40;
     }
 
-    public AttackType AI_CurrentAttack
+    public AttackType CurrentAttack
     {
         get => (AttackType)(int)AnomalyNPC.AnomalyAI[1];
         set => AnomalyNPC.SetAnomalyAI((int)value, 1);
     }
 
-    public int AI_CurrentAttackPhase
+    public int CurrentAttackPhase
     {
         get => (int)AnomalyNPC.AnomalyAI[2];
         set => AnomalyNPC.SetAnomalyAI(value, 2);
@@ -49,20 +50,20 @@ public class AnomalyJewelEmerald : AnomalyNPCOverride
         //如果找不到所属史莱姆王，直接脱战
         if (!OceanNPC.TryGetMaster(NPCID.KingSlime, out NPC master))
         {
-            AI_CurrentAttack = AttackType.Despawn;
+            CurrentAttack = AttackType.Despawn;
             Despawn();
             return false;
         }
 
         Lighting.AddLight(NPC.Center, 0f, 0.8f, 0f);
 
-        if (!TargetClosestIfInvalid(true, Constant.DespawnDistance))
+        if (!NPC.TargetClosestIfInvalid(true, Data.DespawnDistance))
         {
             NPC.Center = master.Top - new Vector2(0, master.height);
             return false;
         }
 
-        switch (AI_CurrentAttack)
+        switch (CurrentAttack)
         {
             case AttackType.Despawn:
                 Despawn();
@@ -84,7 +85,7 @@ public class AnomalyJewelEmerald : AnomalyNPCOverride
     {
         for (int i = 0; i < amount; i++)
         {
-            TOActivator.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.GemEmerald, 0, default, d =>
+            TOActivator.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.GemEmerald, d =>
             {
                 d.velocity = NPC.SafeDirectionTo(Target.Center + Target.velocity * 20f, -Vector2.UnitY) * Main.rand.NextFloat(-4f, -1f) * Main.rand.NextFloat(1f, 2f);
                 d.noGravity = true;
@@ -145,11 +146,11 @@ public class AnomalyJewelEmerald : AnomalyNPCOverride
                 break;
         }
 
-        AI_Timer2++;
-        if (AI_Timer2 >= Constant.ChargePhaseGateValue)
+        Timer2++;
+        if (Timer2 >= Data.ChargePhaseGateValue)
         {
-            AI_Timer2 = 0;
-            AI_CurrentAttack = AttackType.Charge;
+            Timer2 = 0;
+            CurrentAttack = AttackType.Charge;
             NPC.netUpdate = true;
         }
     }
@@ -158,21 +159,21 @@ public class AnomalyJewelEmerald : AnomalyNPCOverride
     {
         NPC.knockBackResist = 0f;
 
-        switch (AI_CurrentAttackPhase)
+        switch (CurrentAttackPhase)
         {
             case 0: //停止，旋转
                 NPC.damage = 0;
                 NPC.velocity *= 0.94f;
-                AI_Timer1++;
-                NPC.rotation += (0.1f + AI_Timer1 / Constant.ChargeGateValue * 0.4f) * NPC.direction;
-                if (AI_Timer1 >= Constant.ChargeGateValue)
+                Timer1++;
+                NPC.rotation += (0.1f + Timer1 / Data.ChargeGateValue * 0.4f) * NPC.direction;
+                if (Timer1 >= Data.ChargeGateValue)
                 {
                     MakeDust(10);
 
                     SoundEngine.PlaySound(SoundID.Item38, NPC.Center);
 
-                    AI_CurrentAttackPhase = 1;
-                    AI_Timer1 = 0;
+                    CurrentAttackPhase = 1;
+                    Timer1 = 0;
                     NPC.netUpdate = true;
                 }
                 break;
@@ -181,22 +182,22 @@ public class AnomalyJewelEmerald : AnomalyNPCOverride
                 float chargeSpeed = 24f;
                 NPC.velocity = NPC.SafeDirectionTo(Target.Center + Target.velocity * 20f, -Vector2.UnitY) * chargeSpeed;
                 NPC.rotation = NPC.velocity.ToRotation() + MathHelper.PiOver2;
-                AI_CurrentAttackPhase = 2;
-                AI_Timer1 = 0;
+                CurrentAttackPhase = 2;
+                Timer1 = 0;
                 NPC.netSpam = 0;
                 NPC.netUpdate = true;
                 break;
             case 2: //冲刺中
                 NPC.damage = NPC.defDamage;
-                AI_Timer1++;
-                if (AI_Timer1 >= Constant.ChargeGateValue)
+                Timer1++;
+                if (Timer1 >= Data.ChargeGateValue)
                 {
                     NPC.damage = 0;
                     MakeDust(10);
                     SoundEngine.PlaySound(SoundID.Item8, NPC.Center);
-                    AI_CurrentAttackPhase = 0;
-                    AI_Timer1 = 0;
-                    AI_CurrentAttack = AttackType.FollowTarget;
+                    CurrentAttackPhase = 0;
+                    Timer1 = 0;
+                    CurrentAttack = AttackType.FollowTarget;
                     NPC.netUpdate = true;
                     NPC.velocity = Vector2.Zero;
                 }

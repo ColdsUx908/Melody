@@ -21,7 +21,7 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     /// 标识符分配器。
     /// <br/>进入世界时重置为0。
     /// </summary>
-    internal static ulong _identifierAllocator;
+    private static ulong _identifierAllocator;
 
     public ulong SpawnTime { get; internal set; } = 0;
 
@@ -35,6 +35,12 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     public float[] OceanAI { get; } = new float[MaxAISlots];
 
     public bool[] AIChanged { get; } = new bool[MaxAISlots];
+
+    public void SetOceanAI(float value, int index)
+    {
+        OceanAI[index] = value;
+        AIChanged[index] = true;
+    }
 
     public void SetOceanAI(float value, Index index)
     {
@@ -125,11 +131,17 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     #region Net
     public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
     {
+        if (!TOMain.SyncEnabled)
+            return;
+
         TONetUtils.SendAI(OceanAI, AIChanged, binaryWriter);
     }
 
     public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
     {
+        if (!TOMain.SyncEnabled)
+            return;
+
         TONetUtils.ReceiveAI(OceanAI, binaryReader);
     }
     #endregion

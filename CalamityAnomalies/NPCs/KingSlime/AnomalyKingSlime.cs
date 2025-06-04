@@ -15,7 +15,7 @@ namespace CalamityAnomalies.NPCs.KingSlime;
 
 public class AnomalyKingSlime : AnomalyNPCOverride
 {
-    #region 枚举、常量、属性、AI状态
+    #region 枚举、数值、属性、AI状态
     public enum AttackType
     {
         Despawn = -1,
@@ -30,7 +30,7 @@ public class AnomalyKingSlime : AnomalyNPCOverride
         PhaseChange_1And2 = 5,
     }
 
-    private static class Constant
+    private static class Data
     {
         public const float DespawnDistance = 5000f;
 
@@ -43,55 +43,55 @@ public class AnomalyKingSlime : AnomalyNPCOverride
     /// <summary>
     /// 当前阶段。0，1，2。
     /// </summary>
-    public int AI_CurrentPhase
+    public int CurrentPhase
     {
         get => (int)AnomalyNPC.AnomalyAI[0];
         set => AnomalyNPC.SetAnomalyAI(value, 0);
     }
 
-    public AttackType AI_CurrentAttack
+    public AttackType CurrentAttack
     {
         get => (AttackType)(int)AnomalyNPC.AnomalyAI[1];
         set => AnomalyNPC.SetAnomalyAI((int)value, 1);
     }
 
-    public int AI_CurrentAttackPhase
+    public int CurrentAttackPhase
     {
         get => (int)AnomalyNPC.AnomalyAI[2];
         set => AnomalyNPC.SetAnomalyAI(value, 2);
     }
 
-    public int AI_JewelSpawn
+    public int JewelSpawn
     {
         get => (int)AnomalyNPC.AnomalyAI[3];
         set => AnomalyNPC.SetAnomalyAI(value, 3);
     }
 
-    public bool AI_JewelEmeraldSpawned
+    public bool JewelEmeraldSpawned
     {
-        get => TOMathHelper.GetBit(AI_JewelSpawn, 0);
-        set => AI_JewelSpawn = TOMathHelper.SetBit(AI_JewelSpawn, 0, true);
+        get => TOMathHelper.GetBit(JewelSpawn, 0);
+        set => JewelSpawn = TOMathHelper.SetBit(JewelSpawn, 0, true);
     }
 
-    public bool AI_JewelRubySpawned
+    public bool JewelRubySpawned
     {
-        get => TOMathHelper.GetBit(AI_JewelSpawn, 0);
-        set => AI_JewelSpawn = TOMathHelper.SetBit(AI_JewelSpawn, 0, true);
+        get => TOMathHelper.GetBit(JewelSpawn, 0);
+        set => JewelSpawn = TOMathHelper.SetBit(JewelSpawn, 0, true);
     }
 
-    public bool AI_JewelSapphireSpawned
+    public bool JewelSapphireSpawned
     {
-        get => TOMathHelper.GetBit(AI_JewelSpawn, 0);
-        set => AI_JewelSpawn = TOMathHelper.SetBit(AI_JewelSpawn, 0, true);
+        get => TOMathHelper.GetBit(JewelSpawn, 0);
+        set => JewelSpawn = TOMathHelper.SetBit(JewelSpawn, 0, true);
     }
 
-    public int AI_LastSpawnSlimeLife
+    public int LastSpawnSlimeLife
     {
         get => (int)AnomalyNPC.AnomalyAI[4];
         set => AnomalyNPC.SetAnomalyAI(value, 4);
     }
 
-    public float AI_TeleportTimer
+    public float TeleportTimer
     {
         get => AnomalyNPC.AnomalyAI[5];
         set => AnomalyNPC.SetAnomalyAI(value, 5);
@@ -101,57 +101,57 @@ public class AnomalyKingSlime : AnomalyNPCOverride
     /// 王冠绿宝石实例。
     /// <br/>在 <see cref="SetDefaults"/> 中初始化为 <see cref="TOMain.DummyNPC"/>。
     /// </summary>
-    public NPC AI_JewelEmerald
+    public NPC JewelEmerald
     {
         get => Main.npc[(int)AnomalyNPC.AnomalyAI[6]];
         set => AnomalyNPC.SetAnomalyAI(value.whoAmI, 6);
     }
 
-    public bool AI_JewelEmeraldAlive => AI_JewelEmerald.active && AI_JewelEmerald.ModNPC is KingSlimeJewelEmerald && AI_JewelEmerald.Ocean().Master == NPC.whoAmI;
+    public bool JewelEmeraldAlive => JewelEmerald.active && JewelEmerald.ModNPC is KingSlimeJewelEmerald && JewelEmerald.Ocean().Master == NPC.whoAmI;
 
     /// <summary>
     /// 王冠红宝石实例。
     /// <br/>在 <see cref="SetDefaults"/> 中初始化为 <see cref="TOMain.DummyNPC"/>。
     /// </summary>
-    public NPC AI_JewelRuby
+    public NPC JewelRuby
     {
         get => Main.npc[(int)AnomalyNPC.AnomalyAI[7]];
         set => AnomalyNPC.SetAnomalyAI(value.whoAmI, 7);
     }
 
-    public bool AI_JewelRubyAlive => AI_JewelRuby.active && AI_JewelRuby.ModNPC is KingSlimeJewelRuby && AI_JewelRuby.Ocean().Master == NPC.whoAmI;
+    public bool JewelRubyAlive => JewelRuby.active && JewelRuby.ModNPC is KingSlimeJewelRuby && JewelRuby.Ocean().Master == NPC.whoAmI;
 
     /// <summary>
     /// 王冠蓝宝石实例。
     /// <br/>在 <see cref="SetDefaults"/> 中初始化为 <see cref="TOMain.DummyNPC"/>。
     /// </summary>
-    public NPC AI_JewelSapphire
+    public NPC JewelSapphire
     {
         get => Main.npc[(int)AnomalyNPC.AnomalyAI[8]];
         set => AnomalyNPC.SetAnomalyAI(value.whoAmI, 8);
     }
 
-    public bool AI_JewelSapphireAlive => AI_JewelSapphire.active && AI_JewelSapphire.ModNPC is KingSlimeJewelSapphire && AI_JewelSapphire.Ocean().Master == NPC.whoAmI;
+    public bool JewelSapphireAlive => JewelSapphire.active && JewelSapphire.ModNPC is KingSlimeJewelSapphire && JewelSapphire.Ocean().Master == NPC.whoAmI;
 
-    public int AI_SmallJumpCounter
+    public int SmallJumpCounter
     {
         get => (int)AnomalyNPC.AnomalyAI[9];
         set => AnomalyNPC.SetAnomalyAI(value, 9);
     }
 
-    public int AI_ChangedVelocityDirectionWhenJump
+    public int ChangedVelocityDirectionDuringJump
     {
         get => (int)AnomalyNPC.AnomalyAI[10];
         set => AnomalyNPC.SetAnomalyAI(value, 10);
     }
 
-    public float AI_TeleportScaleMultiplier
+    public float TeleportScaleMultiplier
     {
         get => AnomalyNPC.AnomalyAI[11];
         set => AnomalyNPC.SetAnomalyAI(Math.Clamp(value, 0f, 1f), 11);
     }
 
-    public Vector2 AI_TeleportDestination
+    public Vector2 TeleportDestination
     {
         get => new(AnomalyNPC.AnomalyAI[12], AnomalyNPC.AnomalyAI[13]);
         set
@@ -161,7 +161,7 @@ public class AnomalyKingSlime : AnomalyNPCOverride
         }
     }
 
-    public float AI_DespawnScaleMultiplier
+    public float DespawnScaleMultiplier
     {
         get => AnomalyNPC.AnomalyAI[14];
         set => AnomalyNPC.SetAnomalyAI(Math.Clamp(value, 0f, 1f), 14);
@@ -188,12 +188,12 @@ public class AnomalyKingSlime : AnomalyNPCOverride
             NPC.Calamity().DR += 0.1f;
         }
 
-        AI_TeleportScaleMultiplier = 1f;
-        AI_DespawnScaleMultiplier = 1f;
+        TeleportScaleMultiplier = 1f;
+        DespawnScaleMultiplier = 1f;
 
-        AI_JewelEmerald = TOMain.DummyNPC;
-        AI_JewelRuby = TOMain.DummyNPC;
-        AI_JewelSapphire = TOMain.DummyNPC;
+        JewelEmerald = TOMain.DummyNPC;
+        JewelRuby = TOMain.DummyNPC;
+        JewelSapphire = TOMain.DummyNPC;
     }
     #endregion
 
@@ -204,7 +204,7 @@ public class AnomalyKingSlime : AnomalyNPCOverride
     #region AI
     public override bool PreAI()
     {
-        if (AI_CurrentAttack == AttackType.Despawn || !TargetClosestIfInvalid(true, Constant.DespawnDistance))
+        if (CurrentAttack == AttackType.Despawn || !NPC.TargetClosestIfInvalid(true, Data.DespawnDistance))
         {
             Despawn();
             ChangeScale();
@@ -213,27 +213,27 @@ public class AnomalyKingSlime : AnomalyNPCOverride
         else
             NPC.FaceNPCTarget(Target);
 
-        switch (AI_CurrentPhase)
+        switch (CurrentPhase)
         {
             case 0: //初始化
-                AI_Timer1++;
+                Timer1++;
                 if (NPC.velocity.Y == 0f)
-                    AI_Timer2++;
-                if (AI_Timer2 > 20)
+                    Timer2++;
+                if (Timer2 > 20)
                 {
                     NPC.velocity = Vector2.Zero;
-                    AI_LastSpawnSlimeLife = NPC.life;
-                    AI_CurrentPhase = 1;
+                    LastSpawnSlimeLife = NPC.life;
+                    CurrentPhase = 1;
                     SelectNextAttack();
                 }
-                else if (AI_Timer1 > 600)
+                else if (Timer1 > 600)
                 {
-                    AI_CurrentAttack = AttackType.Despawn;
+                    CurrentAttack = AttackType.Despawn;
                     Despawn();
                 }
                 break;
             case 1:
-                switch (AI_CurrentAttack)
+                switch (CurrentAttack)
                 {
                     case AttackType.Despawn:
                         Despawn();
@@ -254,7 +254,7 @@ public class AnomalyKingSlime : AnomalyNPCOverride
                 break;
         }
 
-        AI_TeleportTimer += (float)Math.Max(NPC.Center.Y - Target.Center.Y, 0f) > 0f ? 3f : MathHelper.Lerp(1f, 1.5f, OceanNPC.LifeRatioReverse);
+        TeleportTimer += (float)Math.Max(NPC.Center.Y - Target.Center.Y, 0f) > 0f ? 3f : MathHelper.Lerp(1f, 1.5f, OceanNPC.LifeRatioReverse);
 
         ChangeScale();
         TrySpawnMinions();
@@ -266,23 +266,23 @@ public class AnomalyKingSlime : AnomalyNPCOverride
 
     private void SelectNextAttack(int initialAITimer1 = 0)
     {
-        AI_ChangedVelocityDirectionWhenJump = 0;
-        if (AI_TeleportTimer > 1000f || !NPC.WithinRange(Target.Center, 3000f))
+        ChangedVelocityDirectionDuringJump = 0;
+        if (TeleportTimer > 1000f || !NPC.WithinRange(Target.Center, 3000f))
         {
-            AI_CurrentAttack = AttackType.Teleport_Phase1;
-            AI_TeleportTimer = 0f;
+            CurrentAttack = AttackType.Teleport_Phase1;
+            TeleportTimer = 0f;
         }
         else
         {
-            AI_CurrentAttack = AI_SmallJumpCounter switch
+            CurrentAttack = SmallJumpCounter switch
             {
                 3 => AttackType.HighJump_Phase1,
                 1 or 2 when OceanNPC.LifeRatio < 0.3f => AttackType.RapidJump_Phase1,
                 _ => AttackType.NormalJump_Phase1
             };
         }
-        AI_CurrentAttackPhase = 0;
-        AI_Timer1 = initialAITimer1;
+        CurrentAttackPhase = 0;
+        Timer1 = initialAITimer1;
     }
 
     private bool StopHorizontalMovement()
@@ -305,10 +305,12 @@ public class AnomalyKingSlime : AnomalyNPCOverride
         for (int i = 0; i < amount; i++)
         {
             TOActivator.NewDustAction(NPC.Center, NPC.width + 25, NPC.height,
-                AI_JewelSapphireAlive ? DustID.GemSapphire : DustID.TintableDust, 150, new Color(78, 136, 255, 80), d =>
+                JewelSapphireAlive ? DustID.GemSapphire : DustID.TintableDust, d =>
                 {
+                    d.alpha = 150;
+                    d.color = new(78, 136, 255, 80);
                     d.noGravity = true;
-                    d.scale = TOMathHelper.ClampMap(Constant.MinScale, Constant.MaxScale, 2f, 5f, NPC.scale);
+                    d.scale = TOMathHelper.ClampMap(Data.MinScale, Data.MaxScale, 2f, 5f, NPC.scale);
                     d.velocity *= 0.5f;
                 });
         }
@@ -319,8 +321,8 @@ public class AnomalyKingSlime : AnomalyNPCOverride
         StopHorizontalMovement(); //停止水平移动，避免奇怪的滑行现象
         NPC.dontTakeDamage = true;
         NPC.damage = 0;
-        AI_DespawnScaleMultiplier *= 0.97f;
-        MakeSlimeDust((int)TOMathHelper.ClampMap(Constant.MinScale, Constant.MaxScale, 5f, 12.5f, NPC.scale));
+        DespawnScaleMultiplier *= 0.97f;
+        MakeSlimeDust((int)TOMathHelper.ClampMap(Data.MinScale, Data.MaxScale, 5f, 12.5f, NPC.scale));
 
         if (NPC.scale < 0.2f) //体积足够小时执行脱战逻辑
         {
@@ -343,8 +345,9 @@ public class AnomalyKingSlime : AnomalyNPCOverride
 
         for (int i = 0; i < amount; i++)
         {
-            TOActivator.NewDustAction(jewel.Center, jewel.width * 3, jewel.height * 3, type, 100, default, d =>
+            TOActivator.NewDustAction(jewel.Center, jewel.width * 3, jewel.height * 3, type, d =>
             {
+                d.alpha = 100;
                 d.noGravity = true;
                 d.velocity *= Main.rand.NextVector2CircularEdge(5f, 5f) * Main.rand.NextFloat(1f, 2f);
                 if (Main.rand.NextBool())
@@ -359,9 +362,9 @@ public class AnomalyKingSlime : AnomalyNPCOverride
     }
 
     private void ChangeScale() => NPC.BetterChangeScale(98, 92, MathHelper.Lerp(
-            Constant.MaxScale,
-            Constant.MinScale,
-            OceanNPC.LifeRatioReverse) * AI_TeleportScaleMultiplier * AI_DespawnScaleMultiplier);
+            Data.MaxScale,
+            Data.MinScale,
+            OceanNPC.LifeRatioReverse) * TeleportScaleMultiplier * DespawnScaleMultiplier);
 
     private void TrySpawnMinions()
     {
@@ -370,7 +373,7 @@ public class AnomalyKingSlime : AnomalyNPCOverride
 
         Vector2 spawnPosition = NPC.Top - new Vector2(0, NPC.height);
 
-        if (OceanNPC.LifeRatio < 0.8f && !AI_JewelEmeraldSpawned)
+        if (OceanNPC.LifeRatio < 0.8f && !JewelEmeraldSpawned)
         {
             SoundEngine.PlaySound(SoundID.Item38, spawnPosition);
 
@@ -379,12 +382,12 @@ public class AnomalyKingSlime : AnomalyNPCOverride
                 n.Ocean().Master = NPC.whoAmI;
                 n.netUpdate = true;
                 MakeJewelDust(n, 50);
-                AI_JewelEmerald = n;
-                AI_JewelEmeraldSpawned = true;
+                JewelEmerald = n;
+                JewelEmeraldSpawned = true;
             });
         }
 
-        if (OceanNPC.LifeRatio < 0.6f && !AI_JewelRubySpawned)
+        if (OceanNPC.LifeRatio < 0.6f && !JewelRubySpawned)
         {
             SoundEngine.PlaySound(SoundID.Item38, spawnPosition);
             TOActivator.NewNPCAction<KingSlimeJewelRuby>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
@@ -392,12 +395,12 @@ public class AnomalyKingSlime : AnomalyNPCOverride
                 n.Ocean().Master = NPC.whoAmI;
                 n.netUpdate = true;
                 MakeJewelDust(n, 50);
-                AI_JewelRuby = n;
-                AI_JewelRubySpawned = true;
+                JewelRuby = n;
+                JewelRubySpawned = true;
             });
         }
 
-        if (OceanNPC.LifeRatio < 1f / 3f && !AI_JewelSapphireSpawned)
+        if (OceanNPC.LifeRatio < 1f / 3f && !JewelSapphireSpawned)
         {
             SoundEngine.PlaySound(SoundID.Item38, spawnPosition);
             TOActivator.NewNPCAction<KingSlimeJewelSapphire>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
@@ -405,17 +408,17 @@ public class AnomalyKingSlime : AnomalyNPCOverride
                 n.Ocean().Master = NPC.whoAmI;
                 n.netUpdate = true;
                 MakeJewelDust(n, 50);
-                AI_JewelSapphire = n;
-                AI_JewelSapphireSpawned = true;
+                JewelSapphire = n;
+                JewelSapphireSpawned = true;
             });
         }
 
-        float distance = (float)(AI_LastSpawnSlimeLife - NPC.life) / NPC.lifeMax;
-        float distanceNeeded = Constant.SpawnSlimeGateValue;
+        float distance = (float)(LastSpawnSlimeLife - NPC.life) / NPC.lifeMax;
+        float distanceNeeded = Data.SpawnSlimeGateValue;
         if (distance >= distanceNeeded)
         {
-            AI_LastSpawnSlimeLife = NPC.life;
-            int spawnAmount1 = Main.rand.Next(1, 3) + (int)Math.Pow(distance / distanceNeeded, Constant.SpawnSlimePow);
+            LastSpawnSlimeLife = NPC.life;
+            int spawnAmount1 = Main.rand.Next(1, 3) + (int)Math.Pow(distance / distanceNeeded, Data.SpawnSlimePow);
             int spawnAmount2 = CAWorld.AnomalyUltramundane ? Main.rand.Next(1, 2) : 0;
 
             for (int i = 0; i < spawnAmount1; i++)
@@ -467,37 +470,37 @@ public class AnomalyKingSlime : AnomalyNPCOverride
 
     private void Jump()
     {
-        switch (AI_CurrentAttackPhase)
+        switch (CurrentAttackPhase)
         {
             case 0: //延迟
-                AI_Timer2++;
+                Timer2++;
                 NPC.damage = 0;
                 NPC.netUpdate = true;
-                NPC.GravityMultiplier *= AI_Timer2 > 25 && NPC.velocity.Y > 0f ? 1.25f : 1f;
-                NPC.MaxFallSpeedMultiplier *= AI_Timer2 > 20 && NPC.velocity.Y > 0f ? 1.35f : 1f;
+                NPC.GravityMultiplier *= Timer2 > 25 && NPC.velocity.Y > 0f ? 1.25f : 1f;
+                NPC.MaxFallSpeedMultiplier *= Timer2 > 20 && NPC.velocity.Y > 0f ? 1.35f : 1f;
                 if (StopHorizontalMovement() && NPC.velocity.Y == 0f)
                 {
-                    AI_Timer1++;
+                    Timer1++;
                     int jumpDelay = (int)MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 20f : 27.5f, CAWorld.AnomalyUltramundane ? 15f : 20f, OceanNPC.LifeRatioReverse);
-                    if (AI_Timer1 > jumpDelay)
+                    if (Timer1 > jumpDelay)
                     {
-                        AI_CurrentAttackPhase = 1;
-                        AI_Timer1 = 0;
+                        CurrentAttackPhase = 1;
+                        Timer1 = 0;
                     }
                 }
                 break;
             case 1: //起跳
-                if (AI_CurrentAttack != AttackType.HighJump_Phase1)
-                    AI_SmallJumpCounter++;
+                if (CurrentAttack != AttackType.HighJump_Phase1)
+                    SmallJumpCounter++;
                 NPC.damage = NPC.defDamage;
                 NPC.netUpdate = true;
                 NPC.velocity = Jump_VelocityInitial;
-                AI_CurrentAttackPhase = 2;
+                CurrentAttackPhase = 2;
                 break;
             case 2: //上升
             case 3: //下降
                 NPC.damage = NPC.defDamage;
-                if (AI_CurrentAttack == AttackType.RapidJump_Phase1 || NPC.velocity.X * NPC.direction > 0.1f)
+                if (CurrentAttack == AttackType.RapidJump_Phase1 || NPC.velocity.X * NPC.direction > 0.1f)
                     NPC.velocity.X = Math.Min(Math.Abs(NPC.velocity.X) + Jump_VelocityXDelta, Jump_VelocityXLimit) * Math.Sign(NPC.velocity.X);
                 else
                 {
@@ -505,7 +508,7 @@ public class AnomalyKingSlime : AnomalyNPCOverride
                     switch (Math.Abs(NPC.velocity.X))
                     {
                         case < 0.1f:
-                            AI_ChangedVelocityDirectionWhenJump++;
+                            ChangedVelocityDirectionDuringJump++;
                             NPC.velocity.X += Jump_VelocityXDelta * NPC.direction;
                             break;
                         case > 0.25f:
@@ -513,25 +516,25 @@ public class AnomalyKingSlime : AnomalyNPCOverride
                             break;
                     }
                 }
-                switch (AI_CurrentAttackPhase)
+                switch (CurrentAttackPhase)
                 {
                     case 2:
                         if (NPC.velocity.Y >= 0) //检测是否已过最高点
-                            AI_CurrentAttackPhase = 3;
+                            CurrentAttackPhase = 3;
                         break;
                     case 3:
                         if (NPC.velocity.Y == 0f)
                         {
-                            if (AI_CurrentAttack == AttackType.HighJump_Phase1)
-                                AI_TeleportTimer += 100f;
-                            SelectNextAttack(AI_CurrentAttack == AttackType.RapidJump_Phase1 ? (int)MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 10 : 20, CAWorld.AnomalyUltramundane ? 7.5f : 12.5f, OceanNPC.LifeRatioReverse) : 0);
+                            if (CurrentAttack == AttackType.HighJump_Phase1)
+                                TeleportTimer += 100f;
+                            SelectNextAttack(CurrentAttack == AttackType.RapidJump_Phase1 ? (int)MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 10 : 20, CAWorld.AnomalyUltramundane ? 7.5f : 12.5f, OceanNPC.LifeRatioReverse) : 0);
                         }
-                        NPC.GravityMultiplier *= AI_CurrentAttack switch
+                        NPC.GravityMultiplier *= CurrentAttack switch
                         {
                             AttackType.HighJump_Phase1 => CAWorld.AnomalyUltramundane ? 1.5f : 1.25f,
                             _ => 1f
                         };
-                        NPC.MaxFallSpeedMultiplier *= AI_CurrentAttack switch
+                        NPC.MaxFallSpeedMultiplier *= CurrentAttack switch
                         {
                             AttackType.HighJump_Phase1 => CAWorld.AnomalyUltramundane ? 2.25f : 1.75f,
                             _ => 1f
@@ -542,7 +545,7 @@ public class AnomalyKingSlime : AnomalyNPCOverride
         }
     }
 
-    private Vector2 Jump_VelocityInitial => AI_CurrentAttack switch
+    private Vector2 Jump_VelocityInitial => CurrentAttack switch
     {
         AttackType.NormalJump_Phase1 => new(
             MathHelper.Lerp(5f, 7.5f, OceanNPC.LifeRatioReverse) * NPC.direction, -7.5f * (1f + Math.Min((float)Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 800f, 0.75f))),
@@ -553,10 +556,10 @@ public class AnomalyKingSlime : AnomalyNPCOverride
         _ => Vector2.Zero
     };
 
-    private float Jump_VelocityXLimit => AI_CurrentAttack switch
+    private float Jump_VelocityXLimit => CurrentAttack switch
     {
         AttackType.RapidJump_Phase1 => 18f,
-        _ => AI_ChangedVelocityDirectionWhenJump switch
+        _ => ChangedVelocityDirectionDuringJump switch
         {
             0 => 12.5f,
             1 => 8f,
@@ -564,15 +567,15 @@ public class AnomalyKingSlime : AnomalyNPCOverride
         }
     };
 
-    private float Jump_VelocityXDelta => AI_CurrentAttack switch
+    private float Jump_VelocityXDelta => CurrentAttack switch
     {
-        AttackType.RapidJump_Phase1 => AI_ChangedVelocityDirectionWhenJump switch
+        AttackType.RapidJump_Phase1 => ChangedVelocityDirectionDuringJump switch
         {
             0 => 0.8f,
             1 => 0.55f,
             _ => 0.35f
         },
-        _ => AI_ChangedVelocityDirectionWhenJump switch
+        _ => ChangedVelocityDirectionDuringJump switch
         {
             0 => 0.5f,
             1 => 0.4f,
@@ -583,7 +586,7 @@ public class AnomalyKingSlime : AnomalyNPCOverride
     private void Teleport()
     {
         NPC.damage = 0;
-        switch (AI_CurrentAttackPhase)
+        switch (CurrentAttackPhase)
         {
             case 0: //寻的
                 Vector2? destination = null;
@@ -620,27 +623,27 @@ public class AnomalyKingSlime : AnomalyNPCOverride
                     }
                 }
 
-                AI_TeleportDestination = destination ?? Target.Bottom;
-                AI_CurrentAttackPhase = 1;
+                TeleportDestination = destination ?? Target.Bottom;
+                CurrentAttackPhase = 1;
                 break;
             case 1: //停止水平移动并缩小体型，满足条件时传送
-                MakeSlimeDust((int)TOMathHelper.ClampMap(Constant.MinScale, Constant.MaxScale, 5f, 12.5f, NPC.scale));
-                AI_TeleportScaleMultiplier -= MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 0.016f : 0.013f, CAWorld.AnomalyUltramundane ? 0.02f : 0.015f, OceanNPC.LifeRatioReverse);
-                if (StopHorizontalMovement() && AI_TeleportScaleMultiplier < 0.2f)
+                MakeSlimeDust((int)TOMathHelper.ClampMap(Data.MinScale, Data.MaxScale, 5f, 12.5f, NPC.scale));
+                TeleportScaleMultiplier -= MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 0.016f : 0.013f, CAWorld.AnomalyUltramundane ? 0.02f : 0.015f, OceanNPC.LifeRatioReverse);
+                if (StopHorizontalMovement() && TeleportScaleMultiplier < 0.2f)
                 {
-                    AI_TeleportScaleMultiplier = 0.2f;
-                    NPC.Bottom = AI_TeleportDestination;
-                    if (AI_JewelSapphireAlive) //移动蓝宝石
+                    TeleportScaleMultiplier = 0.2f;
+                    NPC.Bottom = TeleportDestination;
+                    if (JewelSapphireAlive) //移动蓝宝石
                     {
-                        AI_JewelSapphire.Center = NPC.Center - new Vector2(0f, 200f);
-                        MakeJewelDust(AI_JewelSapphire, 20);
+                        JewelSapphire.Center = NPC.Center - new Vector2(0f, 200f);
+                        MakeJewelDust(JewelSapphire, 20);
                     }
-                    AI_CurrentAttackPhase = 2;
+                    CurrentAttackPhase = 2;
                 }
                 break;
             case 2: //恢复体型，恢复完成后开始下一次攻击
-                AI_TeleportScaleMultiplier += MathHelper.Lerp(0.03f, 0.05f, OceanNPC.LifeRatioReverse);
-                if (AI_TeleportScaleMultiplier == 1f)
+                TeleportScaleMultiplier += MathHelper.Lerp(0.03f, 0.05f, OceanNPC.LifeRatioReverse);
+                if (TeleportScaleMultiplier == 1f)
                     SelectNextAttack((int)MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 10 : 20, CAWorld.AnomalyUltramundane ? 5 : 12.5f, OceanNPC.LifeRatioReverse));
                 break;
         }
@@ -650,7 +653,7 @@ public class AnomalyKingSlime : AnomalyNPCOverride
     #region Draw
     public override Color? GetAlpha(Color drawColor)
     {
-        if (AI_JewelSapphireAlive)
+        if (JewelSapphireAlive)
             return Color.Lerp(new Color(0, 0, 150, NPC.alpha), new Color(125, 125, 255, NPC.alpha), MathF.Sin(Main.GlobalTimeWrappedHourly) / 2f + 0.5f);
 
         return null;

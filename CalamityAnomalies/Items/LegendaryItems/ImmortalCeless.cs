@@ -149,7 +149,7 @@ public class ImmortalCeless : LegendaryItem, ILocalizedModType
         Item.damage = 8;
         Item.DamageType = DamageClass.Magic;
         Item.rare = ModContent.RarityType<Celestial>();
-        Item.value = TOMain.CelestialValue;
+        Item.value = TOMain.CelestialPrice;
         Item.knockBack = 1f;
         Item.useTime = Item.useAnimation = 6;
         Item.useStyle = ItemUseStyleID.Shoot;

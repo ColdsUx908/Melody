@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using CalamityAnomalies.Difficulties;
 using CalamityAnomalies.GlobalInstances;
 using CalamityMod;
 using CalamityMod.Events;
+using CalamityMod.NPCs;
 using CalamityMod.NPCs.CeaselessVoid;
 using CalamityMod.NPCs.ExoMechs.Apollo;
 using CalamityMod.NPCs.ExoMechs.Artemis;
@@ -31,7 +33,7 @@ using static CalamityMod.UI.BossHealthBarManager;
 namespace CalamityAnomalies.UI;
 
 [DetourClassTo<BossHealthBarManager>]
-public class BetterBossHealthBarManager : ITOLoader
+public class BetterBossHealthBar : ITOLoader
 {
     /// <summary>
     /// 改进的Boss血条UI类。
@@ -64,15 +66,41 @@ public class BetterBossHealthBarManager : ITOLoader
 
         public CAGlobalNPC AnomalyNPC { get; }
 
+        public CalamityGlobalNPC CalamityNPC { get; }
+
         public new int NPCType => NPC.type;
 
         public new long CombinedNPCLife { get; private set; } = 0L;
 
         public new long CombinedNPCMaxLife { get; private set; } = 0L;
 
-        public bool Enraged => EnrageTimer > 0;
+        public new bool NPCIsEnraged
+        {
+            get
+            {
+                if (!Valid || !NPC.active)
+                    return false;
 
-        public bool IncreasingDefenseOrDR => IncreasingDefenseOrDRTimer > 0;
+                if (CalamityNPC.CurrentlyEnraged)
+                    return true;
+
+                return HasOneToMany && CustomOneToMany.Values.AsValueEnumerable().Any(k => k.Calamity().CurrentlyEnraged);
+            }
+        }
+
+        public new bool NPCIsIncreasingDefenseOrDR
+        {
+            get
+            {
+                if (!Valid || !NPC.active)
+                    return false;
+
+                if (CalamityNPC.CurrentlyIncreasingDefenseOrDR)
+                    return true;
+
+                return HasOneToMany && CustomOneToMany.Values.AsValueEnumerable().Any(k => k.Calamity().CurrentlyIncreasingDefenseOrDR);
+            }
+        }
 
         public int Height { get; private set; } = 70;
 
@@ -85,6 +113,7 @@ public class BetterBossHealthBarManager : ITOLoader
             NPC = Main.npc[NPCIndex];
             Identifier = NPC.Ocean().Identifier;
             AnomalyNPC = NPC.Anomaly();
+            CalamityNPC = NPC.Calamity();
 
             HasOneToMany = OneToMany.TryGetValue(NPCType, out int[] value);
             CustomOneToManyIndexes = value;
@@ -103,13 +132,7 @@ public class BetterBossHealthBarManager : ITOLoader
 
         public void Update(bool valid)
         {
-            if (!(Valid = valid))
-            {
-                EnrageTimer = Math.Clamp(EnrageTimer - 4, 0, 120);
-                IncreasingDefenseOrDRTimer = Math.Clamp(EnrageTimer - 4, 0, 120);
-                CloseAnimationTimer++;
-                return;
-            }
+            Valid = valid;
 
             CombinedNPCLife = GetCombinedNPCLife();
             CombinedNPCMaxLife = GetCombinedNPCMaxLife();
@@ -125,16 +148,26 @@ public class BetterBossHealthBarManager : ITOLoader
             if (ComboDamageCountdown > 0)
                 ComboDamageCountdown--;
 
-            CloseAnimationTimer = Math.Clamp(CloseAnimationTimer - 2, 0, 120);
-            OpenAnimationTimer = Math.Clamp(OpenAnimationTimer + 1, 0, 120); //由80改为120
-            EnrageTimer = Math.Clamp(EnrageTimer + NPCIsEnraged.ToDirectionInt(), 0, 120);
-            IncreasingDefenseOrDRTimer = Math.Clamp(IncreasingDefenseOrDRTimer + NPCIsIncreasingDefenseOrDR.ToDirectionInt(), 0, 120);
-
             CustomOneToMany.Clear();
             if (HasOneToMany)
             {
                 foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(k => CustomOneToManyIndexes.Contains(k.type)))
                     CustomOneToMany.TryAdd(npc.Ocean().Identifier, npc);
+            }
+
+            OpenAnimationTimer = Math.Clamp(OpenAnimationTimer + 1, 0, 120); //由80改为120
+
+            if (Valid)
+            {
+                EnrageTimer = Math.Clamp(EnrageTimer + NPCIsEnraged.ToDirectionInt(), 0, 120);
+                IncreasingDefenseOrDRTimer = Math.Clamp(IncreasingDefenseOrDRTimer + NPCIsIncreasingDefenseOrDR.ToDirectionInt(), 0, 120);
+                CloseAnimationTimer = Math.Clamp(CloseAnimationTimer - 2, 0, 120);
+            }
+            else
+            {
+                EnrageTimer = Math.Clamp(EnrageTimer - 4, 0, 120);
+                IncreasingDefenseOrDRTimer = Math.Clamp(EnrageTimer - 4, 0, 120);
+                CloseAnimationTimer++;
             }
 
             if (CombinedNPCMaxLife != 0L && (InitialMaxLife == 0L || InitialMaxLife < CombinedNPCMaxLife))
@@ -152,7 +185,7 @@ public class BetterBossHealthBarManager : ITOLoader
 
         private long GetCombinedNPCLife()
         {
-            if (!NPC.active || !Valid)
+            if (!Valid || !NPC.active)
                 return 0L;
 
             foreach ((NPCSpecialHPGetRequirement requirement, NPCSpecialHPGetFunction func) in SpecialHPRequirements)
@@ -202,25 +235,25 @@ public class BetterBossHealthBarManager : ITOLoader
             {
                 Color color = (CAWorld.Anomaly ? Color.Lerp(Color.HotPink, CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * TOMathHelper.GetTimeSin(1f, 1f, 0f, true))
                     : CAWorld.BossRush ? Color.Lerp(BaseColor, Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.4f), Math.Clamp(AnomalyNPC.BossRushAITimer / 120f, 0f, 1f))
-                    : Enraged ? Color.Lerp(BaseColor, Color.Red * 0.5f, EnrageTimer / 120f)
-                    : IncreasingDefenseOrDR ? Color.Lerp(BaseColor, Color.LightGray * 0.5f, IncreasingDefenseOrDRTimer / 120f) : BaseColor) * AnimationCompletionRatio;
+                    : EnrageTimer > 0 ? Color.Lerp(BaseColor, Color.Red * 0.5f, EnrageTimer / 120f)
+                    : IncreasingDefenseOrDRTimer > 0 ? Color.Lerp(BaseColor, Color.LightGray * 0.5f, IncreasingDefenseOrDRTimer / 120f) : BaseColor) * AnimationCompletionRatio;
                 DrawBaseBars(spriteBatch, x, y, null, color);
 
                 //为了避免NPC名称过长遮挡大生命值数字，二者的绘制顺序在此处被调换了。
                 Color? mainColor = AnomalyNPC.IsRunningAnomalyAI ? Color.HotPink * 0.6f * AnimationCompletionRatio2
                     : CAWorld.BossRush ? Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.45f) * AnimationCompletionRatio2
-                    : Enraged ? Color.Red * 0.6f * AnimationCompletionRatio2
-                    : IncreasingDefenseOrDR ? Color.LightGray * 0.6f * AnimationCompletionRatio2
+                    : EnrageTimer > 0 ? Color.Red * 0.6f * AnimationCompletionRatio2
+                    : IncreasingDefenseOrDRTimer > 0 ? Color.LightGray * 0.6f * AnimationCompletionRatio2
                     : null;
                 Color? borderColor = AnomalyNPC.IsRunningAnomalyAI ? Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.55f) * AnimationCompletionRatio2
                     : CAWorld.BossRush ? Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.55f) * AnimationCompletionRatio2
-                    : Enraged ? Color.Black * 0.2f * AnimationCompletionRatio2
-                    : IncreasingDefenseOrDR ? Color.Black * 0.2f * AnimationCompletionRatio2
+                    : EnrageTimer > 0 ? Color.Black * 0.2f * AnimationCompletionRatio2
+                    : IncreasingDefenseOrDRTimer > 0 ? Color.Black * 0.2f * AnimationCompletionRatio2
                     : null;
                 float borderWidth = AnomalyNPC.IsRunningAnomalyAI ? Math.Clamp(AnomalyNPC.AnomalyAITimer / 80f, 0f, 1.5f) + TOMathHelper.GetTimeSin(2f, 1f, 0f, true)
                     : CAWorld.BossRush ? Math.Clamp(AnomalyNPC.BossRushAITimer / 80f, 0f, 1.5f) + TOMathHelper.GetTimeSin(2f, 1f, 0f, true)
-                    : Enraged ? EnrageTimer / 80f + TOMathHelper.GetTimeSin(2f, 1f, 0f, true)
-                    : IncreasingDefenseOrDR ? IncreasingDefenseOrDRTimer / 80f + TOMathHelper.GetTimeSin(2f, 1f, 0f, true)
+                    : EnrageTimer > 0 ? EnrageTimer / 80f + TOMathHelper.GetTimeSin(2f, 1f, 0f, true)
+                    : IncreasingDefenseOrDRTimer > 0 ? IncreasingDefenseOrDRTimer / 80f + TOMathHelper.GetTimeSin(2f, 1f, 0f, true)
                     : 0f;
                 DrawNPCName(spriteBatch, x, y, null, mainColor, borderColor, borderWidth);
 
@@ -250,7 +283,7 @@ public class BetterBossHealthBarManager : ITOLoader
         }
 
         #region 公共绘制方法
-        public void DrawBaseBars(SpriteBatch spriteBatch, int x, int y, Color? color1, Color color2)
+        public void DrawBaseBars(SpriteBatch spriteBatch, int x, int y, Color? color1 = null, Color? color2 = null)
         {
             int mainBarWidth = (int)MathHelper.Min(400f * AnimationCompletionRatio, 400f * NPCLifeRatio);
             spriteBatch.Draw(BossMainHPBar, new Rectangle(x, y + 28, mainBarWidth, BossMainHPBar.Height), color1 ?? Color.White);
@@ -264,28 +297,29 @@ public class BetterBossHealthBarManager : ITOLoader
                 spriteBatch.Draw(BossComboHPBar, new Rectangle(x + mainBarWidth, y + 28, comboHPBarWidth, BossComboHPBar.Height), Color.White);
             }
 
-            spriteBatch.Draw(BossSeperatorBar, new Rectangle(x, y + 18, 400, 6), color2);
+            spriteBatch.Draw(BossSeperatorBar, new Rectangle(x, y + 18, 400, 6), color2 ?? BaseColor * AnimationCompletionRatio);
         }
 
-        public void DrawNPCName(SpriteBatch spriteBatch, int x, int y, string npcName, Color? mainColor, Color? borderColor, float borderWidth)
+        public void DrawNPCName(SpriteBatch spriteBatch, int x, int y, string overrideText = null, Color? mainColor = null, Color? borderColor = null, float borderWidth = 0f)
         {
-            npcName ??= OverridingName ?? NPC.FullName;
-            Vector2 npcNameSize = MouseFont.MeasureString(npcName);
+            string name = overrideText ?? OverridingName ?? NPC.FullName;
+            Vector2 npcNameSize = MouseFont.MeasureString(name);
             Vector2 baseDrawPosition = new(x + 400 - npcNameSize.X, y + 23 - npcNameSize.Y);
-            DrawBorderStringEightWay_Loop(spriteBatch, MouseFont, npcName, baseDrawPosition, mainColor, borderColor, Color.White * AnimationCompletionRatio2, Color.Black * 0.2f * AnimationCompletionRatio2, 8, borderWidth, 1f);
+            DrawBorderStringEightWay_Loop(spriteBatch, MouseFont, name, baseDrawPosition, mainColor, borderColor, Color.White * AnimationCompletionRatio2, Color.Black * 0.2f * AnimationCompletionRatio2, 8, borderWidth, 1f);
         }
 
-        public void DrawBigLifeText(SpriteBatch spriteBatch, int x, int y)
+        public void DrawBigLifeText(SpriteBatch spriteBatch, int x, int y, string overrideText = null)
         {
-            string bigLifeText = NPCLifeRatio == 0f ? "0%" : (NPCLifeRatio * 100f).ToString("N1") + "%";
+            string bigLifeText = overrideText ?? (NPCLifeRatio == 0f ? "0%" : (NPCLifeRatio * 100f).ToString("N1") + "%");
             Vector2 bigLifeTextSize = HPBarFont.MeasureString(bigLifeText);
             CalamityUtils.DrawBorderStringEightWay(spriteBatch, HPBarFont, bigLifeText, new Vector2(x, y + 22 - bigLifeTextSize.Y), MainColor * AnimationCompletionRatio2, MainBorderColour * 0.25f * AnimationCompletionRatio2);
         }
 
-        public void DrawExtraSmallText(SpriteBatch spriteBatch, int x, int y)
+        public void DrawExtraSmallText(SpriteBatch spriteBatch, int x, int y, string overrideText = null, bool ignoreConfig = false)
         {
-            if (!CanDrawExtraSmallText)
+            if (!ignoreConfig && !CanDrawExtraSmallText)
                 return;
+
             float whiteColorAlpha = OpenAnimationTimer switch
             {
                 4 or 8 or 16 => Main.rand.NextFloat(0.7f, 0.8f),
@@ -293,14 +327,18 @@ public class BetterBossHealthBarManager : ITOLoader
                 _ => AnimationCompletionRatio
             };
             int mainBarWidth = (int)MathHelper.Min(400f * AnimationCompletionRatio, 400f * NPCLifeRatio);
+
             string smallText = "";
-            if (EntityExtensionHandler.TryGetValue(NPCType, out BossEntityExtension extraEntityData))
+            if (overrideText is not null)
+                smallText = overrideText;
+            else if (EntityExtensionHandler.TryGetValue(NPCType, out BossEntityExtension extraEntityData))
             {
                 string extensionName = extraEntityData.NameOfExtensions.ToString();
                 int extraEntities = CalamityUtils.CountNPCsBetter(extraEntityData.TypesToSearchFor);
                 smallText += $"({extensionName}: {extraEntities}) ";
             }
             smallText += $"({CombinedNPCLife} / {InitialMaxLife})";
+
             CalamityUtils.DrawBorderStringEightWay(spriteBatch, ItemStackFont, smallText, new Vector2(Math.Max(x, x + mainBarWidth - (ItemStackFont.MeasureString(smallText) * 0.75f).X), y + 45), Color.White * whiteColorAlpha, Color.Black * whiteColorAlpha * 0.24f, 0.75f);
         }
         #endregion

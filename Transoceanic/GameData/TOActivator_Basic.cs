@@ -139,9 +139,9 @@ public static partial class TOActivator
     /// <param name="newColor">覆盖颜色。</param>
     /// <param name="scale">尺寸。</param>
     /// <param name="action">执行的行为。仅当成功生成Dust时生效。</param>
-    public static void NewDustAction(Vector2 position, int width, int height, int type, int alpha = 0, Color newColor = default, Action<Dust> action = null)
+    public static void NewDustAction(Vector2 position, int width, int height, int type, Action<Dust> action = null)
     {
-        int index = Dust.NewDust(position - new Vector2(width / 2f, height / 2f), width, height, type, Alpha: alpha, newColor: newColor);
+        int index = Dust.NewDust(position - new Vector2(width / 2f, height / 2f), width, height, type);
         if (index < Main.maxDust)
             action?.Invoke(Main.dust[index]);
     }
@@ -154,15 +154,11 @@ public static partial class TOActivator
     /// <param name="position">生成位置。<br>注意：该参数表示生成中心，而不是左上角。</br></param>
     /// <param name="offsetX">X偏移最大值。</param>
     /// <param name="offsetY">Y偏移最大值。</param>
-    /// <param name="type">类型。</param>
-    /// <param name="alpha">透明度。</param>
-    /// <param name="newColor">覆盖颜色。</param>
-    /// <param name="scale">尺寸。</param>
     /// <param name="action">执行的行为。仅当成功生成Dust时生效。</param>
     /// <returns></returns>
-    public static bool NewDustActionCheck(out int index, out Dust dust, Vector2 position, int offsetX, int offsetY, int type, int alpha = 0, Color newColor = default, Action<Dust> action = null)
+    public static bool NewDustActionCheck(out int index, out Dust dust, Vector2 position, int offsetX, int offsetY, int type, Action<Dust> action = null)
     {
-        index = Dust.NewDust(position - new Vector2(offsetX, offsetY), offsetX * 2, offsetY * 2, type, Alpha: alpha, newColor: newColor);
+        index = Dust.NewDust(position - new Vector2(offsetX, offsetY), offsetX * 2, offsetY * 2, type);
         if (index < Main.maxDust)
         {
             dust = Main.dust[index];
@@ -181,14 +177,10 @@ public static partial class TOActivator
     /// </summary>
     /// <param name="position">生成位置。</param>
     /// <param name="type">类型。</param>
-    /// <param name="velocity">速度。</param>
-    /// <param name="alpha">透明度。</param>
-    /// <param name="newColor">覆盖颜色。</param>
-    /// <param name="scale">尺寸。</param>
     /// <param name="action">执行的行为。仅当成功生成Dust时生效。</param>
-    public static void NewDustPerfectAction(Vector2 position, int type, Vector2 velocity, int alpha = 0, Color newColor = default, float scale = 1f, Action<Dust> action = null)
+    public static void NewDustPerfectAction(Vector2 position, int type, Action<Dust> action = null)
     {
-        Dust dustSpawned = Dust.NewDustPerfect(position, type, velocity, alpha, newColor, scale);
+        Dust dustSpawned = Dust.NewDustPerfect(position, type);
         if (dustSpawned.dustIndex < Main.maxDust)
             action?.Invoke(dustSpawned);
     }
@@ -200,15 +192,11 @@ public static partial class TOActivator
     /// <param name="dust">输出的Dust实例。</param>
     /// <param name="position">生成位置。</param>
     /// <param name="type">类型。</param>
-    /// <param name="velocity">速度。</param>
-    /// <param name="alpha">透明度。</param>
-    /// <param name="newColor">覆盖颜色。</param>
-    /// <param name="scale">尺寸。</param>
     /// <param name="action">执行的行为。仅当成功生成Dust时生效。</param>
     /// <returns></returns>
-    public static bool NewDustPerfectActionCheck(out int index, out Dust dust, Vector2 position, int type, Vector2 velocity, int alpha = 0, Color newColor = default, float scale = 1f, Action<Dust> action = null)
+    public static bool NewDustPerfectActionCheck(out int index, out Dust dust, Vector2 position, int type, Action<Dust> action = null)
     {
-        Dust dustSpawned = Dust.NewDustPerfect(position, type, velocity, alpha, newColor, scale);
+        Dust dustSpawned = Dust.NewDustPerfect(position, type);
         index = dustSpawned.dustIndex;
         if (index < Main.maxDust)
         {

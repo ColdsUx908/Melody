@@ -16,32 +16,36 @@ public partial class TOPlayer : ModPlayer
     #endregion
 
     #region 透支生命值
-    private double overdrawnLifeRegenExponent = 2;
 
     /// <summary>
     /// 透支生命值。
     /// </summary>
     public double OverdrawnLife { get; set; } = 0;
+
     /// <summary>
     /// 透支生命值的最大值，可超过玩家生命值，默认为零。
     /// </summary>
     public double OverdrawnLifeLimit { get; set; } = 0;
+
     /// <summary>
     /// 回复透支生命值所需的最小未受击时间。
     /// </summary>
     public int OverdrawnLifeRegenThreshold { get; set; } = 0;
+
     /// <summary>
     /// 每帧回复透支生命值的最大值。
     /// </summary>
     public double OverdrawnLifeRegenLimit { get; set; } = 0.5;
+
     /// <summary>
     /// 透支生命值回复乘数。
     /// </summary>
     public double OverdrawnLifeRegenMult { get; set; } = 1;
+
     /// <summary>
     /// 透支生命值回复指数。
     /// </summary>
-    public double OverdrawnLifeRegenExponent { get => overdrawnLifeRegenExponent; set => overdrawnLifeRegenExponent = value; }
+    public double OverdrawnLifeRegenExponent { get; set; } = 2;
     #endregion
 
     #region 通用
@@ -59,28 +63,28 @@ public partial class TOPlayer : ModPlayer
     public override void PreUpdate()
     {
         GameTime++;
-        /*
         switch (Player.name)
         {
             case "Celessalia":
                 Celesgod = Annigod = true;
                 if (GameTime == 300)
                 {
-                    TOLocalizationUtils.ChatLocalizedText(TOMain.ModLocalizationPrefix + "Gods.CelessAlive", TOMain.CelestialColor, Player);
-                    TOLocalizationUtils.ChatLocalizedText(TOMain.ModLocalizationPrefix + "Gods.AnniBehind", TOMain.CelestialColor, Player);
+                    //TOLocalizationUtils.ChatLocalizedText(TOMain.ModLocalizationPrefix + "Gods.CelessAlive", TOMain.CelestialColor, Player);
+                    //TOLocalizationUtils.ChatLocalizedText(TOMain.ModLocalizationPrefix + "Gods.AnniBehind", TOMain.CelestialColor, Player);
                 }
                 break;
             case "Anniah":
                 Celesgod = false;
                 Annigod = true;
                 if (GameTime == 300)
-                    TOLocalizationUtils.ChatLocalizedText(TOMain.ModLocalizationPrefix + "Gods.AnniAlive", TOMain.CelestialColor, Player);
+                {
+                    //TOLocalizationUtils.ChatLocalizedText(TOMain.ModLocalizationPrefix + "Gods.AnniAlive", TOMain.CelestialColor, Player);
+                }
                 break;
             default:
                 Celesgod = Annigod = false;
                 break;
         }
-        */
     }
 
     public override void PostUpdate()

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Chat;
@@ -91,23 +92,21 @@ public static partial class TOLocalizationUtils
 
     public static void ReplyStringBuilder(this CommandCaller commandCaller, StringBuilder builder, Color? textColor = null) => commandCaller.Reply(builder.ToString(), textColor ?? Color.White);
 
-    public static void AppendLocalized(this StringBuilder builder, string key) => builder.Append(Language.GetTextValue(key));
+    public static void AppendLocalizedLine(this StringBuilder builder, string key) => builder.AppendLine(Language.GetTextValue(key));
 
-    public static void AppendLocalizedWith(this StringBuilder builder, string key, params object[] args) => builder.Append(GetTextFormat(key, args));
-
-    public static void AppendLocalizedTO(this StringBuilder builder, string key) => builder.Append(Language.GetTextValue(TOMain.ModLocalizationPrefix + key));
+    public static void AppendLocalizedLineWith(this StringBuilder builder, string key, params object[] args) => builder.AppendLine(GetTextFormat(key, args));
 
     public static StringBuilder CreateWithDebugHeader()
     {
         StringBuilder builder = new();
-        builder.Append("[Transoceanic ERROR]\n");
+        builder.AppendLine("[Transoceanic ERROR]");
         return builder;
     }
 
     public static void AppendTODebugErrorMessage(this StringBuilder builder)
     {
-        builder.Append('\n');
-        builder.AppendLocalized(TOMain.DebugErrorMessageKey);
+        builder.Append(Environment.NewLine);
+        builder.AppendLocalizedLine(TOMain.DebugErrorMessageKey);
     }
 
     public static void ChatDebugErrorMessage(string key, Player receiver, params object[] args)
