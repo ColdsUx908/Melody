@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel;
-using Terraria.Localization;
 using Terraria.ModLoader.Config;
 
 namespace CalamityAnomalies.Configs;
+
 public class CAServerConfig : ModConfig
 {
     public CAServerConfig()

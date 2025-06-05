@@ -10,7 +10,7 @@ public enum PriorityType : byte
     /// </summary>
     Closest = 0,
     /// <summary>
-    /// 最大生命值最高单位
+    /// 最大生命值最高单位。
     /// </summary>
     LifeMax = 1,
     /// <summary>

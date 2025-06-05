@@ -1,6 +1,4 @@
-﻿using Terraria.ModLoader;
-
-namespace Transoceanic;
+﻿namespace Transoceanic;
 
 /// <summary>
 /// 检测特定Mod是否已加载，可获取实例。

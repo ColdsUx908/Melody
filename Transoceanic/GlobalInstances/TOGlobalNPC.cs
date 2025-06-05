@@ -1,12 +1,4 @@
-﻿using System;
-using System.IO;
-using Terraria;
-using Terraria.DataStructures;
-using Terraria.ModLoader;
-using Terraria.ModLoader.IO;
-using Transoceanic.Net;
-
-namespace Transoceanic.GlobalInstances;
+﻿namespace Transoceanic.GlobalInstances;
 
 public class TOGlobalNPC : GlobalNPC, ITOLoader
 {
@@ -27,10 +19,10 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
 
     public ulong ActiveTime => TOMain.GameTimer - SpawnTime;
 
-    private const int MaxAISlots = 24;
+    private const int MaxAISlots = 64;
 
     /// <summary>
-    /// 额外的AI槽位，共24个。
+    /// 额外的AI槽位，共64个。
     /// </summary>
     public float[] OceanAI { get; } = new float[MaxAISlots];
 
@@ -48,10 +40,36 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
         AIChanged[index] = true;
     }
 
+    public bool GetOceanAIBit(int index, byte bitPosition) => TOMathHelper.GetBit((int)OceanAI[index], bitPosition);
+
+    public bool GetOceanAIBit(Index index, byte bitPosition) => TOMathHelper.GetBit((int)OceanAI[index], bitPosition);
+
+    public void SetOceanAIBit(bool value, int index, byte bitPosition) => SetOceanAI(TOMathHelper.SetBit((int)OceanAI[index], bitPosition, value), index);
+
+    public void SetOceanAIBit(bool value, Index index, byte bitPosition) => SetOceanAI(TOMathHelper.SetBit((int)OceanAI[index], bitPosition, value), index);
+
+    public float LifeRatio
+    {
+        get => OceanAI[^4];
+        set => SetOceanAI(value, ^3);
+    }
+
     public int Master
     {
-        get => (int)OceanAI[^1];
-        set => SetOceanAI(Math.Clamp(value, 0, Main.maxNPCs), ^1);
+        get => (int)OceanAI[^3];
+        set => SetOceanAI(Math.Clamp(value, 0, Main.maxNPCs), ^2);
+    }
+
+    public float RotationOffset
+    {
+        get => OceanAI[^2];
+        set => SetOceanAI(value, ^2);
+    }
+
+    public bool AlwaysRotating
+    {
+        get => GetOceanAIBit(^1, 0);
+        set => SetOceanAIBit(value, ^1, 0);
     }
 
     public bool TryGetMaster(out NPC master)
@@ -89,15 +107,11 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     /// </summary>
     public float DynamicDR { get; internal set; } = 0;
 
-    public float LifeRatio { get; internal set; } = 0f;
-
-    public float LifeRatioReverse { get; internal set; } = 0f;
+    public float LifeRatioReverse => 1f - LifeRatio;
 
     #region Defaults
     public override void SetDefaults(NPC npc)
     {
-        Array.Fill(OceanAI, 0f);
-
         Master = Main.maxNPCs;
     }
     #endregion
@@ -114,13 +128,14 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     public override bool PreAI(NPC npc)
     {
         LifeRatio = (float)npc.life / npc.lifeMax;
-        LifeRatioReverse = 1f - LifeRatio;
 
         return true;
     }
 
     public override void AI(NPC npc)
     {
+        if (AlwaysRotating)
+            npc.VelocityToRotation(RotationOffset);
     }
 
     public override void PostAI(NPC npc)

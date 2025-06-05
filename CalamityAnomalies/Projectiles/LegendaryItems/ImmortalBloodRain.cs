@@ -1,16 +1,4 @@
-﻿using System.Collections.Generic;
-using CalamityMod;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Terraria;
-using Terraria.GameContent;
-using Terraria.ID;
-using Terraria.ModLoader;
-using Transoceanic;
-using Transoceanic.ExtraGameData;
-using Transoceanic.GameData;
-using Transoceanic.GameData.Utilities;
-using Transoceanic.GlobalInstances;
+﻿using Transoceanic.GlobalInstances;
 
 namespace CalamityAnomalies.Projectiles.LegendaryItems;
 
@@ -18,21 +6,23 @@ public class ImmortalBloodRain : ModProjectile, ILocalizedModType
 {
     public new string LocalizationCategory => "Projectiles.LegendaryItems";
 
+    public override string Texture => CAMain.TexturePrefix + "Touhou/Ice3";
+
     private const float homingDistance = 10000f;
 
-    private int AI_Phase
+    public int Phase
     {
         get => (int)Projectile.ai[0];
         set => Projectile.ai[0] = value;
     }
 
-    private int AI_Timer
+    public int Timer
     {
         get => (int)Projectile.ai[1];
         set => Projectile.ai[1] = value;
     }
 
-    private Player AI_PlayerTarget
+    public Player PlayerTarget
     {
         get
         {
@@ -42,14 +32,14 @@ public class ImmortalBloodRain : ModProjectile, ILocalizedModType
         set => Projectile.ai[2] = value?.whoAmI ?? -1;
     }
 
-    private NPC AI_NPCTarget
+    public NPC NPCTarget
     {
         get
         {
-            int temp = (int)Projectile.localAI[0];
+            int temp = (int)Projectile.ai[2] - 300;
             return temp >= 0 && temp < Main.maxNPCs ? Main.npc[temp] : null;
         }
-        set => Projectile.localAI[0] = value?.whoAmI ?? -1;
+        set => Projectile.ai[2] = (value?.whoAmI ?? -301) + 300;
     }
 
     private static readonly HashSet<int> InstantKill =
@@ -72,32 +62,33 @@ public class ImmortalBloodRain : ModProjectile, ILocalizedModType
         Projectile.penetrate = 1;
         Projectile.timeLeft = 930; //追踪5秒
         Projectile.extraUpdates = 2; //速度UpUp
+        Projectile.Ocean().AlwaysRotating = true;
 
-        AI_PlayerTarget = null;
-        AI_NPCTarget = null;
+        PlayerTarget = null;
+        NPCTarget = null;
     }
 
     public override void AI()
     {
         Lighting.AddLight((int)((Projectile.position.X + Projectile.width / 2) / 16f), (int)((Projectile.position.Y + Projectile.height / 2) / 16f), 175f / 255f, 1f, 1f);
 
-        switch (AI_Phase)
+        switch (Phase)
         {
             case 0: //初始化
                 Projectile.VelocityToRotation();
-                AI_Phase = 1;
-                AI_Timer = 0;
+                Phase = 1;
+                Timer = 0;
                 break;
             case 1: //寻找目标并追踪，优先追踪玩家；在追踪超过3秒后加速，速度显著更高
-                AI_Timer++;
-                if (!Projectile.Homing(AI_PlayerTarget, rotating: true))
+                Timer++;
+                if (!Projectile.Homing(PlayerTarget))
                 {
-                    if ((AI_PlayerTarget = TOKinematic.GetPvPPlayerTarget(Main.player[Projectile.owner], Projectile.Center, homingDistance, true, PriorityType.LifeMax)) != null)
+                    if ((PlayerTarget = TOKinematic.GetPvPPlayerTarget(Main.player[Projectile.owner], Projectile.Center, homingDistance, true, PriorityType.LifeMax)) != null)
                         break;
-                    if (!Projectile.Homing(AI_NPCTarget, rotating: true))
-                        AI_NPCTarget = TOKinematic.GetNPCTarget(Projectile.Center, homingDistance, true, true, PriorityType.LifeMax);
+                    if (!Projectile.Homing(NPCTarget))
+                        NPCTarget = TOKinematic.GetNPCTarget(Projectile.Center, homingDistance, true, true, PriorityType.LifeMax);
                 }
-                if (AI_Timer > 360)
+                if (Timer > 360)
                     Projectile.velocity *= 1.0013f;
                 break;
         }
@@ -134,7 +125,7 @@ public class ImmortalBloodRain : ModProjectile, ILocalizedModType
 
     public override bool? CanHitNPC(NPC target)
     {
-        if (TOMain.BossActive && !target.IsBossTO())
+        if (TOMain.BossActive && !target.TOBoss)
             return false;
         return true;
     }

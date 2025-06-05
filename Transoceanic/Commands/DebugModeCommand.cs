@@ -1,8 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using Terraria.ModLoader;
-using Transoceanic.Localization;
-
-namespace Transoceanic.Commands;
+﻿namespace Transoceanic.Commands;
 
 /// <summary>
 /// 开启或关闭调试模式的命令。

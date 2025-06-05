@@ -1,8 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using Terraria.ModLoader;
-using Transoceanic;
-
-namespace CalamityAnomalies.Items.ItemRarities;
+﻿namespace CalamityAnomalies.Items.ItemRarities;
 
 public class Celestial : ModRarity
 {

@@ -1,8 +1,4 @@
-﻿using CalamityMod;
-using CalamityMod.Items.PermanentBoosters;
-using Terraria;
-using Terraria.ModLoader;
-using Transoceanic.ExtraGameData;
+﻿using CalamityMod.Items.PermanentBoosters;
 
 namespace CalamityAnomalies.Tweaks._4_1_PostML;
 

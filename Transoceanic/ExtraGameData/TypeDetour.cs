@@ -1,16 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Text.RegularExpressions;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using ReLogic.Content;
-using Terraria;
-using Terraria.DataStructures;
-using Terraria.Enums;
-using Terraria.GameContent;
-using Terraria.GameContent.Bestiary;
+﻿using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.Drawing;
 using Terraria.GameContent.ObjectInteractions;
 using Terraria.GameContent.UI;
@@ -18,17 +6,9 @@ using Terraria.GameContent.UI.BigProgressBar;
 using Terraria.GameContent.UI.Elements;
 using Terraria.GameContent.UI.ResourceSets;
 using Terraria.GameInput;
-using Terraria.Graphics;
-using Terraria.ID;
-using Terraria.IO;
-using Terraria.Localization;
 using Terraria.Map;
-using Terraria.ModLoader;
-using Terraria.ModLoader.IO;
 using Terraria.UI;
-using Terraria.Utilities;
 using Terraria.WorldBuilding;
-using Transoceanic.IL;
 
 namespace Transoceanic.ExtraGameData;
 

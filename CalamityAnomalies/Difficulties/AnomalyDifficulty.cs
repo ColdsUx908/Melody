@@ -1,19 +1,10 @@
-﻿using CalamityMod;
-using CalamityMod.NPCs.SupremeCalamitas;
+﻿using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.Systems;
 using CalamityMod.World;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using ReLogic.Content;
-using Terraria;
-using Terraria.Localization;
-using Terraria.ModLoader;
-using Transoceanic;
-using Transoceanic.Localization;
 
 namespace CalamityAnomalies.Difficulties;
 
-public sealed class AnomalyMode : DifficultyMode, ITOLoader
+public class AnomalyMode : DifficultyMode, ITOLoader
 {
     private const string localizationPrefix = CAMain.ModLocalizationPrefix + "Difficulty.AnomalyMode.";
 
@@ -115,30 +106,35 @@ public sealed class AnomalyManagement : ModSystem
 
     private static void DisableUltra()
     {
-        TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyUltramundaneDeactivate", Color.Red);
+        if (TOMain.GeneralClient)
+            TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyUltramundaneDeactivate", Color.Red);
         CAWorld.AnomalyUltramundane = false;
     }
 
     private static void EnableUltra()
     {
-        TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyUltramundaneActivate", Color.Red);
+        if (TOMain.GeneralClient)
+            TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyUltramundaneActivate", Color.Red);
         CAWorld.AnomalyUltramundane = true;
     }
 
     private static void ZenithInfo()
     {
-        TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyIllegalZenith", Color.HotPink);
+        if (TOMain.GeneralClient)
+            TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyIllegalZenith", Color.HotPink);
         //SoundEngine.PlaySound();
     }
 
     private static void NotLegendaryInfo()
     {
-        TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyIllegalNotLegendary", Color.Red);
+        if (TOMain.GeneralClient)
+            TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyIllegalNotLegendary", Color.Red);
     }
 
     private static void DisableAnomaly()
     {
-        TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyIllegal", Color.Red);
+        if (TOMain.GeneralClient)
+            TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyIllegal", Color.Red);
         CAWorld.Anomaly = false;
     }
 }

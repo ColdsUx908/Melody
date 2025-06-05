@@ -1,15 +1,6 @@
 using CalamityAnomalies.Items.ItemRarities;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Terraria;
-using Terraria.DataStructures;
-using Terraria.GameContent;
-using Terraria.ID;
-using Terraria.ModLoader;
-using Transoceanic;
 using Transoceanic.GlobalInstances;
 using Transoceanic.Systems;
-using Transoceanic.Visual;
 
 namespace CalamityAnomalies.Items.LegendaryItems;
 
@@ -81,7 +72,7 @@ public class AscendantWings : LegendaryItem, ILocalizedModType
 
     public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
     {
-        TODrawUtils.InventoryCustomSize(spriteBatch, position, frame, drawColor, origin,
+        TODrawUtils.DrawInventoryCustomSize(spriteBatch, position, frame, drawColor, origin,
             TextureAssets.Item[Type].Value, 0.35f, new(0f, 0f));
         return false;
     }

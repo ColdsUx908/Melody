@@ -1,15 +1,5 @@
-﻿using System;
-using CalamityMod;
-using CalamityMod.NPCs.NormalNPCs;
-using Microsoft.Xna.Framework;
-using Terraria;
-using Terraria.Audio;
-using Terraria.ID;
-using Transoceanic;
-using Transoceanic.GameData;
-using Transoceanic.GameData.Utilities;
+﻿using CalamityMod.NPCs.NormalNPCs;
 using Transoceanic.GlobalInstances;
-using Transoceanic.MathHelp;
 
 namespace CalamityAnomalies.NPCs.KingSlime;
 
@@ -61,28 +51,22 @@ public class AnomalyKingSlime : AnomalyNPCOverride
         set => AnomalyNPC.SetAnomalyAI(value, 2);
     }
 
-    public int JewelSpawn
-    {
-        get => (int)AnomalyNPC.AnomalyAI[3];
-        set => AnomalyNPC.SetAnomalyAI(value, 3);
-    }
-
     public bool JewelEmeraldSpawned
     {
-        get => TOMathHelper.GetBit(JewelSpawn, 0);
-        set => JewelSpawn = TOMathHelper.SetBit(JewelSpawn, 0, true);
+        get => AnomalyNPC.GetAnomalyAIBit(3, 0);
+        set => AnomalyNPC.SetAnomalyAIBit(value, 3, 0);
     }
 
     public bool JewelRubySpawned
     {
-        get => TOMathHelper.GetBit(JewelSpawn, 0);
-        set => JewelSpawn = TOMathHelper.SetBit(JewelSpawn, 0, true);
+        get => AnomalyNPC.GetAnomalyAIBit(3, 1);
+        set => AnomalyNPC.SetAnomalyAIBit(value, 3, 1);
     }
 
     public bool JewelSapphireSpawned
     {
-        get => TOMathHelper.GetBit(JewelSpawn, 0);
-        set => JewelSpawn = TOMathHelper.SetBit(JewelSpawn, 0, true);
+        get => AnomalyNPC.GetAnomalyAIBit(3, 2);
+        set => AnomalyNPC.SetAnomalyAIBit(value, 3, 2);
     }
 
     public int LastSpawnSlimeLife

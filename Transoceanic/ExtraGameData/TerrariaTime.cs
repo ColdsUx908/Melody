@@ -1,12 +1,4 @@
-﻿using System;
-using System.Text;
-using Terraria;
-using Terraria.Enums;
-using Transoceanic.ExtraMathData;
-using Transoceanic.Localization;
-using Transoceanic.MathHelp;
-
-namespace Transoceanic.ExtraGameData;
+﻿namespace Transoceanic.ExtraGameData;
 
 public readonly struct TerrariaTime : IEquatable<TerrariaTime>
 {

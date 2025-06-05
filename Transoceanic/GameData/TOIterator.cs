@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using Terraria;
-using Terraria.ID;
-
-namespace Transoceanic.GameData;
+﻿namespace Transoceanic.GameData;
 
 /// <summary>
 /// 对象迭代器。

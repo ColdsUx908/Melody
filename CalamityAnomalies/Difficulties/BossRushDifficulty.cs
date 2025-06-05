@@ -1,15 +1,8 @@
 ﻿using CalamityAnomalies.Configs;
-using CalamityMod;
 using CalamityMod.Events;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.Systems;
 using CalamityMod.World;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using ReLogic.Content;
-using Terraria.Localization;
-using Terraria.ModLoader;
-using Transoceanic;
 
 namespace CalamityAnomalies.Difficulties;
 
@@ -17,7 +10,7 @@ namespace CalamityAnomalies.Difficulties;
 /// BossRush难度。
 /// <br/>所有相关更改均用钩子实现。
 /// </summary>
-public sealed class BossRushMode : DifficultyMode, ITOLoader
+public class BossRushMode : DifficultyMode, ITOLoader
 {
     private const string localizationPrefix = CAMain.ModLocalizationPrefix + "Difficulty.BossRushMode.";
 

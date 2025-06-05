@@ -1,6 +1,4 @@
 ﻿using CalamityMod.Projectiles.Rogue;
-using Terraria;
-using Terraria.ID;
 
 namespace CalamityAnomalies.Tweaks._1_4_PostSkeletron;
 

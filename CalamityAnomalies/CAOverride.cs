@@ -1,19 +1,9 @@
-﻿using System.Reflection;
-using System.Runtime.CompilerServices;
-using CalamityAnomalies.Configs;
+﻿using CalamityAnomalies.Configs;
 using CalamityAnomalies.GlobalInstances;
-using CalamityAnomalies.GlobalInstances.GlobalItems;
 using CalamityAnomalies.UI;
-using CalamityMod;
 using CalamityMod.Items;
 using CalamityMod.NPCs;
 using CalamityMod.Projectiles;
-using Microsoft.Xna.Framework.Graphics;
-using Terraria;
-using Terraria.ModLoader;
-using Transoceanic;
-using Transoceanic.ExtraGameData;
-using Transoceanic.GameData.Utilities;
 
 namespace CalamityAnomalies;
 
@@ -50,6 +40,19 @@ public abstract class CANPCOverride : NPCOverride
     /// <br/>默认返回 <see langword="true"/>，即全部允许。
     /// </summary>
     public virtual bool AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC type) => true;
+
+    /// <summary>
+    /// 在更新灾厄的Boss血条之前调用。
+    /// </summary>
+    /// <param name="valid">血条是否绑定到一个有效的NPC。</param>
+    /// <returns>返回 <see langword="false"/> 以阻止默认的更新血条方法运行（除对 <see cref="BetterBossHealthBar.BetterBossHPUI.Valid"/> 属性的更新之外）。默认返回 <see langword="true"/>。</returns>
+    public virtual bool PreUpdateCalBossBar(BetterBossHealthBar.BetterBossHPUI newBar) => true;
+
+    /// <summary>
+    /// 在更新灾厄的Boss血条之后调用。
+    /// </summary>
+    /// <param name="valid">血条是否绑定到一个有效的NPC。</param>
+    public virtual void PostUpdateCalBossBar(BetterBossHealthBar.BetterBossHPUI newBar) { }
 
     /// <summary>
     /// 在绘制灾厄的Boss血条之前调用。
@@ -158,7 +161,7 @@ public abstract class CAProjectileOverride<T> : CAProjectileOverride where T : M
     public override void Connect(Projectile projectile)
     {
         base.Connect(projectile);
-        ModProjectile = projectile.ModProjectile<T>();
+        ModProjectile = projectile.GetModProjectile<T>();
     }
 
     public override void Disconnect()
@@ -253,7 +256,7 @@ public abstract class CAItemTweak<T> : CAItemOverride<T> where T : ModItem
 }
 #endregion
 
-public sealed class CAOverrideHelper : ITOLoader
+public class CAOverrideHelper : ITOLoader
 {
     internal static EntityOverrideDictionary<NPC, CANPCOverride> NPCOverrides { get; } = [];
 
@@ -275,13 +278,4 @@ public sealed class CAOverrideHelper : ITOLoader
         ProjectileOverrides.Clear();
         ItemOverrides.Clear();
     }
-}
-
-public static class CAOverrideExtensions
-{
-    public static bool TryGetOverride(this NPC npc, out CANPCOverride npcOverride, [CallerMemberName] string methodName = null!) => CAOverrideHelper.NPCOverrides.TryGetOverride(npc, methodName, out npcOverride);
-
-    public static bool TryGetOverride(this Projectile projectile, out CAProjectileOverride projectileOverride, [CallerMemberName] string methodName = null!) => CAOverrideHelper.ProjectileOverrides.TryGetOverride(projectile, methodName, out projectileOverride);
-
-    public static bool TryGetOverride(this Item item, out CAItemOverride itemOverride, [CallerMemberName] string methodName = null!) => CAOverrideHelper.ItemOverrides.TryGetOverride(item, methodName, out itemOverride);
 }

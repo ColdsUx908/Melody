@@ -1,11 +1,4 @@
-﻿using System;
-using System.Text;
-using Microsoft.Xna.Framework;
-using Terraria;
-using Terraria.Chat;
-using Terraria.ID;
-using Terraria.Localization;
-using Terraria.ModLoader;
+﻿using Terraria.Chat;
 
 namespace Transoceanic.Localization;
 
@@ -86,27 +79,11 @@ public static partial class TOLocalizationUtils
             ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(builder.ToString()), textcolor ?? Color.White);
     }
 
-    public static void ReplyLocalizedText(this CommandCaller commandCaller, string key, Color? textColor = null) => commandCaller.Reply(Language.GetTextValue(key), textColor ?? Color.White);
-
-    public static void ReplyLocalizedTextWith(this CommandCaller commandCaller, string key, Color? textColor = null, params object[] args) => commandCaller.Reply(GetTextFormat(key, args), textColor ?? Color.White);
-
-    public static void ReplyStringBuilder(this CommandCaller commandCaller, StringBuilder builder, Color? textColor = null) => commandCaller.Reply(builder.ToString(), textColor ?? Color.White);
-
-    public static void AppendLocalizedLine(this StringBuilder builder, string key) => builder.AppendLine(Language.GetTextValue(key));
-
-    public static void AppendLocalizedLineWith(this StringBuilder builder, string key, params object[] args) => builder.AppendLine(GetTextFormat(key, args));
-
     public static StringBuilder CreateWithDebugHeader()
     {
         StringBuilder builder = new();
         builder.AppendLine("[Transoceanic ERROR]");
         return builder;
-    }
-
-    public static void AppendTODebugErrorMessage(this StringBuilder builder)
-    {
-        builder.Append(Environment.NewLine);
-        builder.AppendLocalizedLine(TOMain.DebugErrorMessageKey);
     }
 
     public static void ChatDebugErrorMessage(string key, Player receiver, params object[] args)
@@ -121,13 +98,6 @@ public static partial class TOLocalizationUtils
         ChatLiteralText("[Transoceanic ERROR]", TOMain.TODebugErrorColor, receivers);
         ChatLocalizedTextWith(TOMain.DebugPrefix + key, receivers, TOMain.TODebugErrorColor, args);
         ChatLocalizedText(TOMain.DebugErrorMessageKey, TOMain.TODebugErrorColor, receivers);
-    }
-
-    public static void ReplyDebugErrorMessage(this CommandCaller caller, string key, object[] args)
-    {
-        caller.Reply("[Transoceanic ERROR", TOMain.TODebugErrorColor);
-        caller.ReplyLocalizedTextWith(key, TOMain.TODebugErrorColor, args);
-        caller.ReplyLocalizedText(TOMain.DebugErrorMessageKey, TOMain.TODebugErrorColor);
     }
 
     /*

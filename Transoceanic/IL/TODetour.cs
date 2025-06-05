@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using MonoMod.RuntimeDetour;
-using ZLinq;
+﻿using MonoMod.RuntimeDetour;
 
 namespace Transoceanic.IL;
 

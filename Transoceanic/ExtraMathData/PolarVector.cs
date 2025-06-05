@@ -1,10 +1,4 @@
-﻿using System;
-using Microsoft.Xna.Framework;
-using Terraria;
-using Transoceanic.Localization;
-using Transoceanic.MathHelp;
-
-namespace Transoceanic.ExtraMathData;
+﻿namespace Transoceanic.ExtraMathData;
 
 /// <summary>
 /// 二维极坐标向量。
@@ -72,7 +66,7 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
 
     public PolarVector2() : this(0f, 0f) { }
 
-    public PolarVector2(Vector2 value) : this(value.Length(), value.ToAngle()) { }
+    public PolarVector2(Vector2 value) : this(value.Modulus, value.Angle) { }
 
     /// <summary>
     /// 拷贝构造函数。

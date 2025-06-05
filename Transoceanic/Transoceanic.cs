@@ -1,18 +1,44 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using Microsoft.Xna.Framework;
-using Terraria;
-using Terraria.DataStructures;
+global using System;
+global using System.Collections.Generic;
+global using System.Collections.ObjectModel;
+global using System.Diagnostics.CodeAnalysis;
+global using System.IO;
+global using System.Linq;
+global using System.Reflection;
+global using System.Runtime.CompilerServices;
+global using System.Text;
+global using System.Text.RegularExpressions;
+global using Microsoft.Xna.Framework;
+global using Microsoft.Xna.Framework.Graphics;
+global using ReLogic.Content;
+global using ReLogic.Graphics;
+global using ReLogic.Utilities;
+global using Terraria;
+global using Terraria.DataStructures;
+global using Terraria.Enums;
+global using Terraria.GameContent;
+global using Terraria.Graphics;
+global using Terraria.ID;
+global using Terraria.IO;
+global using Terraria.Localization;
+global using Terraria.ModLoader;
+global using Terraria.ModLoader.Core;
+global using Terraria.ModLoader.IO;
+global using Terraria.Utilities;
+global using Transoceanic.Commands;
+global using Transoceanic.Extensions;
+global using Transoceanic.ExtraGameData;
+global using Transoceanic.ExtraMathData;
+global using Transoceanic.GameData;
+global using Transoceanic.GameData.Utilities;
+global using Transoceanic.GlobalInstances;
+global using Transoceanic.IL;
+global using Transoceanic.Localization;
+global using Transoceanic.MathHelp;
+global using Transoceanic.Net;
+global using Transoceanic.Visual;
+global using ZLinq;
 using Terraria.GameContent.Creative;
-using Terraria.ID;
-using Terraria.ModLoader;
-using Transoceanic.ExtraGameData;
-using Transoceanic.GameData;
-using Transoceanic.GameData.Utilities;
-using Transoceanic.IL;
-using ZLinq;
 
 namespace Transoceanic;
 
@@ -126,17 +152,15 @@ public class TOMain
 
     public static TOIterator<NPC> ActiveNPCs => TOIteratorFactory.NewActiveNPCIterator();
 
-    public static TOIterator<NPC> Enemies => TOIteratorFactory.NewActiveNPCIterator(TONPCUtils.IsEnemy);
+    public static TOIterator<NPC> Enemies => TOIteratorFactory.NewActiveNPCIterator(k => k.Enemy);
 
-    public static TOIterator<NPC> Bosses => TOIteratorFactory.NewActiveNPCIterator(TONPCUtils.IsBossTO);
+    public static TOIterator<NPC> Bosses => TOIteratorFactory.NewActiveNPCIterator(k => k.TOBoss);
 
     public static TOIterator<Projectile> ActiveProjectiles => TOIteratorFactory.NewActiveProjectileIterator();
 
     public static TOIterator<Player> ActivePlayers => TOIteratorFactory.NewActivePlayerIterator();
 
-    public static TOExclusiveIterator<Player> Teammates => TOIteratorFactory.NewActivePlayerIterator(TOPlayerUtils.IsTeammate, Main.LocalPlayer);
-
-    public static TOIterator<Player> PVPPlayers => TOIteratorFactory.NewActivePlayerIterator(TOPlayerUtils.IsPvP);
+    public static TOIterator<Player> PVPPlayers => TOIteratorFactory.NewActivePlayerIterator(k => k.PvP);
 
     /// <summary>
     /// 是否为大师模式。

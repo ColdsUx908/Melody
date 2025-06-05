@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using Microsoft.Xna.Framework;
-using Terraria;
-using Terraria.ModLoader;
-using Terraria.ModLoader.IO;
-using Transoceanic.Net;
-
-namespace CalamityAnomalies.GlobalInstances;
+﻿namespace CalamityAnomalies.GlobalInstances;
 
 public partial class CAGlobalProjectile : GlobalProjectile
 {
@@ -22,11 +13,25 @@ public partial class CAGlobalProjectile : GlobalProjectile
 
     public bool[] AIChanged { get; } = new bool[MaxAISlots];
 
+    public void SetAnomalyAI(float value, int index)
+    {
+        AnomalyAI[index] = value;
+        AIChanged[index] = true;
+    }
+
     public void SetAnomalyAI(float value, Index index)
     {
         AnomalyAI[index] = value;
         AIChanged[index] = true;
     }
+
+    public bool GetAnomalyAIBit(int index, byte bitPosition) => TOMathHelper.GetBit((int)AnomalyAI[index], bitPosition);
+
+    public bool GetAnomalyAIBit(Index index, byte bitPosition) => TOMathHelper.GetBit((int)AnomalyAI[index], bitPosition);
+
+    public void SetAnomalyAIBit(bool value, int index, byte bitPosition) => SetAnomalyAI(TOMathHelper.SetBit((int)AnomalyAI[index], bitPosition, value), index);
+
+    public void SetAnomalyAIBit(bool value, Index index, byte bitPosition) => SetAnomalyAI(TOMathHelper.SetBit((int)AnomalyAI[index], bitPosition, value), index);
 
     #region Defaults
     public override void SetStaticDefaults()
@@ -37,8 +42,6 @@ public partial class CAGlobalProjectile : GlobalProjectile
 
     public override void SetDefaults(Projectile projectile)
     {
-        Array.Fill(AnomalyAI, 0f);
-
         if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
             projectileOverride.SetDefaults();
     }

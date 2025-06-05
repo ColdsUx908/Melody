@@ -1,5 +1,4 @@
-﻿using Terraria.Localization;
-using Terraria.ModLoader.Config;
+﻿using Terraria.ModLoader.Config;
 
 namespace Transoceanic.Configs;
 

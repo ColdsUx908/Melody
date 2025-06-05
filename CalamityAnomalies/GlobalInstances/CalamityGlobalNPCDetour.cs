@@ -1,6 +1,4 @@
-﻿using System;
-using CalamityMod;
-using CalamityMod.Events;
+﻿using CalamityMod.Events;
 using CalamityMod.NPCs;
 using CalamityMod.NPCs.BrimstoneElemental;
 using CalamityMod.NPCs.Bumblebirb;
@@ -18,12 +16,6 @@ using CalamityMod.NPCs.ProfanedGuardians;
 using CalamityMod.NPCs.Providence;
 using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.World;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Terraria;
-using Terraria.ModLoader;
-using Transoceanic.ExtraGameData;
-using Transoceanic.IL;
 using static CalamityMod.NPCs.CalamityGlobalNPC;
 
 namespace CalamityAnomalies.GlobalInstances;

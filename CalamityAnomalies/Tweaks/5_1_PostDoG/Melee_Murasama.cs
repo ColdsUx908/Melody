@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using CalamityAnomalies;
 using CalamityAnomalies.Configs;
-using CalamityAnomalies.Utilities;
-using CalamityMod;
 using CalamityMod.CalPlayer;
 using CalamityMod.Items.Weapons.Melee;
 using CalamityMod.NPCs.AstrumAureus;
@@ -20,15 +17,6 @@ using CalamityMod.NPCs.ProfanedGuardians;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.NPCs.Yharon;
 using CalamityMod.Projectiles.Melee;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Terraria;
-using Terraria.Audio;
-using Terraria.ID;
-using Terraria.ModLoader;
-using Transoceanic;
-using Transoceanic.ExtraGameData;
-using Transoceanic.GameData.Utilities;
 using Transoceanic.GlobalInstances;
 
 namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
@@ -59,7 +47,7 @@ public class MurasamaTweak : CAItemTweak<Murasama>
                 multiplier += 0.2f;
             if (NPC.downedBoss2)
                 multiplier += 0.4f;
-            if (CANPCUtils.DownedEvilBossT2)
+            if (CAUtils.DownedEvilBossT2)
                 multiplier += 0.6f;
             if (NPC.downedBoss3)
                 multiplier += 0.8f;
@@ -184,7 +172,7 @@ public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
         Lighting.AddLight(origin, Color.Red.ToVector3() * (ModProjectile.Slashing == true ? 3.5f : 2f));
 
         Vector2 playerRotatedPoint = Owner.RotatedRelativePoint(Owner.MountedCenter, true);
-        if (Projectile.OnOwnerClient())
+        if (Projectile.OnOwnerClient)
         {
             if (!Owner.CantUseHoldout())
                 ModProjectile.HandleChannelMovement(Owner, playerRotatedPoint);
@@ -235,7 +223,7 @@ public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
         if (!MurasamaUtils.IsSam(Owner))
             return;
 
-        if (target.IsRavager())
+        if (target.Ravager)
             modifiers.SourceDamage *= 3f;
 
         if (!CAWorld.LR)
@@ -250,22 +238,22 @@ public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
                     case NPCID.EaterofSouls when NPC.AnyNPCs(NPCID.EaterofWorldsHead):
                     case NPCID.DiabolistWhite when NPC.AnyNPCs(NPCID.SkeletronHead):
                     case NPCID.FireImp when NPC.AnyNPCs(NPCID.WallofFlesh):
-                    case int _ when target.IsCultistDragon():
+                    case int _ when target.CultistDragon:
                         modifiers.SetInstantKill2(target);
                         break;
-                    case int _ when target.IsDestroyer():
+                    case int _ when target.Destroyer:
                         modifiers.SourceDamage *= 1.5f;
                         break;
                     case NPCID.Probe:
                         modifiers.SourceDamage *= NPC.AnyNPCs(NPCID.SkeletronPrime) ? 4f : 2f;
                         break;
-                    case int _ when target.IsSkeletronPrimeHand():
+                    case int _ when target.SkeletronPrimeHand:
                         modifiers.SourceDamage *= 2f;
                         break;
                     case NPCID.PlanterasTentacle:
                         modifiers.SourceDamage *= 2;
                         break;
-                    case int _ when target.IsGolemFist():
+                    case int _ when target.GolemFist:
                         modifiers.SourceDamage *= 2f;
                         break;
                     case NPCID.GolemHead or NPCID.GolemHeadFree:
@@ -281,19 +269,19 @@ public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
             case CryogenShield:
             case AnahitasIceShield:
             case AureusSpawn:
-            case Bumblefuck when CANPCUtils.PermaFrostActive || (TONPCUtils.AnyNPCs<Yharon>(out NPC yharon) && yharon.Ocean().LifeRatio <= 0.55f):
+            case Bumblefuck when CAUtils.PermaFrostActive || (TONPCUtils.AnyNPCs<Yharon>(out NPC yharon) && yharon.Ocean().LifeRatio <= 0.55f):
             case Bumblefuck2:
             case CeaselessVoid when target.Ocean().LifeRatio < 0.2f:
             case PhantomFuckYou:
                 modifiers.SetInstantKill2(target);
                 break;
-            case var _ when target.IsDesertNuisance() || target.IsDesertNuisanceYoung():
+            case var _ when target.DesertNuisance || target.DesertNuisanceYoung:
                 modifiers.SourceDamage *= 3f;
                 break;
             case Cryogen:
                 modifiers.SourceDamage *= 1.5f;
                 break;
-            case var _ when target.IsAquaticScourge():
+            case var _ when target.AquaticScourge:
                 modifiers.SourceDamage *= 2f;
                 break;
             case BrimstoneElemental:
@@ -326,23 +314,23 @@ public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
             case ProfanedGuardianCommander:
                 modifiers.SourceDamage *= 1.5f;
                 break;
-            case var _ when target.IsStormWeaver():
+            case var _ when target.StormWeaver:
                 break;
             case DarkEnergy:
                 modifiers.SourceDamage *= 1.5f;
                 break;
             case OldDuke:
                 break;
-            case var _ when target.IsDoG():
+            case var _ when target.DoG:
                 modifiers.SourceDamage *= 2f;
                 break;
-            case var _ when target.IsCosmicGuardian():
+            case var _ when target.CosmicGuardian:
                 modifiers.SourceDamage *= 6f;
                 break;
-            case var _ when target.IsThanatos():
+            case var _ when target.Thanatos:
                 modifiers.SourceDamage *= 1.5f;
                 break;
-            case var _ when target.IsExoTwins():
+            case var _ when target.ExoTwins:
                 modifiers.SourceDamage *= 1.3f;
                 break;
             case BrimstoneHeart:

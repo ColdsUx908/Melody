@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace Transoceanic.MathHelp;
+﻿namespace Transoceanic.MathHelp;
 
 public static partial class TOMathHelper
 {

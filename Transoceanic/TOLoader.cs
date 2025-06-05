@@ -1,9 +1,4 @@
-﻿using System;
-using Terraria.ModLoader;
-using Transoceanic.IL;
-using ZLinq;
-
-namespace Transoceanic;
+﻿namespace Transoceanic;
 
 public enum LoaderMethodType
 {

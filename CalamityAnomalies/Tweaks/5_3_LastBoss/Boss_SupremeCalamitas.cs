@@ -1,7 +1,6 @@
 ﻿using CalamityMod.Events;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.Projectiles.Boss;
-using Transoceanic.ExtraGameData;
 
 namespace CalamityAnomalies.Tweaks._5_3_LastBoss;
 

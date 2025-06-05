@@ -1,19 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Reflection;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Terraria;
-using Terraria.DataStructures;
-using Terraria.ID;
-using Terraria.ModLoader;
-using Terraria.Utilities;
-using Transoceanic.GameData.Utilities;
-using Transoceanic.GlobalInstances;
-using Transoceanic.IL;
-using ZLinq;
+﻿using Transoceanic.GlobalInstances;
 
 namespace Transoceanic.ExtraGameData;
 
@@ -59,19 +44,19 @@ public class EntityOverrideDictionary<TEntity, TOverride>
     /// <returns></returns>
     public bool TryGetOverride(TEntity entity, string methodName, [NotNullWhen(true)] out TOverride overrideInstance)
     {
-        if (TryGetValue(entity.GetEntityType(), out List<(TOverride overrideInstance, HashSet<string> overridenMethods)> overrideList))
+        if (TryGetValue(entity.EntityType, out List<(TOverride overrideInstance, HashSet<string> overridenMethods)> overrideList))
         {
             foreach ((TOverride temp, HashSet<string> overrideMethods) in overrideList)
             {
-                if (overrideMethods.Contains(methodName))
+                if (!overrideMethods.Contains(methodName))
+                    continue;
+
+                temp.Disconnect();
+                temp.Connect(entity);
+                if (temp.ShouldProcess)
                 {
-                    temp.Disconnect();
-                    temp.Connect(entity);
-                    if (temp.ShouldProcess)
-                    {
-                        overrideInstance = temp;
-                        return true;
-                    }
+                    overrideInstance = temp;
+                    return true;
                 }
             }
         }
@@ -123,20 +108,20 @@ public abstract class NPCOverride : EntityOverride<NPC>
 
     public int Timer1
     {
-        get => (int)OceanNPC.OceanAI[^3];
-        set => OceanNPC.SetOceanAI(value, ^4);
+        get => (int)OceanNPC.OceanAI[0];
+        set => OceanNPC.SetOceanAI(value, 0);
     }
 
     public int Timer2
     {
-        get => (int)OceanNPC.OceanAI[^2];
-        set => OceanNPC.SetOceanAI(value, ^3);
+        get => (int)OceanNPC.OceanAI[1];
+        set => OceanNPC.SetOceanAI(value, 1);
     }
 
     public int Timer3
     {
-        get => (int)OceanNPC.OceanAI[^1];
-        set => OceanNPC.SetOceanAI(value, ^2);
+        get => (int)OceanNPC.OceanAI[2];
+        set => OceanNPC.SetOceanAI(value, 2);
     }
     #endregion
 

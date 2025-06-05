@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using CalamityAnomalies.Utilities;
-using CalamityMod;
-using CalamityMod.NPCs.Abyss;
+﻿using CalamityMod.NPCs.Abyss;
 using CalamityMod.NPCs.AquaticScourge;
 using CalamityMod.NPCs.AstrumAureus;
 using CalamityMod.NPCs.AstrumDeus;
@@ -25,11 +22,6 @@ using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.NPCs.StormWeaver;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.NPCs.Yharon;
-using Terraria;
-using Terraria.ID;
-using Terraria.ModLoader;
-using Terraria.ModLoader.IO;
-using Transoceanic.GameData.Utilities;
 using Transoceanic.GlobalInstances;
 
 namespace CalamityAnomalies.GlobalInstances;
@@ -507,7 +499,7 @@ public class CAPlayer : ModPlayer
                 case CalamitasClone _:
                     CalamitasClone = true;
                     break;
-                case var _ when CANPCUtils.IsDefeatingLeviathan(npc):
+                case var _ when CAUtils.IsDefeatingLeviathan(npc):
                     Leviathan = true;
                     break;
                 case AstrumAureus _:
@@ -522,7 +514,7 @@ public class CAPlayer : ModPlayer
                 case AstrumDeusHead:
                     AstrumDeus = true;
                     break;
-                case var _ when CANPCUtils.IsDefeatingProfanedGuardians(npc):
+                case var _ when CAUtils.IsDefeatingProfanedGuardians(npc):
                     Guardians = true;
                     break;
                 case Bumblefuck:
@@ -552,7 +544,7 @@ public class CAPlayer : ModPlayer
                 case Yharon _:
                     Yharon = true;
                     break;
-                case var _ when CANPCUtils.IsDefeatingExoMechs(npc):
+                case var _ when CAUtils.IsDefeatingExoMechs(npc):
                     ExoMechs = true;
                     break;
                 case SupremeCalamitas:

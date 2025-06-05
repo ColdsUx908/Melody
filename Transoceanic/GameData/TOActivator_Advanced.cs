@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Terraria;
-using Terraria.DataStructures;
-using Transoceanic.ExtraMathData;
-
-namespace Transoceanic.GameData;
+﻿namespace Transoceanic.GameData;
 
 public static partial class TOActivator
 {

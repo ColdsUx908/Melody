@@ -1,13 +1,4 @@
-﻿using System;
-using CalamityMod;
-using CalamityMod.NPCs.NormalNPCs;
-using Microsoft.Xna.Framework;
-using Terraria;
-using Terraria.Audio;
-using Terraria.ID;
-using Terraria.ModLoader;
-using Transoceanic.GameData;
-using Transoceanic.GameData.Utilities;
+﻿using CalamityMod.NPCs.NormalNPCs;
 
 namespace CalamityAnomalies.NPCs.KingSlime;
 

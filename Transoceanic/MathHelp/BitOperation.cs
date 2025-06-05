@@ -1,7 +1,4 @@
-﻿using System;
-using Terraria;
-
-namespace Transoceanic.MathHelp;
+﻿namespace Transoceanic.MathHelp;
 
 public static partial class TOMathHelper
 {

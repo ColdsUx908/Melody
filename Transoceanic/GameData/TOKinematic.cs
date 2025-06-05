@@ -1,11 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using Terraria;
-using Terraria.ID;
-using Transoceanic.ExtraGameData;
-using Transoceanic.GameData.Utilities;
-using Transoceanic.MathHelp;
-
-namespace Transoceanic.GameData;
+﻿namespace Transoceanic.GameData;
 
 /// <summary>
 /// 运动学工具类。
@@ -40,7 +33,7 @@ public static class TOKinematic
                             target = npc;
                             continue;
                         }
-                        switch (hasPriority, npc.IsBossTO())
+                        switch (hasPriority, npc.TOBoss)
                         {
                             case (true, false):
                                 break;
@@ -79,7 +72,7 @@ public static class TOKinematic
                             target = npc;
                             continue;
                         }
-                        switch (hasPriority, npc.IsBossTO())
+                        switch (hasPriority, npc.TOBoss)
                         {
                             case (true, false):
                                 break;
@@ -121,7 +114,7 @@ public static class TOKinematic
                             distanceTemp2 = distanceTemp1;
                             continue;
                         }
-                        switch (hasPriority, npc.IsBossTO())
+                        switch (hasPriority, npc.TOBoss)
                         {
                             case (true, false):
                                 break;
@@ -170,7 +163,7 @@ public static class TOKinematic
         float maxDistanceToCheckSquared = maxDistanceToCheck * maxDistanceToCheck;
 
         if (Main.netMode == NetmodeID.SinglePlayer)
-            return Main.LocalPlayer.IsAlive() && Vector2.DistanceSquared(origin, Main.LocalPlayer.Center) <= maxDistanceToCheckSquared ? Main.LocalPlayer : null;
+            return Main.LocalPlayer.Alive && Vector2.DistanceSquared(origin, Main.LocalPlayer.Center) <= maxDistanceToCheckSquared ? Main.LocalPlayer : null;
 
         Player target = null;
         switch (priorityType)
@@ -178,8 +171,8 @@ public static class TOKinematic
             case PriorityType.LifeMax:
                 foreach (Player player in
                     TOIteratorFactory.NewActivePlayerIterator(
-                        ignoreTiles ? k => k.IsAlive() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
-                        : k => k.IsAlive() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                        ignoreTiles ? k => k.Alive && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
+                        : k => k.Alive && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
                 {
                     if (target is null || player.statLifeMax2 > target.statLifeMax2)
                         target = player;
@@ -188,8 +181,8 @@ public static class TOKinematic
             case PriorityType.Life:
                 foreach (Player player in
                     TOIteratorFactory.NewActivePlayerIterator(
-                        ignoreTiles ? k => k.IsAlive() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
-                        : k => k.IsAlive() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                        ignoreTiles ? k => k.Alive && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
+                        : k => k.Alive && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
                 {
                     if (target is null || player.statLife > target.statLife)
                         target = player;
@@ -200,8 +193,8 @@ public static class TOKinematic
                 float distanceTemp2 = maxDistanceToCheckSquared;
                 foreach (Player player in
                     TOIteratorFactory.NewActivePlayerIterator(
-                        ignoreTiles ? k => k.IsAlive() && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared
-                        : k => k.IsAlive() && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                        ignoreTiles ? k => k.Alive && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared
+                        : k => k.Alive && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
                 {
                     if (target is null || distanceTemp1 < distanceTemp2)
                     {
@@ -236,8 +229,8 @@ public static class TOKinematic
             case PriorityType.LifeMax:
                 foreach (Player player in
                     TOIteratorFactory.NewActivePlayerIterator(
-                        ignoreTiles ? k => k.IsPvP() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
-                        : k => k.IsPvP() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1), owner))
+                        ignoreTiles ? k => k.PvP && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
+                        : k => k.PvP && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1), owner))
                 {
                     if (target is null || player.statLifeMax2 > target.statLifeMax2)
                         target = player;
@@ -246,8 +239,8 @@ public static class TOKinematic
             case PriorityType.Life:
                 foreach (Player player in
                     TOIteratorFactory.NewActivePlayerIterator(
-                        ignoreTiles ? k => k.IsPvP() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
-                        : k => k.IsPvP() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1), owner))
+                        ignoreTiles ? k => k.PvP && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
+                        : k => k.PvP && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1), owner))
                 {
                     if (target is null || player.statLife > target.statLife)
                         target = player;
@@ -258,8 +251,8 @@ public static class TOKinematic
                 float distanceTemp2 = maxDistanceToCheckSquared;
                 foreach (Player player in
                     TOIteratorFactory.NewActivePlayerIterator(
-                        ignoreTiles ? k => k.IsPvP() && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared
-                        : k => k.IsPvP() && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1), owner))
+                        ignoreTiles ? k => k.PvP && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared
+                        : k => k.PvP && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1), owner))
                 {
                     if (target is null || distanceTemp1 < distanceTemp2)
                     {
@@ -269,46 +262,5 @@ public static class TOKinematic
                 }
                 return target;
         }
-    }
-
-    /// <summary>
-    /// 使弹幕追踪指定目标（反物理规则）。
-    /// </summary>
-    /// <param name="projectile"></param>
-    /// <param name="target">追踪目标。</param>
-    /// <param name="homingRatio">追踪强度。为1f时强制追踪。</param>
-    /// <param name="homingAngle">视野范围。</param>
-    /// <param name="keepVelocity">是否在调整角度时保持速度大小不变。仅在追踪强度不为1时有效。</param>
-    /// <param name="rotating"></param>
-    /// <remarks>须由具体实现决定目标锁定机制。</remarks>
-    /// <returns>若追踪成功，true，否则，false。</returns>
-    public static bool Homing<T>(this Projectile projectile, T target, float homingRatio = 1f, float homingAngle = MathHelper.TwoPi, bool keepVelocity = true, bool rotating = false)
-        where T : Entity
-    {
-        if (target is not null && target.active)
-        {
-            Vector2 distanceVector = target.Center - projectile.Center;
-            float distance = distanceVector.Length();
-
-            if (homingAngle != MathHelper.TwoPi && TOMathHelper.IncludedAngle(projectile.velocity, distanceVector) > homingAngle / 2f)
-                return false;
-
-            float velocityLength = projectile.velocity.Length();
-            Vector2 distanceVector2 = distanceVector.ToCustomLength(velocityLength);
-            if (homingRatio == 1f)
-                projectile.velocity = distance < velocityLength ? distanceVector : distanceVector2;
-            else
-            {
-                projectile.velocity = Vector2.SmoothStep(projectile.velocity, distanceVector2, homingRatio);
-                if (keepVelocity)
-                    projectile.velocity = projectile.velocity.ToCustomLength(velocityLength);
-            }
-
-            if (rotating)
-                projectile.VelocityToRotation();
-            return true;
-        }
-        else
-            return false;
     }
 }

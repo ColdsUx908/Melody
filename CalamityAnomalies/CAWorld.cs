@@ -1,7 +1,4 @@
 ﻿using CalamityMod.World;
-using Terraria;
-using Terraria.ModLoader;
-using Terraria.ModLoader.IO;
 
 namespace CalamityAnomalies;
 

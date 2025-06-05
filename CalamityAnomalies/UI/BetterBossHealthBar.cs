@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using CalamityAnomalies.Difficulties;
+﻿using CalamityAnomalies.Difficulties;
 using CalamityAnomalies.GlobalInstances;
-using CalamityMod;
 using CalamityMod.Events;
 using CalamityMod.NPCs;
 using CalamityMod.NPCs.CeaselessVoid;
@@ -12,22 +8,9 @@ using CalamityMod.NPCs.ExoMechs.Artemis;
 using CalamityMod.NPCs.Ravager;
 using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.UI;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using ReLogic.Graphics;
-using Terraria;
-using Terraria.GameContent;
 using Terraria.GameContent.Events;
 using Terraria.GameContent.UI.BigProgressBar;
-using Terraria.ID;
-using Terraria.ModLoader;
-using Transoceanic;
-using Transoceanic.ExtraMathData;
-using Transoceanic.GameData;
 using Transoceanic.GlobalInstances;
-using Transoceanic.IL;
-using Transoceanic.MathHelp;
-using ZLinq;
 using static CalamityMod.UI.BossHealthBarManager;
 
 namespace CalamityAnomalies.UI;
@@ -134,53 +117,58 @@ public class BetterBossHealthBar : ITOLoader
         {
             Valid = valid;
 
-            CombinedNPCLife = GetCombinedNPCLife();
-            CombinedNPCMaxLife = GetCombinedNPCMaxLife();
-
-            if (CombinedNPCLife != PreviousLife && PreviousLife != 0L)
+            if (PreUpdate())
             {
-                if (ComboDamageCountdown <= 0)
-                    HealthAtStartOfCombo = CombinedNPCLife;
-                ComboDamageCountdown = 30;
+                CombinedNPCLife = GetCombinedNPCLife();
+                CombinedNPCMaxLife = GetCombinedNPCMaxLife();
+
+                if (CombinedNPCLife != PreviousLife && PreviousLife != 0L)
+                {
+                    if (ComboDamageCountdown <= 0)
+                        HealthAtStartOfCombo = CombinedNPCLife;
+                    ComboDamageCountdown = 30;
+                }
+                PreviousLife = CombinedNPCLife;
+
+                if (ComboDamageCountdown > 0)
+                    ComboDamageCountdown--;
+
+                CustomOneToMany.Clear();
+                if (HasOneToMany)
+                {
+                    foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(k => CustomOneToManyIndexes.Contains(k.type)))
+                        CustomOneToMany.TryAdd(npc.Ocean().Identifier, npc);
+                }
+
+                OpenAnimationTimer = Math.Clamp(OpenAnimationTimer + 1, 0, 120); //由80改为120
+
+                if (Valid)
+                {
+                    EnrageTimer = Math.Clamp(EnrageTimer + NPCIsEnraged.ToDirectionInt(), 0, 120);
+                    IncreasingDefenseOrDRTimer = Math.Clamp(IncreasingDefenseOrDRTimer + NPCIsIncreasingDefenseOrDR.ToDirectionInt(), 0, 120);
+                    CloseAnimationTimer = Math.Clamp(CloseAnimationTimer - 2, 0, 120);
+                }
+                else
+                {
+                    EnrageTimer = Math.Clamp(EnrageTimer - 4, 0, 120);
+                    IncreasingDefenseOrDRTimer = Math.Clamp(EnrageTimer - 4, 0, 120);
+                    CloseAnimationTimer++;
+                }
+
+                if (CombinedNPCMaxLife != 0L && (InitialMaxLife == 0L || InitialMaxLife < CombinedNPCMaxLife))
+                    InitialMaxLife = CombinedNPCMaxLife;
+
+                ModifyCalBossBarHeight();
+
+                AnimationCompletionRatio = CloseAnimationTimer > 0
+                    ? 1f - MathHelper.Clamp(CloseAnimationTimer / 120f, 0f, 1f)
+                    : MathHelper.Clamp(OpenAnimationTimer / 80f, 0f, 1f);
+                AnimationCompletionRatio2 = CloseAnimationTimer > 0
+                    ? 1f - MathHelper.Clamp(CloseAnimationTimer / 80f, 0f, 1f)
+                    : MathHelper.Clamp(OpenAnimationTimer / 120f, 0f, 1f);
             }
-            PreviousLife = CombinedNPCLife;
 
-            if (ComboDamageCountdown > 0)
-                ComboDamageCountdown--;
-
-            CustomOneToMany.Clear();
-            if (HasOneToMany)
-            {
-                foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(k => CustomOneToManyIndexes.Contains(k.type)))
-                    CustomOneToMany.TryAdd(npc.Ocean().Identifier, npc);
-            }
-
-            OpenAnimationTimer = Math.Clamp(OpenAnimationTimer + 1, 0, 120); //由80改为120
-
-            if (Valid)
-            {
-                EnrageTimer = Math.Clamp(EnrageTimer + NPCIsEnraged.ToDirectionInt(), 0, 120);
-                IncreasingDefenseOrDRTimer = Math.Clamp(IncreasingDefenseOrDRTimer + NPCIsIncreasingDefenseOrDR.ToDirectionInt(), 0, 120);
-                CloseAnimationTimer = Math.Clamp(CloseAnimationTimer - 2, 0, 120);
-            }
-            else
-            {
-                EnrageTimer = Math.Clamp(EnrageTimer - 4, 0, 120);
-                IncreasingDefenseOrDRTimer = Math.Clamp(EnrageTimer - 4, 0, 120);
-                CloseAnimationTimer++;
-            }
-
-            if (CombinedNPCMaxLife != 0L && (InitialMaxLife == 0L || InitialMaxLife < CombinedNPCMaxLife))
-                InitialMaxLife = CombinedNPCMaxLife;
-
-            ModifyCalBossBarHeight();
-
-            AnimationCompletionRatio = CloseAnimationTimer > 0
-                ? 1f - MathHelper.Clamp(CloseAnimationTimer / 120f, 0f, 1f)
-                : MathHelper.Clamp(OpenAnimationTimer / 80f, 0f, 1f);
-            AnimationCompletionRatio2 = CloseAnimationTimer > 0
-                ? 1f - MathHelper.Clamp(CloseAnimationTimer / 80f, 0f, 1f)
-                : MathHelper.Clamp(OpenAnimationTimer / 120f, 0f, 1f);
+            PostUpdate();
         }
 
         private long GetCombinedNPCLife()
@@ -205,7 +193,7 @@ public class BetterBossHealthBar : ITOLoader
 
         private long GetCombinedNPCMaxLife()
         {
-            if (!NPC.active)
+            if (!Valid || !NPC.active)
                 return 0L;
 
             foreach ((NPCSpecialHPGetRequirement requirement, NPCSpecialHPGetFunction func) in SpecialHPRequirements)
@@ -223,23 +211,44 @@ public class BetterBossHealthBar : ITOLoader
             return result;
         }
 
+        private bool PreUpdate()
+        {
+            if (NPC.TryGetOverride(out CANPCOverride npcOverride, "PreUpdateCalBossBar"))
+            {
+                if (!npcOverride.PreUpdateCalBossBar(this))
+                    return false;
+            }
+
+            return true;
+        }
+
         private void ModifyCalBossBarHeight()
         {
             if (NPC.TryGetOverride(out CANPCOverride npcOverride, "CustomCalBossBarHeight"))
                 Height = npcOverride.CustomCalBossBarHeight(this);
         }
 
+        private void PostUpdate()
+        {
+            if (NPC.TryGetOverride(out CANPCOverride npcOverride, "PostUpdateCalBossBar"))
+                npcOverride.PostUpdateCalBossBar(this);
+        }
+
         public new void Draw(SpriteBatch spriteBatch, int x, int y)
         {
             if (PreDraw(spriteBatch, x, y))
             {
-                Color color = (CAWorld.Anomaly ? Color.Lerp(Color.HotPink, CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * TOMathHelper.GetTimeSin(1f, 1f, 0f, true))
+                DrawMainBar(spriteBatch, x, y);
+
+                DrawComboBar(spriteBatch, x, y);
+
+                Color seperatorColor = (CAWorld.Anomaly ? Color.Lerp(Color.HotPink, CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * TOMathHelper.GetTimeSin(1f, 1f, 0f, true))
                     : CAWorld.BossRush ? Color.Lerp(BaseColor, Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.4f), Math.Clamp(AnomalyNPC.BossRushAITimer / 120f, 0f, 1f))
                     : EnrageTimer > 0 ? Color.Lerp(BaseColor, Color.Red * 0.5f, EnrageTimer / 120f)
                     : IncreasingDefenseOrDRTimer > 0 ? Color.Lerp(BaseColor, Color.LightGray * 0.5f, IncreasingDefenseOrDRTimer / 120f) : BaseColor) * AnimationCompletionRatio;
-                DrawBaseBars(spriteBatch, x, y, null, color);
+                DrawSeperatorBar(spriteBatch, x, y, seperatorColor);
 
-                //为了避免NPC名称过长遮挡大生命值数字，二者的绘制顺序在此处被调换了。
+                //为了避免NPC名称过长遮挡大生命值数字，二者的绘制顺序在此处被调换了，即先绘制NPC名称，再绘制大生命值数字。
                 Color? mainColor = AnomalyNPC.IsRunningAnomalyAI ? Color.HotPink * 0.6f * AnimationCompletionRatio2
                     : CAWorld.BossRush ? Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.45f) * AnimationCompletionRatio2
                     : EnrageTimer > 0 ? Color.Red * 0.6f * AnimationCompletionRatio2
@@ -283,22 +292,27 @@ public class BetterBossHealthBar : ITOLoader
         }
 
         #region 公共绘制方法
-        public void DrawBaseBars(SpriteBatch spriteBatch, int x, int y, Color? color1 = null, Color? color2 = null)
+        public void DrawMainBar(SpriteBatch spriteBatch, int x, int y, Color? newColor = null)
         {
             int mainBarWidth = (int)MathHelper.Min(400f * AnimationCompletionRatio, 400f * NPCLifeRatio);
-            spriteBatch.Draw(BossMainHPBar, new Rectangle(x, y + 28, mainBarWidth, BossMainHPBar.Height), color1 ?? Color.White);
-
-            if (ComboDamageCountdown > 0)
-            {
-                int comboHPBarWidth = (int)(400 * (float)HealthAtStartOfCombo / InitialMaxLife) - mainBarWidth;
-                if (ComboDamageCountdown < 6)
-                    comboHPBarWidth = comboHPBarWidth * ComboDamageCountdown / 6;
-
-                spriteBatch.Draw(BossComboHPBar, new Rectangle(x + mainBarWidth, y + 28, comboHPBarWidth, BossComboHPBar.Height), Color.White);
-            }
-
-            spriteBatch.Draw(BossSeperatorBar, new Rectangle(x, y + 18, 400, 6), color2 ?? BaseColor * AnimationCompletionRatio);
+            spriteBatch.Draw(BossMainHPBar, new Rectangle(x, y + 28, mainBarWidth, BossMainHPBar.Height), newColor ?? Color.White);
         }
+
+        public void DrawComboBar(SpriteBatch spriteBatch, int x, int y, Color? newColor = null)
+        {
+            if (ComboDamageCountdown <= 0)
+                return;
+
+            int mainBarWidth = (int)MathHelper.Min(400f * AnimationCompletionRatio, 400f * NPCLifeRatio);
+            int comboHPBarWidth = (int)(400 * (float)HealthAtStartOfCombo / InitialMaxLife) - mainBarWidth;
+            if (ComboDamageCountdown < 6)
+                comboHPBarWidth = comboHPBarWidth * ComboDamageCountdown / 6;
+
+            spriteBatch.Draw(BossComboHPBar, new Rectangle(x + mainBarWidth, y + 28, comboHPBarWidth, BossComboHPBar.Height), newColor ?? Color.White);
+        }
+
+        public void DrawSeperatorBar(SpriteBatch spriteBatch, int x, int y, Color? newColor = null) =>
+            spriteBatch.Draw(BossSeperatorBar, new Rectangle(x, y + 18, 400, 6), newColor ?? BaseColor * AnimationCompletionRatio);
 
         public void DrawNPCName(SpriteBatch spriteBatch, int x, int y, string overrideText = null, Color? mainColor = null, Color? borderColor = null, float borderWidth = 0f)
         {

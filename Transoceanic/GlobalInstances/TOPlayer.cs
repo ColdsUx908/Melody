@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Terraria;
-using Terraria.ModLoader;
-using Terraria.ModLoader.IO;
-using Transoceanic.Commands;
-using Transoceanic.MathHelp;
-
-namespace Transoceanic.GlobalInstances;
+﻿namespace Transoceanic.GlobalInstances;
 
 public partial class TOPlayer : ModPlayer
 {

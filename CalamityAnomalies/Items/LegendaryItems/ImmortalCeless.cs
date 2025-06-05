@@ -1,17 +1,7 @@
-﻿using System;
-using CalamityAnomalies.GlobalInstances;
+﻿using CalamityAnomalies.GlobalInstances;
 using CalamityAnomalies.Items.ItemRarities;
 using CalamityAnomalies.Projectiles.LegendaryItems;
-using Microsoft.Xna.Framework;
-using Terraria;
-using Terraria.DataStructures;
-using Terraria.ID;
-using Terraria.ModLoader;
-using Transoceanic;
-using Transoceanic.ExtraMathData;
-using Transoceanic.GameData;
 using Transoceanic.GlobalInstances;
-using Transoceanic.MathHelp;
 using Transoceanic.Systems;
 
 namespace CalamityAnomalies.Items.LegendaryItems;

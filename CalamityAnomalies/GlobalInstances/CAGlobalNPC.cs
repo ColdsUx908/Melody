@@ -1,18 +1,6 @@
-﻿using System;
-using System.IO;
-using CalamityMod;
-using CalamityMod.Buffs.StatDebuffs;
+﻿using CalamityMod.Buffs.StatDebuffs;
 using CalamityMod.NPCs;
 using CalamityMod.NPCs.Abyss;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Terraria;
-using Terraria.DataStructures;
-using Terraria.ID;
-using Terraria.ModLoader;
-using Terraria.ModLoader.IO;
-using Transoceanic;
-using Transoceanic.Net;
 
 namespace CalamityAnomalies.GlobalInstances;
 
@@ -55,6 +43,14 @@ public class CAGlobalNPC : GlobalNPC
         AIChanged[index] = true;
     }
 
+    public bool GetAnomalyAIBit(int index, byte bitPosition) => TOMathHelper.GetBit((int)AnomalyAI[index], bitPosition);
+
+    public bool GetAnomalyAIBit(Index index, byte bitPosition) => TOMathHelper.GetBit((int)AnomalyAI[index], bitPosition);
+
+    public void SetAnomalyAIBit(bool value, int index, byte bitPosition) => SetAnomalyAI(TOMathHelper.SetBit((int)AnomalyAI[index], bitPosition, value), index);
+
+    public void SetAnomalyAIBit(bool value, Index index, byte bitPosition) => SetAnomalyAI(TOMathHelper.SetBit((int)AnomalyAI[index], bitPosition, value), index);
+
     public bool NeverTrippy { get; set; } = false;
 
     #region Defaults
@@ -66,8 +62,6 @@ public class CAGlobalNPC : GlobalNPC
 
     public override void SetDefaults(NPC npc)
     {
-        Array.Fill(AnomalyAI, 0f);
-
         if (npc.TryGetOverride(out CANPCOverride npcOverride))
             npcOverride.SetDefaults();
     }

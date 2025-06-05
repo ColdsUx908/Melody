@@ -1,6 +1,4 @@
-﻿using Terraria.ModLoader;
-
-namespace CalamityAnomalies.Net;
+﻿namespace CalamityAnomalies.Net;
 
 public static class CANetUtils
 {

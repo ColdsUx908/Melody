@@ -1,15 +1,4 @@
-﻿using CalamityMod;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Terraria;
-using Terraria.GameContent;
-using Terraria.ID;
-using Terraria.ModLoader;
-using Transoceanic;
-using Transoceanic.ExtraGameData;
-using Transoceanic.GameData;
-using Transoceanic.GameData.Utilities;
-using Transoceanic.MathHelp;
+﻿using Transoceanic.GlobalInstances;
 
 namespace CalamityAnomalies.Projectiles.LegendaryItems;
 
@@ -17,23 +6,25 @@ public class ImmortalIceRain : ModProjectile, ILocalizedModType
 {
     public new string LocalizationCategory => "Projectiles.LegendaryItems";
 
+    public override string Texture => CAMain.TexturePrefix + "Touhou/Ice2";
+
     private const float homingDistance = 4000f;
 
-    private int AI_Phase
+    public int Phase
     {
         get => (int)Projectile.ai[0];
         set => Projectile.ai[0] = value;
     }
 
-    private int AI_Timer
+    public int Timer
     {
         get => (int)Projectile.ai[1];
         set => Projectile.ai[1] = value;
     }
 
-    private float AI_InitialVelocity => Projectile.ai[2];
+    public float InitialVelocity => Projectile.ai[2];
 
-    private NPC AI_NPCTarget
+    public NPC NPCTarget
     {
         get
         {
@@ -56,33 +47,34 @@ public class ImmortalIceRain : ModProjectile, ILocalizedModType
         Projectile.DamageType = DamageClass.Magic;
         Projectile.penetrate = 1;
         Projectile.timeLeft = 1230; //追踪10秒
+        Projectile.Ocean().AlwaysRotating = true;
 
-        AI_NPCTarget = null;
+        NPCTarget = null;
     }
 
     public override void AI()
     {
-        AI_Timer++;
+        Timer++;
 
         Lighting.AddLight((int)((Projectile.position.X + Projectile.width / 2) / 16f), (int)((Projectile.position.Y + Projectile.height / 2) / 16f), 175f / 255f, 1f, 1f);
 
-        switch (AI_Phase)
+        switch (Phase)
         {
             case 0: //初始化
                 Projectile.VelocityToRotation();
-                AI_Phase = 1;
-                AI_Timer = 0;
+                Phase = 1;
+                Timer = 0;
                 break;
             case 1: //逐渐减速
-                Projectile.velocity = Projectile.velocity.ToCustomLength(AI_InitialVelocity * (20 - AI_Timer) / 20);
-                if (AI_Timer == 20)
+                Projectile.velocity.Modulus = InitialVelocity * (20 - Timer) / 20;
+                if (Timer == 20)
                 {
-                    AI_Phase = 2;
-                    AI_Timer = 0;
+                    Phase = 2;
+                    Timer = 0;
                 }
                 break;
             case 2: //停顿10帧后向上飞出
-                if (AI_Timer > 10)
+                if (Timer > 10)
                 {
                     //SoundEngine.PlaySound(SoundID.NPCHit5, Projectile.Center);
                     for (int i = 0; i < 10; i++)
@@ -98,14 +90,14 @@ public class ImmortalIceRain : ModProjectile, ILocalizedModType
                     float velocity2 = Main.rand.NextFloat(10f, 12.5f);
                     Projectile.SetVelocityandRotation(new Vector2(0, -velocity2));
                     Projectile.extraUpdates = 1;
-                    AI_Phase = 3;
-                    AI_Timer = 0;
+                    Phase = 3;
+                    Timer = 0;
                 }
                 break;
             case 3: //寻找目标并追踪；在追踪超过3秒后加速
-                if (!Projectile.Homing(AI_NPCTarget, rotating: true))
-                    AI_NPCTarget = TOKinematic.GetNPCTarget(Projectile.Center, homingDistance, true, true, PriorityType.LifeMax);
-                if (AI_Timer > 360)
+                if (!Projectile.Homing(NPCTarget))
+                    NPCTarget = TOKinematic.GetNPCTarget(Projectile.Center, homingDistance, true, true, PriorityType.LifeMax);
+                if (Timer > 360)
                     Projectile.velocity *= 1.0013f;
                 break;
         }
@@ -131,7 +123,7 @@ public class ImmortalIceRain : ModProjectile, ILocalizedModType
         //SoundEngine.PlaySound(SoundID.Item27 with { Volume = SoundID.Item27.Volume * 0.25f }, Projectile.Center);
         for (int j = 0; j < 3; j++)
         {
-            TOActivator.NewDustAction(Projectile.Center, Projectile.width, Projectile.height, action: d =>
+            TOActivator.NewDustAction(Projectile.Center, Projectile.width, Projectile.height, DustID.Snow, action: d =>
             {
                 d.noGravity = true;
                 d.noLight = true;
@@ -142,7 +134,7 @@ public class ImmortalIceRain : ModProjectile, ILocalizedModType
 
     public override bool? CanHitNPC(NPC target)
     {
-        if (TOMain.BossActive && !target.IsBossTO())
+        if (TOMain.BossActive && !target.TOBoss)
             return false;
         return true;
     }

@@ -1,7 +1,4 @@
-﻿using Terraria;
-using Terraria.ModLoader;
-
-namespace Transoceanic.Systems;
+﻿namespace Transoceanic.Systems;
 
 public abstract class LegendaryItem : ModItem
 {

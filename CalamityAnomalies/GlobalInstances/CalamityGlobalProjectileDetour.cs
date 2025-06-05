@@ -1,8 +1,5 @@
 ﻿using CalamityMod.Events;
 using CalamityMod.Projectiles;
-using Microsoft.Xna.Framework;
-using Terraria;
-using Transoceanic.ExtraGameData;
 
 namespace CalamityAnomalies.GlobalInstances;
 

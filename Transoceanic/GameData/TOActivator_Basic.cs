@@ -1,11 +1,4 @@
-﻿using System;
-using Microsoft.Xna.Framework;
-using Terraria;
-using Terraria.DataStructures;
-using Terraria.ID;
-using Terraria.ModLoader;
-
-namespace Transoceanic.GameData;
+﻿namespace Transoceanic.GameData;
 
 public static partial class TOActivator
 {
@@ -135,9 +128,6 @@ public static partial class TOActivator
     /// <param name="width">X偏移最大值。</param>
     /// <param name="height">Y偏移最大值。</param>
     /// <param name="type">类型。</param>
-    /// <param name="alpha">透明度。</param>
-    /// <param name="newColor">覆盖颜色。</param>
-    /// <param name="scale">尺寸。</param>
     /// <param name="action">执行的行为。仅当成功生成Dust时生效。</param>
     public static void NewDustAction(Vector2 position, int width, int height, int type, Action<Dust> action = null)
     {

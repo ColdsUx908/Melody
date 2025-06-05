@@ -1,7 +1,4 @@
-﻿using CalamityMod;
-using CalamityMod.World;
-using Terraria;
-using Transoceanic.IL;
+﻿using CalamityMod.World;
 
 namespace CalamityAnomalies.Utilities;
 
