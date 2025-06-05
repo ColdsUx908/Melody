@@ -136,7 +136,7 @@ public class CAGlobalNPC : GlobalNPC
         if (npc.ModNPC is EidolonWyrmHead && !DownedBossSystem.downedPrimordialWyrm)
             DownedBossSystem.downedPrimordialWyrm = true;
 
-        foreach (Player player in TOMain.ActivePlayers)
+        foreach (Player player in Player.ActivePlayers_TO)
         {
             player.Anomaly().DownedBossCalamity.BossesOnKill(npc);
         }

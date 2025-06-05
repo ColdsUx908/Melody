@@ -1,14 +1,15 @@
+using CalamityAnomalies;
 using CalamityAnomalies.Items.ItemRarities;
-using Transoceanic.GlobalInstances;
-using Transoceanic.Systems;
 
-namespace CalamityAnomalies.Items.LegendaryItems;
+namespace CalamityAnomalies.DeveloperContents;
 
 [AutoloadEquip(EquipType.Wings)]
 public class AscendantWings : LegendaryItem, ILocalizedModType
 {
-    public new string LocalizationCategory => "Items.LegendaryItems";
+    public new string LocalizationCategory => "DeveloperContents";
+
     public override void SetStaticDefaults() => ArmorIDs.Wing.Sets.Stats[Item.wingSlot] = new WingStats(30, 14.5f, 5.5f);
+
     public override void SetDefaults()
     {
         Item.width = 54;

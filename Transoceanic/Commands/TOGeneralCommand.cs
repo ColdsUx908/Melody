@@ -1,6 +1,4 @@
-﻿using Transoceanic.GlobalInstances;
-
-namespace Transoceanic.Commands;
+﻿namespace Transoceanic.Commands;
 
 public interface ITOCommand
 {

@@ -4,7 +4,7 @@
 /// 对象迭代器。
 /// <para/>示例：
 /// <code>
-/// foreach (NPC n in TOIteratorFactory.NewNPCIterator(k => k.active)) //也可以使用预定义的TOMain.ActiveNPCs
+/// foreach (NPC n in TOIteratorFactory.NewNPCIterator(k => k.active)) //也可以使用预定义的NPC.ActiveNPCs_TO
 /// {
 ///     //代码
 /// }

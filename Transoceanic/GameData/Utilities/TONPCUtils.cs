@@ -4,8 +4,8 @@ public static class TONPCUtils
 {
     public static bool IsDefeatingTwins(NPC npc) => npc.type switch
     {
-        NPCID.Retinazer => !TOMain.ActiveNPCs.Any(k => k.type == NPCID.Spazmatism),
-        NPCID.Spazmatism => !TOMain.ActiveNPCs.Any(k => k.type == NPCID.Retinazer),
+        NPCID.Retinazer => !NPC.ActiveNPCs_TO.Any(k => k.type == NPCID.Spazmatism),
+        NPCID.Spazmatism => !NPC.ActiveNPCs_TO.Any(k => k.type == NPCID.Retinazer),
         _ => false
     };
 

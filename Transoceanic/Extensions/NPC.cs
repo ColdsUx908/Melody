@@ -38,20 +38,20 @@ public static partial class TOExtensions
 
         public bool IsFacingTarget => npc.direction == npc.TargetDirection;
 
-        public void FaceNPCTarget(Entity target)
+        public void FaceNPCTarget(Entity target) => npc.direction = Math.Sign(target.Center.X - npc.Center.X) switch
         {
-            npc.direction = Math.Sign(target.Center.X - npc.Center.X) switch
-            {
-                -1 => -1,
-                _ => 1
-            };
-        }
+            -1 => -1,
+            _ => 1
+        };
 
         /// <summary>
         /// 将NPC速度设置为指定值，同时更新旋转。
         /// <br>为性能考虑，不要在不改变方向的情况中重复调用该方法。</br>
         /// </summary>
-        /// <param name="velocity"></param>
+        /// <param name="velocity">速度</param>
+        /// <param name="rotationOffset">旋转偏移值。
+        /// <br/>在设置旋转时会加上该值，使NPC额外顺时针旋转。
+        /// <br/>例如，对于贴图方向向上的弹幕，应设置该值为 <see cref="MathHelper.PiOver2"/>。
         public void SetVelocityandRotation(Vector2 velocity, float rotationOffset = 0f)
         {
             npc.velocity = velocity;
@@ -61,6 +61,9 @@ public static partial class TOExtensions
         /// <summary>
         /// 适用于贴图方向向上的NPC，用于将 <see cref="Entity.velocity"/> 转换为 <see cref="NPC.rotation"/>，并应用于NPC。
         /// </summary>
+        /// <param name="rotationOffset">旋转偏移值。
+        /// <br/>在设置旋转时会加上该值，使NPC额外顺时针旋转。
+        /// <br/>例如，对于贴图方向向上的弹幕，应设置该值为 <see cref="MathHelper.PiOver2"/>。
         public void VelocityToRotation(float rotationOffset = 0f) => npc.rotation = npc.velocity.ToRotation() + rotationOffset;
 
         /// <summary>
@@ -95,10 +98,92 @@ public static partial class TOExtensions
             npc.position.X -= npc.width / 2;
             npc.position.Y -= npc.height;
         }
+
+
+    }
+
+    extension(NPC)
+    {
+        public static TOIterator<NPC> ActiveNPCs_TO => TOIteratorFactory.NewActiveNPCIterator();
+
+        public static TOIterator<NPC> Enemies_TO => TOIteratorFactory.NewActiveNPCIterator(k => k.Enemy);
+
+        public static TOIterator<NPC> Bosses_TO => TOIteratorFactory.NewActiveNPCIterator(k => k.TOBoss);
+
+        /// <summary>
+        /// 生成一个新的NPC，并在生成后执行一个Action。
+        /// </summary>
+        /// <param name="source">生成源。</param>
+        /// <param name="position">生成位置。</param>
+        /// <param name="type">类型。</param>
+        /// <param name="start">生成NPC索引的最小值。</param>
+        /// <param name="action">执行的行为。仅当成功生成NPC时生效。</param>
+        public static void NewNPCAction_TO(IEntitySource source, Vector2 position, int type, int start = 0, Action<NPC> action = null)
+        {
+            int index = NPC.NewNPC(source, (int)position.X, (int)position.Y, type, start);
+            if (index < Main.maxNPCs)
+            {
+                action?.Invoke(Main.npc[index]);
+                NetMessage.SendData(MessageID.SyncNPC, -1, -1, null, index);
+            }
+        }
+
+        /// <summary>
+        /// 生成一个新的ModNPC，并在生成后执行一个Action。
+        /// </summary>
+        /// <typeparam name="T">ModNPC所属类型。</typeparam>
+        /// <param name="source">生成源。</param>
+        /// <param name="position">生成位置。</param>
+        /// <param name="start">生成NPC索引的最小值。</param>
+        /// <param name="action">执行的行为。仅当成功生成NPC时生效。</param>
+        public static void NewNPCAction_TO<T>(IEntitySource source, Vector2 position, int start = 0, Action<NPC> action = null) where T : ModNPC =>
+            NewNPCAction_TO(source, position, ModContent.NPCType<T>(), start, action);
+
+        /// <summary>
+        /// 生成一个新的NPC，并在生成后执行一个Action。
+        /// </summary>
+        /// <param name="index">输出的NPC索引。</param>
+        /// <param name="npc">输出的NPC实例。</param>
+        /// <param name="source">生成源。</param>
+        /// <param name="position">生成位置。</param>
+        /// <param name="type">类型。</param>
+        /// <param name="start">生成NPC索引的最小值。</param>
+        /// <param name="action">执行的行为。仅当成功生成NPC时生效。</param>
+        /// <returns>生成NPC是否成功。</returns>
+        public static bool NewNPCActionCheck_TO(out int index, out NPC npc, IEntitySource source, Vector2 position, int type, int start = 0, Action<NPC> action = null)
+        {
+            index = NPC.NewNPC(source, (int)position.X, (int)position.Y, type, start);
+            if (index < Main.maxNPCs)
+            {
+                npc = Main.npc[index];
+                action?.Invoke(npc);
+                NetMessage.SendData(MessageID.SyncNPC, -1, -1, null, index);
+                return true;
+            }
+            else
+            {
+                npc = null;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 生成一个新的ModNPC，并在生成后执行一个Action。
+        /// </summary>
+        /// <typeparam name="T">ModNPC所属类型。</typeparam>
+        /// <param name="index">输出的NPC索引。</param>
+        /// <param name="npc">输出的NPC实例。</param>
+        /// <param name="source">生成源。</param>
+        /// <param name="position">生成位置。</param>
+        /// <param name="start">生成NPC索引的最小值。</param>
+        /// <param name="action">执行的行为。仅当成功生成NPC时生效。</param>
+        /// <returns>生成NPC是否成功。</returns>
+        public static void NewNPCActionCheck_TO<T>(out int index, out NPC npc, IEntitySource source, Vector2 position, int start = 0, Action<NPC> action = null) where T : ModNPC =>
+            NewNPCActionCheck_TO(out index, out npc, source, position, ModContent.NPCType<T>(), start, action);
     }
 
     extension(ref NPC.HitModifiers modifiers)
     {
-        public void SetInstantKill2(NPC target) => modifiers.FinalDamage += target.lifeMax;
+        public void SetInstantKillBetter(NPC target) => modifiers.FinalDamage += target.lifeMax;
     }
 }

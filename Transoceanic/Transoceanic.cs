@@ -30,13 +30,11 @@ global using Transoceanic.Extensions;
 global using Transoceanic.ExtraGameData;
 global using Transoceanic.ExtraMathData;
 global using Transoceanic.GameData;
-global using Transoceanic.GameData.Utilities;
 global using Transoceanic.GlobalInstances;
 global using Transoceanic.IL;
 global using Transoceanic.Localization;
 global using Transoceanic.MathHelp;
 global using Transoceanic.Net;
-global using Transoceanic.Visual;
 global using ZLinq;
 using Terraria.GameContent.Creative;
 
@@ -150,17 +148,7 @@ public class TOMain
 
     public static GameModeData GameModeData => (GameModeData)Type_Main.GetField("_currentGameModeInfo", TOReflectionUtils.UniversalBindingFlags).GetValue(null);
 
-    public static TOIterator<NPC> ActiveNPCs => TOIteratorFactory.NewActiveNPCIterator();
-
-    public static TOIterator<NPC> Enemies => TOIteratorFactory.NewActiveNPCIterator(k => k.Enemy);
-
-    public static TOIterator<NPC> Bosses => TOIteratorFactory.NewActiveNPCIterator(k => k.TOBoss);
-
     public static TOIterator<Projectile> ActiveProjectiles => TOIteratorFactory.NewActiveProjectileIterator();
-
-    public static TOIterator<Player> ActivePlayers => TOIteratorFactory.NewActivePlayerIterator();
-
-    public static TOIterator<Player> PVPPlayers => TOIteratorFactory.NewActivePlayerIterator(k => k.PvP);
 
     /// <summary>
     /// 是否为大师模式。
@@ -281,7 +269,7 @@ public class TOMain
 
         public override void PostUpdateNPCs()
         {
-            BossList = Bosses.ToList();
+            BossList = NPC.Bosses_TO.ToList();
             BossActive = BossList.Count > 0;
         }
 

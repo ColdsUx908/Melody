@@ -1,6 +1,4 @@
-﻿using Transoceanic.GlobalInstances;
-
-namespace Transoceanic.ExtraGameData;
+﻿namespace Transoceanic.ExtraGameData;
 
 public abstract class EntityOverride<TEntity> where TEntity : Entity
 {

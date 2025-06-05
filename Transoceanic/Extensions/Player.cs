@@ -1,6 +1,4 @@
-﻿using Transoceanic.GlobalInstances;
-
-namespace Transoceanic.Extensions;
+﻿namespace Transoceanic.Extensions;
 
 public static partial class TOExtensions
 {
@@ -21,5 +19,12 @@ public static partial class TOExtensions
         /// </summary>
         /// <returns>若玩家光标持有物品，返回该物品；否则返回玩家物品栏中选中的物品。</returns>
         public Item ActiveItem => Main.mouseItem.IsAir ? player.HeldItem : Main.mouseItem;
+    }
+
+    extension(Player)
+    {
+        public static TOIterator<Player> ActivePlayers_TO => TOIteratorFactory.NewActivePlayerIterator();
+
+        public static TOIterator<Player> PVPPlayers_TO => TOIteratorFactory.NewActivePlayerIterator(k => k.PvP);
     }
 }

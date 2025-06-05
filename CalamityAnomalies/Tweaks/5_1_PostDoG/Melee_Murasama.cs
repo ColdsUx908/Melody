@@ -17,7 +17,6 @@ using CalamityMod.NPCs.ProfanedGuardians;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.NPCs.Yharon;
 using CalamityMod.Projectiles.Melee;
-using Transoceanic.GlobalInstances;
 
 namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
 
@@ -239,7 +238,7 @@ public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
                     case NPCID.DiabolistWhite when NPC.AnyNPCs(NPCID.SkeletronHead):
                     case NPCID.FireImp when NPC.AnyNPCs(NPCID.WallofFlesh):
                     case int _ when target.CultistDragon:
-                        modifiers.SetInstantKill2(target);
+                        modifiers.SetInstantKillBetter(target);
                         break;
                     case int _ when target.Destroyer:
                         modifiers.SourceDamage *= 1.5f;
@@ -273,7 +272,7 @@ public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
             case Bumblefuck2:
             case CeaselessVoid when target.Ocean().LifeRatio < 0.2f:
             case PhantomFuckYou:
-                modifiers.SetInstantKill2(target);
+                modifiers.SetInstantKillBetter(target);
                 break;
             case var _ when target.DesertNuisance || target.DesertNuisanceYoung:
                 modifiers.SourceDamage *= 3f;

@@ -5,7 +5,6 @@ global using System.IO;
 global using System.Linq;
 global using System.Reflection;
 global using System.Runtime.CompilerServices;
-global using CalamityAnomalies.Utilities;
 global using CalamityAnomalies.GlobalInstances;
 global using CalamityMod;
 global using Microsoft.Xna.Framework;
@@ -34,7 +33,6 @@ global using Transoceanic.Net;
 global using Transoceanic.Visual;
 global using ZLinq;
 global using Calamity = CalamityMod.CalamityMod;
-using CalamityAnomalies.GlobalInstances;
 using CalamityAnomalies.Net;
 
 namespace CalamityAnomalies;

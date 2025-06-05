@@ -1,5 +1,4 @@
 ﻿using CalamityAnomalies.Difficulties;
-using CalamityAnomalies.GlobalInstances;
 using CalamityMod.Events;
 using CalamityMod.NPCs;
 using CalamityMod.NPCs.CeaselessVoid;
@@ -10,7 +9,6 @@ using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.UI;
 using Terraria.GameContent.Events;
 using Terraria.GameContent.UI.BigProgressBar;
-using Transoceanic.GlobalInstances;
 using static CalamityMod.UI.BossHealthBarManager;
 
 namespace CalamityAnomalies.UI;

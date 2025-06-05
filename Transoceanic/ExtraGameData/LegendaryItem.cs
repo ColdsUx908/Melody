@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.Systems;
+﻿namespace Transoceanic.ExtraGameData;
 
 public abstract class LegendaryItem : ModItem
 {
@@ -8,9 +8,4 @@ public abstract class LegendaryItem : ModItem
     /// 设置神器之威。
     /// </summary>
     public virtual void SetPower(Player player) => HasPower = false;
-}
-
-public class LegendaryItemSystem : ModSystem
-{
-
 }

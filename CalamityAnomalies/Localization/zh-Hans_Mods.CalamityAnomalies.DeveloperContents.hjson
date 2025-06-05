@@ -4,3 +4,16 @@ Permafrost: {
 	Welcome2: 现在你要面对的是，真正的最终挑战。
 	Beginning: 将你的真正实力展示在我面前！
 }
+
+AscendantWings: {
+	DisplayName: 上界之翼
+	Tooltip: 飞翔于天空的传奇之翼
+}
+
+ImmortalCeless: {
+	DisplayName: 不朽之天渊
+	Tooltip: 传奇亘古，盛世笙歌
+}
+
+ImmortalBloodRain.DisplayName: Immortal Blood Rain
+ImmortalIceRain.DisplayName: Immortal Ice Rain

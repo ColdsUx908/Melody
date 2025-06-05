@@ -4,3 +4,16 @@ Permafrost: {
 	Welcome2: ""
 	Beginning: ""
 }
+
+AscendantWings: {
+	DisplayName: Ascendant Wings
+	Tooltip: Legendary wings that soar through the sky
+}
+
+ImmortalCeless: {
+	DisplayName: Immortal Celess
+	Tooltip: ""
+}
+
+ImmortalBloodRain.DisplayName: Immortal Blood Rain
+ImmortalIceRain.DisplayName: Immortal Ice Rain

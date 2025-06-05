@@ -9,7 +9,6 @@ using CalamityMod.Projectiles.Boss;
 using CalamityMod.Skies;
 using CalamityMod.Tiles;
 using Terraria.Graphics.Shaders;
-using Transoceanic.GlobalInstances;
 using static CalamityMod.NPCs.SupremeCalamitas.SupremeCalamitas;
 using static CalamityMod.Projectiles.Boss.SCalRitualDrama;
 
@@ -140,7 +139,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
 
                     // Make the town NPC spawn.
                     if (Main.netMode != NetmodeID.MultiplayerClient)
-                        TOActivator.NewNPCAction<DILF>(NPC.GetSource_FromAI(), NPC.Center + new Vector2(0f, 12f));
+                        NPC.NewNPCAction_TO<DILF>(NPC.GetSource_FromAI(), NPC.Center + new Vector2(0f, 12f));
                 }
 
                 NPC.active = false;
@@ -149,7 +148,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
 
             for (int i = 0; i < MathHelper.Lerp(2f, 6f, 1f - NPC.Opacity); i++)
             {
-                TOActivator.NewDustPerfectAction(NPC.Center + Main.rand.NextVector2Square(-24f, 24f), DustID.BlueTorch, iceFire =>
+                Dust.NewDustPerfectAction(NPC.Center + Main.rand.NextVector2Square(-24f, 24f), DustID.BlueTorch, iceFire =>
                 {
                     iceFire.velocity = Vector2.UnitY * -Main.rand.NextFloat(2f, 3.25f);
                     iceFire.color = Color.Cyan;
@@ -179,7 +178,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
         if (NPC.dontTakeDamage && !ModNPC.hasDoneDeathAnim) // Dust visuals for shield when immune
         {
             Vector2 sustVel = new Vector2(-78 * Main.rand.NextFloat(0.95f, 1.05f), 0).RotatedBy(ModNPC.rotateToPlayer + MathHelper.PiOver2).RotatedByRandom(1.4);
-            TOActivator.NewDustPerfectAction(NPC.Center + sustVel, DustID.Sandnado, sust =>
+            Dust.NewDustPerfectAction(NPC.Center + sustVel, DustID.Sandnado, sust =>
             {
                 sust.velocity = sustVel * Main.rand.NextFloat(0.001f, 0.03f);
                 sust.alpha = 200;
@@ -223,7 +222,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
                 // Emit dust off the skull at the position of its eye socket.
                 for (int i = 1; i < 16; i++)
                 {
-                    TOActivator.NewDustPerfectAction(NPC.Center, 185 /* 寒霜九头蛇 */, d =>
+                    Dust.NewDustPerfectAction(NPC.Center, 185 /* 寒霜九头蛇 */, d =>
                     {
                         d.position = Vector2.Lerp(NPC.position, NPC.oldPosition, i / 16f) + NPC.Size * 0.5f;
                         d.position += ModNPC.shieldRotation.ToRotationVector2() * 42f;
@@ -340,7 +339,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
                 for (int i = 0; i < 100; i++)
                 {
                     Vector2 dustVel = new PolarVector2(15f, Main.rand.NextFloat(100f));
-                    TOActivator.NewDustPerfectAction(NPC.Center + dustVel * 3f, Main.rand.NextBool(3) ? DustID.BlueTorch : DustID.IceTorch, d =>
+                    Dust.NewDustPerfectAction(NPC.Center + dustVel * 3f, Main.rand.NextBool(3) ? DustID.BlueTorch : DustID.IceTorch, d =>
                     {
                         d.velocity = dustVel * Main.rand.NextFloat(0.3f, 1.3f);
                         d.scale = Main.rand.NextFloat(2f, 3.2f);
@@ -481,7 +480,7 @@ public class PermafrostRitualDrama : CAProjectileOverride<SCalRitualDrama>
             if (TOMain.GeneralClient)
             {
                 Vector2 spawnPosition = Projectile.Center - new Vector2(53f, 39f);
-                TOActivator.NewNPCAction<SupremeCalamitas>(NPC.GetBossSpawnSource(Player.FindClosest(spawnPosition, 1, 1)), spawnPosition, action: n =>
+                NPC.NewNPCAction_TO<SupremeCalamitas>(NPC.GetBossSpawnSource(Player.FindClosest(spawnPosition, 1, 1)), spawnPosition, action: n =>
                 {
                     TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "Spawn", Color.Lerp(Color.Blue, Color.Cyan, 0.7f));
                     n.GetModNPC<SupremeCalamitas>().permafrost = true;
@@ -497,7 +496,7 @@ public class PermafrostRitualDrama : CAProjectileOverride<SCalRitualDrama>
             // Generate a dust explosion at the ritual's position.
             for (int i = 0; i < 90; i++)
             {
-                TOActivator.NewDustPerfectAction(Projectile.Center, DustID.IceGolem, d =>
+                Dust.NewDustPerfectAction(Projectile.Center, DustID.IceGolem, d =>
                 {
                     d.velocity = new PolarVector2(Main.rand.NextFloat(1.5f, 36f), Main.rand.NextFloat(100f));
                     d.scale = Main.rand.NextFloat(1.2f, 2.3f);
@@ -528,7 +527,7 @@ public class PermafrostRitualDrama : CAProjectileOverride<SCalRitualDrama>
             if (Main.rand.NextBool())
             {
                 float variance = Main.rand.NextFloat(-25f, 25f);
-                TOActivator.NewDustPerfectAction(Projectile.Center + new Vector2(variance, 20), DustID.RainbowMk2, d =>
+                Dust.NewDustPerfectAction(Projectile.Center + new Vector2(variance, 20), DustID.RainbowMk2, d =>
                 {
                     d.velocity = new PolarVector2(ModProjectile.Time * 0.023f * Main.rand.NextFloat(1.1f, 2.1f), variance * 0.02f - MathHelper.PiOver2);
                     d.color = Main.rand.NextBool() ? Color.Cyan : CAMain.AnomalyUltramundaneColor;

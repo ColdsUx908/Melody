@@ -22,7 +22,7 @@ public static partial class TOExtensions
         /// 使实体追踪指定目标（反物理规则）。
         /// </summary>
         /// <param name="target">追踪目标。</param>
-        /// <param name="homingRatio">追踪强度。为1f时强制追踪。</param>
+        /// <param name="homingRatio">追踪强度。为1时强制追踪。</param>
         /// <param name="sightAngle">视野范围。</param>
         /// <param name="keepVelocity">是否在调整角度时保持速度大小不变。仅在追踪强度不为1时有效。</param>
         /// <remarks>须由具体实现决定目标锁定机制。</remarks>

@@ -76,7 +76,7 @@ public class AnomalyJewelEmerald : AnomalyNPCOverride
     {
         for (int i = 0; i < amount; i++)
         {
-            TOActivator.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.GemEmerald, d =>
+            Dust.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.GemEmerald, d =>
             {
                 d.velocity = NPC.SafeDirectionTo(Target.Center + Target.velocity * 20f, -Vector2.UnitY) * Main.rand.NextFloat(-4f, -1f) * Main.rand.NextFloat(1f, 2f);
                 d.noGravity = true;

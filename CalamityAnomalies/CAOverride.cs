@@ -1,5 +1,4 @@
 ﻿using CalamityAnomalies.Configs;
-using CalamityAnomalies.GlobalInstances;
 using CalamityAnomalies.UI;
 using CalamityMod.Items;
 using CalamityMod.NPCs;
