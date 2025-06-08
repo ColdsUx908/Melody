@@ -2,6 +2,6 @@
 
 namespace CalamityAnomalies.Tweaks._6_Endgame;
 
-public class SylveStaffOverride : CAItemTweak<Sylvestaff>
+public class SylveStaffTweak : CAItemTweak<Sylvestaff>
 {
 }

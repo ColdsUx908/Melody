@@ -1,13 +1,13 @@
 ﻿namespace Transoceanic.MathHelp;
 
-public static partial class TOMathHelper
+public static class BitOperation
 {
     public static bool GetBit(sbyte number, byte bitPosition)
     {
         if (bitPosition >= 8)
             throw new ArgumentOutOfRangeException(nameof(bitPosition));
 
-        return ((number >> bitPosition) & 1) == 1;
+        return (number & (1 << bitPosition)) != 0;
     }
 
     public static bool GetBit(byte number, byte bitPosition)
@@ -15,7 +15,7 @@ public static partial class TOMathHelper
         if (bitPosition >= 8)
             throw new ArgumentOutOfRangeException(nameof(bitPosition));
 
-        return ((number >> bitPosition) & 1) == 1;
+        return (number & (1 << bitPosition)) != 0;
     }
 
     public static bool GetBit(short number, byte bitPosition)
@@ -23,7 +23,7 @@ public static partial class TOMathHelper
         if (bitPosition >= 16)
             throw new ArgumentOutOfRangeException(nameof(bitPosition));
 
-        return ((number >> bitPosition) & 1) == 1;
+        return (number & (1 << bitPosition)) != 0;
     }
 
     public static bool GetBit(ushort number, byte bitPosition)
@@ -31,7 +31,7 @@ public static partial class TOMathHelper
         if (bitPosition >= 16)
             throw new ArgumentOutOfRangeException(nameof(bitPosition));
 
-        return ((number >> bitPosition) & 1) == 1;
+        return (number & (1 << bitPosition)) != 0;
     }
 
     public static bool GetBit(int number, byte bitPosition)
@@ -39,7 +39,7 @@ public static partial class TOMathHelper
         if (bitPosition >= 32)
             throw new ArgumentOutOfRangeException(nameof(bitPosition));
 
-        return ((number >> bitPosition) & 1) == 1;
+        return (number & (1 << bitPosition)) != 0;
     }
 
     public static bool GetBit(uint number, byte bitPosition)
@@ -47,7 +47,7 @@ public static partial class TOMathHelper
         if (bitPosition >= 32)
             throw new ArgumentOutOfRangeException(nameof(bitPosition));
 
-        return ((number >> bitPosition) & 1) == 1;
+        return (number & (1 << bitPosition)) != 0;
     }
 
     public static bool GetBit(long number, byte bitPosition)
@@ -55,7 +55,7 @@ public static partial class TOMathHelper
         if (bitPosition >= 64)
             throw new ArgumentOutOfRangeException(nameof(bitPosition));
 
-        return ((number >> bitPosition) & 1) == 1;
+        return (number & (1 << bitPosition)) != 0;
     }
 
     public static bool GetBit(ulong number, byte bitPosition)
@@ -63,7 +63,7 @@ public static partial class TOMathHelper
         if (bitPosition >= 64)
             throw new ArgumentOutOfRangeException(nameof(bitPosition));
 
-        return ((number >> bitPosition) & 1) == 1;
+        return (number & (1ul << bitPosition)) != 0;
     }
 
     public static bool GetBit(Int128 number, byte bitPosition)
@@ -71,7 +71,7 @@ public static partial class TOMathHelper
         if (bitPosition >= 128)
             throw new ArgumentOutOfRangeException(nameof(bitPosition));
 
-        return ((number >> bitPosition) & 1) == 1;
+        return (number & (1 << bitPosition)) != 0;
     }
 
     public static bool GetBit(UInt128 number, byte bitPosition)
@@ -79,7 +79,7 @@ public static partial class TOMathHelper
         if (bitPosition >= 128)
             throw new ArgumentOutOfRangeException(nameof(bitPosition));
 
-        return ((number >> bitPosition) & 1) == 1;
+        return (number & (UInt128.One << bitPosition)) != 0;
     }
 
     public static sbyte SetBit(sbyte number, byte bitPosition, bool value)
@@ -135,7 +135,7 @@ public static partial class TOMathHelper
         if (bitPosition >= 64)
             throw new ArgumentOutOfRangeException(nameof(bitPosition));
 
-        return (number & ~(1L << bitPosition)) | ((long)value.ToInt() << bitPosition);
+        return (number & ~(1 << bitPosition)) | ((long)value.ToInt() << bitPosition);
     }
 
     public static ulong SetBit(ulong number, byte bitPosition, bool value)
@@ -151,7 +151,7 @@ public static partial class TOMathHelper
         if (bitPosition >= 128)
             throw new ArgumentOutOfRangeException(nameof(bitPosition));
 
-        return (number & ~(Int128.One << bitPosition)) | (value.ToInt() << bitPosition);
+        return (number & ~(1 << bitPosition)) | (value.ToInt() << bitPosition);
     }
 
     public static UInt128 SetBit(UInt128 number, byte bitPosition, bool value)

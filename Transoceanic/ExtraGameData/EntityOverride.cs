@@ -121,7 +121,7 @@ public abstract class NPCOverride : EntityOverride<NPC>
         get => (int)OceanNPC.OceanAI[2];
         set => OceanNPC.SetOceanAI(value, 2);
     }
-    #endregion
+    #endregion 实成员
 
     #region 虚成员
     /// <summary>
@@ -135,7 +135,7 @@ public abstract class NPCOverride : EntityOverride<NPC>
     /// 设置负数type的NPC的额外属性。
     /// </summary>
     public virtual void SetDefaultsFromNetId() { }
-    #endregion
+    #endregion Defaults
 
     #region Active
     /// <summary>
@@ -174,7 +174,7 @@ public abstract class NPCOverride : EntityOverride<NPC>
     /// <br/>这个钩子仅在单人模式或服务器上运行。对于客户端效果（如灰尘、血迹和声音），使用 <see cref="HitEffect(NPC.HitInfo)"/>。
     /// </summary>
     public virtual void OnKill() { }
-    #endregion
+    #endregion Active
 
     #region AI
     /// <summary>
@@ -192,7 +192,7 @@ public abstract class NPCOverride : EntityOverride<NPC>
     /// AI。
     /// </summary>
     public virtual void PostAI() { }
-    #endregion
+    #endregion AI
 
     #region Draw
     /// <summary>
@@ -246,7 +246,7 @@ public abstract class NPCOverride : EntityOverride<NPC>
     /// 允许你在地图上翻转NPC的Boss头图标。
     /// </summary>
     public virtual void BossHeadSpriteEffects(ref SpriteEffects spriteEffects) { }
-    #endregion
+    #endregion Draw
 
     #region Hit
     /// <summary>
@@ -387,8 +387,8 @@ public abstract class NPCOverride : EntityOverride<NPC>
     /// <param name="npcHitbox"></param>
     /// <returns></returns>
     public virtual bool ModifyCollisionData(Rectangle victimHitbox, ref int immunityCooldownSlot, ref MultipliableFloat damageMultiplier, ref Rectangle npcHitbox) => true;
-    #endregion
-    #endregion
+    #endregion Hit
+    #endregion 虚成员
 }
 
 public abstract class ProjectileOverride : EntityOverride<Projectile>
@@ -413,7 +413,7 @@ public abstract class ProjectileOverride : EntityOverride<Projectile>
         OceanProjectile = null;
     }
 
-    #endregion
+    #endregion 实成员
 
     #region 虚成员
     #region AI
@@ -432,7 +432,7 @@ public abstract class ProjectileOverride : EntityOverride<Projectile>
     /// AI。
     /// </summary>
     public virtual void PostAI() { }
-    #endregion
+    #endregion AI
 
     #region Hit
     /// <summary>
@@ -525,7 +525,7 @@ public abstract class ProjectileOverride : EntityOverride<Projectile>
     /// <param name="targetHitbox"></param>
     /// <returns></returns>
     public virtual bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => null;
-    #endregion
+    #endregion Hit
 
     #region Draw
     /// <summary>
@@ -564,8 +564,8 @@ public abstract class ProjectileOverride : EntityOverride<Projectile>
     /// <param name="overPlayers"></param>
     /// <param name="overWiresUI"></param>
     public virtual void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI) { }
-    #endregion
-    #endregion
+    #endregion Draw
+    #endregion 虚成员
 }
 
 public abstract class ItemOverride : EntityOverride<Item>
@@ -586,7 +586,7 @@ public abstract class ItemOverride : EntityOverride<Item>
         Item = null;
         OceanItem = null;
     }
-    #endregion
+    #endregion 实成员
 
     #region 虚成员
     #region Defaults
@@ -595,7 +595,7 @@ public abstract class ItemOverride : EntityOverride<Item>
     /// The <see href="https://github.com/tModLoader/tModLoader/wiki/Basic-Recipes">Basic Recipes Guide</see> teaches how to add new recipes to the game and how to manipulate existing recipes.<br/>
     /// </summary>
     public virtual void AddRecipes() { }
-    #endregion
+    #endregion Defaults
 
     #region Active
     /// <summary>
@@ -643,7 +643,7 @@ public abstract class ItemOverride : EntityOverride<Item>
     /// Return true to specify that the item can be picked up despite not having enough room in inventory. Useful for something like hearts or experience items. Use in conjunction with OnPickup to actually consume the item and handle it.
     /// </summary>
     public virtual bool ItemSpace(Player player) => false;
-    #endregion
+    #endregion Active
 
     #region Update
     /// <summary>
@@ -686,7 +686,7 @@ public abstract class ItemOverride : EntityOverride<Item>
     /// <param name="dye"></param>
     /// <param name="hideVisual"></param>
     public virtual void UpdateItemDye(Player player, int dye, bool hideVisual) { }
-    #endregion
+    #endregion Update
 
     #region Draw
     /// <summary>
@@ -716,7 +716,7 @@ public abstract class ItemOverride : EntityOverride<Item>
     public virtual void PostDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame,
         Color drawColor, Color itemColor, Vector2 origin, float scale)
     { }
-    #endregion
+    #endregion Draw
 
     #region Prefix
     /// <summary>
@@ -770,7 +770,7 @@ public abstract class ItemOverride : EntityOverride<Item>
     /// Useful for modifying modded data based on the reforge result.
     /// </summary>
     public virtual void PostReforge() { }
-    #endregion
+    #endregion Prefix
 
     #region Use
     /// <summary>
@@ -878,7 +878,7 @@ public abstract class ItemOverride : EntityOverride<Item>
     /// Allows you to make things happen when an item is right-clicked in the inventory. Useful for goodie bags.
     /// </summary>
     public virtual void RightClick(Player player) { }
-    #endregion
+    #endregion Use
 
     #region ModifyStats
     /// <summary>
@@ -930,7 +930,7 @@ public abstract class ItemOverride : EntityOverride<Item>
     /// Will be 1.1 if the Titan Glove is equipped, and 1 otherwise.
     /// </param>
     public virtual void ModifyItemScale(Player player, ref float scale) { }
-    #endregion
+    #endregion ModifyStats
 
     #region Hit
     /// <summary>
@@ -976,7 +976,7 @@ public abstract class ItemOverride : EntityOverride<Item>
     /// Called on local, server and remote clients. <br/>
     /// </summary>
     public virtual void OnHitPvp(Player player, Player target, Player.HurtInfo hurtInfo) { }
-    #endregion
+    #endregion Hit
 
     #region SpecialEffects
     /// <summary>
@@ -1117,7 +1117,7 @@ public abstract class ItemOverride : EntityOverride<Item>
     /// <param name="slot">The inventory slot that the item is attempting to occupy.</param>
     /// <param name="modded">If the inventory slot index is for modded slots.</param>
     public virtual bool CanEquipAccessory(Player player, int slot, bool modded) => true;
-    #endregion
+    #endregion SpecialEffects
 
     #region Tooltip
     /// <summary>
@@ -1153,6 +1153,6 @@ public abstract class ItemOverride : EntityOverride<Item>
     /// Allows you to modify all the tooltips that display for the given item. See here for information about TooltipLine. To hide tooltips, please use <see cref="TooltipLine.Hide"/> and defensive coding.
     /// </summary>
     public virtual void ModifyTooltips(List<TooltipLine> tooltips) { }
-    #endregion
-    #endregion
+    #endregion Tooltip
+    #endregion 虚成员
 }

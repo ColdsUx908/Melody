@@ -1,7 +1,4 @@
-﻿using CalamityAnomalies;
-using CalamityAnomalies.Configs;
-using CalamityMod.CalPlayer;
-using CalamityMod.Items.Weapons.Melee;
+﻿using CalamityMod.Items.Weapons.Melee;
 using CalamityMod.NPCs.AstrumAureus;
 using CalamityMod.NPCs.BrimstoneElemental;
 using CalamityMod.NPCs.Bumblebirb;
@@ -94,7 +91,7 @@ public class MurasamaTweak : CAItemTweak<Murasama>
     {
         if (MurasamaUtils.IsSam(player))
         {
-            if (Main.zenithWorld && target.ModNPC is HiveTumor && TONPCUtils.AnyNPCs<HiveTumor>())
+            if (Main.zenithWorld && target.ModNPC is HiveTumor && NPC.AnyNPCs<HiveTumor>())
                 return false;
         }
 
@@ -268,7 +265,7 @@ public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
             case CryogenShield:
             case AnahitasIceShield:
             case AureusSpawn:
-            case Bumblefuck when CAUtils.PermaFrostActive || (TONPCUtils.AnyNPCs<Yharon>(out NPC yharon) && yharon.Ocean().LifeRatio <= 0.55f):
+            case Bumblefuck when CAUtils.PermaFrostActive || (NPC.AnyNPCs<Yharon>(out NPC yharon) && yharon.Ocean().LifeRatio <= 0.55f):
             case Bumblefuck2:
             case CeaselessVoid when target.Ocean().LifeRatio < 0.2f:
             case PhantomFuckYou:
@@ -349,7 +346,7 @@ public class MurasamaDetour : ModItemDetour<Murasama>
 {
     public override bool Detour_PreDrawInInventory(Orig_PreDrawInInventory orig, Murasama self, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
     {
-        if (!CAServerConfig.Instance.TweaksEnabled)
+        if (!CAMain.Tweak)
             return orig(self, spriteBatch, position, frame, drawColor, itemColor, origin, scale);
 
         Texture2D texture;
@@ -371,7 +368,7 @@ public class MurasamaDetour : ModItemDetour<Murasama>
 
     public override bool Detour_PreDrawInWorld(Orig_PreDrawInWorld orig, Murasama self, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
     {
-        if (!CAServerConfig.Instance.TweaksEnabled)
+        if (!CAMain.Tweak)
             return orig(self, spriteBatch, lightColor, alphaColor, ref rotation, ref scale, whoAmI);
 
         Texture2D texture;
@@ -392,14 +389,11 @@ public class MurasamaDetour : ModItemDetour<Murasama>
 
     public override void Detour_PostDrawInWorld(Orig_PostDrawInWorld orig, Murasama self, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, float rotation, float scale, int whoAmI)
     {
-        if (!CAServerConfig.Instance.TweaksEnabled)
+        if (!CAMain.Tweak || !MurasamaUtils.Unlocked(Main.LocalPlayer))
         {
             orig(self, spriteBatch, lightColor, alphaColor, rotation, scale, whoAmI);
             return;
         }
-
-        if (!MurasamaUtils.Unlocked(Main.LocalPlayer))
-            return;
 
         Texture2D texture = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Melee/MurasamaGlow").Value;
         spriteBatch.Draw(texture, self.Item.position - Main.screenPosition, self.Item.GetCurrentFrame(ref self.frame, ref self.frameCounter, 2, 13, false), Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
@@ -407,13 +401,10 @@ public class MurasamaDetour : ModItemDetour<Murasama>
 
     public override bool Detour_CanUseItem(Orig_CanUseItem orig, Murasama self, Player player)
     {
-        if (!CAServerConfig.Instance.TweaksEnabled)
+        if (!CAMain.Tweak)
             return orig(self, player);
 
-        if (player.ownedProjectileCounts[self.Item.shoot] > 0)
-            return false;
-
-        return MurasamaUtils.Unlocked(player);
+        return player.ownedProjectileCounts[self.Item.shoot] < 1 && MurasamaUtils.Unlocked(player);
     }
 }
 

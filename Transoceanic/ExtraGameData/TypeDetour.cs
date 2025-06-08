@@ -23,11 +23,11 @@ public abstract class TypeDetour<T> : TypeDetour
     /// 尝试将指定的Detour应用到 <see cref="T"/> 类型的方法上。
     /// </summary>
     /// <remarks>这个方法会检查当前类型中是否存在指定的方法，仅在存在时则应用Detour逻辑。</remarks>
-    /// <param name="methodName">待应用Detour的目标方法名。该参数必须是 <c>{methodNamePrefix}{methodName}</c> 的形式。</param>
-    /// <param name="detour">Detour逻辑的委托。该委托必须与目标方法的签名匹配。</param>
+    /// <param name="detour">Detour逻辑的委托。该委托必须是一个与目标方法的签名匹配的具名方法，且方法名必须是 <c>{methodNamePrefix}{methodName}</c> 的形式。</param>
     /// <param name="methodNamePrefix"><c>methodName</c> 应用的方法名前缀。</param>
-    protected void TryApplyDetour(string methodName, Delegate detour, string methodNamePrefix = "Detour_")
+    protected void TryApplyDetour(Delegate detour, string methodNamePrefix = "Detour_")
     {
+        string methodName = detour.Method.Name;
         Match match = Regex.Match(methodName, methodNamePrefix + @"(?<methodName>.*)$");
         if (match.Success && GetType().HasRealMethod(methodName, TOReflectionUtils.UniversalBindingFlags))
             TODetourUtils.ModifyMethodWithDetour<T>(match.Groups["methodName"].Value, detour);
@@ -58,11 +58,11 @@ public abstract class ModTypeDetour<T> : TypeDetour<T>
 
     public override void Load()
     {
-        TryApplyDetour(nameof(Detour_Load), Detour_Load);
-        TryApplyDetour(nameof(Detour_IsLoadingEnabled), Detour_IsLoadingEnabled);
-        TryApplyDetour(nameof(Detour_SetupContent), Detour_SetupContent);
-        TryApplyDetour(nameof(Detour_SetStaticDefaults), Detour_SetStaticDefaults);
-        TryApplyDetour(nameof(Detour_Unload), Detour_Unload);
+        TryApplyDetour(Detour_Load);
+        TryApplyDetour(Detour_IsLoadingEnabled);
+        TryApplyDetour(Detour_SetupContent);
+        TryApplyDetour(Detour_SetStaticDefaults);
+        TryApplyDetour(Detour_Unload);
     }
 }
 
@@ -147,25 +147,25 @@ public abstract class ModAccessorySlotDetour<T> : ModTypeDetour<T> where T : Mod
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_CustomLocation), Detour_CustomLocation);
-        TryApplyDetour(nameof(Detour_DyeBackgroundTexture), Detour_DyeBackgroundTexture);
-        TryApplyDetour(nameof(Detour_VanityBackgroundTexture), Detour_VanityBackgroundTexture);
-        TryApplyDetour(nameof(Detour_FunctionalBackgroundTexture), Detour_FunctionalBackgroundTexture);
-        TryApplyDetour(nameof(Detour_DyeTexture), Detour_DyeTexture);
-        TryApplyDetour(nameof(Detour_VanityTexture), Detour_VanityTexture);
-        TryApplyDetour(nameof(Detour_FunctionalTexture), Detour_FunctionalTexture);
-        TryApplyDetour(nameof(Detour_DrawFunctionalSlot), Detour_DrawFunctionalSlot);
-        TryApplyDetour(nameof(Detour_DrawVanitySlot), Detour_DrawVanitySlot);
-        TryApplyDetour(nameof(Detour_DrawDyeSlot), Detour_DrawDyeSlot);
-        TryApplyDetour(nameof(Detour_PreDraw), Detour_PreDraw);
-        TryApplyDetour(nameof(Detour_PostDraw), Detour_PostDraw);
-        TryApplyDetour(nameof(Detour_ApplyEquipEffects), Detour_ApplyEquipEffects);
-        TryApplyDetour(nameof(Detour_CanAcceptItem), Detour_CanAcceptItem);
-        TryApplyDetour(nameof(Detour_ModifyDefaultSwapSlot), Detour_ModifyDefaultSwapSlot);
-        TryApplyDetour(nameof(Detour_IsHidden), Detour_IsHidden);
-        TryApplyDetour(nameof(Detour_IsEnabled), Detour_IsEnabled);
-        TryApplyDetour(nameof(Detour_IsVisibleWhenNotEnabled), Detour_IsVisibleWhenNotEnabled);
-        TryApplyDetour(nameof(Detour_OnMouseHover), Detour_OnMouseHover);
+        TryApplyDetour(Detour_CustomLocation);
+        TryApplyDetour(Detour_DyeBackgroundTexture);
+        TryApplyDetour(Detour_VanityBackgroundTexture);
+        TryApplyDetour(Detour_FunctionalBackgroundTexture);
+        TryApplyDetour(Detour_DyeTexture);
+        TryApplyDetour(Detour_VanityTexture);
+        TryApplyDetour(Detour_FunctionalTexture);
+        TryApplyDetour(Detour_DrawFunctionalSlot);
+        TryApplyDetour(Detour_DrawVanitySlot);
+        TryApplyDetour(Detour_DrawDyeSlot);
+        TryApplyDetour(Detour_PreDraw);
+        TryApplyDetour(Detour_PostDraw);
+        TryApplyDetour(Detour_ApplyEquipEffects);
+        TryApplyDetour(Detour_CanAcceptItem);
+        TryApplyDetour(Detour_ModifyDefaultSwapSlot);
+        TryApplyDetour(Detour_IsHidden);
+        TryApplyDetour(Detour_IsEnabled);
+        TryApplyDetour(Detour_IsVisibleWhenNotEnabled);
+        TryApplyDetour(Detour_OnMouseHover);
     }
 }
 
@@ -216,16 +216,16 @@ public abstract class ModBiomeDetour<T> : ModSceneEffectDetour<T> where T : ModB
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_BiomeTorchItemType), Detour_BiomeTorchItemType);
-        TryApplyDetour(nameof(Detour_BiomeCampfireItemType), Detour_BiomeCampfireItemType);
-        TryApplyDetour(nameof(Detour_DisplayName), Detour_DisplayName);
-        TryApplyDetour(nameof(Detour_BestiaryIcon), Detour_BestiaryIcon);
-        TryApplyDetour(nameof(Detour_BackgroundPath), Detour_BackgroundPath);
-        TryApplyDetour(nameof(Detour_BackgroundColor), Detour_BackgroundColor);
-        TryApplyDetour(nameof(Detour_IsBiomeActive), Detour_IsBiomeActive);
-        TryApplyDetour(nameof(Detour_OnEnter), Detour_OnEnter);
-        TryApplyDetour(nameof(Detour_OnInBiome), Detour_OnInBiome);
-        TryApplyDetour(nameof(Detour_OnLeave), Detour_OnLeave);
+        TryApplyDetour(Detour_BiomeTorchItemType);
+        TryApplyDetour(Detour_BiomeCampfireItemType);
+        TryApplyDetour(Detour_DisplayName);
+        TryApplyDetour(Detour_BestiaryIcon);
+        TryApplyDetour(Detour_BackgroundPath);
+        TryApplyDetour(Detour_BackgroundColor);
+        TryApplyDetour(Detour_IsBiomeActive);
+        TryApplyDetour(Detour_OnEnter);
+        TryApplyDetour(Detour_OnInBiome);
+        TryApplyDetour(Detour_OnLeave);
     }
 }
 
@@ -238,7 +238,7 @@ public abstract class ModBiomeConversionDetour<T> : ModTypeDetour<T> where T : M
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_PostSetupContent), Detour_PostSetupContent);
+        TryApplyDetour(Detour_PostSetupContent);
     }
 }
 
@@ -295,18 +295,18 @@ public abstract class ModBlockTypeDetour<T> : ModTypeDetour<T> where T : ModBloc
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_GetMapOption), Detour_GetMapOption);
-        TryApplyDetour(nameof(Detour_KillSound), Detour_KillSound);
-        TryApplyDetour(nameof(Detour_NumDust), Detour_NumDust);
-        TryApplyDetour(nameof(Detour_CreateDust), Detour_CreateDust);
-        TryApplyDetour(nameof(Detour_CanPlace), Detour_CanPlace);
-        TryApplyDetour(nameof(Detour_CanExplode), Detour_CanExplode);
-        TryApplyDetour(nameof(Detour_PreDraw), Detour_PreDraw);
-        TryApplyDetour(nameof(Detour_PostDraw), Detour_PostDraw);
-        TryApplyDetour(nameof(Detour_RandomUpdate), Detour_RandomUpdate);
-        TryApplyDetour(nameof(Detour_PlaceInWorld), Detour_PlaceInWorld);
-        TryApplyDetour(nameof(Detour_ModifyLight), Detour_ModifyLight);
-        TryApplyDetour(nameof(Detour_Convert), Detour_Convert);
+        TryApplyDetour(Detour_GetMapOption);
+        TryApplyDetour(Detour_KillSound);
+        TryApplyDetour(Detour_NumDust);
+        TryApplyDetour(Detour_CreateDust);
+        TryApplyDetour(Detour_CanPlace);
+        TryApplyDetour(Detour_CanExplode);
+        TryApplyDetour(Detour_PreDraw);
+        TryApplyDetour(Detour_PostDraw);
+        TryApplyDetour(Detour_RandomUpdate);
+        TryApplyDetour(Detour_PlaceInWorld);
+        TryApplyDetour(Detour_ModifyLight);
+        TryApplyDetour(Detour_Convert);
     }
 }
 
@@ -327,9 +327,9 @@ public abstract class ModBossBarDetour<T> : ModTypeDetour<T> where T : ModBossBa
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_ModifyInfo), Detour_ModifyInfo);
-        TryApplyDetour(nameof(Detour_PreDraw), Detour_PreDraw);
-        TryApplyDetour(nameof(Detour_PostDraw), Detour_PostDraw);
+        TryApplyDetour(Detour_ModifyInfo);
+        TryApplyDetour(Detour_PreDraw);
+        TryApplyDetour(Detour_PostDraw);
     }
 }
 
@@ -354,10 +354,10 @@ public abstract class ModBossBarStyleDetour<T> : ModTypeDetour<T> where T : ModB
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_Update), Detour_Update);
-        TryApplyDetour(nameof(Detour_OnSelected), Detour_OnSelected);
-        TryApplyDetour(nameof(Detour_OnDeselected), Detour_OnDeselected);
-        TryApplyDetour(nameof(Detour_Draw), Detour_Draw);
+        TryApplyDetour(Detour_Update);
+        TryApplyDetour(Detour_OnSelected);
+        TryApplyDetour(Detour_OnDeselected);
+        TryApplyDetour(Detour_Draw);
     }
 }
 
@@ -398,14 +398,14 @@ public abstract class ModBuffDetour<T> : ModTypeDetour<T> where T : ModBuff
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_UpdatePlayer), Detour_UpdatePlayer);
-        TryApplyDetour(nameof(Detour_UpdateNPC), Detour_UpdateNPC);
-        TryApplyDetour(nameof(Detour_ReApplyPlayer), Detour_ReApplyPlayer);
-        TryApplyDetour(nameof(Detour_ReApplyNPC), Detour_ReApplyNPC);
-        TryApplyDetour(nameof(Detour_ModifyBuffText), Detour_ModifyBuffText);
-        TryApplyDetour(nameof(Detour_PreDraw), Detour_PreDraw);
-        TryApplyDetour(nameof(Detour_PostDraw), Detour_PostDraw);
-        TryApplyDetour(nameof(Detour_RightClick), Detour_RightClick);
+        TryApplyDetour(Detour_UpdatePlayer);
+        TryApplyDetour(Detour_UpdateNPC);
+        TryApplyDetour(Detour_ReApplyPlayer);
+        TryApplyDetour(Detour_ReApplyNPC);
+        TryApplyDetour(Detour_ModifyBuffText);
+        TryApplyDetour(Detour_PreDraw);
+        TryApplyDetour(Detour_PostDraw);
+        TryApplyDetour(Detour_RightClick);
     }
 }
 
@@ -426,9 +426,9 @@ public abstract class ModCactusDetour<T> : TypeDetour<T> where T : ModCactus
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_SetStaticDefaults), Detour_SetStaticDefaults);
-        TryApplyDetour(nameof(Detour_GetTexture), Detour_GetTexture);
-        TryApplyDetour(nameof(Detour_GetFruitTexture), Detour_GetFruitTexture);
+        TryApplyDetour(Detour_SetStaticDefaults);
+        TryApplyDetour(Detour_GetTexture);
+        TryApplyDetour(Detour_GetFruitTexture);
     }
 }
 
@@ -449,9 +449,9 @@ public abstract class ModCloudDetour<T> : ModTypeDetour<T> where T : ModCloud
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_SpawnChance), Detour_SpawnChance);
-        TryApplyDetour(nameof(Detour_OnSpawn), Detour_OnSpawn);
-        TryApplyDetour(nameof(Detour_Draw), Detour_Draw);
+        TryApplyDetour(Detour_SpawnChance);
+        TryApplyDetour(Detour_OnSpawn);
+        TryApplyDetour(Detour_Draw);
     }
 }
 
@@ -464,7 +464,7 @@ public abstract class ModCommandDetour<T> : ModTypeDetour<T> where T : ModComman
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_Action), Detour_Action);
+        TryApplyDetour(Detour_Action);
     }
 }
 
@@ -493,11 +493,11 @@ public abstract class ModDustDetour<T> : ModTypeDetour<T> where T : ModDust
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_PreDraw), Detour_PreDraw);
-        TryApplyDetour(nameof(Detour_OnSpawn), Detour_OnSpawn);
-        TryApplyDetour(nameof(Detour_Update), Detour_Update);
-        TryApplyDetour(nameof(Detour_MidUpdate), Detour_MidUpdate);
-        TryApplyDetour(nameof(Detour_GetAlpha), Detour_GetAlpha);
+        TryApplyDetour(Detour_PreDraw);
+        TryApplyDetour(Detour_OnSpawn);
+        TryApplyDetour(Detour_Update);
+        TryApplyDetour(Detour_MidUpdate);
+        TryApplyDetour(Detour_GetAlpha);
     }
 }
 
@@ -546,16 +546,16 @@ public abstract class ModEmoteBubbleDetour<T> : ModTypeDetour<T> where T : ModEm
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_IsUnlocked), Detour_IsUnlocked);
-        TryApplyDetour(nameof(Detour_OnSpawn), Detour_OnSpawn);
-        TryApplyDetour(nameof(Detour_UpdateFrame), Detour_UpdateFrame);
-        TryApplyDetour(nameof(Detour_UpdateFrameInEmoteMenu), Detour_UpdateFrameInEmoteMenu);
-        TryApplyDetour(nameof(Detour_PreDraw), Detour_PreDraw);
-        TryApplyDetour(nameof(Detour_PostDraw), Detour_PostDraw);
-        TryApplyDetour(nameof(Detour_PreDrawInEmoteMenu), Detour_PreDrawInEmoteMenu);
-        TryApplyDetour(nameof(Detour_PostDrawInEmoteMenu), Detour_PostDrawInEmoteMenu);
-        TryApplyDetour(nameof(Detour_GetFrame), Detour_GetFrame);
-        TryApplyDetour(nameof(Detour_GetFrameInEmoteMenu), Detour_GetFrameInEmoteMenu);
+        TryApplyDetour(Detour_IsUnlocked);
+        TryApplyDetour(Detour_OnSpawn);
+        TryApplyDetour(Detour_UpdateFrame);
+        TryApplyDetour(Detour_UpdateFrameInEmoteMenu);
+        TryApplyDetour(Detour_PreDraw);
+        TryApplyDetour(Detour_PostDraw);
+        TryApplyDetour(Detour_PreDrawInEmoteMenu);
+        TryApplyDetour(Detour_PostDrawInEmoteMenu);
+        TryApplyDetour(Detour_GetFrame);
+        TryApplyDetour(Detour_GetFrameInEmoteMenu);
     }
 }
 
@@ -576,9 +576,9 @@ public abstract class ModGoreDetour<T> : ModTypeDetour<T> where T : ModGore
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_OnSpawn), Detour_OnSpawn);
-        TryApplyDetour(nameof(Detour_Update), Detour_Update);
-        TryApplyDetour(nameof(Detour_GetAlpha), Detour_GetAlpha);
+        TryApplyDetour(Detour_OnSpawn);
+        TryApplyDetour(Detour_Update);
+        TryApplyDetour(Detour_GetAlpha);
     }
 }
 
@@ -595,8 +595,8 @@ public abstract class ModHairDetour<T> : ModTypeDetour<T> where T : ModHair
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_AutoStaticDefaults), Detour_AutoStaticDefaults);
-        TryApplyDetour(nameof(Detour_GetUnlockConditions), Detour_GetUnlockConditions);
+        TryApplyDetour(Detour_AutoStaticDefaults);
+        TryApplyDetour(Detour_GetUnlockConditions);
     }
 }
 
@@ -1097,129 +1097,129 @@ public abstract class ModItemDetour<T> : ModTypeDetour<T> where T : ModItem
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_SetDefaults), Detour_SetDefaults);
-        TryApplyDetour(nameof(Detour_OnSpawn), Detour_OnSpawn);
-        TryApplyDetour(nameof(Detour_OnCreated), Detour_OnCreated);
-        TryApplyDetour(nameof(Detour_AutoDefaults), Detour_AutoDefaults);
-        TryApplyDetour(nameof(Detour_AutoStaticDefaults), Detour_AutoStaticDefaults);
-        TryApplyDetour(nameof(Detour_ChoosePrefix), Detour_ChoosePrefix);
-        TryApplyDetour(nameof(Detour_MeleePrefix), Detour_MeleePrefix);
-        TryApplyDetour(nameof(Detour_WeaponPrefix), Detour_WeaponPrefix);
-        TryApplyDetour(nameof(Detour_RangedPrefix), Detour_RangedPrefix);
-        TryApplyDetour(nameof(Detour_MagicPrefix), Detour_MagicPrefix);
-        TryApplyDetour(nameof(Detour_PrefixChance), Detour_PrefixChance);
-        TryApplyDetour(nameof(Detour_AllowPrefix), Detour_AllowPrefix);
-        TryApplyDetour(nameof(Detour_CanUseItem), Detour_CanUseItem);
-        TryApplyDetour(nameof(Detour_CanAutoReuseItem), Detour_CanAutoReuseItem);
-        TryApplyDetour(nameof(Detour_UseStyle), Detour_UseStyle);
-        TryApplyDetour(nameof(Detour_HoldStyle), Detour_HoldStyle);
-        TryApplyDetour(nameof(Detour_HoldItem), Detour_HoldItem);
-        TryApplyDetour(nameof(Detour_UseTimeMultiplier), Detour_UseTimeMultiplier);
-        TryApplyDetour(nameof(Detour_UseAnimationMultiplier), Detour_UseAnimationMultiplier);
-        TryApplyDetour(nameof(Detour_UseSpeedMultiplier), Detour_UseSpeedMultiplier);
-        TryApplyDetour(nameof(Detour_GetHealLife), Detour_GetHealLife);
-        TryApplyDetour(nameof(Detour_GetHealMana), Detour_GetHealMana);
-        TryApplyDetour(nameof(Detour_ModifyManaCost), Detour_ModifyManaCost);
-        TryApplyDetour(nameof(Detour_OnMissingMana), Detour_OnMissingMana);
-        TryApplyDetour(nameof(Detour_OnConsumeMana), Detour_OnConsumeMana);
-        TryApplyDetour(nameof(Detour_ModifyWeaponDamage), Detour_ModifyWeaponDamage);
-        TryApplyDetour(nameof(Detour_ModifyResearchSorting), Detour_ModifyResearchSorting);
-        TryApplyDetour(nameof(Detour_CanConsumeBait), Detour_CanConsumeBait);
-        TryApplyDetour(nameof(Detour_CanResearch), Detour_CanResearch);
-        TryApplyDetour(nameof(Detour_OnResearched), Detour_OnResearched);
-        TryApplyDetour(nameof(Detour_ModifyWeaponKnockback), Detour_ModifyWeaponKnockback);
-        TryApplyDetour(nameof(Detour_ModifyWeaponCrit), Detour_ModifyWeaponCrit);
-        TryApplyDetour(nameof(Detour_NeedsAmmo), Detour_NeedsAmmo);
-        TryApplyDetour(nameof(Detour_PickAmmo), Detour_PickAmmo);
-        TryApplyDetour(nameof(Detour_CanChooseAmmo), Detour_CanChooseAmmo);
-        TryApplyDetour(nameof(Detour_CanBeChosenAsAmmo), Detour_CanBeChosenAsAmmo);
-        TryApplyDetour(nameof(Detour_CanConsumeAmmo), Detour_CanConsumeAmmo);
-        TryApplyDetour(nameof(Detour_CanBeConsumedAsAmmo), Detour_CanBeConsumedAsAmmo);
-        TryApplyDetour(nameof(Detour_OnConsumeAmmo), Detour_OnConsumeAmmo);
-        TryApplyDetour(nameof(Detour_OnConsumedAsAmmo), Detour_OnConsumedAsAmmo);
-        TryApplyDetour(nameof(Detour_CanShoot), Detour_CanShoot);
-        TryApplyDetour(nameof(Detour_ModifyShootStats), Detour_ModifyShootStats);
-        TryApplyDetour(nameof(Detour_Shoot), Detour_Shoot);
-        TryApplyDetour(nameof(Detour_UseItemHitbox), Detour_UseItemHitbox);
-        TryApplyDetour(nameof(Detour_MeleeEffects), Detour_MeleeEffects);
-        TryApplyDetour(nameof(Detour_CanCatchNPC), Detour_CanCatchNPC);
-        TryApplyDetour(nameof(Detour_OnCatchNPC), Detour_OnCatchNPC);
-        TryApplyDetour(nameof(Detour_ModifyItemScale), Detour_ModifyItemScale);
-        TryApplyDetour(nameof(Detour_CanHitNPC), Detour_CanHitNPC);
-        TryApplyDetour(nameof(Detour_CanMeleeAttackCollideWithNPC), Detour_CanMeleeAttackCollideWithNPC);
-        TryApplyDetour(nameof(Detour_ModifyHitNPC), Detour_ModifyHitNPC);
-        TryApplyDetour(nameof(Detour_OnHitNPC), Detour_OnHitNPC);
-        TryApplyDetour(nameof(Detour_CanHitPvp), Detour_CanHitPvp);
-        TryApplyDetour(nameof(Detour_ModifyHitPvp), Detour_ModifyHitPvp);
-        TryApplyDetour(nameof(Detour_OnHitPvp), Detour_OnHitPvp);
-        TryApplyDetour(nameof(Detour_UseItem), Detour_UseItem);
-        TryApplyDetour(nameof(Detour_UseAnimation), Detour_UseAnimation);
-        TryApplyDetour(nameof(Detour_ConsumeItem), Detour_ConsumeItem);
-        TryApplyDetour(nameof(Detour_OnConsumeItem), Detour_OnConsumeItem);
-        TryApplyDetour(nameof(Detour_UseItemFrame), Detour_UseItemFrame);
-        TryApplyDetour(nameof(Detour_HoldItemFrame), Detour_HoldItemFrame);
-        TryApplyDetour(nameof(Detour_AltFunctionUse), Detour_AltFunctionUse);
-        TryApplyDetour(nameof(Detour_UpdateInventory), Detour_UpdateInventory);
-        TryApplyDetour(nameof(Detour_UpdateInfoAccessory), Detour_UpdateInfoAccessory);
-        TryApplyDetour(nameof(Detour_UpdateEquip), Detour_UpdateEquip);
-        TryApplyDetour(nameof(Detour_UpdateAccessory), Detour_UpdateAccessory);
-        TryApplyDetour(nameof(Detour_UpdateVanity), Detour_UpdateVanity);
-        TryApplyDetour(nameof(Detour_EquipFrameEffects), Detour_EquipFrameEffects);
-        TryApplyDetour(nameof(Detour_IsArmorSet), Detour_IsArmorSet);
-        TryApplyDetour(nameof(Detour_UpdateArmorSet), Detour_UpdateArmorSet);
-        TryApplyDetour(nameof(Detour_IsVanitySet), Detour_IsVanitySet);
-        TryApplyDetour(nameof(Detour_PreUpdateVanitySet), Detour_PreUpdateVanitySet);
-        TryApplyDetour(nameof(Detour_UpdateVanitySet), Detour_UpdateVanitySet);
-        TryApplyDetour(nameof(Detour_ArmorSetShadows), Detour_ArmorSetShadows);
-        TryApplyDetour(nameof(Detour_SetMatch), Detour_SetMatch);
-        TryApplyDetour(nameof(Detour_CanRightClick), Detour_CanRightClick);
-        TryApplyDetour(nameof(Detour_RightClick), Detour_RightClick);
-        TryApplyDetour(nameof(Detour_ModifyItemLoot), Detour_ModifyItemLoot);
-        TryApplyDetour(nameof(Detour_CanStack), Detour_CanStack);
-        TryApplyDetour(nameof(Detour_CanStackInWorld), Detour_CanStackInWorld);
-        TryApplyDetour(nameof(Detour_OnStack), Detour_OnStack);
-        TryApplyDetour(nameof(Detour_SplitStack), Detour_SplitStack);
-        TryApplyDetour(nameof(Detour_ReforgePrice), Detour_ReforgePrice);
-        TryApplyDetour(nameof(Detour_CanReforge), Detour_CanReforge);
-        TryApplyDetour(nameof(Detour_PreReforge), Detour_PreReforge);
-        TryApplyDetour(nameof(Detour_PostReforge), Detour_PostReforge);
-        TryApplyDetour(nameof(Detour_DrawArmorColor), Detour_DrawArmorColor);
-        TryApplyDetour(nameof(Detour_ArmorArmGlowMask), Detour_ArmorArmGlowMask);
-        TryApplyDetour(nameof(Detour_VerticalWingSpeeds), Detour_VerticalWingSpeeds);
-        TryApplyDetour(nameof(Detour_HorizontalWingSpeeds), Detour_HorizontalWingSpeeds);
-        TryApplyDetour(nameof(Detour_WingUpdate), Detour_WingUpdate);
-        TryApplyDetour(nameof(Detour_Update), Detour_Update);
-        TryApplyDetour(nameof(Detour_PostUpdate), Detour_PostUpdate);
-        TryApplyDetour(nameof(Detour_GrabRange), Detour_GrabRange);
-        TryApplyDetour(nameof(Detour_GrabStyle), Detour_GrabStyle);
-        TryApplyDetour(nameof(Detour_CanPickup), Detour_CanPickup);
-        TryApplyDetour(nameof(Detour_OnPickup), Detour_OnPickup);
-        TryApplyDetour(nameof(Detour_ItemSpace), Detour_ItemSpace);
-        TryApplyDetour(nameof(Detour_GetAlpha), Detour_GetAlpha);
-        TryApplyDetour(nameof(Detour_PreDrawInWorld), Detour_PreDrawInWorld);
-        TryApplyDetour(nameof(Detour_PostDrawInWorld), Detour_PostDrawInWorld);
-        TryApplyDetour(nameof(Detour_PreDrawInInventory), Detour_PreDrawInInventory);
-        TryApplyDetour(nameof(Detour_PostDrawInInventory), Detour_PostDrawInInventory);
-        TryApplyDetour(nameof(Detour_HoldoutOffset), Detour_HoldoutOffset);
-        TryApplyDetour(nameof(Detour_HoldoutOrigin), Detour_HoldoutOrigin);
-        TryApplyDetour(nameof(Detour_CanEquipAccessory), Detour_CanEquipAccessory);
-        TryApplyDetour(nameof(Detour_CanAccessoryBeEquippedWith), Detour_CanAccessoryBeEquippedWith);
-        TryApplyDetour(nameof(Detour_ExtractinatorUse), Detour_ExtractinatorUse);
-        TryApplyDetour(nameof(Detour_ModifyFishingLine), Detour_ModifyFishingLine);
-        TryApplyDetour(nameof(Detour_CaughtFishStack), Detour_CaughtFishStack);
-        TryApplyDetour(nameof(Detour_IsQuestFish), Detour_IsQuestFish);
-        TryApplyDetour(nameof(Detour_IsAnglerQuestAvailable), Detour_IsAnglerQuestAvailable);
-        TryApplyDetour(nameof(Detour_AnglerQuestChat), Detour_AnglerQuestChat);
-        TryApplyDetour(nameof(Detour_SaveData), Detour_SaveData);
-        TryApplyDetour(nameof(Detour_LoadData), Detour_LoadData);
-        TryApplyDetour(nameof(Detour_NetSend), Detour_NetSend);
-        TryApplyDetour(nameof(Detour_NetReceive), Detour_NetReceive);
-        TryApplyDetour(nameof(Detour_AddRecipes), Detour_AddRecipes);
-        TryApplyDetour(nameof(Detour_PreDrawTooltip), Detour_PreDrawTooltip);
-        TryApplyDetour(nameof(Detour_PostDrawTooltip), Detour_PostDrawTooltip);
-        TryApplyDetour(nameof(Detour_PreDrawTooltipLine), Detour_PreDrawTooltipLine);
-        TryApplyDetour(nameof(Detour_PostDrawTooltipLine), Detour_PostDrawTooltipLine);
-        TryApplyDetour(nameof(Detour_ModifyTooltips), Detour_ModifyTooltips);
+        TryApplyDetour(Detour_SetDefaults);
+        TryApplyDetour(Detour_OnSpawn);
+        TryApplyDetour(Detour_OnCreated);
+        TryApplyDetour(Detour_AutoDefaults);
+        TryApplyDetour(Detour_AutoStaticDefaults);
+        TryApplyDetour(Detour_ChoosePrefix);
+        TryApplyDetour(Detour_MeleePrefix);
+        TryApplyDetour(Detour_WeaponPrefix);
+        TryApplyDetour(Detour_RangedPrefix);
+        TryApplyDetour(Detour_MagicPrefix);
+        TryApplyDetour(Detour_PrefixChance);
+        TryApplyDetour(Detour_AllowPrefix);
+        TryApplyDetour(Detour_CanUseItem);
+        TryApplyDetour(Detour_CanAutoReuseItem);
+        TryApplyDetour(Detour_UseStyle);
+        TryApplyDetour(Detour_HoldStyle);
+        TryApplyDetour(Detour_HoldItem);
+        TryApplyDetour(Detour_UseTimeMultiplier);
+        TryApplyDetour(Detour_UseAnimationMultiplier);
+        TryApplyDetour(Detour_UseSpeedMultiplier);
+        TryApplyDetour(Detour_GetHealLife);
+        TryApplyDetour(Detour_GetHealMana);
+        TryApplyDetour(Detour_ModifyManaCost);
+        TryApplyDetour(Detour_OnMissingMana);
+        TryApplyDetour(Detour_OnConsumeMana);
+        TryApplyDetour(Detour_ModifyWeaponDamage);
+        TryApplyDetour(Detour_ModifyResearchSorting);
+        TryApplyDetour(Detour_CanConsumeBait);
+        TryApplyDetour(Detour_CanResearch);
+        TryApplyDetour(Detour_OnResearched);
+        TryApplyDetour(Detour_ModifyWeaponKnockback);
+        TryApplyDetour(Detour_ModifyWeaponCrit);
+        TryApplyDetour(Detour_NeedsAmmo);
+        TryApplyDetour(Detour_PickAmmo);
+        TryApplyDetour(Detour_CanChooseAmmo);
+        TryApplyDetour(Detour_CanBeChosenAsAmmo);
+        TryApplyDetour(Detour_CanConsumeAmmo);
+        TryApplyDetour(Detour_CanBeConsumedAsAmmo);
+        TryApplyDetour(Detour_OnConsumeAmmo);
+        TryApplyDetour(Detour_OnConsumedAsAmmo);
+        TryApplyDetour(Detour_CanShoot);
+        TryApplyDetour(Detour_ModifyShootStats);
+        TryApplyDetour(Detour_Shoot);
+        TryApplyDetour(Detour_UseItemHitbox);
+        TryApplyDetour(Detour_MeleeEffects);
+        TryApplyDetour(Detour_CanCatchNPC);
+        TryApplyDetour(Detour_OnCatchNPC);
+        TryApplyDetour(Detour_ModifyItemScale);
+        TryApplyDetour(Detour_CanHitNPC);
+        TryApplyDetour(Detour_CanMeleeAttackCollideWithNPC);
+        TryApplyDetour(Detour_ModifyHitNPC);
+        TryApplyDetour(Detour_OnHitNPC);
+        TryApplyDetour(Detour_CanHitPvp);
+        TryApplyDetour(Detour_ModifyHitPvp);
+        TryApplyDetour(Detour_OnHitPvp);
+        TryApplyDetour(Detour_UseItem);
+        TryApplyDetour(Detour_UseAnimation);
+        TryApplyDetour(Detour_ConsumeItem);
+        TryApplyDetour(Detour_OnConsumeItem);
+        TryApplyDetour(Detour_UseItemFrame);
+        TryApplyDetour(Detour_HoldItemFrame);
+        TryApplyDetour(Detour_AltFunctionUse);
+        TryApplyDetour(Detour_UpdateInventory);
+        TryApplyDetour(Detour_UpdateInfoAccessory);
+        TryApplyDetour(Detour_UpdateEquip);
+        TryApplyDetour(Detour_UpdateAccessory);
+        TryApplyDetour(Detour_UpdateVanity);
+        TryApplyDetour(Detour_EquipFrameEffects);
+        TryApplyDetour(Detour_IsArmorSet);
+        TryApplyDetour(Detour_UpdateArmorSet);
+        TryApplyDetour(Detour_IsVanitySet);
+        TryApplyDetour(Detour_PreUpdateVanitySet);
+        TryApplyDetour(Detour_UpdateVanitySet);
+        TryApplyDetour(Detour_ArmorSetShadows);
+        TryApplyDetour(Detour_SetMatch);
+        TryApplyDetour(Detour_CanRightClick);
+        TryApplyDetour(Detour_RightClick);
+        TryApplyDetour(Detour_ModifyItemLoot);
+        TryApplyDetour(Detour_CanStack);
+        TryApplyDetour(Detour_CanStackInWorld);
+        TryApplyDetour(Detour_OnStack);
+        TryApplyDetour(Detour_SplitStack);
+        TryApplyDetour(Detour_ReforgePrice);
+        TryApplyDetour(Detour_CanReforge);
+        TryApplyDetour(Detour_PreReforge);
+        TryApplyDetour(Detour_PostReforge);
+        TryApplyDetour(Detour_DrawArmorColor);
+        TryApplyDetour(Detour_ArmorArmGlowMask);
+        TryApplyDetour(Detour_VerticalWingSpeeds);
+        TryApplyDetour(Detour_HorizontalWingSpeeds);
+        TryApplyDetour(Detour_WingUpdate);
+        TryApplyDetour(Detour_Update);
+        TryApplyDetour(Detour_PostUpdate);
+        TryApplyDetour(Detour_GrabRange);
+        TryApplyDetour(Detour_GrabStyle);
+        TryApplyDetour(Detour_CanPickup);
+        TryApplyDetour(Detour_OnPickup);
+        TryApplyDetour(Detour_ItemSpace);
+        TryApplyDetour(Detour_GetAlpha);
+        TryApplyDetour(Detour_PreDrawInWorld);
+        TryApplyDetour(Detour_PostDrawInWorld);
+        TryApplyDetour(Detour_PreDrawInInventory);
+        TryApplyDetour(Detour_PostDrawInInventory);
+        TryApplyDetour(Detour_HoldoutOffset);
+        TryApplyDetour(Detour_HoldoutOrigin);
+        TryApplyDetour(Detour_CanEquipAccessory);
+        TryApplyDetour(Detour_CanAccessoryBeEquippedWith);
+        TryApplyDetour(Detour_ExtractinatorUse);
+        TryApplyDetour(Detour_ModifyFishingLine);
+        TryApplyDetour(Detour_CaughtFishStack);
+        TryApplyDetour(Detour_IsQuestFish);
+        TryApplyDetour(Detour_IsAnglerQuestAvailable);
+        TryApplyDetour(Detour_AnglerQuestChat);
+        TryApplyDetour(Detour_SaveData);
+        TryApplyDetour(Detour_LoadData);
+        TryApplyDetour(Detour_NetSend);
+        TryApplyDetour(Detour_NetReceive);
+        TryApplyDetour(Detour_AddRecipes);
+        TryApplyDetour(Detour_PreDrawTooltip);
+        TryApplyDetour(Detour_PostDrawTooltip);
+        TryApplyDetour(Detour_PreDrawTooltipLine);
+        TryApplyDetour(Detour_PostDrawTooltipLine);
+        TryApplyDetour(Detour_ModifyTooltips);
     }
 }
 
@@ -1232,7 +1232,7 @@ public abstract class ModKeybindDetour<T> : TypeDetour<T> where T : ModKeybind
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_GetAssignedKeys), Detour_GetAssignedKeys);
+        TryApplyDetour(Detour_GetAssignedKeys);
     }
 }
 
@@ -1253,9 +1253,9 @@ public abstract class ModMapLayerDetour<T> : ModTypeDetour<T> where T : ModMapLa
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_GetDefaultPosition), Detour_GetDefaultPosition);
-        TryApplyDetour(nameof(Detour_GetModdedConstraints), Detour_GetModdedConstraints);
-        TryApplyDetour(nameof(Detour_Draw), Detour_Draw);
+        TryApplyDetour(Detour_GetDefaultPosition);
+        TryApplyDetour(Detour_GetModdedConstraints);
+        TryApplyDetour(Detour_Draw);
     }
 }
 
@@ -1284,11 +1284,11 @@ public abstract class ModMenuDetour<T> : ModTypeDetour<T> where T : ModMenu
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_OnSelected), Detour_OnSelected);
-        TryApplyDetour(nameof(Detour_OnDeselected), Detour_OnDeselected);
-        TryApplyDetour(nameof(Detour_Update), Detour_Update);
-        TryApplyDetour(nameof(Detour_PreDrawLogo), Detour_PreDrawLogo);
-        TryApplyDetour(nameof(Detour_PostDrawLogo), Detour_PostDrawLogo);
+        TryApplyDetour(Detour_OnSelected);
+        TryApplyDetour(Detour_OnDeselected);
+        TryApplyDetour(Detour_Update);
+        TryApplyDetour(Detour_PreDrawLogo);
+        TryApplyDetour(Detour_PostDrawLogo);
     }
 }
 
@@ -1333,15 +1333,15 @@ public abstract class ModMountDetour<T> : ModTypeDetour<T> where T : ModMount
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_JumpHeight), Detour_JumpHeight);
-        TryApplyDetour(nameof(Detour_JumpSpeed), Detour_JumpSpeed);
-        TryApplyDetour(nameof(Detour_UpdateEffects), Detour_UpdateEffects);
-        TryApplyDetour(nameof(Detour_UpdateFrame), Detour_UpdateFrame);
-        TryApplyDetour(nameof(Detour_UseAbility), Detour_UseAbility);
-        TryApplyDetour(nameof(Detour_AimAbility), Detour_AimAbility);
-        TryApplyDetour(nameof(Detour_SetMount), Detour_SetMount);
-        TryApplyDetour(nameof(Detour_Dismount), Detour_Dismount);
-        TryApplyDetour(nameof(Detour_Draw), Detour_Draw);
+        TryApplyDetour(Detour_JumpHeight);
+        TryApplyDetour(Detour_JumpSpeed);
+        TryApplyDetour(Detour_UpdateEffects);
+        TryApplyDetour(Detour_UpdateFrame);
+        TryApplyDetour(Detour_UseAbility);
+        TryApplyDetour(Detour_AimAbility);
+        TryApplyDetour(Detour_SetMount);
+        TryApplyDetour(Detour_Dismount);
+        TryApplyDetour(Detour_Draw);
     }
 }
 
@@ -1674,87 +1674,87 @@ public abstract class ModNPCDetour<T> : ModTypeDetour<T> where T : ModNPC
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_SetDefaults), Detour_SetDefaults);
-        TryApplyDetour(nameof(Detour_OnSpawn), Detour_OnSpawn);
-        TryApplyDetour(nameof(Detour_AutoStaticDefaults), Detour_AutoStaticDefaults);
-        TryApplyDetour(nameof(Detour_ApplyDifficultyAndPlayerScaling), Detour_ApplyDifficultyAndPlayerScaling);
-        TryApplyDetour(nameof(Detour_SetBestiary), Detour_SetBestiary);
-        TryApplyDetour(nameof(Detour_ModifyTypeName), Detour_ModifyTypeName);
-        TryApplyDetour(nameof(Detour_ModifyHoverBoundingBox), Detour_ModifyHoverBoundingBox);
-        TryApplyDetour(nameof(Detour_SetNPCNameList), Detour_SetNPCNameList);
-        TryApplyDetour(nameof(Detour_TownNPCProfile), Detour_TownNPCProfile);
-        TryApplyDetour(nameof(Detour_ResetEffects), Detour_ResetEffects);
-        TryApplyDetour(nameof(Detour_PreAI), Detour_PreAI);
-        TryApplyDetour(nameof(Detour_AI), Detour_AI);
-        TryApplyDetour(nameof(Detour_PostAI), Detour_PostAI);
-        TryApplyDetour(nameof(Detour_SendExtraAI), Detour_SendExtraAI);
-        TryApplyDetour(nameof(Detour_ReceiveExtraAI), Detour_ReceiveExtraAI);
-        TryApplyDetour(nameof(Detour_FindFrame), Detour_FindFrame);
-        TryApplyDetour(nameof(Detour_HitEffect), Detour_HitEffect);
-        TryApplyDetour(nameof(Detour_UpdateLifeRegen), Detour_UpdateLifeRegen);
-        TryApplyDetour(nameof(Detour_CheckActive), Detour_CheckActive);
-        TryApplyDetour(nameof(Detour_CheckDead), Detour_CheckDead);
-        TryApplyDetour(nameof(Detour_SpecialOnKill), Detour_SpecialOnKill);
-        TryApplyDetour(nameof(Detour_PreKill), Detour_PreKill);
-        TryApplyDetour(nameof(Detour_OnKill), Detour_OnKill);
-        TryApplyDetour(nameof(Detour_CanFallThroughPlatforms), Detour_CanFallThroughPlatforms);
-        TryApplyDetour(nameof(Detour_CanBeCaughtBy), Detour_CanBeCaughtBy);
-        TryApplyDetour(nameof(Detour_OnCaughtBy), Detour_OnCaughtBy);
-        TryApplyDetour(nameof(Detour_ModifyNPCLoot), Detour_ModifyNPCLoot);
-        TryApplyDetour(nameof(Detour_BossLoot), Detour_BossLoot);
-        TryApplyDetour(nameof(Detour_CanHitPlayer), Detour_CanHitPlayer);
-        TryApplyDetour(nameof(Detour_ModifyHitPlayer), Detour_ModifyHitPlayer);
-        TryApplyDetour(nameof(Detour_OnHitPlayer), Detour_OnHitPlayer);
-        TryApplyDetour(nameof(Detour_CanHitNPC), Detour_CanHitNPC);
-        TryApplyDetour(nameof(Detour_CanBeHitByNPC), Detour_CanBeHitByNPC);
-        TryApplyDetour(nameof(Detour_ModifyHitNPC), Detour_ModifyHitNPC);
-        TryApplyDetour(nameof(Detour_OnHitNPC), Detour_OnHitNPC);
-        TryApplyDetour(nameof(Detour_CanBeHitByItem), Detour_CanBeHitByItem);
-        TryApplyDetour(nameof(Detour_CanCollideWithPlayerMeleeAttack), Detour_CanCollideWithPlayerMeleeAttack);
-        TryApplyDetour(nameof(Detour_ModifyHitByItem), Detour_ModifyHitByItem);
-        TryApplyDetour(nameof(Detour_OnHitByItem), Detour_OnHitByItem);
-        TryApplyDetour(nameof(Detour_CanBeHitByProjectile), Detour_CanBeHitByProjectile);
-        TryApplyDetour(nameof(Detour_ModifyHitByProjectile), Detour_ModifyHitByProjectile);
-        TryApplyDetour(nameof(Detour_OnHitByProjectile), Detour_OnHitByProjectile);
-        TryApplyDetour(nameof(Detour_ModifyIncomingHit), Detour_ModifyIncomingHit);
-        TryApplyDetour(nameof(Detour_BossHeadSlot), Detour_BossHeadSlot);
-        TryApplyDetour(nameof(Detour_BossHeadRotation), Detour_BossHeadRotation);
-        TryApplyDetour(nameof(Detour_BossHeadSpriteEffects), Detour_BossHeadSpriteEffects);
-        TryApplyDetour(nameof(Detour_GetAlpha), Detour_GetAlpha);
-        TryApplyDetour(nameof(Detour_DrawEffects), Detour_DrawEffects);
-        TryApplyDetour(nameof(Detour_PreDraw), Detour_PreDraw);
-        TryApplyDetour(nameof(Detour_PostDraw), Detour_PostDraw);
-        TryApplyDetour(nameof(Detour_DrawBehind), Detour_DrawBehind);
-        TryApplyDetour(nameof(Detour_DrawHealthBar), Detour_DrawHealthBar);
-        TryApplyDetour(nameof(Detour_SpawnChance), Detour_SpawnChance);
-        TryApplyDetour(nameof(Detour_SpawnNPC), Detour_SpawnNPC);
-        TryApplyDetour(nameof(Detour_CanTownNPCSpawn), Detour_CanTownNPCSpawn);
-        TryApplyDetour(nameof(Detour_CheckConditions), Detour_CheckConditions);
-        TryApplyDetour(nameof(Detour_UsesPartyHat), Detour_UsesPartyHat);
-        TryApplyDetour(nameof(Detour_CanChat), Detour_CanChat);
-        TryApplyDetour(nameof(Detour_GetChat), Detour_GetChat);
-        TryApplyDetour(nameof(Detour_SetChatButtons), Detour_SetChatButtons);
-        TryApplyDetour(nameof(Detour_OnChatButtonClicked), Detour_OnChatButtonClicked);
-        TryApplyDetour(nameof(Detour_AddShops), Detour_AddShops);
-        TryApplyDetour(nameof(Detour_ModifyActiveShop), Detour_ModifyActiveShop);
-        TryApplyDetour(nameof(Detour_CanGoToStatue), Detour_CanGoToStatue);
-        TryApplyDetour(nameof(Detour_OnGoToStatue), Detour_OnGoToStatue);
-        TryApplyDetour(nameof(Detour_TownNPCAttackStrength), Detour_TownNPCAttackStrength);
-        TryApplyDetour(nameof(Detour_TownNPCAttackCooldown), Detour_TownNPCAttackCooldown);
-        TryApplyDetour(nameof(Detour_TownNPCAttackProj), Detour_TownNPCAttackProj);
-        TryApplyDetour(nameof(Detour_TownNPCAttackProjSpeed), Detour_TownNPCAttackProjSpeed);
-        TryApplyDetour(nameof(Detour_TownNPCAttackShoot), Detour_TownNPCAttackShoot);
-        TryApplyDetour(nameof(Detour_TownNPCAttackMagic), Detour_TownNPCAttackMagic);
-        TryApplyDetour(nameof(Detour_TownNPCAttackSwing), Detour_TownNPCAttackSwing);
-        TryApplyDetour(nameof(Detour_DrawTownAttackGun), Detour_DrawTownAttackGun);
-        TryApplyDetour(nameof(Detour_DrawTownAttackSwing), Detour_DrawTownAttackSwing);
-        TryApplyDetour(nameof(Detour_ModifyCollisionData), Detour_ModifyCollisionData);
-        TryApplyDetour(nameof(Detour_NeedSaving), Detour_NeedSaving);
-        TryApplyDetour(nameof(Detour_SaveData), Detour_SaveData);
-        TryApplyDetour(nameof(Detour_LoadData), Detour_LoadData);
-        TryApplyDetour(nameof(Detour_ChatBubblePosition), Detour_ChatBubblePosition);
-        TryApplyDetour(nameof(Detour_PartyHatPosition), Detour_PartyHatPosition);
-        TryApplyDetour(nameof(Detour_EmoteBubblePosition), Detour_EmoteBubblePosition);
+        TryApplyDetour(Detour_SetDefaults);
+        TryApplyDetour(Detour_OnSpawn);
+        TryApplyDetour(Detour_AutoStaticDefaults);
+        TryApplyDetour(Detour_ApplyDifficultyAndPlayerScaling);
+        TryApplyDetour(Detour_SetBestiary);
+        TryApplyDetour(Detour_ModifyTypeName);
+        TryApplyDetour(Detour_ModifyHoverBoundingBox);
+        TryApplyDetour(Detour_SetNPCNameList);
+        TryApplyDetour(Detour_TownNPCProfile);
+        TryApplyDetour(Detour_ResetEffects);
+        TryApplyDetour(Detour_PreAI);
+        TryApplyDetour(Detour_AI);
+        TryApplyDetour(Detour_PostAI);
+        TryApplyDetour(Detour_SendExtraAI);
+        TryApplyDetour(Detour_ReceiveExtraAI);
+        TryApplyDetour(Detour_FindFrame);
+        TryApplyDetour(Detour_HitEffect);
+        TryApplyDetour(Detour_UpdateLifeRegen);
+        TryApplyDetour(Detour_CheckActive);
+        TryApplyDetour(Detour_CheckDead);
+        TryApplyDetour(Detour_SpecialOnKill);
+        TryApplyDetour(Detour_PreKill);
+        TryApplyDetour(Detour_OnKill);
+        TryApplyDetour(Detour_CanFallThroughPlatforms);
+        TryApplyDetour(Detour_CanBeCaughtBy);
+        TryApplyDetour(Detour_OnCaughtBy);
+        TryApplyDetour(Detour_ModifyNPCLoot);
+        TryApplyDetour(Detour_BossLoot);
+        TryApplyDetour(Detour_CanHitPlayer);
+        TryApplyDetour(Detour_ModifyHitPlayer);
+        TryApplyDetour(Detour_OnHitPlayer);
+        TryApplyDetour(Detour_CanHitNPC);
+        TryApplyDetour(Detour_CanBeHitByNPC);
+        TryApplyDetour(Detour_ModifyHitNPC);
+        TryApplyDetour(Detour_OnHitNPC);
+        TryApplyDetour(Detour_CanBeHitByItem);
+        TryApplyDetour(Detour_CanCollideWithPlayerMeleeAttack);
+        TryApplyDetour(Detour_ModifyHitByItem);
+        TryApplyDetour(Detour_OnHitByItem);
+        TryApplyDetour(Detour_CanBeHitByProjectile);
+        TryApplyDetour(Detour_ModifyHitByProjectile);
+        TryApplyDetour(Detour_OnHitByProjectile);
+        TryApplyDetour(Detour_ModifyIncomingHit);
+        TryApplyDetour(Detour_BossHeadSlot);
+        TryApplyDetour(Detour_BossHeadRotation);
+        TryApplyDetour(Detour_BossHeadSpriteEffects);
+        TryApplyDetour(Detour_GetAlpha);
+        TryApplyDetour(Detour_DrawEffects);
+        TryApplyDetour(Detour_PreDraw);
+        TryApplyDetour(Detour_PostDraw);
+        TryApplyDetour(Detour_DrawBehind);
+        TryApplyDetour(Detour_DrawHealthBar);
+        TryApplyDetour(Detour_SpawnChance);
+        TryApplyDetour(Detour_SpawnNPC);
+        TryApplyDetour(Detour_CanTownNPCSpawn);
+        TryApplyDetour(Detour_CheckConditions);
+        TryApplyDetour(Detour_UsesPartyHat);
+        TryApplyDetour(Detour_CanChat);
+        TryApplyDetour(Detour_GetChat);
+        TryApplyDetour(Detour_SetChatButtons);
+        TryApplyDetour(Detour_OnChatButtonClicked);
+        TryApplyDetour(Detour_AddShops);
+        TryApplyDetour(Detour_ModifyActiveShop);
+        TryApplyDetour(Detour_CanGoToStatue);
+        TryApplyDetour(Detour_OnGoToStatue);
+        TryApplyDetour(Detour_TownNPCAttackStrength);
+        TryApplyDetour(Detour_TownNPCAttackCooldown);
+        TryApplyDetour(Detour_TownNPCAttackProj);
+        TryApplyDetour(Detour_TownNPCAttackProjSpeed);
+        TryApplyDetour(Detour_TownNPCAttackShoot);
+        TryApplyDetour(Detour_TownNPCAttackMagic);
+        TryApplyDetour(Detour_TownNPCAttackSwing);
+        TryApplyDetour(Detour_DrawTownAttackGun);
+        TryApplyDetour(Detour_DrawTownAttackSwing);
+        TryApplyDetour(Detour_ModifyCollisionData);
+        TryApplyDetour(Detour_NeedSaving);
+        TryApplyDetour(Detour_SaveData);
+        TryApplyDetour(Detour_LoadData);
+        TryApplyDetour(Detour_ChatBubblePosition);
+        TryApplyDetour(Detour_PartyHatPosition);
+        TryApplyDetour(Detour_EmoteBubblePosition);
     }
 }
 
@@ -1803,16 +1803,16 @@ public abstract class ModPalmTreeDetour<T> : TypeDetour<T> where T : ModPalmTree
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_SetStaticDefaults), Detour_SetStaticDefaults);
-        TryApplyDetour(nameof(Detour_GetTexture), Detour_GetTexture);
-        TryApplyDetour(nameof(Detour_CountsAsTreeType), Detour_CountsAsTreeType);
-        TryApplyDetour(nameof(Detour_CreateDust), Detour_CreateDust);
-        TryApplyDetour(nameof(Detour_TreeLeaf), Detour_TreeLeaf);
-        TryApplyDetour(nameof(Detour_Shake), Detour_Shake);
-        TryApplyDetour(nameof(Detour_SaplingGrowthType), Detour_SaplingGrowthType);
-        TryApplyDetour(nameof(Detour_DropWood), Detour_DropWood);
-        TryApplyDetour(nameof(Detour_GetTopTextures), Detour_GetTopTextures);
-        TryApplyDetour(nameof(Detour_GetOasisTopTextures), Detour_GetOasisTopTextures);
+        TryApplyDetour(Detour_SetStaticDefaults);
+        TryApplyDetour(Detour_GetTexture);
+        TryApplyDetour(Detour_CountsAsTreeType);
+        TryApplyDetour(Detour_CreateDust);
+        TryApplyDetour(Detour_TreeLeaf);
+        TryApplyDetour(Detour_Shake);
+        TryApplyDetour(Detour_SaplingGrowthType);
+        TryApplyDetour(Detour_DropWood);
+        TryApplyDetour(Detour_GetTopTextures);
+        TryApplyDetour(Detour_GetOasisTopTextures);
     }
 }
 
@@ -2329,133 +2329,133 @@ public abstract class ModPlayerDetour<T> : ModTypeDetour<T> where T : ModPlayer
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_Initialize), Detour_Initialize);
-        TryApplyDetour(nameof(Detour_ResetEffects), Detour_ResetEffects);
-        TryApplyDetour(nameof(Detour_ResetInfoAccessories), Detour_ResetInfoAccessories);
-        TryApplyDetour(nameof(Detour_RefreshInfoAccessoriesFromTeamPlayers), Detour_RefreshInfoAccessoriesFromTeamPlayers);
-        TryApplyDetour(nameof(Detour_ModifyMaxStats), Detour_ModifyMaxStats);
-        TryApplyDetour(nameof(Detour_UpdateDead), Detour_UpdateDead);
-        TryApplyDetour(nameof(Detour_PreSaveCustomData), Detour_PreSaveCustomData);
-        TryApplyDetour(nameof(Detour_SaveData), Detour_SaveData);
-        TryApplyDetour(nameof(Detour_LoadData), Detour_LoadData);
-        TryApplyDetour(nameof(Detour_PreSavePlayer), Detour_PreSavePlayer);
-        TryApplyDetour(nameof(Detour_PostSavePlayer), Detour_PostSavePlayer);
-        TryApplyDetour(nameof(Detour_CopyClientState), Detour_CopyClientState);
-        TryApplyDetour(nameof(Detour_SyncPlayer), Detour_SyncPlayer);
-        TryApplyDetour(nameof(Detour_SendClientChanges), Detour_SendClientChanges);
-        TryApplyDetour(nameof(Detour_UpdateBadLifeRegen), Detour_UpdateBadLifeRegen);
-        TryApplyDetour(nameof(Detour_UpdateLifeRegen), Detour_UpdateLifeRegen);
-        TryApplyDetour(nameof(Detour_NaturalLifeRegen), Detour_NaturalLifeRegen);
-        TryApplyDetour(nameof(Detour_UpdateAutopause), Detour_UpdateAutopause);
-        TryApplyDetour(nameof(Detour_PreUpdate), Detour_PreUpdate);
-        TryApplyDetour(nameof(Detour_ProcessTriggers), Detour_ProcessTriggers);
-        TryApplyDetour(nameof(Detour_ArmorSetBonusActivated), Detour_ArmorSetBonusActivated);
-        TryApplyDetour(nameof(Detour_ArmorSetBonusHeld), Detour_ArmorSetBonusHeld);
-        TryApplyDetour(nameof(Detour_SetControls), Detour_SetControls);
-        TryApplyDetour(nameof(Detour_PreUpdateBuffs), Detour_PreUpdateBuffs);
-        TryApplyDetour(nameof(Detour_PostUpdateBuffs), Detour_PostUpdateBuffs);
-        TryApplyDetour(nameof(Detour_UpdateEquips), Detour_UpdateEquips);
-        TryApplyDetour(nameof(Detour_PostUpdateEquips), Detour_PostUpdateEquips);
-        TryApplyDetour(nameof(Detour_UpdateVisibleAccessories), Detour_UpdateVisibleAccessories);
-        TryApplyDetour(nameof(Detour_UpdateVisibleVanityAccessories), Detour_UpdateVisibleVanityAccessories);
-        TryApplyDetour(nameof(Detour_UpdateDyes), Detour_UpdateDyes);
-        TryApplyDetour(nameof(Detour_PostUpdateMiscEffects), Detour_PostUpdateMiscEffects);
-        TryApplyDetour(nameof(Detour_PostUpdateRunSpeeds), Detour_PostUpdateRunSpeeds);
-        TryApplyDetour(nameof(Detour_PreUpdateMovement), Detour_PreUpdateMovement);
-        TryApplyDetour(nameof(Detour_PostUpdate), Detour_PostUpdate);
-        TryApplyDetour(nameof(Detour_ModifyExtraJumpDurationMultiplier), Detour_ModifyExtraJumpDurationMultiplier);
-        TryApplyDetour(nameof(Detour_CanStartExtraJump), Detour_CanStartExtraJump);
-        TryApplyDetour(nameof(Detour_OnExtraJumpStarted), Detour_OnExtraJumpStarted);
-        TryApplyDetour(nameof(Detour_OnExtraJumpEnded), Detour_OnExtraJumpEnded);
-        TryApplyDetour(nameof(Detour_OnExtraJumpRefreshed), Detour_OnExtraJumpRefreshed);
-        TryApplyDetour(nameof(Detour_ExtraJumpVisuals), Detour_ExtraJumpVisuals);
-        TryApplyDetour(nameof(Detour_CanShowExtraJumpVisuals), Detour_CanShowExtraJumpVisuals);
-        TryApplyDetour(nameof(Detour_OnExtraJumpCleared), Detour_OnExtraJumpCleared);
-        TryApplyDetour(nameof(Detour_FrameEffects), Detour_FrameEffects);
-        TryApplyDetour(nameof(Detour_ImmuneTo), Detour_ImmuneTo);
-        TryApplyDetour(nameof(Detour_FreeDodge), Detour_FreeDodge);
-        TryApplyDetour(nameof(Detour_ConsumableDodge), Detour_ConsumableDodge);
-        TryApplyDetour(nameof(Detour_ModifyHurt), Detour_ModifyHurt);
-        TryApplyDetour(nameof(Detour_OnHurt), Detour_OnHurt);
-        TryApplyDetour(nameof(Detour_PostHurt), Detour_PostHurt);
-        TryApplyDetour(nameof(Detour_PreKill), Detour_PreKill);
-        TryApplyDetour(nameof(Detour_Kill), Detour_Kill);
-        TryApplyDetour(nameof(Detour_PreModifyLuck), Detour_PreModifyLuck);
-        TryApplyDetour(nameof(Detour_ModifyLuck), Detour_ModifyLuck);
-        TryApplyDetour(nameof(Detour_PreItemCheck), Detour_PreItemCheck);
-        TryApplyDetour(nameof(Detour_PostItemCheck), Detour_PostItemCheck);
-        TryApplyDetour(nameof(Detour_UseTimeMultiplier), Detour_UseTimeMultiplier);
-        TryApplyDetour(nameof(Detour_UseAnimationMultiplier), Detour_UseAnimationMultiplier);
-        TryApplyDetour(nameof(Detour_UseSpeedMultiplier), Detour_UseSpeedMultiplier);
-        TryApplyDetour(nameof(Detour_GetHealLife), Detour_GetHealLife);
-        TryApplyDetour(nameof(Detour_GetHealMana), Detour_GetHealMana);
-        TryApplyDetour(nameof(Detour_ModifyManaCost), Detour_ModifyManaCost);
-        TryApplyDetour(nameof(Detour_OnMissingMana), Detour_OnMissingMana);
-        TryApplyDetour(nameof(Detour_OnConsumeMana), Detour_OnConsumeMana);
-        TryApplyDetour(nameof(Detour_ModifyWeaponDamage), Detour_ModifyWeaponDamage);
-        TryApplyDetour(nameof(Detour_ModifyWeaponKnockback), Detour_ModifyWeaponKnockback);
-        TryApplyDetour(nameof(Detour_ModifyWeaponCrit), Detour_ModifyWeaponCrit);
-        TryApplyDetour(nameof(Detour_CanConsumeAmmo), Detour_CanConsumeAmmo);
-        TryApplyDetour(nameof(Detour_OnConsumeAmmo), Detour_OnConsumeAmmo);
-        TryApplyDetour(nameof(Detour_CanShoot), Detour_CanShoot);
-        TryApplyDetour(nameof(Detour_ModifyShootStats), Detour_ModifyShootStats);
-        TryApplyDetour(nameof(Detour_Shoot), Detour_Shoot);
-        TryApplyDetour(nameof(Detour_MeleeEffects), Detour_MeleeEffects);
-        TryApplyDetour(nameof(Detour_EmitEnchantmentVisualsAt), Detour_EmitEnchantmentVisualsAt);
-        TryApplyDetour(nameof(Detour_CanCatchNPC), Detour_CanCatchNPC);
-        TryApplyDetour(nameof(Detour_OnCatchNPC), Detour_OnCatchNPC);
-        TryApplyDetour(nameof(Detour_ModifyItemScale), Detour_ModifyItemScale);
-        TryApplyDetour(nameof(Detour_OnHitAnything), Detour_OnHitAnything);
-        TryApplyDetour(nameof(Detour_CanHitNPC), Detour_CanHitNPC);
-        TryApplyDetour(nameof(Detour_CanMeleeAttackCollideWithNPC), Detour_CanMeleeAttackCollideWithNPC);
-        TryApplyDetour(nameof(Detour_ModifyHitNPC), Detour_ModifyHitNPC);
-        TryApplyDetour(nameof(Detour_OnHitNPC), Detour_OnHitNPC);
-        TryApplyDetour(nameof(Detour_CanHitNPCWithItem), Detour_CanHitNPCWithItem);
-        TryApplyDetour(nameof(Detour_ModifyHitNPCWithItem), Detour_ModifyHitNPCWithItem);
-        TryApplyDetour(nameof(Detour_OnHitNPCWithItem), Detour_OnHitNPCWithItem);
-        TryApplyDetour(nameof(Detour_CanHitNPCWithProj), Detour_CanHitNPCWithProj);
-        TryApplyDetour(nameof(Detour_ModifyHitNPCWithProj), Detour_ModifyHitNPCWithProj);
-        TryApplyDetour(nameof(Detour_OnHitNPCWithProj), Detour_OnHitNPCWithProj);
-        TryApplyDetour(nameof(Detour_CanHitPvp), Detour_CanHitPvp);
-        TryApplyDetour(nameof(Detour_CanHitPvpWithProj), Detour_CanHitPvpWithProj);
-        TryApplyDetour(nameof(Detour_CanBeHitByNPC), Detour_CanBeHitByNPC);
-        TryApplyDetour(nameof(Detour_ModifyHitByNPC), Detour_ModifyHitByNPC);
-        TryApplyDetour(nameof(Detour_OnHitByNPC), Detour_OnHitByNPC);
-        TryApplyDetour(nameof(Detour_CanBeHitByProjectile), Detour_CanBeHitByProjectile);
-        TryApplyDetour(nameof(Detour_ModifyHitByProjectile), Detour_ModifyHitByProjectile);
-        TryApplyDetour(nameof(Detour_OnHitByProjectile), Detour_OnHitByProjectile);
-        TryApplyDetour(nameof(Detour_ModifyFishingAttempt), Detour_ModifyFishingAttempt);
-        TryApplyDetour(nameof(Detour_CatchFish), Detour_CatchFish);
-        TryApplyDetour(nameof(Detour_ModifyCaughtFish), Detour_ModifyCaughtFish);
-        TryApplyDetour(nameof(Detour_CanConsumeBait), Detour_CanConsumeBait);
-        TryApplyDetour(nameof(Detour_GetFishingLevel), Detour_GetFishingLevel);
-        TryApplyDetour(nameof(Detour_AnglerQuestReward), Detour_AnglerQuestReward);
-        TryApplyDetour(nameof(Detour_GetDyeTraderReward), Detour_GetDyeTraderReward);
-        TryApplyDetour(nameof(Detour_DrawEffects), Detour_DrawEffects);
-        TryApplyDetour(nameof(Detour_ModifyDrawInfo), Detour_ModifyDrawInfo);
-        TryApplyDetour(nameof(Detour_ModifyDrawLayerOrdering), Detour_ModifyDrawLayerOrdering);
-        TryApplyDetour(nameof(Detour_HideDrawLayers), Detour_HideDrawLayers);
-        TryApplyDetour(nameof(Detour_ModifyScreenPosition), Detour_ModifyScreenPosition);
-        TryApplyDetour(nameof(Detour_ModifyZoom), Detour_ModifyZoom);
-        TryApplyDetour(nameof(Detour_PlayerConnect), Detour_PlayerConnect);
-        TryApplyDetour(nameof(Detour_PlayerDisconnect), Detour_PlayerDisconnect);
-        TryApplyDetour(nameof(Detour_OnEnterWorld), Detour_OnEnterWorld);
-        TryApplyDetour(nameof(Detour_OnRespawn), Detour_OnRespawn);
-        TryApplyDetour(nameof(Detour_ShiftClickSlot), Detour_ShiftClickSlot);
-        TryApplyDetour(nameof(Detour_HoverSlot), Detour_HoverSlot);
-        TryApplyDetour(nameof(Detour_PostSellItem), Detour_PostSellItem);
-        TryApplyDetour(nameof(Detour_CanSellItem), Detour_CanSellItem);
-        TryApplyDetour(nameof(Detour_PostBuyItem), Detour_PostBuyItem);
-        TryApplyDetour(nameof(Detour_CanBuyItem), Detour_CanBuyItem);
-        TryApplyDetour(nameof(Detour_CanUseItem), Detour_CanUseItem);
-        TryApplyDetour(nameof(Detour_CanAutoReuseItem), Detour_CanAutoReuseItem);
-        TryApplyDetour(nameof(Detour_ModifyNurseHeal), Detour_ModifyNurseHeal);
-        TryApplyDetour(nameof(Detour_ModifyNursePrice), Detour_ModifyNursePrice);
-        TryApplyDetour(nameof(Detour_PostNurseHeal), Detour_PostNurseHeal);
-        TryApplyDetour(nameof(Detour_AddStartingItems), Detour_AddStartingItems);
-        TryApplyDetour(nameof(Detour_ModifyStartingInventory), Detour_ModifyStartingInventory);
-        TryApplyDetour(nameof(Detour_AddMaterialsForCrafting), Detour_AddMaterialsForCrafting);
-        TryApplyDetour(nameof(Detour_OnPickup), Detour_OnPickup);
+        TryApplyDetour(Detour_Initialize);
+        TryApplyDetour(Detour_ResetEffects);
+        TryApplyDetour(Detour_ResetInfoAccessories);
+        TryApplyDetour(Detour_RefreshInfoAccessoriesFromTeamPlayers);
+        TryApplyDetour(Detour_ModifyMaxStats);
+        TryApplyDetour(Detour_UpdateDead);
+        TryApplyDetour(Detour_PreSaveCustomData);
+        TryApplyDetour(Detour_SaveData);
+        TryApplyDetour(Detour_LoadData);
+        TryApplyDetour(Detour_PreSavePlayer);
+        TryApplyDetour(Detour_PostSavePlayer);
+        TryApplyDetour(Detour_CopyClientState);
+        TryApplyDetour(Detour_SyncPlayer);
+        TryApplyDetour(Detour_SendClientChanges);
+        TryApplyDetour(Detour_UpdateBadLifeRegen);
+        TryApplyDetour(Detour_UpdateLifeRegen);
+        TryApplyDetour(Detour_NaturalLifeRegen);
+        TryApplyDetour(Detour_UpdateAutopause);
+        TryApplyDetour(Detour_PreUpdate);
+        TryApplyDetour(Detour_ProcessTriggers);
+        TryApplyDetour(Detour_ArmorSetBonusActivated);
+        TryApplyDetour(Detour_ArmorSetBonusHeld);
+        TryApplyDetour(Detour_SetControls);
+        TryApplyDetour(Detour_PreUpdateBuffs);
+        TryApplyDetour(Detour_PostUpdateBuffs);
+        TryApplyDetour(Detour_UpdateEquips);
+        TryApplyDetour(Detour_PostUpdateEquips);
+        TryApplyDetour(Detour_UpdateVisibleAccessories);
+        TryApplyDetour(Detour_UpdateVisibleVanityAccessories);
+        TryApplyDetour(Detour_UpdateDyes);
+        TryApplyDetour(Detour_PostUpdateMiscEffects);
+        TryApplyDetour(Detour_PostUpdateRunSpeeds);
+        TryApplyDetour(Detour_PreUpdateMovement);
+        TryApplyDetour(Detour_PostUpdate);
+        TryApplyDetour(Detour_ModifyExtraJumpDurationMultiplier);
+        TryApplyDetour(Detour_CanStartExtraJump);
+        TryApplyDetour(Detour_OnExtraJumpStarted);
+        TryApplyDetour(Detour_OnExtraJumpEnded);
+        TryApplyDetour(Detour_OnExtraJumpRefreshed);
+        TryApplyDetour(Detour_ExtraJumpVisuals);
+        TryApplyDetour(Detour_CanShowExtraJumpVisuals);
+        TryApplyDetour(Detour_OnExtraJumpCleared);
+        TryApplyDetour(Detour_FrameEffects);
+        TryApplyDetour(Detour_ImmuneTo);
+        TryApplyDetour(Detour_FreeDodge);
+        TryApplyDetour(Detour_ConsumableDodge);
+        TryApplyDetour(Detour_ModifyHurt);
+        TryApplyDetour(Detour_OnHurt);
+        TryApplyDetour(Detour_PostHurt);
+        TryApplyDetour(Detour_PreKill);
+        TryApplyDetour(Detour_Kill);
+        TryApplyDetour(Detour_PreModifyLuck);
+        TryApplyDetour(Detour_ModifyLuck);
+        TryApplyDetour(Detour_PreItemCheck);
+        TryApplyDetour(Detour_PostItemCheck);
+        TryApplyDetour(Detour_UseTimeMultiplier);
+        TryApplyDetour(Detour_UseAnimationMultiplier);
+        TryApplyDetour(Detour_UseSpeedMultiplier);
+        TryApplyDetour(Detour_GetHealLife);
+        TryApplyDetour(Detour_GetHealMana);
+        TryApplyDetour(Detour_ModifyManaCost);
+        TryApplyDetour(Detour_OnMissingMana);
+        TryApplyDetour(Detour_OnConsumeMana);
+        TryApplyDetour(Detour_ModifyWeaponDamage);
+        TryApplyDetour(Detour_ModifyWeaponKnockback);
+        TryApplyDetour(Detour_ModifyWeaponCrit);
+        TryApplyDetour(Detour_CanConsumeAmmo);
+        TryApplyDetour(Detour_OnConsumeAmmo);
+        TryApplyDetour(Detour_CanShoot);
+        TryApplyDetour(Detour_ModifyShootStats);
+        TryApplyDetour(Detour_Shoot);
+        TryApplyDetour(Detour_MeleeEffects);
+        TryApplyDetour(Detour_EmitEnchantmentVisualsAt);
+        TryApplyDetour(Detour_CanCatchNPC);
+        TryApplyDetour(Detour_OnCatchNPC);
+        TryApplyDetour(Detour_ModifyItemScale);
+        TryApplyDetour(Detour_OnHitAnything);
+        TryApplyDetour(Detour_CanHitNPC);
+        TryApplyDetour(Detour_CanMeleeAttackCollideWithNPC);
+        TryApplyDetour(Detour_ModifyHitNPC);
+        TryApplyDetour(Detour_OnHitNPC);
+        TryApplyDetour(Detour_CanHitNPCWithItem);
+        TryApplyDetour(Detour_ModifyHitNPCWithItem);
+        TryApplyDetour(Detour_OnHitNPCWithItem);
+        TryApplyDetour(Detour_CanHitNPCWithProj);
+        TryApplyDetour(Detour_ModifyHitNPCWithProj);
+        TryApplyDetour(Detour_OnHitNPCWithProj);
+        TryApplyDetour(Detour_CanHitPvp);
+        TryApplyDetour(Detour_CanHitPvpWithProj);
+        TryApplyDetour(Detour_CanBeHitByNPC);
+        TryApplyDetour(Detour_ModifyHitByNPC);
+        TryApplyDetour(Detour_OnHitByNPC);
+        TryApplyDetour(Detour_CanBeHitByProjectile);
+        TryApplyDetour(Detour_ModifyHitByProjectile);
+        TryApplyDetour(Detour_OnHitByProjectile);
+        TryApplyDetour(Detour_ModifyFishingAttempt);
+        TryApplyDetour(Detour_CatchFish);
+        TryApplyDetour(Detour_ModifyCaughtFish);
+        TryApplyDetour(Detour_CanConsumeBait);
+        TryApplyDetour(Detour_GetFishingLevel);
+        TryApplyDetour(Detour_AnglerQuestReward);
+        TryApplyDetour(Detour_GetDyeTraderReward);
+        TryApplyDetour(Detour_DrawEffects);
+        TryApplyDetour(Detour_ModifyDrawInfo);
+        TryApplyDetour(Detour_ModifyDrawLayerOrdering);
+        TryApplyDetour(Detour_HideDrawLayers);
+        TryApplyDetour(Detour_ModifyScreenPosition);
+        TryApplyDetour(Detour_ModifyZoom);
+        TryApplyDetour(Detour_PlayerConnect);
+        TryApplyDetour(Detour_PlayerDisconnect);
+        TryApplyDetour(Detour_OnEnterWorld);
+        TryApplyDetour(Detour_OnRespawn);
+        TryApplyDetour(Detour_ShiftClickSlot);
+        TryApplyDetour(Detour_HoverSlot);
+        TryApplyDetour(Detour_PostSellItem);
+        TryApplyDetour(Detour_CanSellItem);
+        TryApplyDetour(Detour_PostBuyItem);
+        TryApplyDetour(Detour_CanBuyItem);
+        TryApplyDetour(Detour_CanUseItem);
+        TryApplyDetour(Detour_CanAutoReuseItem);
+        TryApplyDetour(Detour_ModifyNurseHeal);
+        TryApplyDetour(Detour_ModifyNursePrice);
+        TryApplyDetour(Detour_PostNurseHeal);
+        TryApplyDetour(Detour_AddStartingItems);
+        TryApplyDetour(Detour_ModifyStartingInventory);
+        TryApplyDetour(Detour_AddMaterialsForCrafting);
+        TryApplyDetour(Detour_OnPickup);
     }
 }
 
@@ -2496,14 +2496,14 @@ public abstract class ModPrefixDetour<T> : ModTypeDetour<T> where T : ModPrefix
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_RollChance), Detour_RollChance);
-        TryApplyDetour(nameof(Detour_CanRoll), Detour_CanRoll);
-        TryApplyDetour(nameof(Detour_SetStats), Detour_SetStats);
-        TryApplyDetour(nameof(Detour_AllStatChangesHaveEffectOn), Detour_AllStatChangesHaveEffectOn);
-        TryApplyDetour(nameof(Detour_Apply), Detour_Apply);
-        TryApplyDetour(nameof(Detour_ModifyValue), Detour_ModifyValue);
-        TryApplyDetour(nameof(Detour_ApplyAccessoryEffects), Detour_ApplyAccessoryEffects);
-        TryApplyDetour(nameof(Detour_GetTooltipLines), Detour_GetTooltipLines);
+        TryApplyDetour(Detour_RollChance);
+        TryApplyDetour(Detour_CanRoll);
+        TryApplyDetour(Detour_SetStats);
+        TryApplyDetour(Detour_AllStatChangesHaveEffectOn);
+        TryApplyDetour(Detour_Apply);
+        TryApplyDetour(Detour_ModifyValue);
+        TryApplyDetour(Detour_ApplyAccessoryEffects);
+        TryApplyDetour(Detour_GetTooltipLines);
     }
 }
 
@@ -2676,47 +2676,47 @@ public abstract class ModProjectileDetour<T> : ModTypeDetour<T> where T : ModPro
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_SetDefaults), Detour_SetDefaults);
-        TryApplyDetour(nameof(Detour_OnSpawn), Detour_OnSpawn);
-        TryApplyDetour(nameof(Detour_AutoStaticDefaults), Detour_AutoStaticDefaults);
-        TryApplyDetour(nameof(Detour_PreAI), Detour_PreAI);
-        TryApplyDetour(nameof(Detour_AI), Detour_AI);
-        TryApplyDetour(nameof(Detour_PostAI), Detour_PostAI);
-        TryApplyDetour(nameof(Detour_SendExtraAI), Detour_SendExtraAI);
-        TryApplyDetour(nameof(Detour_ReceiveExtraAI), Detour_ReceiveExtraAI);
-        TryApplyDetour(nameof(Detour_ShouldUpdatePosition), Detour_ShouldUpdatePosition);
-        TryApplyDetour(nameof(Detour_TileCollideStyle), Detour_TileCollideStyle);
-        TryApplyDetour(nameof(Detour_OnTileCollide), Detour_OnTileCollide);
-        TryApplyDetour(nameof(Detour_CanCutTiles), Detour_CanCutTiles);
-        TryApplyDetour(nameof(Detour_CutTiles), Detour_CutTiles);
-        TryApplyDetour(nameof(Detour_PreKill), Detour_PreKill);
-        TryApplyDetour(nameof(Detour_OnKill), Detour_OnKill);
-        TryApplyDetour(nameof(Detour_CanDamage), Detour_CanDamage);
-        TryApplyDetour(nameof(Detour_MinionContactDamage), Detour_MinionContactDamage);
-        TryApplyDetour(nameof(Detour_ModifyDamageHitbox), Detour_ModifyDamageHitbox);
-        TryApplyDetour(nameof(Detour_CanHitNPC), Detour_CanHitNPC);
-        TryApplyDetour(nameof(Detour_ModifyHitNPC), Detour_ModifyHitNPC);
-        TryApplyDetour(nameof(Detour_OnHitNPC), Detour_OnHitNPC);
-        TryApplyDetour(nameof(Detour_CanHitPvp), Detour_CanHitPvp);
-        TryApplyDetour(nameof(Detour_CanHitPlayer), Detour_CanHitPlayer);
-        TryApplyDetour(nameof(Detour_ModifyHitPlayer), Detour_ModifyHitPlayer);
-        TryApplyDetour(nameof(Detour_OnHitPlayer), Detour_OnHitPlayer);
-        TryApplyDetour(nameof(Detour_Colliding), Detour_Colliding);
-        TryApplyDetour(nameof(Detour_GetAlpha), Detour_GetAlpha);
-        TryApplyDetour(nameof(Detour_PreDrawExtras), Detour_PreDrawExtras);
-        TryApplyDetour(nameof(Detour_PreDraw), Detour_PreDraw);
-        TryApplyDetour(nameof(Detour_PostDraw), Detour_PostDraw);
-        TryApplyDetour(nameof(Detour_CanUseGrapple), Detour_CanUseGrapple);
-        TryApplyDetour(nameof(Detour_UseGrapple), Detour_UseGrapple);
-        TryApplyDetour(nameof(Detour_GrappleRange), Detour_GrappleRange);
-        TryApplyDetour(nameof(Detour_NumGrappleHooks), Detour_NumGrappleHooks);
-        TryApplyDetour(nameof(Detour_GrappleRetreatSpeed), Detour_GrappleRetreatSpeed);
-        TryApplyDetour(nameof(Detour_GrapplePullSpeed), Detour_GrapplePullSpeed);
-        TryApplyDetour(nameof(Detour_GrappleTargetPoint), Detour_GrappleTargetPoint);
-        TryApplyDetour(nameof(Detour_GrappleCanLatchOnTo), Detour_GrappleCanLatchOnTo);
-        TryApplyDetour(nameof(Detour_DrawBehind), Detour_DrawBehind);
-        TryApplyDetour(nameof(Detour_PrepareBombToBlow), Detour_PrepareBombToBlow);
-        TryApplyDetour(nameof(Detour_EmitEnchantmentVisualsAt), Detour_EmitEnchantmentVisualsAt);
+        TryApplyDetour(Detour_SetDefaults);
+        TryApplyDetour(Detour_OnSpawn);
+        TryApplyDetour(Detour_AutoStaticDefaults);
+        TryApplyDetour(Detour_PreAI);
+        TryApplyDetour(Detour_AI);
+        TryApplyDetour(Detour_PostAI);
+        TryApplyDetour(Detour_SendExtraAI);
+        TryApplyDetour(Detour_ReceiveExtraAI);
+        TryApplyDetour(Detour_ShouldUpdatePosition);
+        TryApplyDetour(Detour_TileCollideStyle);
+        TryApplyDetour(Detour_OnTileCollide);
+        TryApplyDetour(Detour_CanCutTiles);
+        TryApplyDetour(Detour_CutTiles);
+        TryApplyDetour(Detour_PreKill);
+        TryApplyDetour(Detour_OnKill);
+        TryApplyDetour(Detour_CanDamage);
+        TryApplyDetour(Detour_MinionContactDamage);
+        TryApplyDetour(Detour_ModifyDamageHitbox);
+        TryApplyDetour(Detour_CanHitNPC);
+        TryApplyDetour(Detour_ModifyHitNPC);
+        TryApplyDetour(Detour_OnHitNPC);
+        TryApplyDetour(Detour_CanHitPvp);
+        TryApplyDetour(Detour_CanHitPlayer);
+        TryApplyDetour(Detour_ModifyHitPlayer);
+        TryApplyDetour(Detour_OnHitPlayer);
+        TryApplyDetour(Detour_Colliding);
+        TryApplyDetour(Detour_GetAlpha);
+        TryApplyDetour(Detour_PreDrawExtras);
+        TryApplyDetour(Detour_PreDraw);
+        TryApplyDetour(Detour_PostDraw);
+        TryApplyDetour(Detour_CanUseGrapple);
+        TryApplyDetour(Detour_UseGrapple);
+        TryApplyDetour(Detour_GrappleRange);
+        TryApplyDetour(Detour_NumGrappleHooks);
+        TryApplyDetour(Detour_GrappleRetreatSpeed);
+        TryApplyDetour(Detour_GrapplePullSpeed);
+        TryApplyDetour(Detour_GrappleTargetPoint);
+        TryApplyDetour(Detour_GrappleCanLatchOnTo);
+        TryApplyDetour(Detour_DrawBehind);
+        TryApplyDetour(Detour_PrepareBombToBlow);
+        TryApplyDetour(Detour_EmitEnchantmentVisualsAt);
     }
 }
 
@@ -2761,15 +2761,15 @@ public abstract class ModPylonDetour<T> : ModTileDetour<T> where T : ModPylon
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_CanPlacePylon), Detour_CanPlacePylon);
-        TryApplyDetour(nameof(Detour_GetNPCShopEntry), Detour_GetNPCShopEntry);
-        TryApplyDetour(nameof(Detour_ValidTeleportCheck_NPCCount), Detour_ValidTeleportCheck_NPCCount);
-        TryApplyDetour(nameof(Detour_ValidTeleportCheck_AnyDanger), Detour_ValidTeleportCheck_AnyDanger);
-        TryApplyDetour(nameof(Detour_ValidTeleportCheck_BiomeRequirements), Detour_ValidTeleportCheck_BiomeRequirements);
-        TryApplyDetour(nameof(Detour_ValidTeleportCheck_DestinationPostCheck), Detour_ValidTeleportCheck_DestinationPostCheck);
-        TryApplyDetour(nameof(Detour_ValidTeleportCheck_NearbyPostCheck), Detour_ValidTeleportCheck_NearbyPostCheck);
-        TryApplyDetour(nameof(Detour_ModifyTeleportationPosition), Detour_ModifyTeleportationPosition);
-        TryApplyDetour(nameof(Detour_DrawMapIcon), Detour_DrawMapIcon);
+        TryApplyDetour(Detour_CanPlacePylon);
+        TryApplyDetour(Detour_GetNPCShopEntry);
+        TryApplyDetour(Detour_ValidTeleportCheck_NPCCount);
+        TryApplyDetour(Detour_ValidTeleportCheck_AnyDanger);
+        TryApplyDetour(Detour_ValidTeleportCheck_BiomeRequirements);
+        TryApplyDetour(Detour_ValidTeleportCheck_DestinationPostCheck);
+        TryApplyDetour(Detour_ValidTeleportCheck_NearbyPostCheck);
+        TryApplyDetour(Detour_ModifyTeleportationPosition);
+        TryApplyDetour(Detour_DrawMapIcon);
     }
 }
 
@@ -2786,8 +2786,8 @@ public abstract class ModRarityDetour<T> : ModTypeDetour<T> where T : ModRarity
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_RarityColor), Detour_RarityColor);
-        TryApplyDetour(nameof(Detour_GetPrefixedRarity), Detour_GetPrefixedRarity);
+        TryApplyDetour(Detour_RarityColor);
+        TryApplyDetour(Detour_GetPrefixedRarity);
     }
 }
 
@@ -2812,10 +2812,10 @@ public abstract class ModResourceDisplaySetDetour<T> : ModTypeDetour<T> where T 
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_PreDrawResources), Detour_PreDrawResources);
-        TryApplyDetour(nameof(Detour_DrawLife), Detour_DrawLife);
-        TryApplyDetour(nameof(Detour_DrawMana), Detour_DrawMana);
-        TryApplyDetour(nameof(Detour_PreHover), Detour_PreHover);
+        TryApplyDetour(Detour_PreDrawResources);
+        TryApplyDetour(Detour_DrawLife);
+        TryApplyDetour(Detour_DrawMana);
+        TryApplyDetour(Detour_PreHover);
     }
 }
 
@@ -2844,11 +2844,11 @@ public abstract class ModResourceOverlayDetour<T> : ModTypeDetour<T> where T : M
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_PreDrawResource), Detour_PreDrawResource);
-        TryApplyDetour(nameof(Detour_PostDrawResource), Detour_PostDrawResource);
-        TryApplyDetour(nameof(Detour_PreDrawResourceDisplay), Detour_PreDrawResourceDisplay);
-        TryApplyDetour(nameof(Detour_PostDrawResourceDisplay), Detour_PostDrawResourceDisplay);
-        TryApplyDetour(nameof(Detour_DisplayHoverText), Detour_DisplayHoverText);
+        TryApplyDetour(Detour_PreDrawResource);
+        TryApplyDetour(Detour_PostDrawResource);
+        TryApplyDetour(Detour_PreDrawResourceDisplay);
+        TryApplyDetour(Detour_PostDrawResourceDisplay);
+        TryApplyDetour(Detour_DisplayHoverText);
     }
 }
 
@@ -2873,10 +2873,10 @@ public abstract class ModSceneEffectDetour<T> : ModTypeDetour<T> where T : ModSc
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_GetWeight), Detour_GetWeight);
-        TryApplyDetour(nameof(Detour_IsSceneEffectActive), Detour_IsSceneEffectActive);
-        TryApplyDetour(nameof(Detour_SpecialVisuals), Detour_SpecialVisuals);
-        TryApplyDetour(nameof(Detour_MapBackgroundColor), Detour_MapBackgroundColor);
+        TryApplyDetour(Detour_GetWeight);
+        TryApplyDetour(Detour_IsSceneEffectActive);
+        TryApplyDetour(Detour_SpecialVisuals);
+        TryApplyDetour(Detour_MapBackgroundColor);
     }
 }
 
@@ -2905,11 +2905,11 @@ public abstract class ModSurfaceBackgroundStyleDetour<T> : ModTypeDetour<T> wher
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_ModifyFarFades), Detour_ModifyFarFades);
-        TryApplyDetour(nameof(Detour_ChooseFarTexture), Detour_ChooseFarTexture);
-        TryApplyDetour(nameof(Detour_ChooseMiddleTexture), Detour_ChooseMiddleTexture);
-        TryApplyDetour(nameof(Detour_PreDrawCloseBackground), Detour_PreDrawCloseBackground);
-        TryApplyDetour(nameof(Detour_ChooseCloseTexture), Detour_ChooseCloseTexture);
+        TryApplyDetour(Detour_ModifyFarFades);
+        TryApplyDetour(Detour_ChooseFarTexture);
+        TryApplyDetour(Detour_ChooseMiddleTexture);
+        TryApplyDetour(Detour_PreDrawCloseBackground);
+        TryApplyDetour(Detour_ChooseCloseTexture);
     }
 }
 
@@ -3162,67 +3162,67 @@ public abstract class ModSystemDetour<T> : ModTypeDetour<T> where T : ModSystem
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_OnModLoad), Detour_OnModLoad);
-        TryApplyDetour(nameof(Detour_OnModUnload), Detour_OnModUnload);
-        TryApplyDetour(nameof(Detour_PostSetupContent), Detour_PostSetupContent);
-        TryApplyDetour(nameof(Detour_OnLocalizationsLoaded), Detour_OnLocalizationsLoaded);
-        TryApplyDetour(nameof(Detour_AddRecipes), Detour_AddRecipes);
-        TryApplyDetour(nameof(Detour_PostAddRecipes), Detour_PostAddRecipes);
-        TryApplyDetour(nameof(Detour_PostSetupRecipes), Detour_PostSetupRecipes);
-        TryApplyDetour(nameof(Detour_AddRecipeGroups), Detour_AddRecipeGroups);
-        TryApplyDetour(nameof(Detour_OnWorldLoad), Detour_OnWorldLoad);
-        TryApplyDetour(nameof(Detour_OnWorldUnload), Detour_OnWorldUnload);
-        TryApplyDetour(nameof(Detour_ClearWorld), Detour_ClearWorld);
-        TryApplyDetour(nameof(Detour_ModifyScreenPosition), Detour_ModifyScreenPosition);
-        TryApplyDetour(nameof(Detour_ModifyTransformMatrix), Detour_ModifyTransformMatrix);
-        TryApplyDetour(nameof(Detour_UpdateUI), Detour_UpdateUI);
-        TryApplyDetour(nameof(Detour_PreUpdateEntities), Detour_PreUpdateEntities);
-        TryApplyDetour(nameof(Detour_PreUpdatePlayers), Detour_PreUpdatePlayers);
-        TryApplyDetour(nameof(Detour_PostUpdatePlayers), Detour_PostUpdatePlayers);
-        TryApplyDetour(nameof(Detour_PreUpdateNPCs), Detour_PreUpdateNPCs);
-        TryApplyDetour(nameof(Detour_PostUpdateNPCs), Detour_PostUpdateNPCs);
-        TryApplyDetour(nameof(Detour_PreUpdateGores), Detour_PreUpdateGores);
-        TryApplyDetour(nameof(Detour_PostUpdateGores), Detour_PostUpdateGores);
-        TryApplyDetour(nameof(Detour_PreUpdateProjectiles), Detour_PreUpdateProjectiles);
-        TryApplyDetour(nameof(Detour_PostUpdateProjectiles), Detour_PostUpdateProjectiles);
-        TryApplyDetour(nameof(Detour_PreUpdateItems), Detour_PreUpdateItems);
-        TryApplyDetour(nameof(Detour_PostUpdateItems), Detour_PostUpdateItems);
-        TryApplyDetour(nameof(Detour_PreUpdateDusts), Detour_PreUpdateDusts);
-        TryApplyDetour(nameof(Detour_PostUpdateDusts), Detour_PostUpdateDusts);
-        TryApplyDetour(nameof(Detour_PreUpdateTime), Detour_PreUpdateTime);
-        TryApplyDetour(nameof(Detour_PostUpdateTime), Detour_PostUpdateTime);
-        TryApplyDetour(nameof(Detour_PreUpdateWorld), Detour_PreUpdateWorld);
-        TryApplyDetour(nameof(Detour_PostUpdateWorld), Detour_PostUpdateWorld);
-        TryApplyDetour(nameof(Detour_PreUpdateInvasions), Detour_PreUpdateInvasions);
-        TryApplyDetour(nameof(Detour_PostUpdateInvasions), Detour_PostUpdateInvasions);
-        TryApplyDetour(nameof(Detour_PostUpdateEverything), Detour_PostUpdateEverything);
-        TryApplyDetour(nameof(Detour_ModifyInterfaceLayers), Detour_ModifyInterfaceLayers);
-        TryApplyDetour(nameof(Detour_ModifyGameTipVisibility), Detour_ModifyGameTipVisibility);
-        TryApplyDetour(nameof(Detour_PostDrawInterface), Detour_PostDrawInterface);
-        TryApplyDetour(nameof(Detour_PreDrawMapIconOverlay), Detour_PreDrawMapIconOverlay);
-        TryApplyDetour(nameof(Detour_PostDrawFullscreenMap), Detour_PostDrawFullscreenMap);
-        TryApplyDetour(nameof(Detour_PostUpdateInput), Detour_PostUpdateInput);
-        TryApplyDetour(nameof(Detour_PreSaveAndQuit), Detour_PreSaveAndQuit);
-        TryApplyDetour(nameof(Detour_PostDrawTiles), Detour_PostDrawTiles);
-        TryApplyDetour(nameof(Detour_ModifyTimeRate), Detour_ModifyTimeRate);
-        TryApplyDetour(nameof(Detour_SaveWorldData), Detour_SaveWorldData);
-        TryApplyDetour(nameof(Detour_LoadWorldData), Detour_LoadWorldData);
-        TryApplyDetour(nameof(Detour_SaveWorldHeader), Detour_SaveWorldHeader);
-        TryApplyDetour(nameof(Detour_CanWorldBePlayed), Detour_CanWorldBePlayed);
-        TryApplyDetour(nameof(Detour_WorldCanBePlayedRejectionMessage), Detour_WorldCanBePlayedRejectionMessage);
-        TryApplyDetour(nameof(Detour_NetSend), Detour_NetSend);
-        TryApplyDetour(nameof(Detour_NetReceive), Detour_NetReceive);
-        TryApplyDetour(nameof(Detour_HijackGetData), Detour_HijackGetData);
-        TryApplyDetour(nameof(Detour_HijackSendData), Detour_HijackSendData);
-        TryApplyDetour(nameof(Detour_PreWorldGen), Detour_PreWorldGen);
-        TryApplyDetour(nameof(Detour_ModifyWorldGenTasks), Detour_ModifyWorldGenTasks);
-        TryApplyDetour(nameof(Detour_PostWorldGen), Detour_PostWorldGen);
-        TryApplyDetour(nameof(Detour_ResetNearbyTileEffects), Detour_ResetNearbyTileEffects);
-        TryApplyDetour(nameof(Detour_ModifyHardmodeTasks), Detour_ModifyHardmodeTasks);
-        TryApplyDetour(nameof(Detour_ModifySunLightColor), Detour_ModifySunLightColor);
-        TryApplyDetour(nameof(Detour_ModifyLightingBrightness), Detour_ModifyLightingBrightness);
-        TryApplyDetour(nameof(Detour_TileCountsAvailable), Detour_TileCountsAvailable);
-        TryApplyDetour(nameof(Detour_ResizeArrays), Detour_ResizeArrays);
+        TryApplyDetour(Detour_OnModLoad);
+        TryApplyDetour(Detour_OnModUnload);
+        TryApplyDetour(Detour_PostSetupContent);
+        TryApplyDetour(Detour_OnLocalizationsLoaded);
+        TryApplyDetour(Detour_AddRecipes);
+        TryApplyDetour(Detour_PostAddRecipes);
+        TryApplyDetour(Detour_PostSetupRecipes);
+        TryApplyDetour(Detour_AddRecipeGroups);
+        TryApplyDetour(Detour_OnWorldLoad);
+        TryApplyDetour(Detour_OnWorldUnload);
+        TryApplyDetour(Detour_ClearWorld);
+        TryApplyDetour(Detour_ModifyScreenPosition);
+        TryApplyDetour(Detour_ModifyTransformMatrix);
+        TryApplyDetour(Detour_UpdateUI);
+        TryApplyDetour(Detour_PreUpdateEntities);
+        TryApplyDetour(Detour_PreUpdatePlayers);
+        TryApplyDetour(Detour_PostUpdatePlayers);
+        TryApplyDetour(Detour_PreUpdateNPCs);
+        TryApplyDetour(Detour_PostUpdateNPCs);
+        TryApplyDetour(Detour_PreUpdateGores);
+        TryApplyDetour(Detour_PostUpdateGores);
+        TryApplyDetour(Detour_PreUpdateProjectiles);
+        TryApplyDetour(Detour_PostUpdateProjectiles);
+        TryApplyDetour(Detour_PreUpdateItems);
+        TryApplyDetour(Detour_PostUpdateItems);
+        TryApplyDetour(Detour_PreUpdateDusts);
+        TryApplyDetour(Detour_PostUpdateDusts);
+        TryApplyDetour(Detour_PreUpdateTime);
+        TryApplyDetour(Detour_PostUpdateTime);
+        TryApplyDetour(Detour_PreUpdateWorld);
+        TryApplyDetour(Detour_PostUpdateWorld);
+        TryApplyDetour(Detour_PreUpdateInvasions);
+        TryApplyDetour(Detour_PostUpdateInvasions);
+        TryApplyDetour(Detour_PostUpdateEverything);
+        TryApplyDetour(Detour_ModifyInterfaceLayers);
+        TryApplyDetour(Detour_ModifyGameTipVisibility);
+        TryApplyDetour(Detour_PostDrawInterface);
+        TryApplyDetour(Detour_PreDrawMapIconOverlay);
+        TryApplyDetour(Detour_PostDrawFullscreenMap);
+        TryApplyDetour(Detour_PostUpdateInput);
+        TryApplyDetour(Detour_PreSaveAndQuit);
+        TryApplyDetour(Detour_PostDrawTiles);
+        TryApplyDetour(Detour_ModifyTimeRate);
+        TryApplyDetour(Detour_SaveWorldData);
+        TryApplyDetour(Detour_LoadWorldData);
+        TryApplyDetour(Detour_SaveWorldHeader);
+        TryApplyDetour(Detour_CanWorldBePlayed);
+        TryApplyDetour(Detour_WorldCanBePlayedRejectionMessage);
+        TryApplyDetour(Detour_NetSend);
+        TryApplyDetour(Detour_NetReceive);
+        TryApplyDetour(Detour_HijackGetData);
+        TryApplyDetour(Detour_HijackSendData);
+        TryApplyDetour(Detour_PreWorldGen);
+        TryApplyDetour(Detour_ModifyWorldGenTasks);
+        TryApplyDetour(Detour_PostWorldGen);
+        TryApplyDetour(Detour_ResetNearbyTileEffects);
+        TryApplyDetour(Detour_ModifyHardmodeTasks);
+        TryApplyDetour(Detour_ModifySunLightColor);
+        TryApplyDetour(Detour_ModifyLightingBrightness);
+        TryApplyDetour(Detour_TileCountsAvailable);
+        TryApplyDetour(Detour_ResizeArrays);
     }
 }
 
@@ -3407,50 +3407,50 @@ public abstract class ModTileDetour<T> : ModTypeDetour<T> where T : ModTile
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_PostSetDefaults), Detour_PostSetDefaults);
-        TryApplyDetour(nameof(Detour_HasSmartInteract), Detour_HasSmartInteract);
-        TryApplyDetour(nameof(Detour_ModifySmartInteractCoords), Detour_ModifySmartInteractCoords);
-        TryApplyDetour(nameof(Detour_ModifySittingTargetInfo), Detour_ModifySittingTargetInfo);
-        TryApplyDetour(nameof(Detour_ModifySleepingTargetInfo), Detour_ModifySleepingTargetInfo);
-        TryApplyDetour(nameof(Detour_DropCritterChance), Detour_DropCritterChance);
-        TryApplyDetour(nameof(Detour_CanDrop), Detour_CanDrop);
-        TryApplyDetour(nameof(Detour_GetItemDrops), Detour_GetItemDrops);
-        TryApplyDetour(nameof(Detour_CanKillTile), Detour_CanKillTile);
-        TryApplyDetour(nameof(Detour_KillTile), Detour_KillTile);
-        TryApplyDetour(nameof(Detour_KillMultiTile), Detour_KillMultiTile);
-        TryApplyDetour(nameof(Detour_NearbyEffects), Detour_NearbyEffects);
-        TryApplyDetour(nameof(Detour_GetTorchLuck), Detour_GetTorchLuck);
-        TryApplyDetour(nameof(Detour_IsTileDangerous), Detour_IsTileDangerous);
-        TryApplyDetour(nameof(Detour_IsTileBiomeSightable), Detour_IsTileBiomeSightable);
-        TryApplyDetour(nameof(Detour_IsTileSpelunkable), Detour_IsTileSpelunkable);
-        TryApplyDetour(nameof(Detour_SetSpriteEffects), Detour_SetSpriteEffects);
-        TryApplyDetour(nameof(Detour_SetDrawPositions), Detour_SetDrawPositions);
-        TryApplyDetour(nameof(Detour_AnimateTile), Detour_AnimateTile);
-        TryApplyDetour(nameof(Detour_AnimateIndividualTile), Detour_AnimateIndividualTile);
-        TryApplyDetour(nameof(Detour_DrawEffects), Detour_DrawEffects);
-        TryApplyDetour(nameof(Detour_EmitParticles), Detour_EmitParticles);
-        TryApplyDetour(nameof(Detour_SpecialDraw), Detour_SpecialDraw);
-        TryApplyDetour(nameof(Detour_TileFrame), Detour_TileFrame);
-        TryApplyDetour(nameof(Detour_PostTileFrame), Detour_PostTileFrame);
-        TryApplyDetour(nameof(Detour_ModifyFrameMerge), Detour_ModifyFrameMerge);
-        TryApplyDetour(nameof(Detour_RightClick), Detour_RightClick);
-        TryApplyDetour(nameof(Detour_MouseOver), Detour_MouseOver);
-        TryApplyDetour(nameof(Detour_MouseOverFar), Detour_MouseOverFar);
-        TryApplyDetour(nameof(Detour_AutoSelect), Detour_AutoSelect);
-        TryApplyDetour(nameof(Detour_HitWire), Detour_HitWire);
-        TryApplyDetour(nameof(Detour_Slope), Detour_Slope);
-        TryApplyDetour(nameof(Detour_FloorVisuals), Detour_FloorVisuals);
-        TryApplyDetour(nameof(Detour_HasWalkDust), Detour_HasWalkDust);
-        TryApplyDetour(nameof(Detour_WalkDust), Detour_WalkDust);
-        TryApplyDetour(nameof(Detour_ChangeWaterfallStyle), Detour_ChangeWaterfallStyle);
-        TryApplyDetour(nameof(Detour_PostSetupTileMerge), Detour_PostSetupTileMerge);
-        TryApplyDetour(nameof(Detour_IsLockedChest), Detour_IsLockedChest);
-        TryApplyDetour(nameof(Detour_UnlockChest), Detour_UnlockChest);
-        TryApplyDetour(nameof(Detour_LockChest), Detour_LockChest);
-        TryApplyDetour(nameof(Detour_DefaultContainerName), Detour_DefaultContainerName);
-        TryApplyDetour(nameof(Detour_CanReplace), Detour_CanReplace);
-        TryApplyDetour(nameof(Detour_AdjustMultiTileVineParameters), Detour_AdjustMultiTileVineParameters);
-        TryApplyDetour(nameof(Detour_GetTileFlameData), Detour_GetTileFlameData);
+        TryApplyDetour(Detour_PostSetDefaults);
+        TryApplyDetour(Detour_HasSmartInteract);
+        TryApplyDetour(Detour_ModifySmartInteractCoords);
+        TryApplyDetour(Detour_ModifySittingTargetInfo);
+        TryApplyDetour(Detour_ModifySleepingTargetInfo);
+        TryApplyDetour(Detour_DropCritterChance);
+        TryApplyDetour(Detour_CanDrop);
+        TryApplyDetour(Detour_GetItemDrops);
+        TryApplyDetour(Detour_CanKillTile);
+        TryApplyDetour(Detour_KillTile);
+        TryApplyDetour(Detour_KillMultiTile);
+        TryApplyDetour(Detour_NearbyEffects);
+        TryApplyDetour(Detour_GetTorchLuck);
+        TryApplyDetour(Detour_IsTileDangerous);
+        TryApplyDetour(Detour_IsTileBiomeSightable);
+        TryApplyDetour(Detour_IsTileSpelunkable);
+        TryApplyDetour(Detour_SetSpriteEffects);
+        TryApplyDetour(Detour_SetDrawPositions);
+        TryApplyDetour(Detour_AnimateTile);
+        TryApplyDetour(Detour_AnimateIndividualTile);
+        TryApplyDetour(Detour_DrawEffects);
+        TryApplyDetour(Detour_EmitParticles);
+        TryApplyDetour(Detour_SpecialDraw);
+        TryApplyDetour(Detour_TileFrame);
+        TryApplyDetour(Detour_PostTileFrame);
+        TryApplyDetour(Detour_ModifyFrameMerge);
+        TryApplyDetour(Detour_RightClick);
+        TryApplyDetour(Detour_MouseOver);
+        TryApplyDetour(Detour_MouseOverFar);
+        TryApplyDetour(Detour_AutoSelect);
+        TryApplyDetour(Detour_HitWire);
+        TryApplyDetour(Detour_Slope);
+        TryApplyDetour(Detour_FloorVisuals);
+        TryApplyDetour(Detour_HasWalkDust);
+        TryApplyDetour(Detour_WalkDust);
+        TryApplyDetour(Detour_ChangeWaterfallStyle);
+        TryApplyDetour(Detour_PostSetupTileMerge);
+        TryApplyDetour(Detour_IsLockedChest);
+        TryApplyDetour(Detour_UnlockChest);
+        TryApplyDetour(Detour_LockChest);
+        TryApplyDetour(Detour_DefaultContainerName);
+        TryApplyDetour(Detour_CanReplace);
+        TryApplyDetour(Detour_AdjustMultiTileVineParameters);
+        TryApplyDetour(Detour_GetTileFlameData);
     }
 }
 
@@ -3483,12 +3483,12 @@ public abstract class ModTileEntityDetour<T> : TypeDetour<T> where T : ModTileEn
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_Hook_AfterPlacement), Detour_Hook_AfterPlacement);
-        TryApplyDetour(nameof(Detour_OnNetPlace), Detour_OnNetPlace);
-        TryApplyDetour(nameof(Detour_PreGlobalUpdate), Detour_PreGlobalUpdate);
-        TryApplyDetour(nameof(Detour_PostGlobalUpdate), Detour_PostGlobalUpdate);
-        TryApplyDetour(nameof(Detour_OnKill), Detour_OnKill);
-        TryApplyDetour(nameof(Detour_IsTileValidForEntity), Detour_IsTileValidForEntity);
+        TryApplyDetour(Detour_Hook_AfterPlacement);
+        TryApplyDetour(Detour_OnNetPlace);
+        TryApplyDetour(Detour_PreGlobalUpdate);
+        TryApplyDetour(Detour_PostGlobalUpdate);
+        TryApplyDetour(Detour_OnKill);
+        TryApplyDetour(Detour_IsTileValidForEntity);
     }
 }
 
@@ -3545,18 +3545,18 @@ public abstract class ModTreeDetour<T> : TypeDetour<T> where T : ModTree
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_SetStaticDefaults), Detour_SetStaticDefaults);
-        TryApplyDetour(nameof(Detour_GetTexture), Detour_GetTexture);
-        TryApplyDetour(nameof(Detour_CountsAsTreeType), Detour_CountsAsTreeType);
-        TryApplyDetour(nameof(Detour_CreateDust), Detour_CreateDust);
-        TryApplyDetour(nameof(Detour_TreeLeaf), Detour_TreeLeaf);
-        TryApplyDetour(nameof(Detour_Shake), Detour_Shake);
-        TryApplyDetour(nameof(Detour_CanDropAcorn), Detour_CanDropAcorn);
-        TryApplyDetour(nameof(Detour_SaplingGrowthType), Detour_SaplingGrowthType);
-        TryApplyDetour(nameof(Detour_DropWood), Detour_DropWood);
-        TryApplyDetour(nameof(Detour_SetTreeFoliageSettings), Detour_SetTreeFoliageSettings);
-        TryApplyDetour(nameof(Detour_GetTopTextures), Detour_GetTopTextures);
-        TryApplyDetour(nameof(Detour_GetBranchTextures), Detour_GetBranchTextures);
+        TryApplyDetour(Detour_SetStaticDefaults);
+        TryApplyDetour(Detour_GetTexture);
+        TryApplyDetour(Detour_CountsAsTreeType);
+        TryApplyDetour(Detour_CreateDust);
+        TryApplyDetour(Detour_TreeLeaf);
+        TryApplyDetour(Detour_Shake);
+        TryApplyDetour(Detour_CanDropAcorn);
+        TryApplyDetour(Detour_SaplingGrowthType);
+        TryApplyDetour(Detour_DropWood);
+        TryApplyDetour(Detour_SetTreeFoliageSettings);
+        TryApplyDetour(Detour_GetTopTextures);
+        TryApplyDetour(Detour_GetBranchTextures);
     }
 }
 
@@ -3569,7 +3569,7 @@ public abstract class ModUndergroundBackgroundStyleDetour<T> : ModTypeDetour<T> 
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_FillTextureArray), Detour_FillTextureArray);
+        TryApplyDetour(Detour_FillTextureArray);
     }
 }
 
@@ -3594,10 +3594,10 @@ public abstract class ModWallDetour<T> : ModTypeDetour<T> where T : ModWall
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_Drop), Detour_Drop);
-        TryApplyDetour(nameof(Detour_KillWall), Detour_KillWall);
-        TryApplyDetour(nameof(Detour_AnimateWall), Detour_AnimateWall);
-        TryApplyDetour(nameof(Detour_WallFrame), Detour_WallFrame);
+        TryApplyDetour(Detour_Drop);
+        TryApplyDetour(Detour_KillWall);
+        TryApplyDetour(Detour_AnimateWall);
+        TryApplyDetour(Detour_WallFrame);
     }
 }
 
@@ -3614,8 +3614,8 @@ public abstract class ModWaterfallStyleDetour<T> : ModTypeDetour<T> where T : Mo
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_AddLight), Detour_AddLight);
-        TryApplyDetour(nameof(Detour_ColorMultiplier), Detour_ColorMultiplier);
+        TryApplyDetour(Detour_AddLight);
+        TryApplyDetour(Detour_ColorMultiplier);
     }
 }
 
@@ -3652,17 +3652,16 @@ public abstract class ModWaterStyleDetour<T> : ModTypeDetour<T> where T : ModWat
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_ChooseWaterfallStyle), Detour_ChooseWaterfallStyle);
-        TryApplyDetour(nameof(Detour_GetSplashDust), Detour_GetSplashDust);
-        TryApplyDetour(nameof(Detour_GetDropletGore), Detour_GetDropletGore);
-        TryApplyDetour(nameof(Detour_LightColorMultiplier), Detour_LightColorMultiplier);
-        TryApplyDetour(nameof(Detour_BiomeHairColor), Detour_BiomeHairColor);
-        TryApplyDetour(nameof(Detour_GetRainTexture), Detour_GetRainTexture);
-        TryApplyDetour(nameof(Detour_GetRainVariant), Detour_GetRainVariant);
+        TryApplyDetour(Detour_ChooseWaterfallStyle);
+        TryApplyDetour(Detour_GetSplashDust);
+        TryApplyDetour(Detour_GetDropletGore);
+        TryApplyDetour(Detour_LightColorMultiplier);
+        TryApplyDetour(Detour_BiomeHairColor);
+        TryApplyDetour(Detour_GetRainTexture);
+        TryApplyDetour(Detour_GetRainVariant);
     }
 }
 
-#region Global
 public abstract class GlobalTypeDetour<TEntity, TGlobal, TGlobalType> : ModTypeDetour<TGlobalType>
     where TEntity : IEntityWithGlobals<TGlobal>
     where TGlobal : GlobalType<TEntity, TGlobal>
@@ -3679,8 +3678,8 @@ public abstract class GlobalTypeDetour<TEntity, TGlobal, TGlobalType> : ModTypeD
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_AppliesToEntity), Detour_AppliesToEntity);
-        TryApplyDetour(nameof(Detour_SetDefaults), Detour_SetDefaults);
+        TryApplyDetour(Detour_AppliesToEntity);
+        TryApplyDetour(Detour_SetDefaults);
     }
 }
 
@@ -3729,16 +3728,16 @@ public abstract class GlobalBlockTypeDetour<T> : ModTypeDetour<T> where T : Glob
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_KillSound), Detour_KillSound);
-        TryApplyDetour(nameof(Detour_NumDust), Detour_NumDust);
-        TryApplyDetour(nameof(Detour_CreateDust), Detour_CreateDust);
-        TryApplyDetour(nameof(Detour_CanPlace), Detour_CanPlace);
-        TryApplyDetour(nameof(Detour_CanExplode), Detour_CanExplode);
-        TryApplyDetour(nameof(Detour_PreDraw), Detour_PreDraw);
-        TryApplyDetour(nameof(Detour_PostDraw), Detour_PostDraw);
-        TryApplyDetour(nameof(Detour_RandomUpdate), Detour_RandomUpdate);
-        TryApplyDetour(nameof(Detour_PlaceInWorld), Detour_PlaceInWorld);
-        TryApplyDetour(nameof(Detour_ModifyLight), Detour_ModifyLight);
+        TryApplyDetour(Detour_KillSound);
+        TryApplyDetour(Detour_NumDust);
+        TryApplyDetour(Detour_CreateDust);
+        TryApplyDetour(Detour_CanPlace);
+        TryApplyDetour(Detour_CanExplode);
+        TryApplyDetour(Detour_PreDraw);
+        TryApplyDetour(Detour_PostDraw);
+        TryApplyDetour(Detour_RandomUpdate);
+        TryApplyDetour(Detour_PlaceInWorld);
+        TryApplyDetour(Detour_ModifyLight);
     }
 }
 
@@ -3755,8 +3754,8 @@ public abstract class GlobalBossBarDetour<T> : ModTypeDetour<T> where T : Global
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_PreDraw), Detour_PreDraw);
-        TryApplyDetour(nameof(Detour_PostDraw), Detour_PostDraw);
+        TryApplyDetour(Detour_PreDraw);
+        TryApplyDetour(Detour_PostDraw);
     }
 }
 
@@ -3805,16 +3804,16 @@ public abstract class GlobalBuffDetour<T> : ModTypeDetour<T> where T : GlobalBuf
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_UpdatePlayer), Detour_UpdatePlayer);
-        TryApplyDetour(nameof(Detour_UpdateNPC), Detour_UpdateNPC);
-        TryApplyDetour(nameof(Detour_ReApplyPlayer), Detour_ReApplyPlayer);
-        TryApplyDetour(nameof(Detour_ReApplyNPC), Detour_ReApplyNPC);
-        TryApplyDetour(nameof(Detour_ModifyBuffText), Detour_ModifyBuffText);
-        TryApplyDetour(nameof(Detour_CustomBuffTipSize), Detour_CustomBuffTipSize);
-        TryApplyDetour(nameof(Detour_DrawCustomBuffTip), Detour_DrawCustomBuffTip);
-        TryApplyDetour(nameof(Detour_PreDraw), Detour_PreDraw);
-        TryApplyDetour(nameof(Detour_PostDraw), Detour_PostDraw);
-        TryApplyDetour(nameof(Detour_RightClick), Detour_RightClick);
+        TryApplyDetour(Detour_UpdatePlayer);
+        TryApplyDetour(Detour_UpdateNPC);
+        TryApplyDetour(Detour_ReApplyPlayer);
+        TryApplyDetour(Detour_ReApplyNPC);
+        TryApplyDetour(Detour_ModifyBuffText);
+        TryApplyDetour(Detour_CustomBuffTipSize);
+        TryApplyDetour(Detour_DrawCustomBuffTip);
+        TryApplyDetour(Detour_PreDraw);
+        TryApplyDetour(Detour_PostDraw);
+        TryApplyDetour(Detour_RightClick);
     }
 }
 
@@ -3859,15 +3858,15 @@ public abstract class GlobalEmoteBubbleDetour<T> : ModTypeDetour<T> where T : Gl
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_OnSpawn), Detour_OnSpawn);
-        TryApplyDetour(nameof(Detour_UpdateFrame), Detour_UpdateFrame);
-        TryApplyDetour(nameof(Detour_UpdateFrameInEmoteMenu), Detour_UpdateFrameInEmoteMenu);
-        TryApplyDetour(nameof(Detour_PreDraw), Detour_PreDraw);
-        TryApplyDetour(nameof(Detour_PostDraw), Detour_PostDraw);
-        TryApplyDetour(nameof(Detour_PreDrawInEmoteMenu), Detour_PreDrawInEmoteMenu);
-        TryApplyDetour(nameof(Detour_PostDrawInEmoteMenu), Detour_PostDrawInEmoteMenu);
-        TryApplyDetour(nameof(Detour_GetFrame), Detour_GetFrame);
-        TryApplyDetour(nameof(Detour_GetFrameInEmoteMenu), Detour_GetFrameInEmoteMenu);
+        TryApplyDetour(Detour_OnSpawn);
+        TryApplyDetour(Detour_UpdateFrame);
+        TryApplyDetour(Detour_UpdateFrameInEmoteMenu);
+        TryApplyDetour(Detour_PreDraw);
+        TryApplyDetour(Detour_PostDraw);
+        TryApplyDetour(Detour_PreDrawInEmoteMenu);
+        TryApplyDetour(Detour_PostDrawInEmoteMenu);
+        TryApplyDetour(Detour_GetFrame);
+        TryApplyDetour(Detour_GetFrameInEmoteMenu);
     }
 }
 
@@ -3884,8 +3883,8 @@ public abstract class GlobalInfoDisplayDetour<T> : ModTypeDetour<T> where T : Gl
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_Active), Detour_Active);
-        TryApplyDetour(nameof(Detour_ModifyDisplayParameters), Detour_ModifyDisplayParameters);
+        TryApplyDetour(Detour_Active);
+        TryApplyDetour(Detour_ModifyDisplayParameters);
     }
 }
 
@@ -4346,118 +4345,118 @@ public abstract class GlobalItemDetour<T> : GlobalTypeDetour<Item, GlobalItem, T
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_OnCreated), Detour_OnCreated);
-        TryApplyDetour(nameof(Detour_OnSpawn), Detour_OnSpawn);
-        TryApplyDetour(nameof(Detour_ChoosePrefix), Detour_ChoosePrefix);
-        TryApplyDetour(nameof(Detour_PrefixChance), Detour_PrefixChance);
-        TryApplyDetour(nameof(Detour_AllowPrefix), Detour_AllowPrefix);
-        TryApplyDetour(nameof(Detour_CanUseItem), Detour_CanUseItem);
-        TryApplyDetour(nameof(Detour_CanAutoReuseItem), Detour_CanAutoReuseItem);
-        TryApplyDetour(nameof(Detour_UseStyle), Detour_UseStyle);
-        TryApplyDetour(nameof(Detour_HoldStyle), Detour_HoldStyle);
-        TryApplyDetour(nameof(Detour_HoldItem), Detour_HoldItem);
-        TryApplyDetour(nameof(Detour_UseTimeMultiplier), Detour_UseTimeMultiplier);
-        TryApplyDetour(nameof(Detour_UseAnimationMultiplier), Detour_UseAnimationMultiplier);
-        TryApplyDetour(nameof(Detour_UseSpeedMultiplier), Detour_UseSpeedMultiplier);
-        TryApplyDetour(nameof(Detour_GetHealLife), Detour_GetHealLife);
-        TryApplyDetour(nameof(Detour_GetHealMana), Detour_GetHealMana);
-        TryApplyDetour(nameof(Detour_ModifyManaCost), Detour_ModifyManaCost);
-        TryApplyDetour(nameof(Detour_OnMissingMana), Detour_OnMissingMana);
-        TryApplyDetour(nameof(Detour_OnConsumeMana), Detour_OnConsumeMana);
-        TryApplyDetour(nameof(Detour_ModifyWeaponDamage), Detour_ModifyWeaponDamage);
-        TryApplyDetour(nameof(Detour_ModifyResearchSorting), Detour_ModifyResearchSorting);
-        TryApplyDetour(nameof(Detour_CanConsumeBait), Detour_CanConsumeBait);
-        TryApplyDetour(nameof(Detour_CanResearch), Detour_CanResearch);
-        TryApplyDetour(nameof(Detour_OnResearched), Detour_OnResearched);
-        TryApplyDetour(nameof(Detour_ModifyWeaponKnockback), Detour_ModifyWeaponKnockback);
-        TryApplyDetour(nameof(Detour_ModifyWeaponCrit), Detour_ModifyWeaponCrit);
-        TryApplyDetour(nameof(Detour_NeedsAmmo), Detour_NeedsAmmo);
-        TryApplyDetour(nameof(Detour_PickAmmo), Detour_PickAmmo);
-        TryApplyDetour(nameof(Detour_CanChooseAmmo), Detour_CanChooseAmmo);
-        TryApplyDetour(nameof(Detour_CanBeChosenAsAmmo), Detour_CanBeChosenAsAmmo);
-        TryApplyDetour(nameof(Detour_CanConsumeAmmo), Detour_CanConsumeAmmo);
-        TryApplyDetour(nameof(Detour_CanBeConsumedAsAmmo), Detour_CanBeConsumedAsAmmo);
-        TryApplyDetour(nameof(Detour_OnConsumeAmmo), Detour_OnConsumeAmmo);
-        TryApplyDetour(nameof(Detour_OnConsumedAsAmmo), Detour_OnConsumedAsAmmo);
-        TryApplyDetour(nameof(Detour_CanShoot), Detour_CanShoot);
-        TryApplyDetour(nameof(Detour_ModifyShootStats), Detour_ModifyShootStats);
-        TryApplyDetour(nameof(Detour_Shoot), Detour_Shoot);
-        TryApplyDetour(nameof(Detour_UseItemHitbox), Detour_UseItemHitbox);
-        TryApplyDetour(nameof(Detour_MeleeEffects), Detour_MeleeEffects);
-        TryApplyDetour(nameof(Detour_CanCatchNPC), Detour_CanCatchNPC);
-        TryApplyDetour(nameof(Detour_OnCatchNPC), Detour_OnCatchNPC);
-        TryApplyDetour(nameof(Detour_ModifyItemScale), Detour_ModifyItemScale);
-        TryApplyDetour(nameof(Detour_CanHitNPC), Detour_CanHitNPC);
-        TryApplyDetour(nameof(Detour_CanMeleeAttackCollideWithNPC), Detour_CanMeleeAttackCollideWithNPC);
-        TryApplyDetour(nameof(Detour_ModifyHitNPC), Detour_ModifyHitNPC);
-        TryApplyDetour(nameof(Detour_OnHitNPC), Detour_OnHitNPC);
-        TryApplyDetour(nameof(Detour_CanHitPvp), Detour_CanHitPvp);
-        TryApplyDetour(nameof(Detour_ModifyHitPvp), Detour_ModifyHitPvp);
-        TryApplyDetour(nameof(Detour_OnHitPvp), Detour_OnHitPvp);
-        TryApplyDetour(nameof(Detour_UseItem), Detour_UseItem);
-        TryApplyDetour(nameof(Detour_UseAnimation), Detour_UseAnimation);
-        TryApplyDetour(nameof(Detour_ConsumeItem), Detour_ConsumeItem);
-        TryApplyDetour(nameof(Detour_OnConsumeItem), Detour_OnConsumeItem);
-        TryApplyDetour(nameof(Detour_UseItemFrame), Detour_UseItemFrame);
-        TryApplyDetour(nameof(Detour_HoldItemFrame), Detour_HoldItemFrame);
-        TryApplyDetour(nameof(Detour_AltFunctionUse), Detour_AltFunctionUse);
-        TryApplyDetour(nameof(Detour_UpdateInventory), Detour_UpdateInventory);
-        TryApplyDetour(nameof(Detour_UpdateInfoAccessory), Detour_UpdateInfoAccessory);
-        TryApplyDetour(nameof(Detour_UpdateEquip), Detour_UpdateEquip);
-        TryApplyDetour(nameof(Detour_UpdateAccessory), Detour_UpdateAccessory);
-        TryApplyDetour(nameof(Detour_UpdateVanity), Detour_UpdateVanity);
-        TryApplyDetour(nameof(Detour_IsArmorSet), Detour_IsArmorSet);
-        TryApplyDetour(nameof(Detour_UpdateArmorSet), Detour_UpdateArmorSet);
-        TryApplyDetour(nameof(Detour_IsVanitySet), Detour_IsVanitySet);
-        TryApplyDetour(nameof(Detour_PreUpdateVanitySet), Detour_PreUpdateVanitySet);
-        TryApplyDetour(nameof(Detour_UpdateVanitySet), Detour_UpdateVanitySet);
-        TryApplyDetour(nameof(Detour_ArmorSetShadows), Detour_ArmorSetShadows);
-        TryApplyDetour(nameof(Detour_SetMatch), Detour_SetMatch);
-        TryApplyDetour(nameof(Detour_CanRightClick), Detour_CanRightClick);
-        TryApplyDetour(nameof(Detour_RightClick), Detour_RightClick);
-        TryApplyDetour(nameof(Detour_ModifyItemLoot), Detour_ModifyItemLoot);
-        TryApplyDetour(nameof(Detour_CanStack), Detour_CanStack);
-        TryApplyDetour(nameof(Detour_CanStackInWorld), Detour_CanStackInWorld);
-        TryApplyDetour(nameof(Detour_OnStack), Detour_OnStack);
-        TryApplyDetour(nameof(Detour_SplitStack), Detour_SplitStack);
-        TryApplyDetour(nameof(Detour_ReforgePrice), Detour_ReforgePrice);
-        TryApplyDetour(nameof(Detour_CanReforge), Detour_CanReforge);
-        TryApplyDetour(nameof(Detour_PreReforge), Detour_PreReforge);
-        TryApplyDetour(nameof(Detour_PostReforge), Detour_PostReforge);
-        TryApplyDetour(nameof(Detour_DrawArmorColor), Detour_DrawArmorColor);
-        TryApplyDetour(nameof(Detour_ArmorArmGlowMask), Detour_ArmorArmGlowMask);
-        TryApplyDetour(nameof(Detour_VerticalWingSpeeds), Detour_VerticalWingSpeeds);
-        TryApplyDetour(nameof(Detour_HorizontalWingSpeeds), Detour_HorizontalWingSpeeds);
-        TryApplyDetour(nameof(Detour_WingUpdate), Detour_WingUpdate);
-        TryApplyDetour(nameof(Detour_Update), Detour_Update);
-        TryApplyDetour(nameof(Detour_PostUpdate), Detour_PostUpdate);
-        TryApplyDetour(nameof(Detour_GrabRange), Detour_GrabRange);
-        TryApplyDetour(nameof(Detour_GrabStyle), Detour_GrabStyle);
-        TryApplyDetour(nameof(Detour_CanPickup), Detour_CanPickup);
-        TryApplyDetour(nameof(Detour_OnPickup), Detour_OnPickup);
-        TryApplyDetour(nameof(Detour_ItemSpace), Detour_ItemSpace);
-        TryApplyDetour(nameof(Detour_GetAlpha), Detour_GetAlpha);
-        TryApplyDetour(nameof(Detour_PreDrawInWorld), Detour_PreDrawInWorld);
-        TryApplyDetour(nameof(Detour_PostDrawInWorld), Detour_PostDrawInWorld);
-        TryApplyDetour(nameof(Detour_PreDrawInInventory), Detour_PreDrawInInventory);
-        TryApplyDetour(nameof(Detour_PostDrawInInventory), Detour_PostDrawInInventory);
-        TryApplyDetour(nameof(Detour_HoldoutOffset), Detour_HoldoutOffset);
-        TryApplyDetour(nameof(Detour_HoldoutOrigin), Detour_HoldoutOrigin);
-        TryApplyDetour(nameof(Detour_CanEquipAccessory), Detour_CanEquipAccessory);
-        TryApplyDetour(nameof(Detour_CanAccessoryBeEquippedWith), Detour_CanAccessoryBeEquippedWith);
-        TryApplyDetour(nameof(Detour_ExtractinatorUse), Detour_ExtractinatorUse);
-        TryApplyDetour(nameof(Detour_CaughtFishStack), Detour_CaughtFishStack);
-        TryApplyDetour(nameof(Detour_IsAnglerQuestAvailable), Detour_IsAnglerQuestAvailable);
-        TryApplyDetour(nameof(Detour_AnglerChat), Detour_AnglerChat);
-        TryApplyDetour(nameof(Detour_PreDrawTooltip), Detour_PreDrawTooltip);
-        TryApplyDetour(nameof(Detour_PostDrawTooltip), Detour_PostDrawTooltip);
-        TryApplyDetour(nameof(Detour_PreDrawTooltipLine), Detour_PreDrawTooltipLine);
-        TryApplyDetour(nameof(Detour_PostDrawTooltipLine), Detour_PostDrawTooltipLine);
-        TryApplyDetour(nameof(Detour_ModifyTooltips), Detour_ModifyTooltips);
-        TryApplyDetour(nameof(Detour_SaveData), Detour_SaveData);
-        TryApplyDetour(nameof(Detour_LoadData), Detour_LoadData);
-        TryApplyDetour(nameof(Detour_NetSend), Detour_NetSend);
-        TryApplyDetour(nameof(Detour_NetReceive), Detour_NetReceive);
+        TryApplyDetour(Detour_OnCreated);
+        TryApplyDetour(Detour_OnSpawn);
+        TryApplyDetour(Detour_ChoosePrefix);
+        TryApplyDetour(Detour_PrefixChance);
+        TryApplyDetour(Detour_AllowPrefix);
+        TryApplyDetour(Detour_CanUseItem);
+        TryApplyDetour(Detour_CanAutoReuseItem);
+        TryApplyDetour(Detour_UseStyle);
+        TryApplyDetour(Detour_HoldStyle);
+        TryApplyDetour(Detour_HoldItem);
+        TryApplyDetour(Detour_UseTimeMultiplier);
+        TryApplyDetour(Detour_UseAnimationMultiplier);
+        TryApplyDetour(Detour_UseSpeedMultiplier);
+        TryApplyDetour(Detour_GetHealLife);
+        TryApplyDetour(Detour_GetHealMana);
+        TryApplyDetour(Detour_ModifyManaCost);
+        TryApplyDetour(Detour_OnMissingMana);
+        TryApplyDetour(Detour_OnConsumeMana);
+        TryApplyDetour(Detour_ModifyWeaponDamage);
+        TryApplyDetour(Detour_ModifyResearchSorting);
+        TryApplyDetour(Detour_CanConsumeBait);
+        TryApplyDetour(Detour_CanResearch);
+        TryApplyDetour(Detour_OnResearched);
+        TryApplyDetour(Detour_ModifyWeaponKnockback);
+        TryApplyDetour(Detour_ModifyWeaponCrit);
+        TryApplyDetour(Detour_NeedsAmmo);
+        TryApplyDetour(Detour_PickAmmo);
+        TryApplyDetour(Detour_CanChooseAmmo);
+        TryApplyDetour(Detour_CanBeChosenAsAmmo);
+        TryApplyDetour(Detour_CanConsumeAmmo);
+        TryApplyDetour(Detour_CanBeConsumedAsAmmo);
+        TryApplyDetour(Detour_OnConsumeAmmo);
+        TryApplyDetour(Detour_OnConsumedAsAmmo);
+        TryApplyDetour(Detour_CanShoot);
+        TryApplyDetour(Detour_ModifyShootStats);
+        TryApplyDetour(Detour_Shoot);
+        TryApplyDetour(Detour_UseItemHitbox);
+        TryApplyDetour(Detour_MeleeEffects);
+        TryApplyDetour(Detour_CanCatchNPC);
+        TryApplyDetour(Detour_OnCatchNPC);
+        TryApplyDetour(Detour_ModifyItemScale);
+        TryApplyDetour(Detour_CanHitNPC);
+        TryApplyDetour(Detour_CanMeleeAttackCollideWithNPC);
+        TryApplyDetour(Detour_ModifyHitNPC);
+        TryApplyDetour(Detour_OnHitNPC);
+        TryApplyDetour(Detour_CanHitPvp);
+        TryApplyDetour(Detour_ModifyHitPvp);
+        TryApplyDetour(Detour_OnHitPvp);
+        TryApplyDetour(Detour_UseItem);
+        TryApplyDetour(Detour_UseAnimation);
+        TryApplyDetour(Detour_ConsumeItem);
+        TryApplyDetour(Detour_OnConsumeItem);
+        TryApplyDetour(Detour_UseItemFrame);
+        TryApplyDetour(Detour_HoldItemFrame);
+        TryApplyDetour(Detour_AltFunctionUse);
+        TryApplyDetour(Detour_UpdateInventory);
+        TryApplyDetour(Detour_UpdateInfoAccessory);
+        TryApplyDetour(Detour_UpdateEquip);
+        TryApplyDetour(Detour_UpdateAccessory);
+        TryApplyDetour(Detour_UpdateVanity);
+        TryApplyDetour(Detour_IsArmorSet);
+        TryApplyDetour(Detour_UpdateArmorSet);
+        TryApplyDetour(Detour_IsVanitySet);
+        TryApplyDetour(Detour_PreUpdateVanitySet);
+        TryApplyDetour(Detour_UpdateVanitySet);
+        TryApplyDetour(Detour_ArmorSetShadows);
+        TryApplyDetour(Detour_SetMatch);
+        TryApplyDetour(Detour_CanRightClick);
+        TryApplyDetour(Detour_RightClick);
+        TryApplyDetour(Detour_ModifyItemLoot);
+        TryApplyDetour(Detour_CanStack);
+        TryApplyDetour(Detour_CanStackInWorld);
+        TryApplyDetour(Detour_OnStack);
+        TryApplyDetour(Detour_SplitStack);
+        TryApplyDetour(Detour_ReforgePrice);
+        TryApplyDetour(Detour_CanReforge);
+        TryApplyDetour(Detour_PreReforge);
+        TryApplyDetour(Detour_PostReforge);
+        TryApplyDetour(Detour_DrawArmorColor);
+        TryApplyDetour(Detour_ArmorArmGlowMask);
+        TryApplyDetour(Detour_VerticalWingSpeeds);
+        TryApplyDetour(Detour_HorizontalWingSpeeds);
+        TryApplyDetour(Detour_WingUpdate);
+        TryApplyDetour(Detour_Update);
+        TryApplyDetour(Detour_PostUpdate);
+        TryApplyDetour(Detour_GrabRange);
+        TryApplyDetour(Detour_GrabStyle);
+        TryApplyDetour(Detour_CanPickup);
+        TryApplyDetour(Detour_OnPickup);
+        TryApplyDetour(Detour_ItemSpace);
+        TryApplyDetour(Detour_GetAlpha);
+        TryApplyDetour(Detour_PreDrawInWorld);
+        TryApplyDetour(Detour_PostDrawInWorld);
+        TryApplyDetour(Detour_PreDrawInInventory);
+        TryApplyDetour(Detour_PostDrawInInventory);
+        TryApplyDetour(Detour_HoldoutOffset);
+        TryApplyDetour(Detour_HoldoutOrigin);
+        TryApplyDetour(Detour_CanEquipAccessory);
+        TryApplyDetour(Detour_CanAccessoryBeEquippedWith);
+        TryApplyDetour(Detour_ExtractinatorUse);
+        TryApplyDetour(Detour_CaughtFishStack);
+        TryApplyDetour(Detour_IsAnglerQuestAvailable);
+        TryApplyDetour(Detour_AnglerChat);
+        TryApplyDetour(Detour_PreDrawTooltip);
+        TryApplyDetour(Detour_PostDrawTooltip);
+        TryApplyDetour(Detour_PreDrawTooltipLine);
+        TryApplyDetour(Detour_PostDrawTooltipLine);
+        TryApplyDetour(Detour_ModifyTooltips);
+        TryApplyDetour(Detour_SaveData);
+        TryApplyDetour(Detour_LoadData);
+        TryApplyDetour(Detour_NetSend);
+        TryApplyDetour(Detour_NetReceive);
     }
 }
 
@@ -4798,88 +4797,88 @@ public abstract class GlobalNPCDetour<T> : GlobalTypeDetour<NPC, GlobalNPC, T> w
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_SetDefaultsFromNetId), Detour_SetDefaultsFromNetId);
-        TryApplyDetour(nameof(Detour_OnSpawn), Detour_OnSpawn);
-        TryApplyDetour(nameof(Detour_ApplyDifficultyAndPlayerScaling), Detour_ApplyDifficultyAndPlayerScaling);
-        TryApplyDetour(nameof(Detour_SetBestiary), Detour_SetBestiary);
-        TryApplyDetour(nameof(Detour_ModifyTypeName), Detour_ModifyTypeName);
-        TryApplyDetour(nameof(Detour_ModifyHoverBoundingBox), Detour_ModifyHoverBoundingBox);
-        TryApplyDetour(nameof(Detour_ModifyTownNPCProfile), Detour_ModifyTownNPCProfile);
-        TryApplyDetour(nameof(Detour_ModifyNPCNameList), Detour_ModifyNPCNameList);
-        TryApplyDetour(nameof(Detour_ResetEffects), Detour_ResetEffects);
-        TryApplyDetour(nameof(Detour_PreAI), Detour_PreAI);
-        TryApplyDetour(nameof(Detour_AI), Detour_AI);
-        TryApplyDetour(nameof(Detour_PostAI), Detour_PostAI);
-        TryApplyDetour(nameof(Detour_SendExtraAI), Detour_SendExtraAI);
-        TryApplyDetour(nameof(Detour_ReceiveExtraAI), Detour_ReceiveExtraAI);
-        TryApplyDetour(nameof(Detour_FindFrame), Detour_FindFrame);
-        TryApplyDetour(nameof(Detour_HitEffect), Detour_HitEffect);
-        TryApplyDetour(nameof(Detour_UpdateLifeRegen), Detour_UpdateLifeRegen);
-        TryApplyDetour(nameof(Detour_CheckActive), Detour_CheckActive);
-        TryApplyDetour(nameof(Detour_CheckDead), Detour_CheckDead);
-        TryApplyDetour(nameof(Detour_SpecialOnKill), Detour_SpecialOnKill);
-        TryApplyDetour(nameof(Detour_PreKill), Detour_PreKill);
-        TryApplyDetour(nameof(Detour_OnKill), Detour_OnKill);
-        TryApplyDetour(nameof(Detour_CanFallThroughPlatforms), Detour_CanFallThroughPlatforms);
-        TryApplyDetour(nameof(Detour_CanBeCaughtBy), Detour_CanBeCaughtBy);
-        TryApplyDetour(nameof(Detour_OnCaughtBy), Detour_OnCaughtBy);
-        TryApplyDetour(nameof(Detour_ModifyNPCLoot), Detour_ModifyNPCLoot);
-        TryApplyDetour(nameof(Detour_ModifyGlobalLoot), Detour_ModifyGlobalLoot);
-        TryApplyDetour(nameof(Detour_CanHitPlayer), Detour_CanHitPlayer);
-        TryApplyDetour(nameof(Detour_ModifyHitPlayer), Detour_ModifyHitPlayer);
-        TryApplyDetour(nameof(Detour_OnHitPlayer), Detour_OnHitPlayer);
-        TryApplyDetour(nameof(Detour_CanHitNPC), Detour_CanHitNPC);
-        TryApplyDetour(nameof(Detour_CanBeHitByNPC), Detour_CanBeHitByNPC);
-        TryApplyDetour(nameof(Detour_ModifyHitNPC), Detour_ModifyHitNPC);
-        TryApplyDetour(nameof(Detour_OnHitNPC), Detour_OnHitNPC);
-        TryApplyDetour(nameof(Detour_CanBeHitByItem), Detour_CanBeHitByItem);
-        TryApplyDetour(nameof(Detour_CanCollideWithPlayerMeleeAttack), Detour_CanCollideWithPlayerMeleeAttack);
-        TryApplyDetour(nameof(Detour_ModifyHitByItem), Detour_ModifyHitByItem);
-        TryApplyDetour(nameof(Detour_OnHitByItem), Detour_OnHitByItem);
-        TryApplyDetour(nameof(Detour_CanBeHitByProjectile), Detour_CanBeHitByProjectile);
-        TryApplyDetour(nameof(Detour_ModifyHitByProjectile), Detour_ModifyHitByProjectile);
-        TryApplyDetour(nameof(Detour_OnHitByProjectile), Detour_OnHitByProjectile);
-        TryApplyDetour(nameof(Detour_ModifyIncomingHit), Detour_ModifyIncomingHit);
-        TryApplyDetour(nameof(Detour_BossHeadSlot), Detour_BossHeadSlot);
-        TryApplyDetour(nameof(Detour_BossHeadRotation), Detour_BossHeadRotation);
-        TryApplyDetour(nameof(Detour_BossHeadSpriteEffects), Detour_BossHeadSpriteEffects);
-        TryApplyDetour(nameof(Detour_GetAlpha), Detour_GetAlpha);
-        TryApplyDetour(nameof(Detour_DrawEffects), Detour_DrawEffects);
-        TryApplyDetour(nameof(Detour_PreDraw), Detour_PreDraw);
-        TryApplyDetour(nameof(Detour_PostDraw), Detour_PostDraw);
-        TryApplyDetour(nameof(Detour_DrawBehind), Detour_DrawBehind);
-        TryApplyDetour(nameof(Detour_DrawHealthBar), Detour_DrawHealthBar);
-        TryApplyDetour(nameof(Detour_EditSpawnRate), Detour_EditSpawnRate);
-        TryApplyDetour(nameof(Detour_EditSpawnRange), Detour_EditSpawnRange);
-        TryApplyDetour(nameof(Detour_EditSpawnPool), Detour_EditSpawnPool);
-        TryApplyDetour(nameof(Detour_SpawnNPC), Detour_SpawnNPC);
-        TryApplyDetour(nameof(Detour_CanChat), Detour_CanChat);
-        TryApplyDetour(nameof(Detour_GetChat), Detour_GetChat);
-        TryApplyDetour(nameof(Detour_PreChatButtonClicked), Detour_PreChatButtonClicked);
-        TryApplyDetour(nameof(Detour_OnChatButtonClicked), Detour_OnChatButtonClicked);
-        TryApplyDetour(nameof(Detour_ModifyShop), Detour_ModifyShop);
-        TryApplyDetour(nameof(Detour_ModifyActiveShop), Detour_ModifyActiveShop);
-        TryApplyDetour(nameof(Detour_SetupTravelShop), Detour_SetupTravelShop);
-        TryApplyDetour(nameof(Detour_CanGoToStatue), Detour_CanGoToStatue);
-        TryApplyDetour(nameof(Detour_OnGoToStatue), Detour_OnGoToStatue);
-        TryApplyDetour(nameof(Detour_BuffTownNPC), Detour_BuffTownNPC);
-        TryApplyDetour(nameof(Detour_TownNPCAttackStrength), Detour_TownNPCAttackStrength);
-        TryApplyDetour(nameof(Detour_TownNPCAttackCooldown), Detour_TownNPCAttackCooldown);
-        TryApplyDetour(nameof(Detour_TownNPCAttackProj), Detour_TownNPCAttackProj);
-        TryApplyDetour(nameof(Detour_TownNPCAttackProjSpeed), Detour_TownNPCAttackProjSpeed);
-        TryApplyDetour(nameof(Detour_TownNPCAttackShoot), Detour_TownNPCAttackShoot);
-        TryApplyDetour(nameof(Detour_TownNPCAttackMagic), Detour_TownNPCAttackMagic);
-        TryApplyDetour(nameof(Detour_TownNPCAttackSwing), Detour_TownNPCAttackSwing);
-        TryApplyDetour(nameof(Detour_DrawTownAttackGun), Detour_DrawTownAttackGun);
-        TryApplyDetour(nameof(Detour_DrawTownAttackSwing), Detour_DrawTownAttackSwing);
-        TryApplyDetour(nameof(Detour_ModifyCollisionData), Detour_ModifyCollisionData);
-        TryApplyDetour(nameof(Detour_NeedSaving), Detour_NeedSaving);
-        TryApplyDetour(nameof(Detour_SaveData), Detour_SaveData);
-        TryApplyDetour(nameof(Detour_LoadData), Detour_LoadData);
-        TryApplyDetour(nameof(Detour_PickEmote), Detour_PickEmote);
-        TryApplyDetour(nameof(Detour_ChatBubblePosition), Detour_ChatBubblePosition);
-        TryApplyDetour(nameof(Detour_PartyHatPosition), Detour_PartyHatPosition);
-        TryApplyDetour(nameof(Detour_EmoteBubblePosition), Detour_EmoteBubblePosition);
+        TryApplyDetour(Detour_SetDefaultsFromNetId);
+        TryApplyDetour(Detour_OnSpawn);
+        TryApplyDetour(Detour_ApplyDifficultyAndPlayerScaling);
+        TryApplyDetour(Detour_SetBestiary);
+        TryApplyDetour(Detour_ModifyTypeName);
+        TryApplyDetour(Detour_ModifyHoverBoundingBox);
+        TryApplyDetour(Detour_ModifyTownNPCProfile);
+        TryApplyDetour(Detour_ModifyNPCNameList);
+        TryApplyDetour(Detour_ResetEffects);
+        TryApplyDetour(Detour_PreAI);
+        TryApplyDetour(Detour_AI);
+        TryApplyDetour(Detour_PostAI);
+        TryApplyDetour(Detour_SendExtraAI);
+        TryApplyDetour(Detour_ReceiveExtraAI);
+        TryApplyDetour(Detour_FindFrame);
+        TryApplyDetour(Detour_HitEffect);
+        TryApplyDetour(Detour_UpdateLifeRegen);
+        TryApplyDetour(Detour_CheckActive);
+        TryApplyDetour(Detour_CheckDead);
+        TryApplyDetour(Detour_SpecialOnKill);
+        TryApplyDetour(Detour_PreKill);
+        TryApplyDetour(Detour_OnKill);
+        TryApplyDetour(Detour_CanFallThroughPlatforms);
+        TryApplyDetour(Detour_CanBeCaughtBy);
+        TryApplyDetour(Detour_OnCaughtBy);
+        TryApplyDetour(Detour_ModifyNPCLoot);
+        TryApplyDetour(Detour_ModifyGlobalLoot);
+        TryApplyDetour(Detour_CanHitPlayer);
+        TryApplyDetour(Detour_ModifyHitPlayer);
+        TryApplyDetour(Detour_OnHitPlayer);
+        TryApplyDetour(Detour_CanHitNPC);
+        TryApplyDetour(Detour_CanBeHitByNPC);
+        TryApplyDetour(Detour_ModifyHitNPC);
+        TryApplyDetour(Detour_OnHitNPC);
+        TryApplyDetour(Detour_CanBeHitByItem);
+        TryApplyDetour(Detour_CanCollideWithPlayerMeleeAttack);
+        TryApplyDetour(Detour_ModifyHitByItem);
+        TryApplyDetour(Detour_OnHitByItem);
+        TryApplyDetour(Detour_CanBeHitByProjectile);
+        TryApplyDetour(Detour_ModifyHitByProjectile);
+        TryApplyDetour(Detour_OnHitByProjectile);
+        TryApplyDetour(Detour_ModifyIncomingHit);
+        TryApplyDetour(Detour_BossHeadSlot);
+        TryApplyDetour(Detour_BossHeadRotation);
+        TryApplyDetour(Detour_BossHeadSpriteEffects);
+        TryApplyDetour(Detour_GetAlpha);
+        TryApplyDetour(Detour_DrawEffects);
+        TryApplyDetour(Detour_PreDraw);
+        TryApplyDetour(Detour_PostDraw);
+        TryApplyDetour(Detour_DrawBehind);
+        TryApplyDetour(Detour_DrawHealthBar);
+        TryApplyDetour(Detour_EditSpawnRate);
+        TryApplyDetour(Detour_EditSpawnRange);
+        TryApplyDetour(Detour_EditSpawnPool);
+        TryApplyDetour(Detour_SpawnNPC);
+        TryApplyDetour(Detour_CanChat);
+        TryApplyDetour(Detour_GetChat);
+        TryApplyDetour(Detour_PreChatButtonClicked);
+        TryApplyDetour(Detour_OnChatButtonClicked);
+        TryApplyDetour(Detour_ModifyShop);
+        TryApplyDetour(Detour_ModifyActiveShop);
+        TryApplyDetour(Detour_SetupTravelShop);
+        TryApplyDetour(Detour_CanGoToStatue);
+        TryApplyDetour(Detour_OnGoToStatue);
+        TryApplyDetour(Detour_BuffTownNPC);
+        TryApplyDetour(Detour_TownNPCAttackStrength);
+        TryApplyDetour(Detour_TownNPCAttackCooldown);
+        TryApplyDetour(Detour_TownNPCAttackProj);
+        TryApplyDetour(Detour_TownNPCAttackProjSpeed);
+        TryApplyDetour(Detour_TownNPCAttackShoot);
+        TryApplyDetour(Detour_TownNPCAttackMagic);
+        TryApplyDetour(Detour_TownNPCAttackSwing);
+        TryApplyDetour(Detour_DrawTownAttackGun);
+        TryApplyDetour(Detour_DrawTownAttackSwing);
+        TryApplyDetour(Detour_ModifyCollisionData);
+        TryApplyDetour(Detour_NeedSaving);
+        TryApplyDetour(Detour_SaveData);
+        TryApplyDetour(Detour_LoadData);
+        TryApplyDetour(Detour_PickEmote);
+        TryApplyDetour(Detour_ChatBubblePosition);
+        TryApplyDetour(Detour_PartyHatPosition);
+        TryApplyDetour(Detour_EmoteBubblePosition);
     }
 }
 
@@ -5044,44 +5043,44 @@ public abstract class GlobalProjectileDetour<T> : GlobalTypeDetour<Projectile, G
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_OnSpawn), Detour_OnSpawn);
-        TryApplyDetour(nameof(Detour_PreAI), Detour_PreAI);
-        TryApplyDetour(nameof(Detour_AI), Detour_AI);
-        TryApplyDetour(nameof(Detour_PostAI), Detour_PostAI);
-        TryApplyDetour(nameof(Detour_SendExtraAI), Detour_SendExtraAI);
-        TryApplyDetour(nameof(Detour_ReceiveExtraAI), Detour_ReceiveExtraAI);
-        TryApplyDetour(nameof(Detour_ShouldUpdatePosition), Detour_ShouldUpdatePosition);
-        TryApplyDetour(nameof(Detour_TileCollideStyle), Detour_TileCollideStyle);
-        TryApplyDetour(nameof(Detour_OnTileCollide), Detour_OnTileCollide);
-        TryApplyDetour(nameof(Detour_PreKill), Detour_PreKill);
-        TryApplyDetour(nameof(Detour_OnKill), Detour_OnKill);
-        TryApplyDetour(nameof(Detour_CanCutTiles), Detour_CanCutTiles);
-        TryApplyDetour(nameof(Detour_CutTiles), Detour_CutTiles);
-        TryApplyDetour(nameof(Detour_CanDamage), Detour_CanDamage);
-        TryApplyDetour(nameof(Detour_MinionContactDamage), Detour_MinionContactDamage);
-        TryApplyDetour(nameof(Detour_ModifyDamageHitbox), Detour_ModifyDamageHitbox);
-        TryApplyDetour(nameof(Detour_CanHitNPC), Detour_CanHitNPC);
-        TryApplyDetour(nameof(Detour_ModifyHitNPC), Detour_ModifyHitNPC);
-        TryApplyDetour(nameof(Detour_OnHitNPC), Detour_OnHitNPC);
-        TryApplyDetour(nameof(Detour_CanHitPvp), Detour_CanHitPvp);
-        TryApplyDetour(nameof(Detour_CanHitPlayer), Detour_CanHitPlayer);
-        TryApplyDetour(nameof(Detour_ModifyHitPlayer), Detour_ModifyHitPlayer);
-        TryApplyDetour(nameof(Detour_OnHitPlayer), Detour_OnHitPlayer);
-        TryApplyDetour(nameof(Detour_Colliding), Detour_Colliding);
-        TryApplyDetour(nameof(Detour_GetAlpha), Detour_GetAlpha);
-        TryApplyDetour(nameof(Detour_PreDrawExtras), Detour_PreDrawExtras);
-        TryApplyDetour(nameof(Detour_PreDraw), Detour_PreDraw);
-        TryApplyDetour(nameof(Detour_PostDraw), Detour_PostDraw);
-        TryApplyDetour(nameof(Detour_DrawBehind), Detour_DrawBehind);
-        TryApplyDetour(nameof(Detour_CanUseGrapple), Detour_CanUseGrapple);
-        TryApplyDetour(nameof(Detour_UseGrapple), Detour_UseGrapple);
-        TryApplyDetour(nameof(Detour_NumGrappleHooks), Detour_NumGrappleHooks);
-        TryApplyDetour(nameof(Detour_GrappleRetreatSpeed), Detour_GrappleRetreatSpeed);
-        TryApplyDetour(nameof(Detour_GrapplePullSpeed), Detour_GrapplePullSpeed);
-        TryApplyDetour(nameof(Detour_GrappleTargetPoint), Detour_GrappleTargetPoint);
-        TryApplyDetour(nameof(Detour_GrappleCanLatchOnTo), Detour_GrappleCanLatchOnTo);
-        TryApplyDetour(nameof(Detour_PrepareBombToBlow), Detour_PrepareBombToBlow);
-        TryApplyDetour(nameof(Detour_EmitEnchantmentVisualsAt), Detour_EmitEnchantmentVisualsAt);
+        TryApplyDetour(Detour_OnSpawn);
+        TryApplyDetour(Detour_PreAI);
+        TryApplyDetour(Detour_AI);
+        TryApplyDetour(Detour_PostAI);
+        TryApplyDetour(Detour_SendExtraAI);
+        TryApplyDetour(Detour_ReceiveExtraAI);
+        TryApplyDetour(Detour_ShouldUpdatePosition);
+        TryApplyDetour(Detour_TileCollideStyle);
+        TryApplyDetour(Detour_OnTileCollide);
+        TryApplyDetour(Detour_PreKill);
+        TryApplyDetour(Detour_OnKill);
+        TryApplyDetour(Detour_CanCutTiles);
+        TryApplyDetour(Detour_CutTiles);
+        TryApplyDetour(Detour_CanDamage);
+        TryApplyDetour(Detour_MinionContactDamage);
+        TryApplyDetour(Detour_ModifyDamageHitbox);
+        TryApplyDetour(Detour_CanHitNPC);
+        TryApplyDetour(Detour_ModifyHitNPC);
+        TryApplyDetour(Detour_OnHitNPC);
+        TryApplyDetour(Detour_CanHitPvp);
+        TryApplyDetour(Detour_CanHitPlayer);
+        TryApplyDetour(Detour_ModifyHitPlayer);
+        TryApplyDetour(Detour_OnHitPlayer);
+        TryApplyDetour(Detour_Colliding);
+        TryApplyDetour(Detour_GetAlpha);
+        TryApplyDetour(Detour_PreDrawExtras);
+        TryApplyDetour(Detour_PreDraw);
+        TryApplyDetour(Detour_PostDraw);
+        TryApplyDetour(Detour_DrawBehind);
+        TryApplyDetour(Detour_CanUseGrapple);
+        TryApplyDetour(Detour_UseGrapple);
+        TryApplyDetour(Detour_NumGrappleHooks);
+        TryApplyDetour(Detour_GrappleRetreatSpeed);
+        TryApplyDetour(Detour_GrapplePullSpeed);
+        TryApplyDetour(Detour_GrappleTargetPoint);
+        TryApplyDetour(Detour_GrappleCanLatchOnTo);
+        TryApplyDetour(Detour_PrepareBombToBlow);
+        TryApplyDetour(Detour_EmitEnchantmentVisualsAt);
     }
 }
 
@@ -5114,12 +5113,12 @@ public abstract class GlobalPylonDetour<T> : ModTypeDetour<T> where T : GlobalPy
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_PreDrawMapIcon), Detour_PreDrawMapIcon);
-        TryApplyDetour(nameof(Detour_PreCanPlacePylon), Detour_PreCanPlacePylon);
-        TryApplyDetour(nameof(Detour_ValidTeleportCheck_PreNPCCount), Detour_ValidTeleportCheck_PreNPCCount);
-        TryApplyDetour(nameof(Detour_ValidTeleportCheck_PreAnyDanger), Detour_ValidTeleportCheck_PreAnyDanger);
-        TryApplyDetour(nameof(Detour_ValidTeleportCheck_PreBiomeRequirements), Detour_ValidTeleportCheck_PreBiomeRequirements);
-        TryApplyDetour(nameof(Detour_PostValidTeleportCheck), Detour_PostValidTeleportCheck);
+        TryApplyDetour(Detour_PreDrawMapIcon);
+        TryApplyDetour(Detour_PreCanPlacePylon);
+        TryApplyDetour(Detour_ValidTeleportCheck_PreNPCCount);
+        TryApplyDetour(Detour_ValidTeleportCheck_PreAnyDanger);
+        TryApplyDetour(Detour_ValidTeleportCheck_PreBiomeRequirements);
+        TryApplyDetour(Detour_PostValidTeleportCheck);
     }
 }
 
@@ -5244,35 +5243,35 @@ public abstract class GlobalTileDetour<T> : GlobalBlockTypeDetour<T> where T : G
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_DropCritterChance), Detour_DropCritterChance);
-        TryApplyDetour(nameof(Detour_CanDrop), Detour_CanDrop);
-        TryApplyDetour(nameof(Detour_Drop), Detour_Drop);
-        TryApplyDetour(nameof(Detour_CanKillTile), Detour_CanKillTile);
-        TryApplyDetour(nameof(Detour_KillTile), Detour_KillTile);
-        TryApplyDetour(nameof(Detour_NearbyEffects), Detour_NearbyEffects);
-        TryApplyDetour(nameof(Detour_IsTileDangerous), Detour_IsTileDangerous);
-        TryApplyDetour(nameof(Detour_IsTileBiomeSightable), Detour_IsTileBiomeSightable);
-        TryApplyDetour(nameof(Detour_IsTileSpelunkable), Detour_IsTileSpelunkable);
-        TryApplyDetour(nameof(Detour_SetSpriteEffects), Detour_SetSpriteEffects);
-        TryApplyDetour(nameof(Detour_AnimateTile), Detour_AnimateTile);
-        TryApplyDetour(nameof(Detour_DrawEffects), Detour_DrawEffects);
-        TryApplyDetour(nameof(Detour_EmitParticles), Detour_EmitParticles);
-        TryApplyDetour(nameof(Detour_SpecialDraw), Detour_SpecialDraw);
-        TryApplyDetour(nameof(Detour_TileFrame), Detour_TileFrame);
-        TryApplyDetour(nameof(Detour_AdjTiles), Detour_AdjTiles);
-        TryApplyDetour(nameof(Detour_RightClick), Detour_RightClick);
-        TryApplyDetour(nameof(Detour_MouseOver), Detour_MouseOver);
-        TryApplyDetour(nameof(Detour_MouseOverFar), Detour_MouseOverFar);
-        TryApplyDetour(nameof(Detour_AutoSelect), Detour_AutoSelect);
-        TryApplyDetour(nameof(Detour_PreHitWire), Detour_PreHitWire);
-        TryApplyDetour(nameof(Detour_HitWire), Detour_HitWire);
-        TryApplyDetour(nameof(Detour_Slope), Detour_Slope);
-        TryApplyDetour(nameof(Detour_FloorVisuals), Detour_FloorVisuals);
-        TryApplyDetour(nameof(Detour_ChangeWaterfallStyle), Detour_ChangeWaterfallStyle);
-        TryApplyDetour(nameof(Detour_CanReplace), Detour_CanReplace);
-        TryApplyDetour(nameof(Detour_PostSetupTileMerge), Detour_PostSetupTileMerge);
-        TryApplyDetour(nameof(Detour_PreShakeTree), Detour_PreShakeTree);
-        TryApplyDetour(nameof(Detour_ShakeTree), Detour_ShakeTree);
+        TryApplyDetour(Detour_DropCritterChance);
+        TryApplyDetour(Detour_CanDrop);
+        TryApplyDetour(Detour_Drop);
+        TryApplyDetour(Detour_CanKillTile);
+        TryApplyDetour(Detour_KillTile);
+        TryApplyDetour(Detour_NearbyEffects);
+        TryApplyDetour(Detour_IsTileDangerous);
+        TryApplyDetour(Detour_IsTileBiomeSightable);
+        TryApplyDetour(Detour_IsTileSpelunkable);
+        TryApplyDetour(Detour_SetSpriteEffects);
+        TryApplyDetour(Detour_AnimateTile);
+        TryApplyDetour(Detour_DrawEffects);
+        TryApplyDetour(Detour_EmitParticles);
+        TryApplyDetour(Detour_SpecialDraw);
+        TryApplyDetour(Detour_TileFrame);
+        TryApplyDetour(Detour_AdjTiles);
+        TryApplyDetour(Detour_RightClick);
+        TryApplyDetour(Detour_MouseOver);
+        TryApplyDetour(Detour_MouseOverFar);
+        TryApplyDetour(Detour_AutoSelect);
+        TryApplyDetour(Detour_PreHitWire);
+        TryApplyDetour(Detour_HitWire);
+        TryApplyDetour(Detour_Slope);
+        TryApplyDetour(Detour_FloorVisuals);
+        TryApplyDetour(Detour_ChangeWaterfallStyle);
+        TryApplyDetour(Detour_CanReplace);
+        TryApplyDetour(Detour_PostSetupTileMerge);
+        TryApplyDetour(Detour_PreShakeTree);
+        TryApplyDetour(Detour_ShakeTree);
     }
 }
 
@@ -5293,14 +5292,12 @@ public abstract class GlobalWallDetour<T> : GlobalBlockTypeDetour<T> where T : G
     public override void Load()
     {
         base.Load();
-        TryApplyDetour(nameof(Detour_Drop), Detour_Drop);
-        TryApplyDetour(nameof(Detour_KillWall), Detour_KillWall);
-        TryApplyDetour(nameof(Detour_WallFrame), Detour_WallFrame);
+        TryApplyDetour(Detour_Drop);
+        TryApplyDetour(Detour_KillWall);
+        TryApplyDetour(Detour_WallFrame);
     }
 }
-#endregion
 
-#region Load
 public class TypeDetourHelper : ITOLoader
 {
     internal static List<TypeDetour> DetourInstances { get; } = [];
@@ -5316,4 +5313,3 @@ public class TypeDetourHelper : ITOLoader
 
     void ITOLoader.OnModUnload() => DetourInstances.Clear();
 }
-#endregion

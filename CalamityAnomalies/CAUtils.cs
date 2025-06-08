@@ -1,6 +1,4 @@
-﻿using CalamityAnomalies;
-using CalamityMod.NPCs;
-using CalamityMod.NPCs.SupremeCalamitas;
+﻿using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.World;
 
 namespace CalamityAnomalies;
@@ -12,9 +10,9 @@ public static class CAUtils
     public static bool IsDefeatingProfanedGuardians(NPC npc) => npc.ProfanedGuardianBoss && !TOIteratorFactory.NewActiveNPCIterator(k => k.ProfanedGuardianBoss, npc).Any();
 
     public static bool IsDefeatingExoMechs(NPC npc) =>
-        npc.Ares && !NPC.ActiveNPCs_TO.Any(k => !k.ExoTwins && !k.Thanatos)
-        || npc.ExoTwins && !NPC.ActiveNPCs_TO.Any(k => !k.Ares && !k.Thanatos)
-        || npc.ThanatosHead && !NPC.ActiveNPCs_TO.Any(k => !k.ExoTwins && !k.Ares);
+        npc.Ares && !NPC.ActiveNPCs.Any(k => !k.ExoTwins && !k.Thanatos)
+        || npc.ExoTwins && !NPC.ActiveNPCs.Any(k => !k.Ares && !k.Thanatos)
+        || npc.ThanatosHead && !NPC.ActiveNPCs.Any(k => !k.ExoTwins && !k.Ares);
 
     public static bool DownedEvilBossT2 => DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator;
 

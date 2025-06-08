@@ -5,7 +5,7 @@ public static partial class TOExtensions
     extension(Type type)
     {
         /// <summary>
-        /// 检查指定类型是否声明了对应方法，
+        /// 检查指定类型是否声明了对应方法。
         /// </summary>
         /// <param name="methodName"></param>
         /// <param name="flags"></param>
@@ -18,7 +18,7 @@ public static partial class TOExtensions
         }
 
         /// <summary>
-        /// 检查指定类型是否声明了对应方法，
+        /// 检查指定类型是否声明了对应方法。
         /// </summary>
         /// <param name="methodName"></param>
         /// <param name="flags"></param>
@@ -65,7 +65,6 @@ public static partial class TOExtensions
                      ? method.Name + "<" + string.Join(",", method.GetGenericArguments().Select(k => k.Name)) + ">"
                      : method.Name;
     }
-
 
     extension(MethodInfo method)
     {

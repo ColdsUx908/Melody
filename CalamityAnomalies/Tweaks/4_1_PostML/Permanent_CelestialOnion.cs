@@ -11,7 +11,7 @@ public class CelestialOnionDetour : ModItemDetour<CelestialOnion>
 
 public class NewCelestialOnionAccessorySlot : ModAccessorySlot
 {
-    public override bool IsEnabled() => !Main.gameMenu && Player.Calamity().extraAccessoryML;
+    public override bool IsEnabled() => CAMain.Tweak && !Main.gameMenu && Player.Calamity().extraAccessoryML;
 
     public override bool IsHidden() => IsEmpty && !IsEnabled();
 }

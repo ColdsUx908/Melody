@@ -5,7 +5,7 @@ public partial class TOPlayer : ModPlayer
     #region 特殊事件
     public bool Celesgod { get; set; } = false;
     public bool Annigod { get; set; } = false;
-    #endregion
+    #endregion 特殊事件
 
     #region 透支生命值
 
@@ -38,7 +38,7 @@ public partial class TOPlayer : ModPlayer
     /// 透支生命值回复指数。
     /// </summary>
     public double OverdrawnLifeRegenExponent { get; set; } = 2;
-    #endregion
+    #endregion 透支生命值
 
     #region 通用
 
@@ -49,7 +49,7 @@ public partial class TOPlayer : ModPlayer
     public int TimeWithoutHurt { get; set; } = 0;
 
     public CommandCallInfo CommandCallInfo { get; internal set; } = null;
-    #endregion
+    #endregion 通用
 
     #region Update
     public override void PreUpdate()
@@ -96,7 +96,7 @@ public partial class TOPlayer : ModPlayer
                     OverdrawnLifeRegenLimit));
         }
     }
-    #endregion
+    #endregion Update
 
     #region Hit
     public override void OnHurt(Player.HurtInfo info)
@@ -112,7 +112,7 @@ public partial class TOPlayer : ModPlayer
             info.Damage += temp;
         }
     }
-    #endregion
+    #endregion Hit
 
     #region WorldData
     public override void SaveData(TagCompound tag)
@@ -127,7 +127,7 @@ public partial class TOPlayer : ModPlayer
     {
         GameTime = 0;
     }
-    #endregion
+    #endregion WorldData
 }
 
 public abstract class PlayerDownedBoss

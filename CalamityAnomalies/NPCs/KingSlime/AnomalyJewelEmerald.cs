@@ -32,7 +32,7 @@ public class AnomalyJewelEmerald : AnomalyNPCOverride
         get => (int)AnomalyNPC.AnomalyAI[2];
         set => AnomalyNPC.SetAnomalyAI(value, 2);
     }
-    #endregion
+    #endregion 枚举、数值、属性
 
     public override int OverrideType => ModContent.NPCType<KingSlimeJewelEmerald>();
 
@@ -152,36 +152,34 @@ public class AnomalyJewelEmerald : AnomalyNPCOverride
 
         switch (CurrentAttackPhase)
         {
-            case 0: //停止，旋转
-                NPC.damage = 0;
-                NPC.velocity *= 0.94f;
+            case 0:
                 Timer1++;
-                NPC.rotation += (0.1f + Timer1 / Data.ChargeGateValue * 0.4f) * NPC.direction;
-                if (Timer1 >= Data.ChargeGateValue)
+                if (Timer1 < Data.ChargeGateValue) //停止，旋转
+                {
+                    NPC.damage = 0;
+                    NPC.velocity *= 0.94f;
+                    NPC.rotation += (0.1f + Timer1 / Data.ChargeGateValue * 0.4f) * NPC.direction;
+                }
+                else //冲刺
                 {
                     MakeDust(10);
-
                     SoundEngine.PlaySound(SoundID.Item38, NPC.Center);
-
+                    NPC.damage = NPC.defDamage;
+                    float chargeSpeed = 24f;
+                    NPC.SetVelocityandRotation(NPC.SafeDirectionTo(Target.Center + Target.velocity * 20f, -Vector2.UnitY) * chargeSpeed, MathHelper.PiOver2);
+                    CurrentAttackPhase = 2;
+                    Timer1 = 0;
+                    NPC.netSpam = 0;
                     CurrentAttackPhase = 1;
                     Timer1 = 0;
                     NPC.netUpdate = true;
                 }
                 break;
-            case 1: //冲刺
-                NPC.damage = NPC.defDamage;
-                float chargeSpeed = 24f;
-                NPC.velocity = NPC.SafeDirectionTo(Target.Center + Target.velocity * 20f, -Vector2.UnitY) * chargeSpeed;
-                NPC.rotation = NPC.velocity.ToRotation() + MathHelper.PiOver2;
-                CurrentAttackPhase = 2;
-                Timer1 = 0;
-                NPC.netSpam = 0;
-                NPC.netUpdate = true;
-                break;
-            case 2: //冲刺中
-                NPC.damage = NPC.defDamage;
+            case 1: //冲刺中
                 Timer1++;
-                if (Timer1 >= Data.ChargeGateValue)
+                if (Timer1 < Data.ChargeGateValue)
+                    NPC.damage = NPC.defDamage;
+                else
                 {
                     NPC.damage = 0;
                     MakeDust(10);
@@ -189,8 +187,8 @@ public class AnomalyJewelEmerald : AnomalyNPCOverride
                     CurrentAttackPhase = 0;
                     Timer1 = 0;
                     CurrentAttack = AttackType.FollowTarget;
-                    NPC.netUpdate = true;
                     NPC.velocity = Vector2.Zero;
+                    NPC.netUpdate = true;
                 }
                 break;
         }

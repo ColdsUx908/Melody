@@ -1,7 +1,7 @@
 ﻿namespace Transoceanic.ExtraMathData;
 
 /// <summary>
-/// 二维极坐标向量。
+/// 二维极坐标向量 (ρ, θ)。
 /// </summary>
 public readonly struct PolarVector2 : IEquatable<PolarVector2>
 {
@@ -33,11 +33,10 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
     public float AngleOverPeriod => Angle / MathHelper.TwoPi;
 
     /// <summary>
-    /// 主要构造函数。
+    /// 构造一个极坐标向量 (ρ, θ)。
     /// </summary>
-    /// <param name="radius"></param>
-    /// <param name="angle"></param>
-    /// <exception cref="ArgumentException"></exception>
+    /// <param name="radius">ρ。</param>
+    /// <param name="angle">θ。</param>
     public PolarVector2(float radius, float angle)
     {
         try
@@ -62,10 +61,16 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
         }
     }
 
+    /// <summary>
+    /// 构造一个极坐标单位向量 (1, θ)。
+    /// </summary>
+    /// <param name="angle">θ。</param>
     public PolarVector2(float angle) : this(1f, angle) { }
 
-    public PolarVector2() : this(0f, 0f) { }
-
+    /// <summary>
+    /// 使用直角向量构造一个极坐标向量。
+    /// </summary>
+    /// <param name="value"></param>
     public PolarVector2(Vector2 value) : this(value.Modulus, value.Angle) { }
 
     /// <summary>
@@ -80,7 +85,7 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
     }
 
     /// <summary>
-    /// 解构函数。
+    /// 将极坐标向量解构为 (ρ, θ)。
     /// </summary>
     /// <param name="radius"></param>
     /// <param name="angle"></param>
@@ -132,8 +137,8 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
     public static PolarVector2 operator +(PolarVector2 a, PolarVector2 b)
     {
         //极坐标加法公式：
-        //新极径 r = sqrt(r1² + r2² + 2r1r2cos(θ2-θ1))
-        //新角度 θ = θ1 + arctan(r2sin(θ2-θ1) / (r1 + r2cos(θ2-θ1)))
+        //新极径 ρ = sqrt(ρ1² + ρ2² + 2ρ1ρ2cos(θ2 - θ1))
+        //新角度 θ = θ1 + arctan(r2sin(θ2 - θ1) / (r1 + r2cos(θ2 - θ1)))
 
         (float sinDelta, float cosDelta) = MathF.SinCos(b.Angle - a.Angle);
         float radius = MathF.Sqrt(a.Radius * a.Radius + b.Radius * b.Radius + 2 * a.Radius * b.Radius * cosDelta);
@@ -154,7 +159,6 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    /// <exception cref="NotFiniteNumberException"></exception>
     public static PolarVector2 operator *(PolarVector2 a, float b) => b switch
     {
         > 0f => new(a.Radius * b, a.Angle),
@@ -246,7 +250,7 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
     /// </code>
     /// </summary>
     public static readonly PolarVector2[] UnitClocks =
-        [
+    [
         //0点钟方向（同12点钟方向）
         -UnitY,
         //1点钟方向 (5π/3)
@@ -271,6 +275,6 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
         new(TOMathHelper.PiOver6 * 7f),
         //11点钟方向 (4π/3)
         new(TOMathHelper.PiOver3 * 4f),
-        ];
-    #endregion
+    ];
+    #endregion 预定义量
 }

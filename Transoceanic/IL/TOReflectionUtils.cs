@@ -8,6 +8,11 @@ public static class TOReflectionUtils
     public const BindingFlags UniversalBindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
 
     /// <summary>
+    /// 包含实例成员所需Flag。
+    /// </summary>
+    public const BindingFlags InstanceBindingFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+
+    /// <summary>
     /// 包含静态成员所需Flag。
     /// </summary>
     public const BindingFlags StaticBindingFlags = BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;

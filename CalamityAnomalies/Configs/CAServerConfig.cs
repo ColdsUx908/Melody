@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+﻿#define TWEAK
+
+using System.ComponentModel;
 using Terraria.ModLoader.Config;
 
 namespace CalamityAnomalies.Configs;
@@ -20,7 +22,13 @@ public class CAServerConfig : ModConfig
     [Header("Content")]
 
     [ReloadRequired]
-    [DefaultValue(false)]
+    [DefaultValue(
+#if TWEAK
+        true
+#else
+        false
+#endif
+        )]
     public bool TweaksEnabled { get; set; }
 
     [ReloadRequired]

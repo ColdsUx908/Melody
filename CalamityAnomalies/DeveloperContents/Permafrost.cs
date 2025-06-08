@@ -1,6 +1,4 @@
 ﻿using CalamityAnomalies.UI;
-using CalamityMod.CalPlayer;
-using CalamityMod.NPCs;
 using CalamityMod.NPCs.Cryogen;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.NPCs.TownNPCs;
@@ -27,19 +25,21 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
     {
         public static Color BlueColor => Color.Lerp(Color.LightCyan, Color.Cyan, TOMathHelper.GetTimeSin(0.2f, 1f, 0f, true));
 
+        public static List<Color> NameColors { get; } =
+        [
+            Color.Cyan,
+            Color.LightYellow,
+            Color.LightPink,
+            Color.SkyBlue,
+            Color.LightSkyBlue
+        ];
+
+        public static Color NameColor => NameColors.LerpMany(TOMathHelper.GetTimeSin(0.5f, 0.6f, 0f, true));
+
         public const float DespawnDistance = 15000f;
 
         public const int ArenaSize = 201;
     }
-
-    public List<Color> NameColors { get; } =
-    [
-        Color.Cyan,
-        Color.LightYellow,
-        Color.LightPink,
-        Color.SkyBlue,
-        Color.LightSkyBlue
-    ];
 
     public int Arena_TopLeftX
     {
@@ -67,7 +67,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
         set => AnomalyNPC.SetAnomalyAI((int)value, 2);
     }
 
-    #endregion
+    #endregion 枚举、数值、属性、AI状态
 
     private const string localizationPrefix = CAMain.ModLocalizationPrefix + "DeveloperContents.Permafrost.";
 
@@ -98,9 +98,6 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
 
         return false;
     }
-
-
-    #region 行为函数
     private void StartUp()
     {
         ModNPC.FrameType = FrameAnimationType.UpwardDraft;
@@ -116,7 +113,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
         }
 
         if (CalamityConfig.Instance.BossesStopWeather)
-            Calamity.StopRain();
+            CalamityMod_.StopRain();
 
         #region 目标与脱战
         if (!NPC.TargetClosestIfInvalid(true, Data.DespawnDistance))
@@ -139,7 +136,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
 
                     // Make the town NPC spawn.
                     if (Main.netMode != NetmodeID.MultiplayerClient)
-                        NPC.NewNPCAction_TO<DILF>(NPC.GetSource_FromAI(), NPC.Center + new Vector2(0f, 12f));
+                        NPC.NewNPCAction<DILF>(NPC.GetSource_FromAI(), NPC.Center + new Vector2(0f, 12f));
                 }
 
                 NPC.active = false;
@@ -159,13 +156,13 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
         }
         else
             ModNPC.canDespawn = false;
-        #endregion
+        #endregion 目标与脱战
 
         #region 判定方向
         bool currentlyCharging = NPC.ai[1] == 2f;
         if (!currentlyCharging && Math.Abs(Target.Center.X - NPC.Center.X) > 16f)
             NPC.spriteDirection = (Target.Center.X < NPC.Center.X).ToDirectionInt();
-        #endregion
+        #endregion 判定方向
 
         #region 力场和护盾
         // Shield effect rotation
@@ -217,23 +214,6 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
                     ModNPC.shieldRotation = ModNPC.shieldRotation.AngleTowards(idealRotation, 0.18f);
                 }
             }
-            else if (!ModNPC.permafrost)
-            {
-                // Emit dust off the skull at the position of its eye socket.
-                for (int i = 1; i < 16; i++)
-                {
-                    Dust.NewDustPerfectAction(NPC.Center, 185 /* 寒霜九头蛇 */, d =>
-                    {
-                        d.position = Vector2.Lerp(NPC.position, NPC.oldPosition, i / 16f) + NPC.Size * 0.5f;
-                        d.position += ModNPC.shieldRotation.ToRotationVector2() * 42f;
-                        d.position += (ModNPC.shieldRotation - MathHelper.PiOver2).ToRotationVector2() * (float)Math.Cos(NPC.velocity.ToRotation()) * -4f;
-                        d.velocity = NPC.velocity;
-                        d.color = Color.Cyan;
-                        d.scale = MathHelper.Lerp(0.6f, 0.85f, 1f - i / 16f);
-                        d.noGravity = true;
-                    });
-                }
-            }
 
             // Shrink the force-field since it looks strange when charging.
             ModNPC.forcefieldScale = MathHelper.Lerp(ModNPC.forcefieldScale, 0.45f, 0.08f);
@@ -245,7 +225,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
             ModNPC.shieldOpacity = MathHelper.Lerp(ModNPC.shieldOpacity, 0f, 0.08f);
             ModNPC.forcefieldScale = MathHelper.Lerp(ModNPC.forcefieldScale, 1f, 0.08f);
         }
-        #endregion
+        #endregion 力场和护盾
 
         #region 竞技场
         if (!ModNPC.spawnArena && Main.netMode != NetmodeID.MultiplayerClient)
@@ -273,7 +253,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
             {
                 if (!tile.HasTile)
                 {
-                    tile.TileType = (ushort)ModContent.TileType<ArenaTile>();
+                    tile.SetTileType<ArenaTile>();
                     tile.Get<TileWallWireStateData>().HasTile = true;
                 }
 
@@ -282,8 +262,10 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
                 else
                     WorldGen.SquareTileFrame(i, j, true);
             }
+
+            ModNPC.spawnArena = true;
         }
-        #endregion
+        #endregion 竞技场
 
         #region 激怒和伤害减免
         if (ModNPC.spawnArena && !Target.Hitbox.Intersects(ModNPC.safeBox))
@@ -312,7 +294,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
             if (ModNPC.startFifthAttack)
                 CalamityNPC.DR *= 1.2f;
         }
-        #endregion
+        #endregion 激怒和伤害减免
     }
 
     private void Welcome()
@@ -323,15 +305,15 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
         {
             case 180:
                 if (TOMain.GeneralClient)
-                    TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "Welcome1", TOMain.CelestialColor);
+                    TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "Welcome1", Color.LightCyan);
                 break;
             case 300:
                 if (TOMain.GeneralClient)
-                    TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "Welcome2", TOMain.CelestialColor);
+                    TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "Welcome2", Color.LightCyan);
                 break;
             case 480:
                 if (TOMain.GeneralClient)
-                    TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "Beginning", TOMain.CelestialColor);
+                    TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "Beginning", Color.LightCyan);
 
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(NPC.Center, Vector2.Zero, Color.Cyan, new Vector2(1f), 0, 0.1f, 7f, 30));
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(NPC.Center, Vector2.Zero, CAMain.AnomalyUltramundaneColor * 0.8f, new Vector2(2f), 0, 0.05f, 6f, 36));
@@ -339,7 +321,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
                 for (int i = 0; i < 100; i++)
                 {
                     Vector2 dustVel = new PolarVector2(15f, Main.rand.NextFloat(100f));
-                    Dust.NewDustPerfectAction(NPC.Center + dustVel * 3f, Main.rand.NextBool(3) ? DustID.BlueTorch : DustID.IceTorch, d =>
+                    Dust.NewDustPerfectAction(NPC.Center + dustVel * 3f, Main.rand.NextBool(4) ? DustID.BlueTorch : DustID.IceTorch, d =>
                     {
                         d.velocity = dustVel * Main.rand.NextFloat(0.3f, 1.3f);
                         d.scale = Main.rand.NextFloat(2f, 3.2f);
@@ -356,9 +338,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
 
         Timer1++;
     }
-    #endregion
-
-    #endregion
+    #endregion AI
 
     #region Draw
     public delegate void Orig_DrawForcefield(SupremeCalamitas self, SpriteBatch spriteBatch);
@@ -429,14 +409,14 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
         newBar.DrawSeperatorBar(spriteBatch, x, y, Data.BlueColor * newBar.AnimationCompletionRatio2);
         newBar.DrawNPCName(spriteBatch, x, y, null,
             Data.BlueColor * newBar.AnimationCompletionRatio2,
-            NameColors.LerpMany(TOMathHelper.GetTimeSin(0.5f, 0.6f, 0f, true) * newBar.AnimationCompletionRatio2),
-            Math.Clamp(OceanNPC.ActiveTime, 0f, 360f) / 240f + TOMathHelper.GetTimeSin(1f, 1f, 0f, false) + OceanNPC.LifeRatioReverse);
+            Data.NameColor * newBar.AnimationCompletionRatio2,
+            Math.Clamp(OceanNPC.ActiveTime, 0f, 360f) / 240f + TOMathHelper.GetTimeSin(1f, 1f, 0f, false) + OceanNPC.LifeRatioReverse / 2f);
         newBar.DrawBigLifeText(spriteBatch, x, y);
         newBar.DrawExtraSmallText(spriteBatch, x, y);
 
         return false;
     }
-    #endregion
+    #endregion Draw
 }
 
 public class PermafrostRitualDrama : CAProjectileOverride<SCalRitualDrama>
@@ -464,7 +444,7 @@ public class PermafrostRitualDrama : CAProjectileOverride<SCalRitualDrama>
         // If needed, these effects may continue after the ritual timer, to ensure that there are no awkward
         // background changes between the time it takes for SCal to appear after this projectile is gone.
         // If SCal is already present, this does not happen.
-        if (!TONPCUtils.AnyNPCs<SupremeCalamitas>())
+        if (!NPC.AnyNPCs<SupremeCalamitas>())
         {
             SCalSky.OverridingIntensity = Utils.GetLerpValue(90f, TotalRitualTime - 25f, ModProjectile.Time, true);
             calamityPlayer.GeneralScreenShakePower = Utils.GetLerpValue(90f, TotalRitualTime - 25f, ModProjectile.Time, true);
@@ -480,7 +460,7 @@ public class PermafrostRitualDrama : CAProjectileOverride<SCalRitualDrama>
             if (TOMain.GeneralClient)
             {
                 Vector2 spawnPosition = Projectile.Center - new Vector2(53f, 39f);
-                NPC.NewNPCAction_TO<SupremeCalamitas>(NPC.GetBossSpawnSource(Player.FindClosest(spawnPosition, 1, 1)), spawnPosition, action: n =>
+                NPC.NewNPCAction<SupremeCalamitas>(NPC.GetBossSpawnSource(Player.FindClosest(spawnPosition, 1, 1)), spawnPosition, action: n =>
                 {
                     TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "Spawn", Color.Lerp(Color.Blue, Color.Cyan, 0.7f));
                     n.GetModNPC<SupremeCalamitas>().permafrost = true;
@@ -515,9 +495,8 @@ public class PermafrostRitualDrama : CAProjectileOverride<SCalRitualDrama>
 
         if (ModProjectile.Time >= TotalRitualTime)
         {
-            if (Main.netMode != NetmodeID.MultiplayerClient && !TONPCUtils.AnyNPCs<SupremeCalamitas>())
+            if (Main.netMode != NetmodeID.MultiplayerClient && !NPC.AnyNPCs<SupremeCalamitas>())
                 Projectile.Kill();
-
             return false;
         }
 

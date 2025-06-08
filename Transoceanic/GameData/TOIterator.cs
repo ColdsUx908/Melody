@@ -12,7 +12,6 @@
 /// </summary>
 public readonly ref struct TOIterator<T> where T : class
 {
-    #region 主体
     private readonly ReadOnlySpan<T> _span;
     private readonly Predicate<T> _predicate;
 
@@ -62,9 +61,7 @@ public readonly ref struct TOIterator<T> where T : class
             return null;
         }
     }
-    #endregion
 
-    #region 查询方法
     public bool Any()
     {
         foreach (T _ in this)
@@ -130,7 +127,6 @@ public readonly ref struct TOIterator<T> where T : class
         found = null;
         return false;
     }
-    #endregion
 }
 
 /// <summary>
@@ -148,7 +144,6 @@ public readonly ref struct TOIterator<T> where T : class
 /// </summary>
 public readonly ref struct TOExclusiveIterator<T> where T : class
 {
-    #region 主体
     private readonly ReadOnlySpan<T> _span;
     private readonly Predicate<T> _predicate;
     private readonly HashSet<T> _exclusions;
@@ -209,9 +204,7 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
             return null;
         }
     }
-    #endregion
 
-    #region 查询方法
     public bool Any()
     {
         foreach (T _ in this)
@@ -263,7 +256,6 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
     public T[] ToArray() => [.. ToList()];
 
     public bool TryGetFirst(out T found) => (found = this[0]) is not null;
-    #endregion
 }
 
 /// <summary>

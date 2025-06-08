@@ -1,5 +1,4 @@
 ﻿using CalamityMod.Buffs.StatDebuffs;
-using CalamityMod.NPCs;
 using CalamityMod.NPCs.Abyss;
 
 namespace CalamityAnomalies.GlobalInstances;
@@ -43,13 +42,13 @@ public class CAGlobalNPC : GlobalNPC
         AIChanged[index] = true;
     }
 
-    public bool GetAnomalyAIBit(int index, byte bitPosition) => TOMathHelper.GetBit((int)AnomalyAI[index], bitPosition);
+    public bool GetAnomalyAIBit(int index, byte bitPosition) => BitOperation.GetBit((int)AnomalyAI[index], bitPosition);
 
-    public bool GetAnomalyAIBit(Index index, byte bitPosition) => TOMathHelper.GetBit((int)AnomalyAI[index], bitPosition);
+    public bool GetAnomalyAIBit(Index index, byte bitPosition) => BitOperation.GetBit((int)AnomalyAI[index], bitPosition);
 
-    public void SetAnomalyAIBit(bool value, int index, byte bitPosition) => SetAnomalyAI(TOMathHelper.SetBit((int)AnomalyAI[index], bitPosition, value), index);
+    public void SetAnomalyAIBit(bool value, int index, byte bitPosition) => SetAnomalyAI(BitOperation.SetBit((int)AnomalyAI[index], bitPosition, value), index);
 
-    public void SetAnomalyAIBit(bool value, Index index, byte bitPosition) => SetAnomalyAI(TOMathHelper.SetBit((int)AnomalyAI[index], bitPosition, value), index);
+    public void SetAnomalyAIBit(bool value, Index index, byte bitPosition) => SetAnomalyAI(BitOperation.SetBit((int)AnomalyAI[index], bitPosition, value), index);
 
     public bool NeverTrippy { get; set; } = false;
 
@@ -71,7 +70,7 @@ public class CAGlobalNPC : GlobalNPC
         if (npc.TryGetOverride(out CANPCOverride npcOverride))
             npcOverride.SetDefaultsFromNetId();
     }
-    #endregion
+    #endregion Defaults
 
     #region Active
     public override void OnSpawn(NPC npc, IEntitySource source)
@@ -136,12 +135,12 @@ public class CAGlobalNPC : GlobalNPC
         if (npc.ModNPC is EidolonWyrmHead && !DownedBossSystem.downedPrimordialWyrm)
             DownedBossSystem.downedPrimordialWyrm = true;
 
-        foreach (Player player in Player.ActivePlayers_TO)
+        foreach (Player player in Player.ActivePlayers)
         {
             player.Anomaly().DownedBossCalamity.BossesOnKill(npc);
         }
     }
-    #endregion
+    #endregion Active
 
     #region AI
     public override bool PreAI(NPC npc)
@@ -166,16 +165,19 @@ public class CAGlobalNPC : GlobalNPC
             npc.buffImmune[ModContent.BuffType<TemporalSadness>()] = true;
             npc.buffImmune[BuffID.Webbed] = true;
 
-            AnomalyAITimer++;
-            if (CAWorld.AnomalyUltramundane)
+            if (CAWorld.Anomaly)
             {
-                AnomalyUltraAITimer++;
-                AnomalyUltraBarTimer = Math.Clamp(AnomalyUltraBarTimer + 1, 0, 120);
-            }
-            else
-            {
-                AnomalyUltraAITimer = 0;
-                AnomalyUltraBarTimer = Math.Clamp(AnomalyUltraBarTimer - 4, 0, 120);
+                AnomalyAITimer++;
+                if (CAWorld.AnomalyUltramundane)
+                {
+                    AnomalyUltraAITimer++;
+                    AnomalyUltraBarTimer = Math.Clamp(AnomalyUltraBarTimer + 1, 0, 120);
+                }
+                else
+                {
+                    AnomalyUltraAITimer = 0;
+                    AnomalyUltraBarTimer = Math.Clamp(AnomalyUltraBarTimer - 4, 0, 120);
+                }
             }
 
             if (!npcOverride.PreAI())
@@ -203,7 +205,7 @@ public class CAGlobalNPC : GlobalNPC
         if (npc.TryGetOverride(out CANPCOverride npcOverride))
             npcOverride.PostAI();
     }
-    #endregion
+    #endregion AI
 
     #region Draw
     public override void FindFrame(NPC npc, int frameHeight)
@@ -267,7 +269,7 @@ public class CAGlobalNPC : GlobalNPC
         if (npc.TryGetOverride(out CANPCOverride npcOverride))
             npcOverride.BossHeadSpriteEffects(ref spriteEffects);
     }
-    #endregion
+    #endregion Draw
 
     #region Hit
     public override void HitEffect(NPC npc, NPC.HitInfo hit)
@@ -409,7 +411,7 @@ public class CAGlobalNPC : GlobalNPC
 
         return true;
     }
-    #endregion
+    #endregion Hit
 
     #region Net
     public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
@@ -421,5 +423,5 @@ public class CAGlobalNPC : GlobalNPC
     {
         TONetUtils.ReceiveAI(AnomalyAI, binaryReader);
     }
-    #endregion
+    #endregion Net
 }

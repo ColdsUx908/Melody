@@ -1,6 +1,5 @@
 ﻿using CalamityAnomalies.Difficulties;
 using CalamityMod.Events;
-using CalamityMod.NPCs;
 using CalamityMod.NPCs.CeaselessVoid;
 using CalamityMod.NPCs.ExoMechs.Apollo;
 using CalamityMod.NPCs.ExoMechs.Artemis;
@@ -142,8 +141,8 @@ public class BetterBossHealthBar : ITOLoader
 
                 if (Valid)
                 {
-                    EnrageTimer = Math.Clamp(EnrageTimer + NPCIsEnraged.ToDirectionInt(), 0, 120);
-                    IncreasingDefenseOrDRTimer = Math.Clamp(IncreasingDefenseOrDRTimer + NPCIsIncreasingDefenseOrDR.ToDirectionInt(), 0, 120);
+                    EnrageTimer = Math.Clamp(EnrageTimer + (NPCIsEnraged ? 1 : -4), 0, 120);
+                    IncreasingDefenseOrDRTimer = Math.Clamp(IncreasingDefenseOrDRTimer + (NPCIsIncreasingDefenseOrDR ? 1 : -4), 0, 120);
                     CloseAnimationTimer = Math.Clamp(CloseAnimationTimer - 2, 0, 120);
                 }
                 else
@@ -240,27 +239,27 @@ public class BetterBossHealthBar : ITOLoader
 
                 DrawComboBar(spriteBatch, x, y);
 
-                Color seperatorColor = (CAWorld.Anomaly ? Color.Lerp(Color.HotPink, CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * TOMathHelper.GetTimeSin(1f, 1f, 0f, true))
-                    : CAWorld.BossRush ? Color.Lerp(BaseColor, Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.4f), Math.Clamp(AnomalyNPC.BossRushAITimer / 120f, 0f, 1f))
-                    : EnrageTimer > 0 ? Color.Lerp(BaseColor, Color.Red * 0.5f, EnrageTimer / 120f)
-                    : IncreasingDefenseOrDRTimer > 0 ? Color.Lerp(BaseColor, Color.LightGray * 0.5f, IncreasingDefenseOrDRTimer / 120f) : BaseColor) * AnimationCompletionRatio;
+                Color seperatorColor = (CAWorld.Anomaly ? Color.Lerp(BaseColor, Color.Lerp(Color.HotPink, CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * TOMathHelper.GetTimeSin(0.5f, 1f, 0f, true)), Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f))
+                    : CAWorld.BossRush ? Color.Lerp(BaseColor, Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.4f), Math.Clamp(AnomalyNPC.BossRushAITimer / 80f, 0f, 1f))
+                    : EnrageTimer > 0 ? Color.Lerp(BaseColor, Color.Red * 0.5f, Math.Clamp(EnrageTimer / 80f, 0f, 1f))
+                    : IncreasingDefenseOrDRTimer > 0 ? Color.Lerp(BaseColor, Color.LightGray * 0.6f, Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 1f))
+                    : BaseColor) * AnimationCompletionRatio;
                 DrawSeperatorBar(spriteBatch, x, y, seperatorColor);
 
                 //为了避免NPC名称过长遮挡大生命值数字，二者的绘制顺序在此处被调换了，即先绘制NPC名称，再绘制大生命值数字。
                 Color? mainColor = AnomalyNPC.IsRunningAnomalyAI ? Color.HotPink * 0.6f * AnimationCompletionRatio2
                     : CAWorld.BossRush ? Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.45f) * AnimationCompletionRatio2
                     : EnrageTimer > 0 ? Color.Red * 0.6f * AnimationCompletionRatio2
-                    : IncreasingDefenseOrDRTimer > 0 ? Color.LightGray * 0.6f * AnimationCompletionRatio2
+                    : IncreasingDefenseOrDRTimer > 0 ? Color.LightGray * 0.7f * AnimationCompletionRatio2
                     : null;
                 Color? borderColor = AnomalyNPC.IsRunningAnomalyAI ? Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.55f) * AnimationCompletionRatio2
                     : CAWorld.BossRush ? Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.55f) * AnimationCompletionRatio2
-                    : EnrageTimer > 0 ? Color.Black * 0.2f * AnimationCompletionRatio2
-                    : IncreasingDefenseOrDRTimer > 0 ? Color.Black * 0.2f * AnimationCompletionRatio2
+                    : EnrageTimer > 0 || IncreasingDefenseOrDRTimer > 0 ? Color.Black * 0.2f * AnimationCompletionRatio2
                     : null;
-                float borderWidth = AnomalyNPC.IsRunningAnomalyAI ? Math.Clamp(AnomalyNPC.AnomalyAITimer / 80f, 0f, 1.5f) + TOMathHelper.GetTimeSin(2f, 1f, 0f, true)
-                    : CAWorld.BossRush ? Math.Clamp(AnomalyNPC.BossRushAITimer / 80f, 0f, 1.5f) + TOMathHelper.GetTimeSin(2f, 1f, 0f, true)
-                    : EnrageTimer > 0 ? EnrageTimer / 80f + TOMathHelper.GetTimeSin(2f, 1f, 0f, true)
-                    : IncreasingDefenseOrDRTimer > 0 ? IncreasingDefenseOrDRTimer / 80f + TOMathHelper.GetTimeSin(2f, 1f, 0f, true)
+                float borderWidth = AnomalyNPC.IsRunningAnomalyAI ? (Math.Clamp(AnomalyNPC.AnomalyAITimer / 80f, 0f, 1.5f) + TOMathHelper.GetTimeSin(1f, 1f, 0f, true) * Math.Clamp(AnomalyNPC.AnomalyAITimer / 80f, 0f, 1f))
+                    : CAWorld.BossRush ? (Math.Clamp(AnomalyNPC.BossRushAITimer / 80f, 0f, 1.5f) + TOMathHelper.GetTimeSin(1f, 1f, 0f, true) * Math.Clamp(AnomalyNPC.BossRushAITimer / 80f, 0f, 1f))
+                    : EnrageTimer > 0 ? (EnrageTimer / 80f + TOMathHelper.GetTimeSin(1f, 1f, 0f, true) * Math.Clamp(EnrageTimer / 80f, 0f, 1f))
+                    : IncreasingDefenseOrDRTimer > 0 ? (IncreasingDefenseOrDRTimer / 80f + TOMathHelper.GetTimeSin(1f, 1f, 0f, true) * Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 1f))
                     : 0f;
                 DrawNPCName(spriteBatch, x, y, null, mainColor, borderColor, borderWidth);
 
@@ -353,7 +352,7 @@ public class BetterBossHealthBar : ITOLoader
 
             CalamityUtils.DrawBorderStringEightWay(spriteBatch, ItemStackFont, smallText, new Vector2(Math.Max(x, x + mainBarWidth - (ItemStackFont.MeasureString(smallText) * 0.75f).X), y + 45), Color.White * whiteColorAlpha, Color.Black * whiteColorAlpha * 0.24f, 0.75f);
         }
-        #endregion
+        #endregion 公共绘制方法
     }
 
     public static DynamicSpriteFont MouseFont { get; } = FontAssets.MouseText.Value;

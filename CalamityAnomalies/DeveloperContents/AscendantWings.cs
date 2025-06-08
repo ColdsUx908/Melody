@@ -1,4 +1,3 @@
-using CalamityAnomalies;
 using CalamityAnomalies.Items.ItemRarities;
 
 namespace CalamityAnomalies.DeveloperContents;

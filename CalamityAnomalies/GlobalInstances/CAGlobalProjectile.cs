@@ -25,13 +25,13 @@ public partial class CAGlobalProjectile : GlobalProjectile
         AIChanged[index] = true;
     }
 
-    public bool GetAnomalyAIBit(int index, byte bitPosition) => TOMathHelper.GetBit((int)AnomalyAI[index], bitPosition);
+    public bool GetAnomalyAIBit(int index, byte bitPosition) => BitOperation.GetBit((int)AnomalyAI[index], bitPosition);
 
-    public bool GetAnomalyAIBit(Index index, byte bitPosition) => TOMathHelper.GetBit((int)AnomalyAI[index], bitPosition);
+    public bool GetAnomalyAIBit(Index index, byte bitPosition) => BitOperation.GetBit((int)AnomalyAI[index], bitPosition);
 
-    public void SetAnomalyAIBit(bool value, int index, byte bitPosition) => SetAnomalyAI(TOMathHelper.SetBit((int)AnomalyAI[index], bitPosition, value), index);
+    public void SetAnomalyAIBit(bool value, int index, byte bitPosition) => SetAnomalyAI(BitOperation.SetBit((int)AnomalyAI[index], bitPosition, value), index);
 
-    public void SetAnomalyAIBit(bool value, Index index, byte bitPosition) => SetAnomalyAI(TOMathHelper.SetBit((int)AnomalyAI[index], bitPosition, value), index);
+    public void SetAnomalyAIBit(bool value, Index index, byte bitPosition) => SetAnomalyAI(BitOperation.SetBit((int)AnomalyAI[index], bitPosition, value), index);
 
     #region Defaults
     public override void SetStaticDefaults()
@@ -45,7 +45,7 @@ public partial class CAGlobalProjectile : GlobalProjectile
         if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
             projectileOverride.SetDefaults();
     }
-    #endregion
+    #endregion Defaults
 
     #region AI
     public override bool PreAI(Projectile projectile)
@@ -70,7 +70,7 @@ public partial class CAGlobalProjectile : GlobalProjectile
         if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
             projectileOverride.PostAI();
     }
-    #endregion
+    #endregion AI
 
     #region Draw
     public override Color? GetAlpha(Projectile projectile, Color lightColor)
@@ -118,7 +118,7 @@ public partial class CAGlobalProjectile : GlobalProjectile
         if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
             projectileOverride.DrawBehind(index, behindNPCsAndTiles, behindNPCs, behindProjectiles, overPlayers, overWiresUI);
     }
-    #endregion
+    #endregion Draw
 
     #region Hit
     public override bool? CanCutTiles(Projectile projectile)
@@ -237,7 +237,7 @@ public partial class CAGlobalProjectile : GlobalProjectile
 
         return null;
     }
-    #endregion
+    #endregion Hit
 
     #region Net
     public override void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter)
@@ -249,5 +249,5 @@ public partial class CAGlobalProjectile : GlobalProjectile
     {
         TONetUtils.ReceiveAI(AnomalyAI, binaryReader);
     }
-    #endregion
+    #endregion Net
 }

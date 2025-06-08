@@ -104,11 +104,55 @@ public static partial class TOExtensions
 
     extension(NPC)
     {
-        public static TOIterator<NPC> ActiveNPCs_TO => TOIteratorFactory.NewActiveNPCIterator();
+        public static bool AnyNPCs<T>() where T : ModNPC => NPC.AnyNPCs(ModContent.NPCType<T>());
 
-        public static TOIterator<NPC> Enemies_TO => TOIteratorFactory.NewActiveNPCIterator(k => k.Enemy);
+        public static bool AnyNPCs(int type, [NotNullWhen(true)] out NPC npc)
+        {
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                npc = Main.npc[i];
+                if (npc.active && npc.type == type)
+                    return true;
+            }
+            npc = null;
+            return false;
+        }
 
-        public static TOIterator<NPC> Bosses_TO => TOIteratorFactory.NewActiveNPCIterator(k => k.TOBoss);
+        public static bool AnyNPCs<T>([NotNullWhen(true)] out NPC npc) where T : ModNPC
+        {
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                npc = Main.npc[i];
+                if (npc.active && npc.ModNPC is T)
+                    return true;
+            }
+            npc = null;
+            return false;
+        }
+
+        public static bool AnyNPCs<T>([NotNullWhen(true)] out NPC npc, [NotNullWhen(true)] out T modNPC) where T : ModNPC
+        {
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                npc = Main.npc[i];
+                if (npc.active && npc.ModNPC is T t)
+                {
+                    modNPC = t;
+                    return true;
+                }
+            }
+            npc = null;
+            modNPC = null;
+            return false;
+        }
+
+        public static TOIterator<NPC> ActiveNPCs => TOIteratorFactory.NewActiveNPCIterator();
+
+        public static TOIterator<NPC> Enemies => TOIteratorFactory.NewActiveNPCIterator(k => k.Enemy);
+
+        public static TOIterator<NPC> Bosses => TOIteratorFactory.NewActiveNPCIterator(k => k.TOBoss);
+
+        public void SpawnOnPlayer<T>(int plr) where T : ModNPC => NPC.SpawnOnPlayer(plr, ModContent.NPCType<T>());
 
         /// <summary>
         /// 生成一个新的NPC，并在生成后执行一个Action。
@@ -118,7 +162,7 @@ public static partial class TOExtensions
         /// <param name="type">类型。</param>
         /// <param name="start">生成NPC索引的最小值。</param>
         /// <param name="action">执行的行为。仅当成功生成NPC时生效。</param>
-        public static void NewNPCAction_TO(IEntitySource source, Vector2 position, int type, int start = 0, Action<NPC> action = null)
+        public static void NewNPCAction(IEntitySource source, Vector2 position, int type, int start = 0, Action<NPC> action = null)
         {
             int index = NPC.NewNPC(source, (int)position.X, (int)position.Y, type, start);
             if (index < Main.maxNPCs)
@@ -136,8 +180,8 @@ public static partial class TOExtensions
         /// <param name="position">生成位置。</param>
         /// <param name="start">生成NPC索引的最小值。</param>
         /// <param name="action">执行的行为。仅当成功生成NPC时生效。</param>
-        public static void NewNPCAction_TO<T>(IEntitySource source, Vector2 position, int start = 0, Action<NPC> action = null) where T : ModNPC =>
-            NewNPCAction_TO(source, position, ModContent.NPCType<T>(), start, action);
+        public static void NewNPCAction<T>(IEntitySource source, Vector2 position, int start = 0, Action<NPC> action = null) where T : ModNPC =>
+            NewNPCAction(source, position, ModContent.NPCType<T>(), start, action);
 
         /// <summary>
         /// 生成一个新的NPC，并在生成后执行一个Action。
@@ -150,7 +194,7 @@ public static partial class TOExtensions
         /// <param name="start">生成NPC索引的最小值。</param>
         /// <param name="action">执行的行为。仅当成功生成NPC时生效。</param>
         /// <returns>生成NPC是否成功。</returns>
-        public static bool NewNPCActionCheck_TO(out int index, out NPC npc, IEntitySource source, Vector2 position, int type, int start = 0, Action<NPC> action = null)
+        public static bool NewNPCActionCheck(out int index, [NotNullWhen(true)] out NPC npc, IEntitySource source, Vector2 position, int type, int start = 0, Action<NPC> action = null)
         {
             index = NPC.NewNPC(source, (int)position.X, (int)position.Y, type, start);
             if (index < Main.maxNPCs)
@@ -178,8 +222,8 @@ public static partial class TOExtensions
         /// <param name="start">生成NPC索引的最小值。</param>
         /// <param name="action">执行的行为。仅当成功生成NPC时生效。</param>
         /// <returns>生成NPC是否成功。</returns>
-        public static void NewNPCActionCheck_TO<T>(out int index, out NPC npc, IEntitySource source, Vector2 position, int start = 0, Action<NPC> action = null) where T : ModNPC =>
-            NewNPCActionCheck_TO(out index, out npc, source, position, ModContent.NPCType<T>(), start, action);
+        public static void NewNPCActionCheck<T>(out int index, [NotNullWhen(true)] out NPC npc, IEntitySource source, Vector2 position, int start = 0, Action<NPC> action = null) where T : ModNPC =>
+            NewNPCActionCheck(out index, out npc, source, position, ModContent.NPCType<T>(), start, action);
     }
 
     extension(ref NPC.HitModifiers modifiers)

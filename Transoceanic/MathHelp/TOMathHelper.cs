@@ -80,4 +80,17 @@ public static partial class TOMathHelper
 
     public static float ClampMap(float oldMin, float oldMax, float newMin, float newMax, float value) =>
         Map(oldMin, oldMax, newMin, newMax, Math.Clamp(value, oldMin, oldMax));
+
+    public static float MapReverse(float oldMin, float oldMax, float newMin, float newMax, float value)
+    {
+        if (oldMin > oldMax)
+            throw new ArgumentOutOfRangeException($"{nameof(oldMin)}, {nameof(oldMax)}", "oldMin must be less than or equal to oldMax.");
+        if (newMin > newMax)
+            throw new ArgumentOutOfRangeException($"{nameof(newMin)}, {nameof(newMax)}", "newMin must be less than or equal to newMax.");
+
+        return newMax - (value - oldMin) / (oldMax - oldMin) * (newMax - newMin);
+    }
+
+    public static float ClampMapReverse(float oldMin, float oldMax, float newMin, float newMax, float value) =>
+        MapReverse(oldMin, oldMax, newMin, newMax, Math.Clamp(value, oldMin, oldMax));
 }

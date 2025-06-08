@@ -25,7 +25,7 @@ public class CAGlobalItem : GlobalItem
         foreach (CAItemOverride itemOverride in CAOverrideHelper.ItemOverrides.Values)
             itemOverride.AddRecipes();
     }
-    #endregion
+    #endregion Defaults
 
     #region Active
     public override void OnCreated(Item item, ItemCreationContext context)
@@ -101,7 +101,7 @@ public class CAGlobalItem : GlobalItem
 
         return false;
     }
-    #endregion
+    #endregion Active
 
     #region Update
     public override void UpdateInventory(Item item, Player player)
@@ -145,7 +145,7 @@ public class CAGlobalItem : GlobalItem
         if (item.TryGetOverride(out CAItemOverride itemOverride))
             itemOverride.UpdateItemDye(player, dye, hideVisual);
     }
-    #endregion
+    #endregion Update
 
     #region Draw
     public override Color? GetAlpha(Item item, Color lightColor)
@@ -195,7 +195,7 @@ public class CAGlobalItem : GlobalItem
         if (item.TryGetOverride(out CAItemOverride itemOverride))
             itemOverride.PostDrawInInventory(spriteBatch, position, frame, drawColor, itemColor, origin, scale);
     }
-    #endregion
+    #endregion Draw
 
     #region Prefix
     public override int ChoosePrefix(Item item, UnifiedRandom rand)
@@ -266,7 +266,7 @@ public class CAGlobalItem : GlobalItem
         if (item.TryGetOverride(out CAItemOverride itemOverride))
             itemOverride.PostReforge();
     }
-    #endregion
+    #endregion Prefix
 
     #region Use
     public override bool AltFunctionUse(Item item, Player player)
@@ -413,7 +413,7 @@ public class CAGlobalItem : GlobalItem
         if (item.TryGetOverride(out CAItemOverride itemOverride))
             itemOverride.RightClick(player);
     }
-    #endregion
+    #endregion Use
 
     #region ModifyStats
     public override void ModifyWeaponDamage(Item item, Player player, ref StatModifier damage)
@@ -445,7 +445,7 @@ public class CAGlobalItem : GlobalItem
         if (item.TryGetOverride(out CAItemOverride itemOverride))
             itemOverride.ModifyItemScale(player, ref scale);
     }
-    #endregion
+    #endregion ModifyStats
 
     #region Hit
     public override bool? CanHitNPC(Item item, Player player, NPC target)
@@ -515,7 +515,7 @@ public class CAGlobalItem : GlobalItem
             itemOverride.OnHitPvp(player, target, hurtInfo);
         }
     }
-    #endregion
+    #endregion Hit
 
     #region SpecialEffects
     public override void GetHealLife(Item item, Player player, bool quickHeal, ref int healValue)
@@ -664,7 +664,7 @@ public class CAGlobalItem : GlobalItem
 
         return true;
     }
-    #endregion
+    #endregion SpecialEffects
 
     #region Tooltip
     public override bool PreDrawTooltip(Item item, ReadOnlyCollection<TooltipLine> lines, ref int x, ref int y)
@@ -732,7 +732,7 @@ public class CAGlobalItem : GlobalItem
             }
         }
     }
-    #endregion
+    #endregion Tooltip
 
     #region Net
     public override void NetSend(Item item, BinaryWriter writer)
@@ -742,7 +742,7 @@ public class CAGlobalItem : GlobalItem
     public override void NetReceive(Item item, BinaryReader reader)
     {
     }
-    #endregion
+    #endregion Net
 
     #region NotOverriden
     public override bool? CanConsumeBait(Player player, Item bait) => null;
@@ -806,11 +806,11 @@ public class CAGlobalItem : GlobalItem
     public override bool IsAnglerQuestAvailable(int type) => true;
 
     public override void AnglerChat(int type, ref string chat, ref string catchLocation) { }
-    #endregion
+    #endregion NotOverriden
 
     #region Data
     public override void SaveData(Item item, TagCompound tag) { }
 
     public override void LoadData(Item item, TagCompound tag) { }
-    #endregion
+    #endregion Data
 }

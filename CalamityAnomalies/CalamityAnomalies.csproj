@@ -6,14 +6,12 @@
 	<!-- General -->
 	<PropertyGroup>
 		<LangVersion>preview</LangVersion>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 	</PropertyGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\Transoceanic\Transoceanic.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Reference Include="ACalTweak">
-	    <HintPath>..\..\Users\21334\Documents\My Games\Terraria\tModLoader\ModSources\ACalTweak\ACalTweak.dll</HintPath>
-	  </Reference>
 	  <Reference Include="CalamityMod">
 	    <HintPath>..\..\..\..\..\..\..\..\CalamityMod\CalamityMod.dll</HintPath>
 	  </Reference>

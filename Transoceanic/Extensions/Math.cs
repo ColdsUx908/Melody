@@ -2,8 +2,15 @@
 
 public static partial class TOExtensions
 {
+    #region Vector2
     extension(Vector2 vector)
     {
+        public void Deconstruct(out float x, out float y)
+        {
+            x = vector.X;
+            y = vector.Y;
+        }
+
         /// <summary>
         /// 获取向量的顺时针旋转角。
         /// </summary>
@@ -35,10 +42,36 @@ public static partial class TOExtensions
 
     extension(ref Vector2 vector)
     {
+        public void CopyFrom(Vector2 other)
+        {
+            vector.X = other.X;
+            vector.Y = other.Y;
+        }
+
         public float Modulus
         {
             get => vector.Length();
-            set => vector = vector.ToCustomLength(value);
+            set => vector.CopyFrom(vector.ToCustomLength(value));
         }
     }
+
+    extension(Vector2)
+    {
+        /// <summary>
+        /// 计算两个向量的夹角。
+        /// </summary>
+        /// <param name="value1"></param>
+        /// <param name="value2"></param>
+        /// <returns></returns>
+        public static float IncludedAngle(Vector2 value1, Vector2 value2) => (float)Math.Acos(Vector2.Dot(value1, value2) / (value1.Modulus * value2.Modulus));
+
+        /// <summary>
+        /// 获取两个向量角平分线的单位方向向量。
+        /// </summary>
+        /// <param name="value1"></param>
+        /// <param name="value2"></param>
+        /// <returns></returns>
+        public static Vector2 UnitAngleBisector(Vector2 value1, Vector2 value2) => new PolarVector2((value1.Angle + value2.Angle) / 2);
+    }
+    #endregion Vector2
 }

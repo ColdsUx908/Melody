@@ -22,14 +22,26 @@ public static partial class TOExtensions
         /// <summary>
         /// 生成一个新的Dust，并在生成后执行一个Action。
         /// </summary>
+        /// <typeparam name="T">ModDust所属类型。</typeparam>
+        /// <param name="position">生成位置。<br>注意：该参数表示生成中心，而不是左上角。</br></param>
+        /// <param name="width">X偏移最大值。</param>
+        /// <param name="height">Y偏移最大值。</param>
+        /// <param name="action">执行的行为。仅当成功生成Dust时生效。</param>
+        public static void NewDustAction<T>(Vector2 position, int width, int height, Action<Dust> action = null) where T : ModDust =>
+            NewDustAction(position, width, height, ModContent.DustType<T>(), action);
+
+        /// <summary>
+        /// 生成一个新的Dust，并在生成后执行一个Action。
+        /// </summary>
         /// <param name="index">输出的Dust索引。</param>
         /// <param name="dust">输出的Dust实例。</param>
         /// <param name="position">生成位置。<br>注意：该参数表示生成中心，而不是左上角。</br></param>
         /// <param name="offsetX">X偏移最大值。</param>
         /// <param name="offsetY">Y偏移最大值。</param>
+        /// <param name="type">类型。</param>
         /// <param name="action">执行的行为。仅当成功生成Dust时生效。</param>
-        /// <returns></returns>
-        public static bool NewDustActionCheck(out int index, out Dust dust, Vector2 position, int offsetX, int offsetY, int type, Action<Dust> action = null)
+        /// <returns>生成Dust是否成功。</returns>
+        public static bool NewDustActionCheck(out int index, [NotNullWhen(true)] out Dust dust, Vector2 position, int offsetX, int offsetY, int type, Action<Dust> action = null)
         {
             index = Dust.NewDust(position - new Vector2(offsetX, offsetY), offsetX * 2, offsetY * 2, type);
             if (index < Main.maxDust)
@@ -44,6 +56,20 @@ public static partial class TOExtensions
                 return false;
             }
         }
+
+        /// <summary>
+        /// 生成一个新的Dust，并在生成后执行一个Action。
+        /// </summary>
+        /// <typeparam name="T">ModDust所属类型。</typeparam>
+        /// <param name="index">输出的Dust索引。</param>
+        /// <param name="dust">输出的Dust实例。</param>
+        /// <param name="position">生成位置。<br>注意：该参数表示生成中心，而不是左上角。</br></param>
+        /// <param name="offsetX">X偏移最大值。</param>
+        /// <param name="offsetY">Y偏移最大值。</param>
+        /// <param name="action">执行的行为。仅当成功生成Dust时生效。</param>
+        /// <returns>生成Dust是否成功。</returns>
+        public static bool NewDustActionCheck<T>(out int index, [NotNullWhen(true)] out Dust dust, Vector2 position, int offsetX, int offsetY, Action<Dust> action = null) where T : ModDust =>
+            NewDustActionCheck(out index, out dust, position, offsetX, offsetY, ModContent.DustType<T>(), action);
 
         /// <summary>
         /// 生成一个新的Dust（无随机偏移），并在生成后执行一个Action。
@@ -61,13 +87,22 @@ public static partial class TOExtensions
         /// <summary>
         /// 生成一个新的Dust（无随机偏移），并在生成后执行一个Action。
         /// </summary>
+        /// <typeparam name="T">ModDust所属类型。</typeparam>
+        /// <param name="position">生成位置。</param>
+        /// <param name="action">执行的行为。仅当成功生成Dust时生效。</param>
+        public static void NewDustPerfectAction<T>(Vector2 position, Action<Dust> action = null) where T : ModDust =>
+            NewDustPerfectAction(position, ModContent.DustType<T>(), action);
+
+        /// <summary>
+        /// 生成一个新的Dust（无随机偏移），并在生成后执行一个Action。
+        /// </summary>
         /// <param name="index">输出的Dust索引。</param>
         /// <param name="dust">输出的Dust实例。</param>
         /// <param name="position">生成位置。</param>
         /// <param name="type">类型。</param>
         /// <param name="action">执行的行为。仅当成功生成Dust时生效。</param>
-        /// <returns></returns>
-        public static bool NewDustPerfectActionCheck(out int index, out Dust dust, Vector2 position, int type, Action<Dust> action = null)
+        /// <returns>生成Dust是否成功。</returns>
+        public static bool NewDustPerfectActionCheck(out int index, [NotNullWhen(true)] out Dust dust, Vector2 position, int type, Action<Dust> action = null)
         {
             Dust dustSpawned = Dust.NewDustPerfect(position, type);
             index = dustSpawned.dustIndex;
@@ -83,5 +118,17 @@ public static partial class TOExtensions
                 return false;
             }
         }
+
+        /// <summary>
+        /// 生成一个新的Dust（无随机偏移），并在生成后执行一个Action。
+        /// </summary>
+        /// <typeparam name="T">ModDust所属类型。</typeparam>
+        /// <param name="index">输出的Dust索引。</param>
+        /// <param name="dust">输出的Dust实例。</param>
+        /// <param name="position">生成位置。</param>
+        /// <param name="action">执行的行为。仅当成功生成Dust时生效。</param>
+        /// <returns>生成Dust是否成功。</returns>
+        public static bool NewDustPerfectActionCheck<T>(out int index, [NotNullWhen(true)] out Dust dust, Vector2 position, Action<Dust> action = null) where T : ModDust =>
+            NewDustPerfectActionCheck(out index, out dust, position, ModContent.DustType<T>(), action);
     }
 }

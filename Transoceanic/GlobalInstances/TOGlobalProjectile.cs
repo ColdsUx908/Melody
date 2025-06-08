@@ -25,13 +25,13 @@ public class TOGlobalProjectile : GlobalProjectile
         AIChanged[index] = true;
     }
 
-    public bool GetOceanAIBit(int index, byte bitPosition) => TOMathHelper.GetBit((int)OceanAI[index], bitPosition);
+    public bool GetOceanAIBit(int index, byte bitPosition) => BitOperation.GetBit((int)OceanAI[index], bitPosition);
 
-    public bool GetOceanAIBit(Index index, byte bitPosition) => TOMathHelper.GetBit((int)OceanAI[index], bitPosition);
+    public bool GetOceanAIBit(Index index, byte bitPosition) => BitOperation.GetBit((int)OceanAI[index], bitPosition);
 
-    public void SetOceanAIBit(bool value, int index, byte bitPosition) => SetOceanAI(TOMathHelper.SetBit((int)OceanAI[index], bitPosition, value), index);
+    public void SetOceanAIBit(bool value, int index, byte bitPosition) => SetOceanAI(BitOperation.SetBit((int)OceanAI[index], bitPosition, value), index);
 
-    public void SetOceanAIBit(bool value, Index index, byte bitPosition) => SetOceanAI(TOMathHelper.SetBit((int)OceanAI[index], bitPosition, value), index);
+    public void SetOceanAIBit(bool value, Index index, byte bitPosition) => SetOceanAI(BitOperation.SetBit((int)OceanAI[index], bitPosition, value), index);
 
     public float RotationOffset
     {
@@ -49,7 +49,7 @@ public class TOGlobalProjectile : GlobalProjectile
     public override void SetDefaults(Projectile projectile)
     {
     }
-    #endregion
+    #endregion Defaults
 
     #region AI
     public override bool PreAI(Projectile projectile)
@@ -62,7 +62,7 @@ public class TOGlobalProjectile : GlobalProjectile
         if (AlwaysRotating)
             projectile.VelocityToRotation(RotationOffset);
     }
-    #endregion
+    #endregion AI
 
     #region Net
     public override void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter)
@@ -80,5 +80,5 @@ public class TOGlobalProjectile : GlobalProjectile
 
         TONetUtils.ReceiveAI(OceanAI, binaryReader);
     }
-    #endregion
+    #endregion Net
 }

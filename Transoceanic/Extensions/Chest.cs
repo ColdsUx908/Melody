@@ -14,7 +14,9 @@ public static partial class TOExtensions
         /// </summary>
         public Vector2 Coordinate => chest.Position.ToWorldCoordinates();
 
-        public bool HasItem(int itemType, out int index, out Item item)
+        public Vector2 Center => chest.Position.ToWorldCoordinates(0f, 16f);
+
+        public bool HasItem(int itemType, out int index, [NotNullWhen(true)] out Item item)
         {
             for (int i = 0; i < chest.item.Length; i++)
             {

@@ -1,11 +1,8 @@
-﻿using CalamityAnomalies.Configs;
-using CalamityAnomalies.UI;
-using CalamityMod.Items;
-using CalamityMod.NPCs;
-using CalamityMod.Projectiles;
+﻿using CalamityAnomalies.UI;
 
 namespace CalamityAnomalies;
 
+#region Override
 #region NPC
 public enum OrigMethodType_CalamityGlobalNPC
 {
@@ -77,6 +74,8 @@ public abstract class CANPCOverride : NPCOverride
 
 public abstract class CANPCOverride<T> : CANPCOverride where T : ModNPC
 {
+    public static Type Type { get; } = typeof(T);
+
     public T ModNPC { get; private set; } = null;
 
     public override int OverrideType => ModContent.NPCType<T>();
@@ -112,16 +111,16 @@ public abstract class CANPCTweak : CANPCOverride
 {
     public override decimal Priority => 5m;
 
-    public override bool ShouldProcess => CAServerConfig.Instance.TweaksEnabled;
+    public override bool ShouldProcess => CAMain.Tweak;
 }
 
 public abstract class CANPCTweak<T> : CANPCOverride<T> where T : ModNPC
 {
     public override decimal Priority => 5m;
 
-    public override bool ShouldProcess => CAServerConfig.Instance.TweaksEnabled;
+    public override bool ShouldProcess => CAMain.Tweak;
 }
-#endregion
+#endregion NPC
 
 #region Projectile
 public enum OrigMethodType_CalamityGlobalProjectile
@@ -153,6 +152,8 @@ public abstract class CAProjectileOverride : ProjectileOverride
 
 public abstract class CAProjectileOverride<T> : CAProjectileOverride where T : ModProjectile
 {
+    public static Type Type { get; } = typeof(T);
+
     public T ModProjectile { get; private set; } = null;
 
     public override int OverrideType => ModContent.ProjectileType<T>();
@@ -188,16 +189,16 @@ public abstract class CAProjectileTweak : CAProjectileOverride
 {
     public override decimal Priority => 5m;
 
-    public override bool ShouldProcess => CAServerConfig.Instance.TweaksEnabled;
+    public override bool ShouldProcess => CAMain.Tweak;
 }
 
 public abstract class CAProjectileTweak<T> : CAProjectileOverride<T> where T : ModProjectile
 {
     public override decimal Priority => 5m;
 
-    public override bool ShouldProcess => CAServerConfig.Instance.TweaksEnabled;
+    public override bool ShouldProcess => CAMain.Tweak;
 }
-#endregion
+#endregion Projectile
 
 #region Item
 public abstract class CAItemOverride : ItemOverride
@@ -223,6 +224,8 @@ public abstract class CAItemOverride : ItemOverride
 
 public abstract class CAItemOverride<T> : CAItemOverride where T : ModItem
 {
+    public static Type Type { get; } = typeof(T);
+
     public T ModItem { get; private set; } = null;
 
     public override int OverrideType => ModContent.ItemType<T>();
@@ -244,16 +247,16 @@ public abstract class CAItemTweak : CAItemOverride
 {
     public override decimal Priority => 5m;
 
-    public override bool ShouldProcess => CAServerConfig.Instance.TweaksEnabled;
+    public override bool ShouldProcess => CAMain.Tweak;
 }
 
 public abstract class CAItemTweak<T> : CAItemOverride<T> where T : ModItem
 {
     public override decimal Priority => 5m;
 
-    public override bool ShouldProcess => CAServerConfig.Instance.TweaksEnabled;
+    public override bool ShouldProcess => CAMain.Tweak;
 }
-#endregion
+#endregion Item
 
 public class CAOverrideHelper : ITOLoader
 {
@@ -278,3 +281,4 @@ public class CAOverrideHelper : ITOLoader
         ItemOverrides.Clear();
     }
 }
+#endregion Override

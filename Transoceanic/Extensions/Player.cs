@@ -6,7 +6,7 @@ public static partial class TOExtensions
     {
         public TOPlayer Ocean() => player.GetModPlayer<TOPlayer>();
 
-        public bool Alive => !player.dead && !player.ghost;
+        public bool Alive => player.active && !player.dead && !player.ghost;
 
         public bool PvP => player.Alive && player.hostile;
 
@@ -23,8 +23,10 @@ public static partial class TOExtensions
 
     extension(Player)
     {
-        public static TOIterator<Player> ActivePlayers_TO => TOIteratorFactory.NewActivePlayerIterator();
+        public static TOIterator<Player> ActivePlayers => TOIteratorFactory.NewActivePlayerIterator();
 
-        public static TOIterator<Player> PVPPlayers_TO => TOIteratorFactory.NewActivePlayerIterator(k => k.PvP);
+        public static TOIterator<Player> PVPPlayers => TOIteratorFactory.NewPlayerIterator(k => k.PvP);
+
+        public static int ActivePlayerCount => Main.netMode == NetmodeID.SinglePlayer ? 1 : Main.CurrentFrameFlags.ActivePlayersCount;
     }
 }

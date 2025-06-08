@@ -1,5 +1,4 @@
 ﻿using CalamityMod.Events;
-using CalamityMod.NPCs;
 using CalamityMod.NPCs.BrimstoneElemental;
 using CalamityMod.NPCs.Bumblebirb;
 using CalamityMod.NPCs.CalClone;
@@ -161,7 +160,7 @@ public class CalamityGlobalNPCDetour : GlobalNPCDetour<CalamityGlobalNPC>
 
         static void Adjust(NPC npc, bool shouldAdjustStatScaling)
         {
-            npc.lifeMax += (int)(npc.lifeMax * CalamityConfig.Instance.BossHealthBoost * 0.01);
+            npc.ApplyCalamityBossHealthBoost();
             if (shouldAdjustStatScaling && Main.masterMode)
                 npc.lifeMax = (int)Math.Round(npc.lifeMax * MasterModeEnemyHPMultiplier); //只更改血量，因为攻击已经在ModNPC的SetDefaults()中处理了
         }

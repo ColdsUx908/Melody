@@ -57,6 +57,10 @@ public static class CAExtensions
         public bool Ares => npc.ModNPC is AresLaserCannon or AresTeslaCannon or AresGaussNuke or AresPlasmaFlamethrower;
 
         public bool ExoMechs => npc.Thanatos || npc.ExoTwins || npc.Ares;
+
+        public void ApplyCalamityBossHealthBoost() => npc.lifeMax += (int)(npc.lifeMax * CalamityConfig.Instance.BossHealthBoost * 0.01);
+
+        public int GetProjectileDamage<T>() where T : ModProjectile => npc.GetProjectileDamage(ModContent.ProjectileType<T>());
     }
 
     extension(Projectile projectile)

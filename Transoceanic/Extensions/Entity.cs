@@ -35,7 +35,7 @@ public static partial class TOExtensions
                 Vector2 distanceVector = target.Center - entity.Center;
                 float distance = distanceVector.Length();
 
-                if (sightAngle != MathHelper.TwoPi && TOMathHelper.IncludedAngle(entity.velocity, distanceVector) > sightAngle / 2f)
+                if (sightAngle != MathHelper.TwoPi && Vector2.IncludedAngle(entity.velocity, distanceVector) > sightAngle / 2f)
                     return false;
 
                 float velocityLength = entity.velocity.Length();

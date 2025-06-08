@@ -114,9 +114,6 @@ public class TOMain
 {
     #region NotUpdate
 
-    /// <summary>
-    /// µ÷ÊÔÄ£Ê½¡£¿ªÆôºó»áÔÚÓÎÏ·ÖĞÏÔÊ¾Ò»Ğ©µ÷ÊÔĞÅÏ¢£¬ÒÔ¼°¿ªÆôÒ»Ğ©ÓÎÏ·ÄÚÈİµ÷ÊÔ¹¦ÄÜ¡£
-    /// </summary>
     public static bool DEBUG { get; internal set; } =
 #if DEBUG
         true
@@ -128,8 +125,8 @@ public class TOMain
     public static bool IsDEBUGPlayer(Player player) => DEBUG && player.name == "~ColdsUx";
 
     /// <summary>
-    /// ÓÃÓÚ±êÊ¶ÊÇ·ñÆôÓÃÍ¬²½¹¦ÄÜ¡£
-    /// <br/>ÓÉÓÚTransoceanicÎª¿Í»§¶ËMod£¬Ä¬ÈÏÇé¿öÏÂ²»ÆôÓÃÍ¬²½¹¦ÄÜ£¬ĞëÓÉÒÀÀµÄ£×é¿ªÆô¡£
+    /// æ˜¯å¦å¯ç”¨Transoceanicæ¨¡ç»„å†…ç½®çš„ç½‘ç»œåŒæ­¥ã€‚
+    /// <br/>ç”±äºTransoceanicä¸ºå®¢æˆ·ç«¯æ¨¡ç»„ï¼Œè¯¥é€‰é¡¹å¿…é¡»ç”±ä¾èµ–æ¨¡ç»„æ‰‹åŠ¨å¼€å¯ã€‚
     /// </summary>
     public static bool SyncEnabled
     {
@@ -150,21 +147,10 @@ public class TOMain
 
     public static TOIterator<Projectile> ActiveProjectiles => TOIteratorFactory.NewActiveProjectileIterator();
 
-    /// <summary>
-    /// ÊÇ·ñÎª´óÊ¦Ä£Ê½¡£
-    /// <br/>Í¬Ê±¼ì²é <see cref="TrueMasterMode"/> ºÍ <see cref="JourneyMasterMode"/>¡£
-    /// </summary>
     public static bool MasterMode => TrueMasterMode || JourneyMasterMode;
 
-    /// <summary>
-    /// ÓĞĞ©ĞĞÎª½öÔÚµ¥ÈËÄ£Ê½»òÕß¶àÈËÄ£Ê½·şÎñ¶Ë½øĞĞ¡£
-    /// </summary>
     public static bool GeneralClient => Main.netMode != NetmodeID.MultiplayerClient;
 
-    /// <summary>
-    /// ¼ÙÈËNPC¡£
-    /// <br/>¶ÔÓ¦ <see cref="Main.maxNPCs"/> µÄ×îºóÒ»¸öNPC¡£
-    /// </summary>
     public static NPC DummyNPC => Main.npc[Main.maxNPCs];
 
     public static Projectile DummyProjectile => Main.projectile[Main.maxProjectiles];
@@ -185,9 +171,9 @@ public class TOMain
     public static Color DiscoColor { get; internal set; } = new(Main.DiscoR, Main.DiscoG, Main.DiscoB, Main.DiscoR);
 
     public const int CelestialPrice = 25000000;
-    #endregion
+    #endregion Constant
 
-    #endregion
+    #endregion NotUpdate
 
     #region ShouldUpdate
 
@@ -219,26 +205,26 @@ public class TOMain
     public static TerrariaTime TerrariaTime { get; private set; }
 
     /// <summary>
-    /// ÊÇ·ñÎª¡°ÕæÕıµÄ¡±´óÊ¦Ä£Ê½£¨¼´´´½¨ÊÀ½çÊ±Ñ¡Ôñ¡°´óÊ¦ÄÑ¶È¡±£©¡£
+    /// ï¿½Ç·ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½Ê¦Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Ñ¡ï¿½ñ¡°´ï¿½Ê¦ï¿½Ñ¶È¡ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public static bool TrueMasterMode { get; private set; } = false;
 
     /// <summary>
-    /// ÊÇ·ñÎªÂÃĞĞ´óÊ¦Ä£Ê½£¨¼´½«µĞÈËÄÑ¶Èµ÷ÕûÖÁ3.0µÄÂÃĞĞÄ£Ê½£©¡£
+    /// ï¿½Ç·ï¿½Îªï¿½ï¿½ï¿½Ğ´ï¿½Ê¦Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¶Èµï¿½ï¿½ï¿½ï¿½ï¿½3.0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public static bool JourneyMasterMode { get; private set; } = false;
 
     /// <summary>
-    /// ÊÇ·ñÎª´«ÆæÄÑ¶È£¨ÔÚ¡°ÕæÕıµÄ¡±´óÊ¦Ä£Ê½»òÂÃĞĞ´óÊ¦Ä£Ê½µÄ»ù´¡ÉÏ¿ªÆôFTWÖÖ×ÓÌØĞÔ£©¡£
+    /// ï¿½Ç·ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½Ñ¶È£ï¿½ï¿½Ú¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½Ê¦Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ´ï¿½Ê¦Ä£Ê½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ï¿½ï¿½FTWï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô£ï¿½ï¿½ï¿½
     /// </summary>
     public static bool LegendaryMode { get; private set; } = false;
-    #endregion
+    #endregion PreUpdateEntities
 
     #region PostUpdateNPCs
     public static List<NPC> BossList { get; private set; } = [];
 
     public static bool BossActive { get; private set; } = false;
-    #endregion
+    #endregion PostUpdateNPCs
 
     public class Update : ModSystem
     {
@@ -269,7 +255,7 @@ public class TOMain
 
         public override void PostUpdateNPCs()
         {
-            BossList = NPC.Bosses_TO.ToList();
+            BossList = NPC.Bosses.ToList();
             BossActive = BossList.Count > 0;
         }
 
@@ -303,5 +289,5 @@ public class TOMain
             BossActive = false;
         }
     }
-    #endregion
+    #endregion ShouldUpdate
 }

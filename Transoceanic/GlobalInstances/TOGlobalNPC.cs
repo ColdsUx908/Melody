@@ -40,24 +40,24 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
         AIChanged[index] = true;
     }
 
-    public bool GetOceanAIBit(int index, byte bitPosition) => TOMathHelper.GetBit((int)OceanAI[index], bitPosition);
+    public bool GetOceanAIBit(int index, byte bitPosition) => BitOperation.GetBit((int)OceanAI[index], bitPosition);
 
-    public bool GetOceanAIBit(Index index, byte bitPosition) => TOMathHelper.GetBit((int)OceanAI[index], bitPosition);
+    public bool GetOceanAIBit(Index index, byte bitPosition) => BitOperation.GetBit((int)OceanAI[index], bitPosition);
 
-    public void SetOceanAIBit(bool value, int index, byte bitPosition) => SetOceanAI(TOMathHelper.SetBit((int)OceanAI[index], bitPosition, value), index);
+    public void SetOceanAIBit(bool value, int index, byte bitPosition) => SetOceanAI(BitOperation.SetBit((int)OceanAI[index], bitPosition, value), index);
 
-    public void SetOceanAIBit(bool value, Index index, byte bitPosition) => SetOceanAI(TOMathHelper.SetBit((int)OceanAI[index], bitPosition, value), index);
+    public void SetOceanAIBit(bool value, Index index, byte bitPosition) => SetOceanAI(BitOperation.SetBit((int)OceanAI[index], bitPosition, value), index);
 
     public float LifeRatio
     {
         get => OceanAI[^4];
-        set => SetOceanAI(value, ^3);
+        set => SetOceanAI(value, ^4);
     }
 
     public int Master
     {
         get => (int)OceanAI[^3];
-        set => SetOceanAI(Math.Clamp(value, 0, Main.maxNPCs), ^2);
+        set => SetOceanAI(Math.Clamp(value, 0, Main.maxNPCs), ^3);
     }
 
     public float RotationOffset
@@ -114,7 +114,7 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     {
         Master = Main.maxNPCs;
     }
-    #endregion
+    #endregion Defaults
 
     #region Active
     public override void OnSpawn(NPC npc, IEntitySource source)
@@ -122,7 +122,7 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
         Identifier = ++_identifierAllocator; //城镇NPC这类NPC不会拥有在这里被设置标识符的机会
         SpawnTime = TOMain.GameTimer;
     }
-    #endregion
+    #endregion Active
 
     #region AI
     public override bool PreAI(NPC npc)
@@ -141,7 +141,7 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     public override void PostAI(NPC npc)
     {
     }
-    #endregion
+    #endregion AI
 
     #region Net
     public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
@@ -159,7 +159,7 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
 
         TONetUtils.ReceiveAI(OceanAI, binaryReader);
     }
-    #endregion
+    #endregion Net
 
     #region Load
     void ITOLoader.Load()
@@ -171,5 +171,5 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     {
         _identifierAllocator = 0ul;
     }
-    #endregion
+    #endregion Load
 }

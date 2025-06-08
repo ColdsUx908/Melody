@@ -1,5 +1,4 @@
-﻿using CalamityAnomalies.Configs;
-using CalamityMod.Events;
+﻿using CalamityMod.Events;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.Systems;
 using CalamityMod.World;

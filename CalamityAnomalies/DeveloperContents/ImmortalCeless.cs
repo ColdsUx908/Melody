@@ -1,5 +1,4 @@
-﻿using CalamityAnomalies;
-using CalamityAnomalies.Items.ItemRarities;
+﻿using CalamityAnomalies.Items.ItemRarities;
 using Transoceanic.GlobalInstances;
 
 namespace CalamityAnomalies.DeveloperContents;
@@ -178,11 +177,11 @@ public class ImmortalCeless : LegendaryItem, ILocalizedModType
     {
         if (player.altFunctionUse == 2)
         {
-            Projectile.NewProjectileAction_TO(source, position, velocity.ToCustomLength(10f), ProjBlood, damage * 3, knockback * 3f, -1, p => p.velocity = new PolarVector2(15f, Main.rand.NextFloat(0f, MathHelper.TwoPi)));
+            Projectile.NewProjectileAction(source, position, velocity.ToCustomLength(10f), ProjBlood, damage * 3, knockback * 3f, -1, p => p.velocity = new PolarVector2(15f, Main.rand.NextFloat(0f, MathHelper.TwoPi)));
         }
         else
         {
-            Projectile.RotatedProj_TO(ProjAmount, MathHelper.TwoPi / ProjAmount, source, player.Center, new Vector2(0f, -15f), type, damage, knockback, -1, p => p.ai[2] = 15f); //ai[2]传递速度信息
+            Projectile.RotatedProj(ProjAmount, MathHelper.TwoPi / ProjAmount, source, player.Center, new Vector2(0f, -15f), type, damage, knockback, -1, p => p.ai[2] = 15f); //ai[2]传递速度信息
 
             float offsetangle;
             for (int i = 0; i < ProjAmount * 2; i++)
@@ -191,7 +190,7 @@ public class ImmortalCeless : LegendaryItem, ILocalizedModType
                 int t = Main.rand.Next(i, i * 4);
                 offsetangle = (float)Math.Pow(t + 1, 2) + t * 3;
                 Vector2 velocity3 = new PolarVector2(velocity2, offsetangle);
-                Projectile.NewProjectileAction_TO(source, player.Center, velocity3, type, damage, knockback, -1, p => p.ai[2] = velocity2); //ai[2]传递速度信息
+                Projectile.NewProjectileAction(source, player.Center, velocity3, type, damage, knockback, -1, p => p.ai[2] = velocity2); //ai[2]传递速度信息
             }
         }
 

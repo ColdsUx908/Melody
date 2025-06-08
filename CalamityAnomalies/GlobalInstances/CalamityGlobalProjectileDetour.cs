@@ -1,5 +1,4 @@
 ﻿using CalamityMod.Events;
-using CalamityMod.Projectiles;
 
 namespace CalamityAnomalies.GlobalInstances;
 

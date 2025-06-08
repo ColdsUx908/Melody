@@ -47,7 +47,7 @@ public static partial class TOExtensions
         /// <param name="knockback">击退。</param>
         /// <param name="owner">弹幕主人。</param>
         /// <param name="action">执行的行为。仅当成功生成Projectile时生效。</param>
-        public static void NewProjectileAction_TO(IEntitySource source, Vector2 position, Vector2 velocity, int type, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
+        public static void NewProjectileAction(IEntitySource source, Vector2 position, Vector2 velocity, int type, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
         {
             int index = Projectile.NewProjectile(source, position, velocity, type, damage, knockback, owner);
             if (index < Main.maxProjectiles)
@@ -65,8 +65,8 @@ public static partial class TOExtensions
         /// <param name="knockback">击退。</param>
         /// <param name="owner">弹幕主人。</param>
         /// <param name="action">执行的行为。仅当成功生成Projectile时生效。</param>
-        public static void NewProjectileAction_TO<T>(IEntitySource source, Vector2 position, Vector2 velocity, int damage, float knockback, int owner = -1, Action<Projectile> action = null) where T : ModProjectile =>
-            NewProjectileAction_TO(source, position, velocity, ModContent.ProjectileType<T>(), damage, knockback, owner, action);
+        public static void NewProjectileAction<T>(IEntitySource source, Vector2 position, Vector2 velocity, int damage, float knockback, int owner = -1, Action<Projectile> action = null) where T : ModProjectile =>
+            NewProjectileAction(source, position, velocity, ModContent.ProjectileType<T>(), damage, knockback, owner, action);
 
         /// <summary>
         /// 生成一个新的Projectile，并在生成后执行一个Action。
@@ -82,7 +82,7 @@ public static partial class TOExtensions
         /// <param name="owner">弹幕主人。</param>
         /// <param name="action">执行的行为。仅当成功生成Projectile时生效。</param>
         /// <returns>生成Projectile是否成功。</returns>
-        public static bool NewProjectileActionCheck_TO(out int index, out Projectile projectile, IEntitySource source, Vector2 position, Vector2 velocity, int type, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
+        public static bool NewProjectileActionCheck(out int index, [NotNullWhen(true)] out Projectile projectile, IEntitySource source, Vector2 position, Vector2 velocity, int type, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
         {
             index = Projectile.NewProjectile(source, position, velocity, type, damage, knockback, owner);
             if (index < Main.maxProjectiles)
@@ -112,9 +112,8 @@ public static partial class TOExtensions
         /// <param name="owner">弹幕主人。</param>
         /// <param name="action">执行的行为。仅当成功生成Projectile时生效。</param>
         /// <returns>生成Projectile是否成功。</returns>
-        public static bool NewProjectileActionCheck_TO<T>(out int index, out Projectile projectile, IEntitySource source, Vector2 position, Vector2 velocity, int damage, float knockback, int owner = -1, Action<Projectile> action = null) where T : ModProjectile =>
-            NewProjectileActionCheck_TO(out index, out projectile, source, position, velocity, ModContent.ProjectileType<T>(), damage, knockback, owner, action);
-
+        public static bool NewProjectileActionCheck<T>(out int index, [NotNullWhen(true)] out Projectile projectile, IEntitySource source, Vector2 position, Vector2 velocity, int damage, float knockback, int owner = -1, Action<Projectile> action = null) where T : ModProjectile =>
+            NewProjectileActionCheck(out index, out projectile, source, position, velocity, ModContent.ProjectileType<T>(), damage, knockback, owner, action);
 
         /// <summary>
         /// 生成指定数量的Projectile，使用指定的旋转角度。
@@ -129,11 +128,32 @@ public static partial class TOExtensions
         /// <param name="knockback">击退。</param>
         /// <param name="owner">弹幕主人。</param>
         /// <param name="action">执行的行为。仅当成功生成Projectile时生效。</param>
-        public static void RotatedProj_TO(int number, float radian,
+        public static void RotatedProj(int number, float radian,
             IEntitySource source, Vector2 position, Vector2 velocity, int type, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
         {
             for (int i = 0; i < number; i++)
-                NewProjectileAction_TO(source, position, velocity.RotatedBy(radian * i), type, damage, knockback, owner, action);
+                NewProjectileAction(source, position, velocity.RotatedBy(radian * i), type, damage, knockback, owner, action);
+        }
+
+        /// <summary>
+        /// 生成指定数量的Projectile，使用指定的旋转角度。
+        /// </summary>
+        /// <typeparam name="T">ModProjectile所属类型。</typeparam>
+        /// <param name="number">弹幕总数。</param>
+        /// <param name="radian">单次旋转角度（顺时针）。</param>
+        /// <param name="source">生成源。</param>
+        /// <param name="position">生成位置。</param>
+        /// <param name="velocity">速度。</param>
+        /// <param name="damage">伤害。</param>
+        /// <param name="knockback">击退。</param>
+        /// <param name="owner">弹幕主人。</param>
+        /// <param name="action">执行的行为。仅当成功生成Projectile时生效。</param>
+        public static void RotatedProj<T>(int number, float radian,
+            IEntitySource source, Vector2 position, Vector2 velocity, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
+            where T : ModProjectile
+        {
+            for (int i = 0; i < number; i++)
+                NewProjectileAction(source, position, velocity.RotatedBy(radian * i), ModContent.ProjectileType<T>(), damage, knockback, owner, action);
         }
 
         /// <summary>
@@ -153,7 +173,7 @@ public static partial class TOExtensions
         /// <param name="owner">弹幕主人。</param>
         /// <param name="action">执行的行为。仅当成功生成Projectile时生效。</param>
         /// <returns>Projectile是否全部生成。</returns>
-        public static bool RotatedProjCheck_TO(out List<int> indexes, out List<Projectile> projectiles, out int spawnedNumber, int number, float offset,
+        public static bool RotatedProjCheck(out List<int> indexes, out List<Projectile> projectiles, out int spawnedNumber, int number, float offset,
             IEntitySource source, Vector2 position, Vector2 velocity, int type, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
         {
             indexes = [];
@@ -163,7 +183,7 @@ public static partial class TOExtensions
             PolarVector2 temp = (PolarVector2)velocity;
             for (int i = 0; i < number; i++)
             {
-                if (NewProjectileActionCheck_TO(out int index, out Projectile projectile, source, position, temp.RotatedBy(offset * i), type, damage, knockback, owner, action))
+                if (NewProjectileActionCheck(out int index, out Projectile projectile, source, position, temp.RotatedBy(offset * i), type, damage, knockback, owner, action))
                 {
                     indexes.Add(index);
                     projectiles.Add(projectile);

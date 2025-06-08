@@ -151,7 +151,7 @@ public class AnomalyKingSlime : AnomalyNPCOverride
     }
 
 
-    #endregion
+    #endregion 枚举、数值、属性、AI状态
 
     public override int OverrideType => NPCID.KingSlime;
 
@@ -178,11 +178,11 @@ public class AnomalyKingSlime : AnomalyNPCOverride
         JewelRuby = TOMain.DummyNPC;
         JewelSapphire = TOMain.DummyNPC;
     }
-    #endregion
+    #endregion Defaults
 
     #region Active
     public override bool CheckActive() => false;
-    #endregion
+    #endregion Active
 
     #region AI
     public override bool PreAI()
@@ -359,7 +359,7 @@ public class AnomalyKingSlime : AnomalyNPCOverride
         if (OceanNPC.LifeRatio < 0.8f && !JewelEmeraldSpawned)
         {
             SoundEngine.PlaySound(SoundID.Item38, spawnPosition);
-            NPC.NewNPCAction_TO<KingSlimeJewelEmerald>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
+            NPC.NewNPCAction<KingSlimeJewelEmerald>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
             {
                 n.Ocean().Master = NPC.whoAmI;
                 n.netUpdate = true;
@@ -372,7 +372,7 @@ public class AnomalyKingSlime : AnomalyNPCOverride
         if (OceanNPC.LifeRatio < 0.6f && !JewelRubySpawned)
         {
             SoundEngine.PlaySound(SoundID.Item38, spawnPosition);
-            NPC.NewNPCAction_TO<KingSlimeJewelRuby>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
+            NPC.NewNPCAction<KingSlimeJewelRuby>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
             {
                 n.Ocean().Master = NPC.whoAmI;
                 n.netUpdate = true;
@@ -385,7 +385,7 @@ public class AnomalyKingSlime : AnomalyNPCOverride
         if (OceanNPC.LifeRatio < 1f / 3f && !JewelSapphireSpawned)
         {
             SoundEngine.PlaySound(SoundID.Item38, spawnPosition);
-            NPC.NewNPCAction_TO<KingSlimeJewelSapphire>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
+            NPC.NewNPCAction<KingSlimeJewelSapphire>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
             {
                 n.Ocean().Master = NPC.whoAmI;
                 n.netUpdate = true;
@@ -442,7 +442,7 @@ public class AnomalyKingSlime : AnomalyNPCOverride
         int spawnZoneHeight = NPC.height - 32;
         Vector2 spawnPosition = new(NPC.position.X + Main.rand.Next(spawnZoneWidth), NPC.position.Y + Main.rand.Next(spawnZoneHeight));
         Vector2 spawnVelocity = new(Main.rand.NextFloat(-1.5f, 1.5f), Main.rand.NextFloat(-3f, 3f));
-        NPC.NewNPCAction_TO(NPC.GetSource_FromAI(), spawnPosition, type, action: n =>
+        NPC.NewNPCAction(NPC.GetSource_FromAI(), spawnPosition, type, action: n =>
         {
             n.velocity = spawnVelocity;
             n.ai[0] = -1000 * Main.rand.Next(3);
@@ -630,7 +630,7 @@ public class AnomalyKingSlime : AnomalyNPCOverride
                 break;
         }
     }
-    #endregion
+    #endregion AI
 
     #region Draw
     public override Color? GetAlpha(Color drawColor)
@@ -640,5 +640,5 @@ public class AnomalyKingSlime : AnomalyNPCOverride
 
         return null;
     }
-    #endregion
+    #endregion Draw
 }
