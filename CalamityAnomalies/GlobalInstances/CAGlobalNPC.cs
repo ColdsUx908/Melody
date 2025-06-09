@@ -7,28 +7,31 @@ public class CAGlobalNPC : GlobalNPC
 {
     public override bool InstancePerEntity => true;
 
-    public int AnomalyKilltime { get; private set; } = 0;
-
-    public bool ShouldRunAnomalyAI { get; set; } = true;
-
-    public int AnomalyAITimer { get; private set; } = 0;
-
-    public int AnomalyUltraAITimer { get; private set; } = 0;
-
-    public int AnomalyUltraBarTimer { get; private set; } = 0;
-
-    public bool IsRunningAnomalyAI => AnomalyAITimer > 0;
-
-    public int BossRushAITimer { get; private set; } = 0;
-
-    private const int MaxAISlots = 64;
+    #region Data
+    private const int MaxAISlots = 128;
 
     /// <summary>
-    /// 额外的AI槽位，共64个。
+    /// 额外的AI槽位，共128个。
     /// </summary>
     public float[] AnomalyAI { get; } = new float[MaxAISlots];
 
     public bool[] AIChanged { get; } = new bool[MaxAISlots];
+
+    private float[] InternalAnomalyAI { get; } = new float[MaxAISlots];
+
+    private bool[] InternalAIChanged { get; } = new bool[MaxAISlots];
+
+    public override GlobalNPC Clone(NPC from, NPC to)
+    {
+        CAGlobalNPC clone = (CAGlobalNPC)base.Clone(from, to);
+
+        Array.Copy(AnomalyAI, clone.AnomalyAI, MaxAISlots);
+        Array.Copy(AIChanged, clone.AIChanged, MaxAISlots);
+        Array.Copy(InternalAnomalyAI, clone.InternalAnomalyAI, MaxAISlots);
+        Array.Copy(InternalAIChanged, clone.InternalAIChanged, MaxAISlots);
+
+        return clone;
+    }
 
     public void SetAnomalyAI(float value, int index)
     {
@@ -50,7 +53,70 @@ public class CAGlobalNPC : GlobalNPC
 
     public void SetAnomalyAIBit(bool value, Index index, byte bitPosition) => SetAnomalyAI(BitOperation.SetBit((int)AnomalyAI[index], bitPosition, value), index);
 
-    public bool NeverTrippy { get; set; } = false;
+    private void SetInternalAnomalyAI(float value, int index)
+    {
+        InternalAnomalyAI[index] = value;
+        InternalAIChanged[index] = true;
+    }
+
+    private void SetInternalAnomalyAI(float value, Index index)
+    {
+        InternalAnomalyAI[index] = value;
+        InternalAIChanged[index] = true;
+    }
+
+    private bool GetInternalAnomalyAIBit(int index, byte bitPosition) => BitOperation.GetBit((int)InternalAnomalyAI[index], bitPosition);
+
+    private bool GetInternalAnomalyAIBit(Index index, byte bitPosition) => BitOperation.GetBit((int)InternalAnomalyAI[index], bitPosition);
+
+    private void SetInternalAnomalyAIBit(bool value, int index, byte bitPosition) => SetInternalAnomalyAI(BitOperation.SetBit((int)InternalAnomalyAI[index], bitPosition, value), index);
+
+    private void SetInternalAnomalyAIBit(bool value, Index index, byte bitPosition) => SetInternalAnomalyAI(BitOperation.SetBit((int)InternalAnomalyAI[index], bitPosition, value), index);
+    #endregion Data
+
+    public bool NeverTrippy
+    {
+        get => GetInternalAnomalyAIBit(0, 0);
+        set => SetInternalAnomalyAIBit(value, 0, 0);
+    }
+
+    public bool ShouldRunAnomalyAI
+    {
+        get => GetInternalAnomalyAIBit(0, 1);
+        set => SetInternalAnomalyAIBit(value, 0, 1);
+    }
+
+    public int AnomalyKilltime
+    {
+        get => (int)InternalAnomalyAI[1];
+        private set => SetInternalAnomalyAI(value, 1);
+    }
+
+    public int AnomalyAITimer
+    {
+        get => (int)InternalAnomalyAI[2];
+        private set => SetInternalAnomalyAI(value, 2);
+    }
+
+    public bool IsRunningAnomalyAI => AnomalyAITimer > 0;
+
+    public int AnomalyUltraAITimer
+    {
+        get => (int)InternalAnomalyAI[3];
+        private set => SetInternalAnomalyAI(value, 3);
+    }
+
+    public int AnomalyUltraBarTimer
+    {
+        get => (int)InternalAnomalyAI[4];
+        private set => SetInternalAnomalyAI(value, 4);
+    }
+
+    public int BossRushAITimer
+    {
+        get => (int)InternalAnomalyAI[5];
+        private set => SetInternalAnomalyAI(value, 5);
+    }
 
     #region Defaults
     public override void SetStaticDefaults()
@@ -145,6 +211,8 @@ public class CAGlobalNPC : GlobalNPC
     #region AI
     public override bool PreAI(NPC npc)
     {
+        bool result = true;
+
         CalamityGlobalNPC calamityNPC = npc.Calamity();
 
         if (npc.TryGetOverride(out CANPCOverride npcOverride))
@@ -179,19 +247,19 @@ public class CAGlobalNPC : GlobalNPC
                     AnomalyUltraBarTimer = Math.Clamp(AnomalyUltraBarTimer - 4, 0, 120);
                 }
             }
+            else
+                AnomalyAITimer = 0;
 
             if (!npcOverride.PreAI())
-                return false;
+                result = false;
         }
-
-        AnomalyAITimer = 0;
 
         if (CAWorld.BossRush)
             BossRushAITimer++;
         else
             BossRushAITimer = 0;
 
-        return true;
+        return result;
     }
 
     public override void AI(NPC npc)
@@ -417,11 +485,13 @@ public class CAGlobalNPC : GlobalNPC
     public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
     {
         TONetUtils.SendAI(AnomalyAI, AIChanged, binaryWriter);
+        TONetUtils.SendAI(InternalAnomalyAI, InternalAIChanged, binaryWriter);
     }
 
     public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
     {
         TONetUtils.ReceiveAI(AnomalyAI, binaryReader);
+        TONetUtils.ReceiveAI(InternalAnomalyAI, binaryReader);
     }
     #endregion Net
 }

@@ -98,8 +98,11 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
 
         return false;
     }
+
     private void StartUp()
     {
+        NPC.damage = 0;
+
         ModNPC.FrameType = FrameAnimationType.UpwardDraft;
         ModNPC.FrameChangeSpeed = 0.15f;
 
@@ -410,7 +413,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
         newBar.DrawNPCName(spriteBatch, x, y, null,
             Data.BlueColor * newBar.AnimationCompletionRatio2,
             Data.NameColor * newBar.AnimationCompletionRatio2,
-            Math.Clamp(OceanNPC.ActiveTime, 0f, 360f) / 240f + TOMathHelper.GetTimeSin(1f, 1f, 0f, false) + OceanNPC.LifeRatioReverse / 2f);
+            Math.Clamp(OceanNPC.ActiveTime, 0f, 360f) / 240f + TOMathHelper.GetTimeSin(0.5f, 1f, TOMathHelper.PiOver3, true) + OceanNPC.LifeRatioReverse / 2f);
         newBar.DrawBigLifeText(spriteBatch, x, y);
         newBar.DrawExtraSmallText(spriteBatch, x, y);
 

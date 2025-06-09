@@ -106,20 +106,32 @@ public abstract class NPCOverride : EntityOverride<NPC>
 
     public int Timer1
     {
-        get => (int)OceanNPC.OceanAI[0];
-        set => OceanNPC.SetOceanAI(value, 0);
+        get => OceanNPC.Timer1;
+        set => OceanNPC.Timer1 = value;
     }
 
     public int Timer2
     {
-        get => (int)OceanNPC.OceanAI[1];
-        set => OceanNPC.SetOceanAI(value, 1);
+        get => OceanNPC.Timer2;
+        set => OceanNPC.Timer2 = value;
     }
 
     public int Timer3
     {
-        get => (int)OceanNPC.OceanAI[2];
-        set => OceanNPC.SetOceanAI(value, 2);
+        get => OceanNPC.Timer3;
+        set => OceanNPC.Timer3 = value;
+    }
+
+    public float Timer4
+    {
+        get => OceanNPC.Timer4;
+        set => OceanNPC.Timer4 = value;
+    }
+
+    public float Timer5
+    {
+        get => OceanNPC.Timer5;
+        set => OceanNPC.Timer5 = value;
     }
     #endregion 实成员
 

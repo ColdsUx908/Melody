@@ -19,14 +19,18 @@ public class AnomalyKingSlime : AnomalyNPCOverride
         PhaseChange_1And2 = 5,
     }
 
-    private static class Data
+    public static class Data
     {
         public const float DespawnDistance = 5000f;
 
         public static float MaxScale => CAWorld.AnomalyUltramundane ? 7.5f : 6f;
+
         public static float MinScale => 0.5f;
+
         public static float SpawnSlimeGateValue => CAWorld.AnomalyUltramundane ? 0.025f : 0.03f;
+
         public static float SpawnSlimePow => CAWorld.AnomalyUltramundane ? 0.5f : 0.3f;
+
     }
 
     /// <summary>

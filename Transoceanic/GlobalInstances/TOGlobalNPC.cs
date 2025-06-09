@@ -4,72 +4,100 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
 {
     public override bool InstancePerEntity => true;
 
-    /// <summary>
-    /// NPC的标识符。
-    /// <br/>若NPC在进入世界后生成，则标识符为正数。
-    /// </summary>
-    public ulong Identifier { get; internal set; } = 0;
+    #region Data
     /// <summary>
     /// 标识符分配器。
     /// <br/>进入世界时重置为0。
     /// </summary>
     private static ulong _identifierAllocator;
 
-    public ulong SpawnTime { get; internal set; } = 0;
+    /// <summary>
+    /// NPC的标识符。
+    /// <br/>若NPC在进入世界后生成，则标识符为正数。
+    /// <br/>不同步。
+    /// </summary>
+    public ulong Identifier { get; private set; } = 0;
 
-    public ulong ActiveTime => TOMain.GameTimer - SpawnTime;
-
-    private const int MaxAISlots = 64;
+    public void AllocateIdentifier() => Identifier = ++_identifierAllocator;
 
     /// <summary>
-    /// 额外的AI槽位，共64个。
+    /// NPC生成时 <see cref="TOMain.GameTimer"/> 的值。
+    /// <br/>不同步。
     /// </summary>
-    public float[] OceanAI { get; } = new float[MaxAISlots];
+    public int SpawnTime { get; private set; } = -1;
 
-    public bool[] AIChanged { get; } = new bool[MaxAISlots];
+    private const int MaxAISlots = 128;
 
-    public void SetOceanAI(float value, int index)
+    /// <summary>
+    /// 额外的AI槽位，共128个。
+    /// </summary>
+    private float[] OceanAI { get; } = new float[MaxAISlots];
+
+    private bool[] AIChanged { get; } = new bool[MaxAISlots];
+
+    public override GlobalNPC Clone(NPC from, NPC to)
+    {
+        TOGlobalNPC clone = (TOGlobalNPC)base.Clone(from, to);
+
+        clone.Identifier = Identifier;
+        clone.SpawnTime = SpawnTime;
+        Array.Copy(OceanAI, clone.OceanAI, MaxAISlots);
+        Array.Copy(AIChanged, clone.AIChanged, MaxAISlots);
+
+        return clone;
+    }
+
+    private void SetOceanAI(float value, int index)
     {
         OceanAI[index] = value;
         AIChanged[index] = true;
     }
 
-    public void SetOceanAI(float value, Index index)
+    private void SetOceanAI(float value, Index index)
     {
         OceanAI[index] = value;
         AIChanged[index] = true;
     }
 
-    public bool GetOceanAIBit(int index, byte bitPosition) => BitOperation.GetBit((int)OceanAI[index], bitPosition);
+    private bool GetOceanAIBit(int index, byte bitPosition) => BitOperation.GetBit((int)OceanAI[index], bitPosition);
 
-    public bool GetOceanAIBit(Index index, byte bitPosition) => BitOperation.GetBit((int)OceanAI[index], bitPosition);
+    private bool GetOceanAIBit(Index index, byte bitPosition) => BitOperation.GetBit((int)OceanAI[index], bitPosition);
 
-    public void SetOceanAIBit(bool value, int index, byte bitPosition) => SetOceanAI(BitOperation.SetBit((int)OceanAI[index], bitPosition, value), index);
+    private void SetOceanAIBit(bool value, int index, byte bitPosition) => SetOceanAI(BitOperation.SetBit((int)OceanAI[index], bitPosition, value), index);
 
-    public void SetOceanAIBit(bool value, Index index, byte bitPosition) => SetOceanAI(BitOperation.SetBit((int)OceanAI[index], bitPosition, value), index);
+    private void SetOceanAIBit(bool value, Index index, byte bitPosition) => SetOceanAI(BitOperation.SetBit((int)OceanAI[index], bitPosition, value), index);
+    #endregion Data
 
-    public float LifeRatio
+    public bool AlwaysRotating
     {
-        get => OceanAI[^4];
-        set => SetOceanAI(value, ^4);
+        get => GetOceanAIBit(0, 0);
+        set => SetOceanAIBit(value, 0, 0);
     }
 
-    public int Master
+    public int ActiveTime
     {
-        get => (int)OceanAI[^3];
-        set => SetOceanAI(Math.Clamp(value, 0, Main.maxNPCs), ^3);
+        get => (int)OceanAI[1];
+        set => SetOceanAI(value, 1);
     }
 
     public float RotationOffset
     {
-        get => OceanAI[^2];
-        set => SetOceanAI(value, ^2);
+        get => OceanAI[1];
+        set => SetOceanAI(value, 1);
     }
 
-    public bool AlwaysRotating
+    public float LifeRatio
     {
-        get => GetOceanAIBit(^1, 0);
-        set => SetOceanAIBit(value, ^1, 0);
+        get => OceanAI[2];
+        set => SetOceanAI(value, 2);
+    }
+
+    public float LifeRatioReverse => 1f - LifeRatio;
+
+    public int Master
+    {
+        get => (int)OceanAI[3];
+        set => SetOceanAI(Math.Clamp(value, 0, Main.maxNPCs), 3);
     }
 
     public bool TryGetMaster(out NPC master)
@@ -98,16 +126,35 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
 
     public bool TryGetMaster<T>(out NPC master) where T : ModNPC => TryGetMaster(ModContent.NPCType<T>(), out master);
 
-    /// <summary>
-    /// 额外伤害减免。在所有伤害减免生效后独立生效。不建议使用。
-    /// </summary>
-    public float ExtraDR { get; set; } = 0;
-    /// <summary>
-    /// 动态伤害减免。
-    /// </summary>
-    public float DynamicDR { get; internal set; } = 0;
+    public int Timer1
+    {
+        get => (int)OceanAI[^5];
+        set => SetOceanAI(value, ^5);
+    }
 
-    public float LifeRatioReverse => 1f - LifeRatio;
+    public int Timer2
+    {
+        get => (int)OceanAI[^4];
+        set => SetOceanAI(value, ^4);
+    }
+
+    public int Timer3
+    {
+        get => (int)OceanAI[^3];
+        set => SetOceanAI(value, ^3);
+    }
+
+    public float Timer4
+    {
+        get => OceanAI[^2];
+        set => SetOceanAI(value, ^2);
+    }
+
+    public float Timer5
+    {
+        get => OceanAI[^1];
+        set => SetOceanAI(value, ^1);
+    }
 
     #region Defaults
     public override void SetDefaults(NPC npc)
@@ -119,7 +166,7 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     #region Active
     public override void OnSpawn(NPC npc, IEntitySource source)
     {
-        Identifier = ++_identifierAllocator; //城镇NPC这类NPC不会拥有在这里被设置标识符的机会
+        AllocateIdentifier(); //城镇NPC这类NPC不会拥有在这里被设置标识符的机会
         SpawnTime = TOMain.GameTimer;
     }
     #endregion Active
@@ -127,6 +174,7 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     #region AI
     public override bool PreAI(NPC npc)
     {
+        ActiveTime++;
         LifeRatio = (float)npc.life / npc.lifeMax;
 
         return true;

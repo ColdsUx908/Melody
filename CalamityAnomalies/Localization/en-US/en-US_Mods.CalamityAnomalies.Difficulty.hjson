@@ -4,9 +4,9 @@ AnomalyMode: {
 	AnomalyExpandedInfo: "[c/FF0000:>:(]"
 	AnomalyActivate: Anomaly is active... are you serious?
 	AnomalyDeactivate: Anomaly is not active; wise choice.
-	AnomalyIllegal: Anomaly is only available in TRUE Master difficulty.
-	AnomalyIllegalNotLegendary: Anomaly Ultramundane is only available in TRUE Legendary difficulty.
-	AnomalyIllegalZenith: Anomaly Ultramundane is not supported in Get fixed boi worlds.
+	AnomalyInvalid: Anomaly is only available in TRUE Master difficulty.
+	AnomalyUltraInvalidNotLegendary: Anomaly Ultramundane is only available in TRUE Legendary difficulty.
+	AnomalyUltraInvalidZenith: Anomaly Ultramundane is not supported in Get fixed boi worlds.
 	AnomalyUltramundaneActivate:
 		'''
 		Anomaly Ultramundane is fully activated, please make sure you know what you're doing!

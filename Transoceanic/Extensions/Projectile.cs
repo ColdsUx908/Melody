@@ -51,7 +51,10 @@ public static partial class TOExtensions
         {
             int index = Projectile.NewProjectile(source, position, velocity, type, damage, knockback, owner);
             if (index < Main.maxProjectiles)
+            {
                 action?.Invoke(Main.projectile[index]);
+                NetMessage.SendData(MessageID.SyncProjectile, -1, -1, null, index);
+            }
         }
 
         /// <summary>
@@ -89,6 +92,7 @@ public static partial class TOExtensions
             {
                 projectile = Main.projectile[index];
                 action?.Invoke(projectile);
+                NetMessage.SendData(MessageID.SyncProjectile, -1, -1, null, index);
                 return true;
             }
             else

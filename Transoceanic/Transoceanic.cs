@@ -93,7 +93,7 @@ public class Transoceanic : Mod
         {
             if (Loaded)
             {
-                foreach (ITOLoader loader in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOLoader>(TOMain.Assembly)
+                foreach (ITOLoader loader in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOLoader>(TOMain.Assembly).AsValueEnumerable()
                     .OrderByDescending(k => k.GetPriority(LoaderMethodType.UnLoad)))
                 {
                     loader.UnLoad();
@@ -110,7 +110,7 @@ public class Transoceanic : Mod
     }
 }
 
-public class TOMain
+public static class TOMain
 {
     #region NotUpdate
 
@@ -182,7 +182,7 @@ public class TOMain
 
     public static float GeneralMinutes => GeneralSeconds / 60f;
 
-    public static ulong GameTimer
+    public static int GameTimer
     {
         get;
         internal set
@@ -204,19 +204,10 @@ public class TOMain
 
     public static TerrariaTime TerrariaTime { get; private set; }
 
-    /// <summary>
-    /// �Ƿ�Ϊ�������ġ���ʦģʽ������������ʱѡ�񡰴�ʦ�Ѷȡ�����
-    /// </summary>
     public static bool TrueMasterMode { get; private set; } = false;
 
-    /// <summary>
-    /// �Ƿ�Ϊ���д�ʦģʽ�����������Ѷȵ�����3.0������ģʽ����
-    /// </summary>
     public static bool JourneyMasterMode { get; private set; } = false;
 
-    /// <summary>
-    /// �Ƿ�Ϊ�����Ѷȣ��ڡ������ġ���ʦģʽ�����д�ʦģʽ�Ļ����Ͽ���FTW�������ԣ���
-    /// </summary>
     public static bool LegendaryMode { get; private set; } = false;
     #endregion PreUpdateEntities
 
@@ -262,6 +253,9 @@ public class TOMain
         public override void OnWorldLoad()
         {
             GameTimer = 0;
+
+            foreach (NPC npc in NPC.ActiveNPCs)
+                npc.Ocean().AllocateIdentifier();
         }
 
         public override void OnWorldUnload()

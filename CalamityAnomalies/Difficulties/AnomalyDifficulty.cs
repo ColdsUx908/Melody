@@ -121,20 +121,20 @@ public sealed class AnomalyManagement : ModSystem
     private static void ZenithInfo()
     {
         if (TOMain.GeneralClient)
-            TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyIllegalZenith", Color.HotPink);
+            TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyUltraInvalidZenith", Color.HotPink);
         //SoundEngine.PlaySound();
     }
 
     private static void NotLegendaryInfo()
     {
         if (TOMain.GeneralClient)
-            TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyIllegalNotLegendary", Color.Red);
+            TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyUltraInvalidNotLegendary", Color.Red);
     }
 
     private static void DisableAnomaly()
     {
         if (TOMain.GeneralClient)
-            TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyIllegal", Color.Red);
+            TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyInvalid", Color.Red);
         CAWorld.Anomaly = false;
     }
 }

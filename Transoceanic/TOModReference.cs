@@ -69,6 +69,13 @@ public class TOModReferences : ITOLoader
     public static TOModReferenceContainer ThoriumRework { get; private set; }
     public static TOModReferenceContainer WrathoftheGods { get; private set; }
 
+    decimal ITOLoader.GetPriority(LoaderMethodType type) => type switch
+    {
+        LoaderMethodType.PostSetupContent => 10m,
+        LoaderMethodType.OnModUnload => -10m,
+        _ => 0m
+    };
+
     void ITOLoader.PostSetupContent()
     {
         CA = new("CalamityAnomalies");

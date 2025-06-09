@@ -7,6 +7,13 @@ public class CAGlobalItem : GlobalItem
 {
     public override bool InstancePerEntity => true;
 
+    public override GlobalItem Clone(Item from, Item to)
+    {
+        CAGlobalItem clone = (CAGlobalItem)base.Clone(from, to);
+
+        return clone;
+    }
+
     #region Defaults
     public override void SetStaticDefaults()
     {

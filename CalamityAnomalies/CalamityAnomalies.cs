@@ -56,7 +56,7 @@ public class CalamityAnomalies : Mod
     }
 }
 
-public class CAMain : ITOLoader
+public static class CAMain
 {
     /// <summary>
     /// 是否启用了平衡修改。
@@ -72,18 +72,21 @@ public class CAMain : ITOLoader
 
     public static Type Type_CalamityMod { get; } = typeof(CalamityMod_);
 
-    public static CalamityMod_ CalamityModInstance { get; internal set; }
+    public static CalamityMod_ CalamityModInstance { get; internal set; } = null;
 
     public static Color AnomalyUltramundaneColor { get; } = new(0xE8, 0x97, 0xFF);
 
-    void ITOLoader.PostSetupContent()
+    public class Load : ITOLoader
     {
-        CalamityModInstance = (CalamityMod_)Type_CalamityMod.GetField("Instance", TOReflectionUtils.StaticBindingFlags).GetValue(null);
-        TOMain.SyncEnabled = true;
-    }
+        void ITOLoader.PostSetupContent()
+        {
+            CalamityModInstance = (CalamityMod_)Type_CalamityMod.GetField("Instance", TOReflectionUtils.StaticBindingFlags).GetValue(null);
+            TOMain.SyncEnabled = true;
+        }
 
-    void ITOLoader.OnModUnload()
-    {
-        CalamityModInstance = null;
+        void ITOLoader.OnModUnload()
+        {
+            CalamityModInstance = null;
+        }
     }
 }

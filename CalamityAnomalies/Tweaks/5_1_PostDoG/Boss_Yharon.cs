@@ -1,6 +1,7 @@
 ﻿using CalamityMod.Events;
 using CalamityMod.NPCs.Bumblebirb;
 using CalamityMod.NPCs.Yharon;
+using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
 using CalamityMod.Projectiles.Boss;
 using CalamityMod.World;
@@ -9,100 +10,180 @@ using static CalamityMod.NPCs.Yharon.Yharon;
 namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
 
 //犽戎
-//这是涉及平衡修改的第一个Boss，能非常清楚地展现灾厄代码有多史
+//这是涉及平衡修改的第一个Boss，能非常清楚地展现灾厄代码有多**
+//既然你要用Yharon类自己的数据，就不要**的用私有字段导致外部根本动不了
 
-public class YharonTweak : CANPCTweak<Yharon>
+/* 改动
+ * 1. “巨龙重生”。
+ * 2. 在进入二阶段时获得15秒无敌。
+ * 3. 在转换阶段时获得97%无法削减的伤害减免（BossRush时为99%）。
+ */
+
+public record YharonPublicizer(Yharon Yharon)
 {
-    #region Yharon类成员
-#pragma warning disable IDE1006
-    public static readonly FieldInfo self_safeBox = Type.GetField("safeBox", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo self_enraged = Type.GetField("enraged", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo self_protectionBoost = Type.GetField("protectionBoost", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo self_moveCloser = Type.GetField("moveCloser", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo self_useTornado = Type.GetField("useTornado", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo self_secondPhasePhase = Type.GetField("secondPhasePhase", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo self_teleportLocation = Type.GetField("teleportLocation", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo self_startSecondAI = Type.GetField("startSecondAI", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo self_spawnArena = Type.GetField("spawnArena", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo self_invincibilityCounter = Type.GetField("invincibilityCounter", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo self_fastChargeTelegraphTime = Type.GetField("fastChargeTelegraphTime", TOReflectionUtils.UniversalBindingFlags);
+    private static readonly Type type = typeof(Yharon);
+    private static readonly FieldInfo self_safeBox = type.GetField("safeBox", TOReflectionUtils.UniversalBindingFlags);
+    private static readonly FieldInfo self_enraged = type.GetField("enraged", TOReflectionUtils.UniversalBindingFlags);
+    private static readonly FieldInfo self_protectionBoost = type.GetField("protectionBoost", TOReflectionUtils.UniversalBindingFlags);
+    private static readonly FieldInfo self_moveCloser = type.GetField("moveCloser", TOReflectionUtils.UniversalBindingFlags);
+    private static readonly FieldInfo self_useTornado = type.GetField("useTornado", TOReflectionUtils.UniversalBindingFlags);
+    private static readonly FieldInfo self_secondPhasePhase = type.GetField("secondPhasePhase", TOReflectionUtils.UniversalBindingFlags);
+    private static readonly FieldInfo self_teleportLocation = type.GetField("teleportLocation", TOReflectionUtils.UniversalBindingFlags);
+    private static readonly FieldInfo self_startSecondAI = type.GetField("startSecondAI", TOReflectionUtils.UniversalBindingFlags);
+    private static readonly FieldInfo self_spawnArena = type.GetField("spawnArena", TOReflectionUtils.UniversalBindingFlags);
+    private static readonly FieldInfo self_invincibilityCounter = type.GetField("invincibilityCounter", TOReflectionUtils.UniversalBindingFlags);
+    private static readonly FieldInfo self_fastChargeTelegraphTime = type.GetField("fastChargeTelegraphTime", TOReflectionUtils.UniversalBindingFlags);
 
+#pragma warning disable IDE1006
     public Rectangle safeBox
     {
-        get => (Rectangle)self_safeBox.GetValue(ModNPC);
-        set => self_safeBox.SetValue(ModNPC, value);
+        get => (Rectangle)self_safeBox.GetValue(Yharon);
+        set => self_safeBox.SetValue(Yharon, value);
     }
 
     public bool enraged
     {
-        get => (bool)self_enraged.GetValue(ModNPC);
-        set => self_enraged.SetValue(ModNPC, value);
+        get => (bool)self_enraged.GetValue(Yharon);
+        set => self_enraged.SetValue(Yharon, value);
     }
 
     public bool protectionBoost
     {
-        get => (bool)self_protectionBoost.GetValue(ModNPC);
-        set => self_protectionBoost.SetValue(ModNPC, value);
+        get => (bool)self_protectionBoost.GetValue(Yharon);
+        set => self_protectionBoost.SetValue(Yharon, value);
     }
 
     public bool moveCloser
     {
-        get => (bool)self_moveCloser.GetValue(ModNPC);
-        set => self_moveCloser.SetValue(ModNPC, value);
+        get => (bool)self_moveCloser.GetValue(Yharon);
+        set => self_moveCloser.SetValue(Yharon, value);
     }
 
     public bool useTornado
     {
-        get => (bool)self_useTornado.GetValue(ModNPC);
-        set => self_useTornado.SetValue(ModNPC, value);
+        get => (bool)self_useTornado.GetValue(Yharon);
+        set => self_useTornado.SetValue(Yharon, value);
     }
 
     public int secondPhasePhase
     {
-        get => (int)self_secondPhasePhase.GetValue(ModNPC);
-        set => self_secondPhasePhase.SetValue(ModNPC, value);
+        get => (int)self_secondPhasePhase.GetValue(Yharon);
+        set => self_secondPhasePhase.SetValue(Yharon, value);
     }
 
     public int teleportLocation
     {
-        get => (int)self_teleportLocation.GetValue(ModNPC);
-        set => self_teleportLocation.SetValue(ModNPC, value);
+        get => (int)self_teleportLocation.GetValue(Yharon);
+        set => self_teleportLocation.SetValue(Yharon, value);
     }
 
     public bool startSecondAI
     {
-        get => (bool)self_startSecondAI.GetValue(ModNPC);
-        set => self_startSecondAI.SetValue(ModNPC, value);
+        get => (bool)self_startSecondAI.GetValue(Yharon);
+        set => self_startSecondAI.SetValue(Yharon, value);
     }
 
     public bool spawnArena
     {
-        get => (bool)self_spawnArena.GetValue(ModNPC);
-        set => self_spawnArena.SetValue(ModNPC, value);
+        get => (bool)self_spawnArena.GetValue(Yharon);
+        set => self_spawnArena.SetValue(Yharon, value);
     }
 
     public int invincibilityCounter
     {
-        get => (int)self_invincibilityCounter.GetValue(ModNPC);
-        set => self_invincibilityCounter.SetValue(ModNPC, value);
+        get => (int)self_invincibilityCounter.GetValue(Yharon);
+        set => self_invincibilityCounter.SetValue(Yharon, value);
     }
 
     public int fastChargeTelegraphTime
     {
-        get => (int)self_fastChargeTelegraphTime.GetValue(ModNPC);
-        set => self_fastChargeTelegraphTime.SetValue(ModNPC, value);
+        get => (int)self_fastChargeTelegraphTime.GetValue(Yharon);
+        set => self_fastChargeTelegraphTime.SetValue(Yharon, value);
     }
 #pragma warning restore IDE1006
+}
 
-    public ref SlotId RoarSoundSlot => ref ModNPC.RoarSoundSlot;
-    #endregion Yharon类成员
-
-    private static class Data
+public class YharonTweak : CANPCTweak<Yharon>
+{
+    #region 数据、属性
+    public static class Data
     {
         public const float Phase2GateValue = 0.1f;
 
         public const int Phase2InvincibilityTime = 900;
     }
+
+    public YharonPublicizer YharonPublicizer { get; private set; } = null;
+
+#pragma warning disable IDE1006
+    public Rectangle safeBox
+    {
+        get => YharonPublicizer.safeBox;
+        set => YharonPublicizer.safeBox = value;
+    }
+
+    public bool enraged
+    {
+        get => YharonPublicizer.enraged;
+        set => YharonPublicizer.enraged = value;
+    }
+
+    public bool protectionBoost
+    {
+        get => YharonPublicizer.protectionBoost;
+        set => YharonPublicizer.protectionBoost = value;
+    }
+
+    public bool moveCloser
+    {
+        get => YharonPublicizer.moveCloser;
+        set => YharonPublicizer.moveCloser = value;
+    }
+
+    public bool useTornado
+    {
+        get => YharonPublicizer.useTornado;
+        set => YharonPublicizer.useTornado = value;
+    }
+
+    public int secondPhasePhase
+    {
+        get => YharonPublicizer.secondPhasePhase;
+        set => YharonPublicizer.secondPhasePhase = value;
+    }
+
+    public int teleportLocation
+    {
+        get => YharonPublicizer.teleportLocation;
+        set => YharonPublicizer.teleportLocation = value;
+    }
+
+    public bool startSecondAI
+    {
+        get => YharonPublicizer.startSecondAI;
+        set => YharonPublicizer.startSecondAI = value;
+    }
+
+    public bool spawnArena
+    {
+        get => YharonPublicizer.spawnArena;
+        set => YharonPublicizer.spawnArena = value;
+    }
+
+    public int invincibilityCounter
+    {
+        get => YharonPublicizer.invincibilityCounter;
+        set => YharonPublicizer.invincibilityCounter = value;
+    }
+
+    public int fastChargeTelegraphTime
+    {
+        get => YharonPublicizer.fastChargeTelegraphTime;
+        set => YharonPublicizer.fastChargeTelegraphTime = value;
+    }
+#pragma warning restore IDE1006
+
+    public ref SlotId RoarSoundSlot => ref ModNPC.RoarSoundSlot;
 
     public bool Initialized
     {
@@ -123,11 +204,24 @@ public class YharonTweak : CANPCTweak<Yharon>
             NPC.SyncExtraAI();
         }
     }
+    #endregion 数据、属性
+
+    public override void Connect(NPC npc)
+    {
+        base.Connect(npc);
+        YharonPublicizer = new(ModNPC);
+    }
+
+    public override void Disconnect()
+    {
+        YharonPublicizer = null;
+        base.Disconnect();
+    }
 
     #region Active
     public override bool CheckDead()
     {
-        if (!startSecondAI)
+        if (!startSecondAI || invincibilityCounter < Data.Phase2InvincibilityTime)
         {
             NPC.life = 1;
             NPC.active = true;
@@ -137,7 +231,7 @@ public class YharonTweak : CANPCTweak<Yharon>
 
         return true;
     }
-    #endregion
+    #endregion Active
 
     #region AI
 
@@ -151,6 +245,10 @@ public class YharonTweak : CANPCTweak<Yharon>
             InitialLifeMax = NPC.lifeMax;
             Initialized = true;
         }
+
+        CalamityNPC.DR = normalDR;
+        CalamityNPC.unbreakableDR = false;
+        CalamityNPC.CurrentlyIncreasingDefenseOrDR = false;
 
         if (!startSecondAI)
             AI1();
@@ -353,30 +451,17 @@ public class YharonTweak : CANPCTweak<Yharon>
         // Set DR based on protection boost (aka enrage)
         bool chargeTelegraph = (NPC.ai[0] == 0f || NPC.ai[0] == 6f || NPC.ai[0] == 13f) && NPC.localAI[1] > 0f;
         bool bulletHell = NPC.ai[0] is 8f or 15f;
-        CalamityNPC.DR = protectionBoost ? EnragedDR : normalDR;
-        CalamityNPC.CurrentlyIncreasingDefenseOrDR = protectionBoost;
-
-        // Increased DR during phase transitions
-        if (!protectionBoost)
-        {
-            if (phase3Change)
-            {
-                CalamityNPC.DR = phase4Check ? (bossRush ? 0.99f : 0.97f) : normalDR;
-                CalamityNPC.CurrentlyIncreasingDefenseOrDR = phase4Check;
-            }
-            else if (phase2Change)
-            {
-                CalamityNPC.DR = phase3Check ? (bossRush ? 0.99f : 0.97f) : normalDR;
-                CalamityNPC.CurrentlyIncreasingDefenseOrDR = phase3Check;
-            }
-            else if (phase1Change)
-            {
-                CalamityNPC.DR = phase2Check ? (bossRush ? 0.99f : 0.97f) : normalDR;
-                CalamityNPC.CurrentlyIncreasingDefenseOrDR = phase2Check;
-            }
-        }
-
         NPC.dontTakeDamage = bulletHell;
+
+        bool shouldIncreaseDR = protectionBoost;
+        if (phase3Change)
+            shouldIncreaseDR |= phase4Check;
+        else if (phase2Change)
+            shouldIncreaseDR |= phase3Check;
+        else if (phase1Change)
+            shouldIncreaseDR |= phase2Check;
+        if (shouldIncreaseDR)
+            IncreaseDR();
 
         // Trigger spawn effects
         if (NPC.localAI[0] == 0f)
@@ -1459,6 +1544,8 @@ public class YharonTweak : CANPCTweak<Yharon>
             {
                 case 120f:
                     RoarSoundSlot = SoundEngine.PlaySound(RoarSound, NPC.Center);
+                    break;
+                case 130f:
                     if (TOMain.GeneralClient)
                     {
                         Projectile.NewProjectileAction<ResplendentExplosion>(NPC.GetSource_FromAI(), NPC.Center, Vector2.Zero, 0, 0f, Main.myPlayer, p =>
@@ -1469,9 +1556,6 @@ public class YharonTweak : CANPCTweak<Yharon>
                             p.netUpdate = true;
                         });
                     }
-                    break;
-                case 122f:
-                    //GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(NPC.Center, Vector2.Zero, Color.Orange, new Vector2(3f), 0f, 0f, 15f, 60));
                     break;
                 case >= 180:
                     startSecondAI = true;
@@ -1643,7 +1727,8 @@ public class YharonTweak : CANPCTweak<Yharon>
             int increasedLifeMax = newLifeMax - NPC.lifeMax;
             NPC.lifeMax += increasedLifeMax;
 
-            int newLife = (int)MathHelper.Lerp(NPC.life, NPC.lifeMax * (0.1f + invincibilityCounter / 1000f), invincibilityCounter / 3600f + 0.75f);
+            //对数插值: y = ln((e - 1)x / 900 + 1)
+            int newLife = (int)MathHelper.Lerp(NPC.life, NPC.lifeMax * (0.1f + invincibilityCounter / 1000f), MathF.Log((MathF.E - 1) * invincibilityCounter / 900f + 1));
             int increasedLife = Math.Clamp(newLife - NPC.life + increasedLifeMax, 0, NPC.lifeMax - NPC.life);
 
             if (increasedLife > 0)
@@ -1712,42 +1797,9 @@ public class YharonTweak : CANPCTweak<Yharon>
         // Set DR based on protection boost (aka enrage)
         bool bulletHell = NPC.ai[0] == 5f;
         NPC.dontTakeDamage = bulletHell;
-        CalamityNPC.DR = protectionBoost ? EnragedDR : normalDR;
-        CalamityNPC.CurrentlyIncreasingDefenseOrDR = protectionBoost;
 
-        // Increased DR during phase transitions
-        if (!protectionBoost)
-        {
-            switch (secondPhasePhase)
-            {
-                case 1:
-
-                    CalamityNPC.DR = phase2 ? (bossRush ? 0.99f : 0.97f) : normalDR;
-                    CalamityNPC.CurrentlyIncreasingDefenseOrDR = phase2;
-
-                    break;
-
-                case 2:
-
-                    CalamityNPC.DR = phase3 ? (bossRush ? 0.99f : 0.97f) : normalDR;
-                    CalamityNPC.CurrentlyIncreasingDefenseOrDR = phase3;
-
-                    break;
-
-                case 3:
-
-                    CalamityNPC.DR = phase4 ? (bossRush ? 0.99f : 0.97f) : normalDR;
-                    CalamityNPC.CurrentlyIncreasingDefenseOrDR = phase4;
-
-                    break;
-            }
-
-            if (invincible || NPC.ai[0] == 9f)
-            {
-                CalamityNPC.DR = bossRush ? 0.99f : 0.97f;
-                CalamityNPC.CurrentlyIncreasingDefenseOrDR = true;
-            }
-        }
+        if (protectionBoost || (secondPhasePhase == 1 && phase2) || (secondPhasePhase == 2 && phase3) || (secondPhasePhase == 3 && phase4) || invincible || NPC.ai[0] == 9f)
+            IncreaseDR();
 
         float reduceSpeedChargeDistance = 500f;
         float reduceSpeedFireballSpitChargeDistance = 800f;
@@ -2613,6 +2665,13 @@ public class YharonTweak : CANPCTweak<Yharon>
             NPC.rotation = NPC.rotation.AngleTowards(facingAngle, rotationSpeed);
     }
 
+    private void IncreaseDR()
+    {
+        CalamityNPC.DR = BossRushEvent.BossRushActive ? 0.99f : 0.97f;
+        CalamityNPC.unbreakableDR = true;
+        CalamityNPC.CurrentlyIncreasingDefenseOrDR = true;
+    }
+
     private void ChargeDust(int dustAmt)
     {
         for (int i = 0; i < dustAmt; i++)
@@ -2694,8 +2753,82 @@ public class YharonDetour : ModNPCDetour<Yharon>
         orig(self);
 
         NPC npc = self.NPC;
-        npc.LifeMaxNERB(700000, 840000, 400000); //为适应巨龙重生，修改了最大生命值
+        npc.LifeMaxNERB(650000, 780000, 370000); //为适应巨龙重生，修改了最大生命值
         npc.ApplyCalamityBossHealthBoost();
+    }
+
+    public override void Detour_HitEffect(Orig_HitEffect orig, Yharon self, NPC.HitInfo hit)
+    {
+        NPC npc = self.NPC;
+        // hit sound
+        if (npc.soundDelay == 0)
+        {
+            npc.soundDelay = Main.rand.Next(16, 20);
+            SoundEngine.PlaySound(HitSound, npc.Center);
+        }
+
+        for (int k = 0; k < 5; k++)
+            Dust.NewDustAction(npc.Center, npc.width, npc.height, DustID.Blood, d => d.velocity = new Vector2(hit.HitDirection, -1f));
+
+        YharonPublicizer yharonPublicizer = new(self);
+        bool shouldNotDie = !yharonPublicizer.startSecondAI || yharonPublicizer.invincibilityCounter < YharonTweak.Data.Phase2InvincibilityTime;
+
+        if (npc.life <= 0)
+        {
+            bool shouldSummonProj = true;
+            if (shouldNotDie)
+            {
+                CalamityGlobalNPC calamityNPC = npc.Calamity();
+                //这一堆抽象的运算能够反映出我写代码时的精神状态
+                //什么神人会把亡语弹幕往HitEffect()里塞
+                if ((int)calamityNPC.newAI[2]++ % 3 != 0 || ++calamityNPC.newAI[3] > 6f) //一阶段最多释放6次垂死攻击
+                    shouldSummonProj = false;
+                npc.SyncExtraAI();
+            }
+            if (shouldSummonProj)
+                self.DoFireRing(300, (Main.expertMode || BossRushEvent.BossRushActive) ? 125 : 150, -1f, 0f);
+            npc.position.X += (npc.width / 2);
+            npc.position.Y += (npc.height / 2);
+            npc.width = 300;
+            npc.height = 280;
+            npc.position.X -= (npc.width / 2);
+            npc.position.Y -= (npc.height / 2);
+            for (int i = 0; i < 40; i++)
+            {
+                Dust.NewDustAction(npc.Center, npc.width, npc.height, DustID.CopperCoin, d =>
+                {
+                    d.alpha = 100;
+                    d.velocity *= 3f;
+                    if (Main.rand.NextBool())
+                    {
+                        d.scale = 0.5f;
+                        d.fadeIn = 1f + Main.rand.Next(10) * 0.1f;
+                    }
+                    else
+                        d.scale = 2f;
+                });
+            }
+            for (int j = 0; j < 70; j++)
+            {
+                Dust.NewDustAction(npc.Center, npc.width, npc.height, DustID.CopperCoin, d =>
+                {
+                    d.alpha = 100;
+                    d.velocity *= 5f;
+                    d.noGravity = true;
+                    d.scale = 3f;
+                });
+                Dust.NewDustAction(npc.Center, npc.width, npc.height, DustID.CopperCoin, d =>
+                {
+                    d.alpha = 100;
+                    d.velocity *= 2f;
+                    d.scale = 2f;
+                });
+            }
+
+            // Turn into dust on death.
+            if (npc.life <= 0 && !shouldNotDie)
+                DeathAshParticle.CreateAshesFromNPC(npc);
+        }
     }
 }
 

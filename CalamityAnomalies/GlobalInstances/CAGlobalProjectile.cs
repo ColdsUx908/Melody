@@ -4,14 +4,31 @@ public partial class CAGlobalProjectile : GlobalProjectile
 {
     public override bool InstancePerEntity => true;
 
-    private const int MaxAISlots = 32;
+    #region Data
+    private const int MaxAISlots = 64;
 
     /// <summary>
-    /// 额外的AI槽位，共32个。
+    /// 额外的AI槽位，共64个。
     /// </summary>
     public float[] AnomalyAI { get; } = new float[MaxAISlots];
 
-    public bool[] AIChanged { get; } = new bool[MaxAISlots];
+    private bool[] AIChanged { get; } = new bool[MaxAISlots];
+
+    private float[] InternalAnomalyAI { get; } = new float[MaxAISlots];
+
+    private bool[] InternalAIChanged { get; } = new bool[MaxAISlots];
+
+    public override GlobalProjectile Clone(Projectile from, Projectile to)
+    {
+        CAGlobalProjectile clone = (CAGlobalProjectile)base.Clone(from, to);
+
+        Array.Copy(AnomalyAI, clone.AnomalyAI, MaxAISlots);
+        Array.Copy(AIChanged, clone.AIChanged, MaxAISlots);
+        Array.Copy(InternalAnomalyAI, clone.InternalAnomalyAI, MaxAISlots);
+        Array.Copy(InternalAIChanged, clone.InternalAIChanged, MaxAISlots);
+
+        return clone;
+    }
 
     public void SetAnomalyAI(float value, int index)
     {
@@ -32,6 +49,28 @@ public partial class CAGlobalProjectile : GlobalProjectile
     public void SetAnomalyAIBit(bool value, int index, byte bitPosition) => SetAnomalyAI(BitOperation.SetBit((int)AnomalyAI[index], bitPosition, value), index);
 
     public void SetAnomalyAIBit(bool value, Index index, byte bitPosition) => SetAnomalyAI(BitOperation.SetBit((int)AnomalyAI[index], bitPosition, value), index);
+
+    private void SetInternalAnomalyAI(float value, int index)
+    {
+        InternalAnomalyAI[index] = value;
+        InternalAIChanged[index] = true;
+    }
+
+    private void SetInternalAnomalyAI(float value, Index index)
+    {
+        InternalAnomalyAI[index] = value;
+        InternalAIChanged[index] = true;
+    }
+
+    private bool GetInternalAnomalyAIBit(int index, byte bitPosition) => BitOperation.GetBit((int)InternalAnomalyAI[index], bitPosition);
+
+    private bool GetInternalAnomalyAIBit(Index index, byte bitPosition) => BitOperation.GetBit((int)InternalAnomalyAI[index], bitPosition);
+
+    private void SetInternalAnomalyAIBit(bool value, int index, byte bitPosition) => SetInternalAnomalyAI(BitOperation.SetBit((int)InternalAnomalyAI[index], bitPosition, value), index);
+
+    private void SetInternalAnomalyAIBit(bool value, Index index, byte bitPosition) => SetInternalAnomalyAI(BitOperation.SetBit((int)InternalAnomalyAI[index], bitPosition, value), index);
+    #endregion Data
+
 
     #region Defaults
     public override void SetStaticDefaults()

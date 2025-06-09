@@ -13,11 +13,12 @@ public class AnomalyJewelEmerald : AnomalyNPCOverride
         Charge = 1,
     }
 
-    private static class Data
+    public static class Data
     {
         public const float DespawnDistance = 5000f;
 
         public const int ChargePhaseGateValue = 90;
+
         public const int ChargeGateValue = 40;
     }
 
