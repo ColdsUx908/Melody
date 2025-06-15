@@ -2,6 +2,7 @@ using CalamityAnomalies.Items.ItemRarities;
 
 namespace CalamityAnomalies.DeveloperContents;
 
+/*
 [AutoloadEquip(EquipType.Wings)]
 public class AscendantWings : LegendaryItem, ILocalizedModType
 {
@@ -45,18 +46,6 @@ public class AscendantWings : LegendaryItem, ILocalizedModType
             //无视液体
             player.wet = false;
 
-            /*
-            Preferences configpath = new Preferences(TOGlobal.ConfigPath);
-            configpath?.Load();
-            if (!configpath.Get("Hitbox", false))
-            {
-                Rectangle hitbox = player.Hitbox;
-                hitbox.X += player.Hitbox.Width / 2;
-                hitbox.Y += player.Hitbox.Height / 2;
-                hitbox.Width = 1;
-                hitbox.Height = 1;
-            }
-            */
 
 
             if (player.TryingToHoverDown)
@@ -77,3 +66,4 @@ public class AscendantWings : LegendaryItem, ILocalizedModType
         return false;
     }
 }
+

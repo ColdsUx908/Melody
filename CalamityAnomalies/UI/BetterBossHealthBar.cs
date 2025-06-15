@@ -219,7 +219,11 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
         private void ModifyCalBossBarHeight()
         {
             if (NPC.TryGetOverride(out CANPCOverride npcOverride, "CustomCalBossBarHeight"))
-                Height = npcOverride.CustomCalBossBarHeight(this);
+            {
+                int height = 70;
+                npcOverride.ModifyCalBossBarHeight(this, ref height);
+                Height = height;
+            }
         }
 
         private void PostUpdate()

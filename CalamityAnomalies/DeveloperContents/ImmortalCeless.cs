@@ -3,6 +3,7 @@ using Transoceanic.GlobalInstances;
 
 namespace CalamityAnomalies.DeveloperContents;
 
+/*
 public class ImmortalCeless : LegendaryItem, ILocalizedModType
 {
     #region 传奇
@@ -167,10 +168,6 @@ public class ImmortalCeless : LegendaryItem, ILocalizedModType
 
     public override void HoldItem(Player player)
     {
-        /*if (player.ownedProjectileCounts[godType] < 1)
-        {
-            Projectile.NewProjectile(source, player.Center, Vector2.Zero, godType, damage, 0, -1, 0, 0, 0);
-        }*/
     }
 
     public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
@@ -497,3 +494,4 @@ public class ImmortalBloodRain : ModProjectile, ILocalizedModType
 
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => CalamityUtils.CircularHitboxCollision(Projectile.Center, 4f, targetHitbox);
 }
+*/

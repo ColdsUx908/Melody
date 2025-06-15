@@ -67,7 +67,7 @@ public abstract class CANPCOverride : NPCOverride
     /// 使用此方法可以修改灾厄Boss血条的高度。
     /// <br/>默认为 <c>70</c>。
     /// </summary>
-    public virtual int CustomCalBossBarHeight(BetterBossHealthBar.BetterBossHPUI newBar) => 70;
+    public virtual void ModifyCalBossBarHeight(BetterBossHealthBar.BetterBossHPUI newBar, ref int height) { }
 }
 
 public abstract class CANPCOverride<T> : CANPCOverride where T : ModNPC

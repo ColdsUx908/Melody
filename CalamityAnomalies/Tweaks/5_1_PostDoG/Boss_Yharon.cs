@@ -9,11 +9,9 @@ using static CalamityMod.NPCs.Yharon.Yharon;
 
 namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
 
-//犽戎
-//这是涉及平衡修改的第一个Boss，能非常清楚地展现灾厄代码有多**
-//既然你要用Yharon类自己的数据，就不要**的用私有字段导致外部根本动不了
-
-/* 改动
+/* 犽戎
+ * 沟槽的私有字段还在追我。
+ * 改动
  * 1. “巨龙重生”。
  * 2. 在进入二阶段时获得15秒无敌。
  * 3. 在转换阶段时获得97%无法削减的伤害减免（BossRush时为99%）。

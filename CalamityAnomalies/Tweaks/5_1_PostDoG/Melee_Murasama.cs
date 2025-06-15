@@ -17,9 +17,8 @@ using CalamityMod.Projectiles.Melee;
 
 namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
 
-//鬼妖村正
-
-/* 改动
+/* 鬼妖村正
+ * 改动
  * 
  * 1. 全局
  * 1) 怒气或肾上腺素开启时，攻击速度翻倍，但非大型挥砍仅造成30%伤害。
