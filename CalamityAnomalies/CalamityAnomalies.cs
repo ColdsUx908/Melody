@@ -33,8 +33,6 @@ global using Transoceanic.GameData;
 global using Transoceanic.IL;
 global using Transoceanic.Localization;
 global using Transoceanic.MathHelp;
-global using Transoceanic.Net;
-global using Transoceanic.Visual;
 global using ZLinq;
 global using CalamityMod_ = CalamityMod.CalamityMod;
 

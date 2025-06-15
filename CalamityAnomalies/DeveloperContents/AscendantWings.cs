@@ -66,4 +66,4 @@ public class AscendantWings : LegendaryItem, ILocalizedModType
         return false;
     }
 }
-
+*/
