@@ -41,19 +41,18 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
         public const int ArenaSize = 201;
     }
 
-    public int Arena_TopLeftX
+    public Point Arena_TopLeft
     {
-        get => (int)AnomalyNPC.AnomalyAI[0];
-        set => AnomalyNPC.SetAnomalyAI(value, 0);
+        get => AnomalyNPC.AnomalyAI2[0].p;
+        set
+        {
+            if (AnomalyNPC.AnomalyAI2[0].p != value)
+            {
+                AnomalyNPC.AnomalyAI2[0].p = value;
+                AnomalyNPC.AIChanged2[0] = true;
+            }
+        }
     }
-
-    public int Arena_TopLeftY
-    {
-        get => (int)AnomalyNPC.AnomalyAI[1];
-        set => AnomalyNPC.SetAnomalyAI(value, 1);
-    }
-
-    public Point Arena_TopLeft => new(Arena_TopLeftX, Arena_TopLeftY);
 
     public Vector2 Arena_TopLeftPosition => Arena_TopLeft.ToWorldCoordinates();
 
@@ -63,8 +62,16 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
 
     public AttackType CurrentAttack
     {
-        get => (AttackType)(int)AnomalyNPC.AnomalyAI[2];
-        set => AnomalyNPC.SetAnomalyAI((int)value, 2);
+        get => (AttackType)AnomalyNPC.AnomalyAI[0].i;
+        set
+        {
+            int temp = (int)value;
+            if (AnomalyNPC.AnomalyAI[0].i != temp)
+            {
+                AnomalyNPC.AnomalyAI[0].i = temp;
+                AnomalyNPC.AIChanged[0] = true;
+            }
+        }
     }
 
     #endregion 枚举、数值、属性、AI状态
@@ -249,8 +256,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
             int minY = safeBoxTilesY - safeBoxTileWidth;
             int maxY = safeBoxTilesY + safeBoxTileWidth;
 
-            Arena_TopLeftX = minX;
-            Arena_TopLeftY = minY;
+            Arena_TopLeft = new Point(minX, minY);
 
             foreach ((Tile tile, int i, int j) in TOTileUtils.GetBorderTiles(minX, maxX, minY, maxY, 2))
             {

@@ -24,14 +24,29 @@ public class AnomalyJewelEmerald : AnomalyNPCOverride
 
     public AttackType CurrentAttack
     {
-        get => (AttackType)(int)AnomalyNPC.AnomalyAI[1];
-        set => AnomalyNPC.SetAnomalyAI((int)value, 1);
+        get => (AttackType)AnomalyNPC.AnomalyAI[0].i;
+        set
+        {
+            int temp = (int)value;
+            if (AnomalyNPC.AnomalyAI[0].i != temp)
+            {
+                AnomalyNPC.AnomalyAI[0].i = temp;
+                AnomalyNPC.AIChanged[0] = true;
+            }
+        }
     }
 
     public int CurrentAttackPhase
     {
-        get => (int)AnomalyNPC.AnomalyAI[2];
-        set => AnomalyNPC.SetAnomalyAI(value, 2);
+        get => AnomalyNPC.AnomalyAI[1].i;
+        set
+        {
+            if (AnomalyNPC.AnomalyAI[1].i != value)
+            {
+                AnomalyNPC.AnomalyAI[1].i = value;
+                AnomalyNPC.AIChanged[0] = true;
+            }
+        }
     }
     #endregion 枚举、数值、属性
 

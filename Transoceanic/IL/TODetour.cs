@@ -1,6 +1,62 @@
-﻿using MonoMod.RuntimeDetour;
+﻿using System.ComponentModel;
+using MonoMod.RuntimeDetour;
 
 namespace Transoceanic.IL;
+
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+public class CustomDetourTargetAttribute : Attribute
+{
+    [DisallowNull]
+    public Type TargetType { get; }
+
+    [DisallowNull]
+    public string Name { get; }
+
+    [DisallowNull]
+    public BindingFlags BindingAttr { get; }
+
+    public CustomDetourTargetAttribute(Type targetType, string name, BindingFlags bindingAttr)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        TargetType = targetType ?? throw new ArgumentNullException(nameof(targetType));
+        Name = name;
+        BindingAttr = bindingAttr;
+    }
+
+    public MethodInfo TargetMethod => TargetType.GetMethod(Name, BindingAttr);
+}
+
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+public class CustomDetourPrefixAttribute : Attribute
+{
+    [DisallowNull]
+    public string Prefix { get; set; }
+
+    public CustomDetourPrefixAttribute(string prefix) => Prefix = prefix ?? throw new ArgumentNullException(nameof(prefix));
+}
+
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+public class CustomDetourConfigAttribute : Attribute
+{
+    [DisallowNull]
+    public string Id { get; }
+
+    public int? Priority { get; }
+
+    [AllowNull]
+    public IEnumerable<string> Before { get; }
+
+    [AllowNull]
+    public IEnumerable<string> After { get; }
+
+    [Browsable(false)]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public int SubPriority { get; }
+
+    public DetourConfig DetourConfig => new(Id, Priority, Before, After, SubPriority);
+
+    public CustomDetourConfigAttribute(string id) => Id = id ?? throw new ArgumentNullException(nameof(id));
+}
 
 /// <summary>
 /// 用于标记包含Detour方法的类。
@@ -13,20 +69,7 @@ public class DetourClassToAttribute : Attribute
     [DisallowNull]
     public Type TargetType { get; }
 
-    /// <summary>
-    /// 用于标识Detour方法的前缀。
-    /// <br/>若要标记的Detour方法为 <c>Detour_{methodName}</c> 的形式，则前缀为 <c>"Detour_"</c>。
-    /// </summary>
-    [DisallowNull]
-    public string DetourPrefix { get; }
-
-    public DetourClassToAttribute([DisallowNull] Type targetType, [DisallowNull] string detourPrefix = "Detour_")
-    {
-        ArgumentNullException.ThrowIfNull(targetType);
-        ArgumentException.ThrowIfNullOrWhiteSpace(detourPrefix);
-        TargetType = targetType;
-        DetourPrefix = detourPrefix;
-    }
+    public DetourClassToAttribute(Type targetType) => TargetType = targetType ?? throw new ArgumentNullException(nameof(targetType));
 }
 
 /// <summary>
@@ -36,7 +79,7 @@ public class DetourClassToAttribute : Attribute
 /// <typeparam name="T"></typeparam>
 public class DetourClassToAttribute<T> : DetourClassToAttribute where T : class
 {
-    public DetourClassToAttribute([DisallowNull] string detourPrefix = "Detour_") : base(typeof(T), detourPrefix) { }
+    public DetourClassToAttribute() : base(typeof(T)) { }
 }
 
 /// <summary>
@@ -49,22 +92,11 @@ public class MultiDetourClassToAttribute : Attribute
     [DisallowNull]
     public Type[] TargetTypes { get; }
 
-    /// <summary>
-    /// 用于标识Detour方法的前缀。
-    /// <br/>若要标记的Detour方法为 <c>{Detour_}{typeName}_{methodName}</c> 的形式，则前缀为 <c>"Detour_"</c>。
-    /// </summary>
-    [DisallowNull]
-    public string DetourPrefix { get; }
-
-    public MultiDetourClassToAttribute([DisallowNull] Type[] targetTypes, [DisallowNull] string detourPrefix)
+    public MultiDetourClassToAttribute(params Type[] targetTypes)
     {
         ArgumentException.ThrowIfNullOrEmptyOrAnyNull(targetTypes);
-        ArgumentException.ThrowIfNullOrEmpty(detourPrefix);
         TargetTypes = targetTypes;
-        DetourPrefix = detourPrefix;
     }
-
-    public MultiDetourClassToAttribute([DisallowNull] params Type[] targetTypes) : this(targetTypes, "Detour_") { }
 }
 
 [AttributeUsage(AttributeTargets.Method)]
@@ -73,20 +105,7 @@ public class DetourMethodToAttribute : Attribute
     [DisallowNull]
     public Type TargetType { get; }
 
-    /// <summary>
-    /// 用于标识Detour方法的前缀。
-    /// <br/>若要标记的Detour方法为 <c>Detour_{methodName}</c> 的形式，则前缀为 <c>"Detour_"</c>。
-    /// </summary>
-    [DisallowNull]
-    public string DetourPrefix { get; }
-
-    public DetourMethodToAttribute([DisallowNull] Type targetType, [DisallowNull] string detourPrefix = "Detour_")
-    {
-        ArgumentNullException.ThrowIfNull(targetType);
-        ArgumentException.ThrowIfNullOrWhiteSpace(detourPrefix);
-        TargetType = targetType;
-        DetourPrefix = detourPrefix;
-    }
+    public DetourMethodToAttribute(Type targetType) => TargetType = targetType ?? throw new ArgumentNullException(nameof(targetType));
 }
 
 [AttributeUsage(AttributeTargets.Method)]
@@ -102,7 +121,7 @@ public interface ITODetourProvider
 {
     /// <summary>
     /// 应用Detour逻辑。
-    /// <br/>使用 <see cref="TODetourUtils.ModifyMethodWithDetour(MethodBase, Delegate, DetourConfig)"/> 或 <see cref="TODetourUtils.ModifyMethodWithDetour(MethodBase, MethodInfo, DetourConfig)"/> 来实现Detour逻辑，
+    /// <br/>使用 <see cref="TODetourUtils.ModifyMethodWithDetour(MethodBase, Delegate)"/> 或 <see cref="TODetourUtils.ModifyMethodWithDetour(MethodBase, MethodInfo)"/> 来实现Detour逻辑，
     /// <br/>以便在 <see cref="TODetourHelper.Detours"/> 中注册Detour，并自动加载和卸载。
     /// </summary>
     public abstract void ApplyDetour();
@@ -123,44 +142,24 @@ public class TODetourHelper : ITOLoader
 
         foreach ((Type type, DetourClassToAttribute attribute) in TOReflectionUtils.GetTypesWithAttribute<DetourClassToAttribute>())
         {
-            Regex regex = new(attribute.DetourPrefix + @"(?<methodName>.*)$");
             Type targetType = attribute.TargetType;
             foreach (MethodInfo detour in type.GetRealMethods(TOReflectionUtils.StaticBindingFlags))
-            {
-                Match match = regex.Match(detour.Name);
-                if (match.Success)
-                    TODetourUtils.ModifyMethodWithDetour(targetType.GetMethod(match.Groups["methodName"].Value, TOReflectionUtils.UniversalBindingFlags), detour);
-            }
+                TODetourUtils.ApplyStaticMethodDetour(detour, targetType);
         }
 
         foreach ((Type type, MultiDetourClassToAttribute attribute) in TOReflectionUtils.GetTypesWithAttribute<MultiDetourClassToAttribute>())
         {
-            Regex regex = new(attribute.DetourPrefix + @"(?<typeName>[^_]+)_(?<methodName>.*)$");
             Type[] targetTypes = attribute.TargetTypes;
             foreach (MethodInfo detour in type.GetRealMethods(TOReflectionUtils.StaticBindingFlags))
-            {
-                Match match = regex.Match(detour.Name);
-                if (match.Success)
-                {
-                    Type targetType = targetTypes.AsValueEnumerable().FirstOrDefault(k => k.Name == match.Groups["typeName"].Value);
-                    if (targetType is not null)
-                        TODetourUtils.ModifyMethodWithDetour(targetType.GetMethod(match.Groups["methodName"].Value, TOReflectionUtils.UniversalBindingFlags), detour);
-                }
-            }
+                TODetourUtils.ApplyTypedStaticMethodDetour(detour, targetTypes);
         }
 
         foreach ((MethodInfo detour, DetourMethodToAttribute attribute) in TOReflectionUtils.GetMethodsWithAttribute<DetourMethodToAttribute>())
-        {
-            Regex regex = new(attribute.DetourPrefix + @"(?<methodName>.*)$");
-            Match match = regex.Match(detour.Name);
-            if (match.Success)
-                TODetourUtils.ModifyMethodWithDetour(attribute.TargetType.GetMethod(match.Groups["methodName"].Value, TOReflectionUtils.UniversalBindingFlags), detour);
-        }
+            TODetourUtils.ApplyStaticMethodDetour(detour, attribute.TargetType);
 
         foreach (ITODetourProvider detourProvider in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITODetourProvider>().OrderByDescending(k => k.LoadPriority))
             detourProvider.ApplyDetour();
     }
-
     void ITOLoader.OnModUnload()
     {
         foreach (Hook hook in Detours)
@@ -171,29 +170,57 @@ public class TODetourHelper : ITOLoader
 
 public static class TODetourUtils
 {
-    public static void ModifyMethodWithDetour(MethodBase target, MethodInfo detour, DetourConfig detourConfig = null)
+    public static void ModifyMethodWithDetour(MethodBase target, MethodInfo detour)
     {
-        if (target is not null && detour is not null)
+        if (target is null || detour is null)
         {
-            Hook hook = detourConfig is not null ? new(target, detour, detourConfig, true) : new(target, detour, true);
-            TODetourHelper.Detours.Add(hook);
+            return;
         }
+        DetourConfig detourConfig = detour.GetAttribute<CustomDetourConfigAttribute>()?.DetourConfig;
+        TODetourHelper.Detours.Add(detourConfig is not null ? new(target, detour, detourConfig, true) : new(target, detour, true));
     }
 
-    public static void ModifyMethodWithDetour(MethodBase target, Delegate detour, DetourConfig detourConfig = null)
+    public static void ModifyMethodWithDetour(MethodBase target, Delegate detour)
     {
-        if (target is not null && detour is not null)
+        if (target is null || detour is null)
         {
-            Hook hook = detourConfig is not null ? new(target, detour, detourConfig, true) : new(target, detour, true);
-            TODetourHelper.Detours.Add(hook);
+            return;
         }
+        DetourConfig detourConfig = detour.Method.GetAttribute<CustomDetourConfigAttribute>()?.DetourConfig;
+        TODetourHelper.Detours.Add(detourConfig is not null ? new(target, detour, detourConfig, true) : new(target, detour, true));
     }
 
-    public static void ModifyMethodWithDetour(Type targetType, string methodName, MethodInfo detour, DetourConfig detourConfig = null) => ModifyMethodWithDetour(targetType.GetMethod(methodName, TOReflectionUtils.UniversalBindingFlags), detour, detourConfig);
+    public static void ModifyMethodWithDetour(Type targetType, string methodName, MethodInfo detour) => ModifyMethodWithDetour(targetType.GetMethod(methodName, TOReflectionUtils.UniversalBindingFlags), detour);
 
-    public static void ModifyMethodWithDetour(Type targetType, string methodName, Delegate detour, DetourConfig detourConfig = null) => ModifyMethodWithDetour(targetType.GetMethod(methodName, TOReflectionUtils.UniversalBindingFlags), detour, detourConfig);
+    public static void ModifyMethodWithDetour(Type targetType, string methodName, Delegate detour) => ModifyMethodWithDetour(targetType.GetMethod(methodName, TOReflectionUtils.UniversalBindingFlags), detour);
 
-    public static void ModifyMethodWithDetour<T>(string methodName, MethodInfo detour, DetourConfig detourConfig = null) => ModifyMethodWithDetour(typeof(T), methodName, detour, detourConfig);
+    public static void ModifyMethodWithDetour<T>(string methodName, MethodInfo detour) => ModifyMethodWithDetour(typeof(T), methodName, detour);
 
-    public static void ModifyMethodWithDetour<T>(string methodName, Delegate detour, DetourConfig detourConfig = null) => ModifyMethodWithDetour(typeof(T), methodName, detour, detourConfig);
+    public static void ModifyMethodWithDetour<T>(string methodName, Delegate detour) => ModifyMethodWithDetour(typeof(T), methodName, detour);
+
+    private const string DefaultPrefix = "Detour_";
+    [StringSyntax(StringSyntaxAttribute.Regex)]
+    private const string Pattern = @"(?<methodName>.*)$";
+    [StringSyntax(StringSyntaxAttribute.Regex)]
+    private const string Pattern2 = @"(?<typeName>[^_]+)_(?<methodName>.*)$";
+
+    public static void ApplyStaticMethodDetour(MethodInfo detour, Type targetType)
+    {
+        string prefix = detour.GetAttribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
+        Match match = Regex.Match(detour.Name, prefix + Pattern);
+        if (match.Success)
+            ModifyMethodWithDetour(detour.GetAttribute<CustomDetourTargetAttribute>()?.TargetMethod ?? targetType.GetMethod(match.Groups["methodName"].Value, TOReflectionUtils.UniversalBindingFlags), detour);
+    }
+
+    public static void ApplyTypedStaticMethodDetour(MethodInfo detour, Type[] targetTypes)
+    {
+        string prefix = detour.GetAttribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
+        Match match = Regex.Match(detour.Name, prefix + Pattern2);
+        if (match.Success)
+        {
+            Type targetType = targetTypes.AsValueEnumerable().FirstOrDefault(k => k.Name == match.Groups["typeName"].Value);
+            if (targetType is not null)
+                ModifyMethodWithDetour(detour.GetAttribute<CustomDetourTargetAttribute>()?.TargetMethod ?? targetType.GetMethod(match.Groups["methodName"].Value, TOReflectionUtils.UniversalBindingFlags), detour);
+        }
+    }
 }

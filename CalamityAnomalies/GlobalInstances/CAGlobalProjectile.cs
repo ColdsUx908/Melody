@@ -5,70 +5,32 @@ public partial class CAGlobalProjectile : GlobalProjectile
     public override bool InstancePerEntity => true;
 
     #region Data
-    private const int MaxAISlots = 64;
+    private const int AISlot = 32;
+    private const int AISlot2 = 16;
 
-    /// <summary>
-    /// 额外的AI槽位，共64个。
-    /// </summary>
-    public float[] AnomalyAI { get; } = new float[MaxAISlots];
+    public DataUnion32[] AnomalyAI { get; } = new DataUnion32[AISlot];
+    public DataUnion64[] AnomalyAI2 { get; } = new DataUnion64[AISlot2];
 
-    private bool[] AIChanged { get; } = new bool[MaxAISlots];
+    public ref Bits32 AIChanged => ref AnomalyAI[^1].bits;
+    public ref Bits64 AIChanged2 => ref AnomalyAI2[^1].bits;
 
-    private float[] InternalAnomalyAI { get; } = new float[MaxAISlots];
+    private DataUnion32[] InternalAnomalyAI { get; } = new DataUnion32[AISlot];
+    private DataUnion64[] InternalAnomalyAI2 { get; } = new DataUnion64[AISlot2];
 
-    private bool[] InternalAIChanged { get; } = new bool[MaxAISlots];
+    private ref Bits32 InternalAIChanged => ref AnomalyAI[^1].bits;
+    private ref Bits64 InternalAIChanged2 => ref AnomalyAI2[^1].bits;
 
     public override GlobalProjectile Clone(Projectile from, Projectile to)
     {
         CAGlobalProjectile clone = (CAGlobalProjectile)base.Clone(from, to);
 
-        Array.Copy(AnomalyAI, clone.AnomalyAI, MaxAISlots);
-        Array.Copy(AIChanged, clone.AIChanged, MaxAISlots);
-        Array.Copy(InternalAnomalyAI, clone.InternalAnomalyAI, MaxAISlots);
-        Array.Copy(InternalAIChanged, clone.InternalAIChanged, MaxAISlots);
+        Array.Copy(AnomalyAI, clone.AnomalyAI, AISlot);
+        Array.Copy(AnomalyAI2, clone.AnomalyAI2, AISlot2);
+        Array.Copy(InternalAnomalyAI, clone.InternalAnomalyAI, AISlot);
+        Array.Copy(InternalAnomalyAI, clone.InternalAnomalyAI, AISlot2);
 
         return clone;
     }
-
-    public void SetAnomalyAI(float value, int index)
-    {
-        AnomalyAI[index] = value;
-        AIChanged[index] = true;
-    }
-
-    public void SetAnomalyAI(float value, Index index)
-    {
-        AnomalyAI[index] = value;
-        AIChanged[index] = true;
-    }
-
-    public bool GetAnomalyAIBit(int index, byte bitPosition) => BitOperation.GetBit((int)AnomalyAI[index], bitPosition);
-
-    public bool GetAnomalyAIBit(Index index, byte bitPosition) => BitOperation.GetBit((int)AnomalyAI[index], bitPosition);
-
-    public void SetAnomalyAIBit(bool value, int index, byte bitPosition) => SetAnomalyAI(BitOperation.SetBit((int)AnomalyAI[index], bitPosition, value), index);
-
-    public void SetAnomalyAIBit(bool value, Index index, byte bitPosition) => SetAnomalyAI(BitOperation.SetBit((int)AnomalyAI[index], bitPosition, value), index);
-
-    private void SetInternalAnomalyAI(float value, int index)
-    {
-        InternalAnomalyAI[index] = value;
-        InternalAIChanged[index] = true;
-    }
-
-    private void SetInternalAnomalyAI(float value, Index index)
-    {
-        InternalAnomalyAI[index] = value;
-        InternalAIChanged[index] = true;
-    }
-
-    private bool GetInternalAnomalyAIBit(int index, byte bitPosition) => BitOperation.GetBit((int)InternalAnomalyAI[index], bitPosition);
-
-    private bool GetInternalAnomalyAIBit(Index index, byte bitPosition) => BitOperation.GetBit((int)InternalAnomalyAI[index], bitPosition);
-
-    private void SetInternalAnomalyAIBit(bool value, int index, byte bitPosition) => SetInternalAnomalyAI(BitOperation.SetBit((int)InternalAnomalyAI[index], bitPosition, value), index);
-
-    private void SetInternalAnomalyAIBit(bool value, Index index, byte bitPosition) => SetInternalAnomalyAI(BitOperation.SetBit((int)InternalAnomalyAI[index], bitPosition, value), index);
     #endregion Data
 
 
@@ -281,12 +243,80 @@ public partial class CAGlobalProjectile : GlobalProjectile
     #region Net
     public override void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter)
     {
-        TONetUtils.SendAI(AnomalyAI, AIChanged, binaryWriter);
+        Dictionary<int, float> aiToSend = [];
+        for (int i = 0; i < AISlot - 1; i++)
+        {
+            if (AIChanged[i])
+                aiToSend[i] = AnomalyAI[i].f;
+        }
+        binaryWriter.Write(aiToSend.Count);
+        foreach ((int index, float value) in aiToSend)
+        {
+            binaryWriter.Write(index);
+            binaryWriter.Write(value);
+        }
+        AIChanged = default;
+
+        Dictionary<int, double> aiToSend2 = [];
+        for (int i = 0; i < AISlot2 - 1; i++)
+        {
+            if (AIChanged2[i])
+                aiToSend2[i] = AnomalyAI2[i].d;
+        }
+        binaryWriter.Write(aiToSend2.Count);
+        foreach ((int index, double value) in aiToSend2)
+        {
+            binaryWriter.Write(index);
+            binaryWriter.Write(value);
+        }
+        AIChanged2 = default;
+
+        Dictionary<int, float> aiToSend3 = [];
+        for (int i = 0; i < AISlot - 1; i++)
+        {
+            if (InternalAIChanged[i])
+                aiToSend[i] = InternalAnomalyAI[i].f;
+        }
+        binaryWriter.Write(aiToSend.Count);
+        foreach ((int index, float value) in aiToSend3)
+        {
+            binaryWriter.Write(index);
+            binaryWriter.Write(value);
+        }
+        InternalAIChanged = default;
+
+        Dictionary<int, double> aiToSend4 = [];
+        for (int i = 0; i < AISlot2 - 1; i++)
+        {
+            if (AIChanged2[i])
+                aiToSend2[i] = InternalAnomalyAI2[i].d;
+        }
+        binaryWriter.Write(aiToSend2.Count);
+        foreach ((int index, double value) in aiToSend4)
+        {
+            binaryWriter.Write(index);
+            binaryWriter.Write(value);
+        }
+        InternalAIChanged2 = default;
     }
 
     public override void ReceiveExtraAI(Projectile projectile, BitReader bitReader, BinaryReader binaryReader)
     {
-        TONetUtils.ReceiveAI(AnomalyAI, binaryReader);
+        int recievedAICount = binaryReader.ReadInt32();
+        for (int i = 0; i < recievedAICount; i++)
+            AnomalyAI[binaryReader.ReadInt32()].f = binaryReader.ReadSingle();
+
+        int recievedAICount2 = binaryReader.ReadInt32();
+        for (int i = 0; i < recievedAICount2; i++)
+            AnomalyAI2[binaryReader.ReadInt32()].d = binaryReader.ReadDouble();
+
+        int recievedAICount3 = binaryReader.ReadInt32();
+        for (int i = 0; i < recievedAICount3; i++)
+            InternalAnomalyAI[binaryReader.ReadInt32()].f = binaryReader.ReadSingle();
+
+        int recievedAICount4 = binaryReader.ReadInt32();
+        for (int i = 0; i < recievedAICount4; i++)
+            InternalAnomalyAI2[binaryReader.ReadInt32()].d = binaryReader.ReadDouble();
     }
     #endregion Net
 }

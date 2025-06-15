@@ -422,7 +422,7 @@ public class YharonTweak : CANPCTweak<Yharon>
                     Width = Main.zenithWorld ? 3000 : Main.getGoodWorld ? 2000 : bossRush ? 4000 : revenge ? 6000 : 7000,
                     Height = Main.maxTilesY * 16
                 };
-                for (int i = -1; i < 0; i += 2)
+                for (int i = -1; i < 2; i += 2)
                     Projectile.NewProjectileAction<SkyFlareRevenge>(NPC.GetSource_FromAI(), player.Center + new Vector2(i * (Main.zenithWorld ? 1500f : Main.getGoodWorld ? 1000f : bossRush ? 2000f : revenge ? 3000f : 3500f), 100f), Vector2.Zero, 0, 0f, Main.myPlayer);
             }
 
@@ -796,7 +796,7 @@ public class YharonTweak : CANPCTweak<Yharon>
 
             if (TOMain.GeneralClient && NPC.ai[2] == fireTornadoPhaseTimer - 30)
             {
-                for (int i = -1; i < 0; i += 2)
+                for (int i = -1; i < 2; i += 2)
                     Projectile.NewProjectileAction<Flare>(NPC.GetSource_FromAI(), NPC.Center, new Vector2(NPC.direction * 4 * i, 8f), 0, 0f, Main.myPlayer);
             }
 

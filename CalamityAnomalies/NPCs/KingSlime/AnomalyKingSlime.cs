@@ -38,50 +38,107 @@ public class AnomalyKingSlime : AnomalyNPCOverride
     /// </summary>
     public int CurrentPhase
     {
-        get => (int)AnomalyNPC.AnomalyAI[0];
-        set => AnomalyNPC.SetAnomalyAI(value, 0);
+        get => AnomalyNPC.AnomalyAI[0].i;
+        set
+        {
+            if (AnomalyNPC.AnomalyAI[0].i != value)
+            {
+                AnomalyNPC.AnomalyAI[0].i = value;
+                AnomalyNPC.AIChanged[0] = true;
+            }
+        }
     }
 
     public AttackType CurrentAttack
     {
-        get => (AttackType)(int)AnomalyNPC.AnomalyAI[1];
-        set => AnomalyNPC.SetAnomalyAI((int)value, 1);
+        get => (AttackType)AnomalyNPC.AnomalyAI[1].i;
+        set
+        {
+            int temp = (int)value;
+            if (AnomalyNPC.AnomalyAI[1].i != temp)
+            {
+                AnomalyNPC.AnomalyAI[1].i = temp;
+                AnomalyNPC.AIChanged[1] = true;
+            }
+        }
     }
 
     public int CurrentAttackPhase
     {
-        get => (int)AnomalyNPC.AnomalyAI[2];
-        set => AnomalyNPC.SetAnomalyAI(value, 2);
+        get => AnomalyNPC.AnomalyAI[2].i;
+        set
+        {
+            if (AnomalyNPC.AnomalyAI[2].i != value)
+            {
+                AnomalyNPC.AnomalyAI[2].i = value;
+                AnomalyNPC.AIChanged[2] = true;
+            }
+        }
     }
 
     public bool JewelEmeraldSpawned
     {
-        get => AnomalyNPC.GetAnomalyAIBit(3, 0);
-        set => AnomalyNPC.SetAnomalyAIBit(value, 3, 0);
+        get => AnomalyNPC.AnomalyAI[3].bits[0];
+        set
+        {
+            if (AnomalyNPC.AnomalyAI[3].bits[0] != value)
+            {
+                AnomalyNPC.AnomalyAI[3].bits[0] = value;
+                AnomalyNPC.AIChanged[3] = true;
+            }
+        }
     }
 
     public bool JewelRubySpawned
     {
-        get => AnomalyNPC.GetAnomalyAIBit(3, 1);
-        set => AnomalyNPC.SetAnomalyAIBit(value, 3, 1);
+        get => AnomalyNPC.AnomalyAI[3].bits[1];
+        set
+        {
+            if (AnomalyNPC.AnomalyAI[3].bits[1] != value)
+            {
+                AnomalyNPC.AnomalyAI[3].bits[1] = value;
+                AnomalyNPC.AIChanged[3] = true;
+            }
+        }
     }
 
     public bool JewelSapphireSpawned
     {
-        get => AnomalyNPC.GetAnomalyAIBit(3, 2);
-        set => AnomalyNPC.SetAnomalyAIBit(value, 3, 2);
+        get => AnomalyNPC.AnomalyAI[3].bits[2];
+        set
+        {
+            if (AnomalyNPC.AnomalyAI[3].bits[2] != value)
+            {
+                AnomalyNPC.AnomalyAI[3].bits[2] = value;
+                AnomalyNPC.AIChanged[3] = true;
+            }
+        }
     }
 
     public int LastSpawnSlimeLife
     {
-        get => (int)AnomalyNPC.AnomalyAI[4];
-        set => AnomalyNPC.SetAnomalyAI(value, 4);
+        get => AnomalyNPC.AnomalyAI[4].i;
+        set
+        {
+            if (AnomalyNPC.AnomalyAI[4].i != value)
+            {
+                AnomalyNPC.AnomalyAI[4].i = value;
+                AnomalyNPC.AIChanged[4] = true;
+            }
+        }
     }
 
     public float TeleportTimer
     {
-        get => AnomalyNPC.AnomalyAI[5];
-        set => AnomalyNPC.SetAnomalyAI(value, 5);
+        get => AnomalyNPC.AnomalyAI[5].f;
+        set
+        {
+            if (AnomalyNPC.AnomalyAI[5].f != value)
+            {
+                AnomalyNPC.AnomalyAI[5].f = value;
+                AnomalyNPC.AIChanged[5] = true;
+            }
+        }
     }
 
     /// <summary>
@@ -90,8 +147,16 @@ public class AnomalyKingSlime : AnomalyNPCOverride
     /// </summary>
     public NPC JewelEmerald
     {
-        get => Main.npc[(int)AnomalyNPC.AnomalyAI[6]];
-        set => AnomalyNPC.SetAnomalyAI(value.whoAmI, 6);
+        get => Main.npc[AnomalyNPC.AnomalyAI[6].i];
+        set
+        {
+            int temp = value.whoAmI;
+            if (AnomalyNPC.AnomalyAI[6].i != temp)
+            {
+                AnomalyNPC.AnomalyAI[6].i = temp;
+                AnomalyNPC.AIChanged[6] = true;
+            }
+        }
     }
 
     public bool JewelEmeraldAlive => JewelEmerald.active && JewelEmerald.ModNPC is KingSlimeJewelEmerald && JewelEmerald.Ocean().Master == NPC.whoAmI;
@@ -102,8 +167,16 @@ public class AnomalyKingSlime : AnomalyNPCOverride
     /// </summary>
     public NPC JewelRuby
     {
-        get => Main.npc[(int)AnomalyNPC.AnomalyAI[7]];
-        set => AnomalyNPC.SetAnomalyAI(value.whoAmI, 7);
+        get => Main.npc[AnomalyNPC.AnomalyAI[7].i];
+        set
+        {
+            int temp = value.whoAmI;
+            if (AnomalyNPC.AnomalyAI[7].i != temp)
+            {
+                AnomalyNPC.AnomalyAI[7].i = temp;
+                AnomalyNPC.AIChanged[7] = true;
+            }
+        }
     }
 
     public bool JewelRubyAlive => JewelRuby.active && JewelRuby.ModNPC is KingSlimeJewelRuby && JewelRuby.Ocean().Master == NPC.whoAmI;
@@ -114,44 +187,83 @@ public class AnomalyKingSlime : AnomalyNPCOverride
     /// </summary>
     public NPC JewelSapphire
     {
-        get => Main.npc[(int)AnomalyNPC.AnomalyAI[8]];
-        set => AnomalyNPC.SetAnomalyAI(value.whoAmI, 8);
+        get => Main.npc[AnomalyNPC.AnomalyAI[8].i];
+        set
+        {
+            int temp = value.whoAmI;
+            if (AnomalyNPC.AnomalyAI[8].i != temp)
+            {
+                AnomalyNPC.AnomalyAI[8].i = temp;
+                AnomalyNPC.AIChanged[8] = true;
+            }
+        }
     }
 
     public bool JewelSapphireAlive => JewelSapphire.active && JewelSapphire.ModNPC is KingSlimeJewelSapphire && JewelSapphire.Ocean().Master == NPC.whoAmI;
 
     public int SmallJumpCounter
     {
-        get => (int)AnomalyNPC.AnomalyAI[9];
-        set => AnomalyNPC.SetAnomalyAI(value, 9);
+        get => AnomalyNPC.AnomalyAI[9].i;
+        set
+        {
+            if (AnomalyNPC.AnomalyAI[9].i != value)
+            {
+                AnomalyNPC.AnomalyAI[9].i = value;
+                AnomalyNPC.AIChanged[9] = true;
+            }
+        }
     }
 
     public int ChangedVelocityDirectionDuringJump
     {
-        get => (int)AnomalyNPC.AnomalyAI[10];
-        set => AnomalyNPC.SetAnomalyAI(value, 10);
+        get => AnomalyNPC.AnomalyAI[10].i;
+        set
+        {
+            if (AnomalyNPC.AnomalyAI[10].i != value)
+            {
+                AnomalyNPC.AnomalyAI[10].i = value;
+                AnomalyNPC.AIChanged[10] = true;
+            }
+        }
     }
 
     public float TeleportScaleMultiplier
     {
-        get => AnomalyNPC.AnomalyAI[11];
-        set => AnomalyNPC.SetAnomalyAI(Math.Clamp(value, 0f, 1f), 11);
-    }
-
-    public Vector2 TeleportDestination
-    {
-        get => new(AnomalyNPC.AnomalyAI[12], AnomalyNPC.AnomalyAI[13]);
+        get => AnomalyNPC.AnomalyAI[11].f;
         set
         {
-            AnomalyNPC.SetAnomalyAI(value.X, 12);
-            AnomalyNPC.SetAnomalyAI(value.Y, 13);
+            if (AnomalyNPC.AnomalyAI[11].f != value)
+            {
+                AnomalyNPC.AnomalyAI[11].f = value;
+                AnomalyNPC.AIChanged[11] = true;
+            }
         }
     }
 
     public float DespawnScaleMultiplier
     {
-        get => AnomalyNPC.AnomalyAI[14];
-        set => AnomalyNPC.SetAnomalyAI(Math.Clamp(value, 0f, 1f), 14);
+        get => AnomalyNPC.AnomalyAI[12].f;
+        set
+        {
+            if (AnomalyNPC.AnomalyAI[12].f != value)
+            {
+                AnomalyNPC.AnomalyAI[12].f = value;
+                AnomalyNPC.AIChanged[12] = true;
+            }
+        }
+    }
+
+    public Vector2 TeleportDestination
+    {
+        get => AnomalyNPC.AnomalyAI2[0].v;
+        set
+        {
+            if (AnomalyNPC.AnomalyAI2[0].v != value)
+            {
+                AnomalyNPC.AnomalyAI2[0].v = value;
+                AnomalyNPC.AIChanged2[0] = true;
+            }
+        }
     }
 
 

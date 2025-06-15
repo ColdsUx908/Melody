@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.ExtraMathData;
+﻿namespace Transoceanic.Data;
 
 /// <summary>
 /// 二维极坐标向量 (ρ, θ)。

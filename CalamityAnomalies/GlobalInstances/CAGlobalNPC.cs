@@ -1,5 +1,8 @@
 ﻿using CalamityMod.Buffs.StatDebuffs;
+using CalamityMod.Events;
 using CalamityMod.NPCs.Abyss;
+using CalamityMod.NPCs.Providence;
+using Terraria;
 
 namespace CalamityAnomalies.GlobalInstances;
 
@@ -8,115 +11,128 @@ public class CAGlobalNPC : GlobalNPC
     public override bool InstancePerEntity => true;
 
     #region Data
-    private const int MaxAISlots = 128;
+    private const int AISlot = 32;
+    private const int AISlot2 = 16;
 
-    /// <summary>
-    /// 额外的AI槽位，共128个。
-    /// </summary>
-    public float[] AnomalyAI { get; } = new float[MaxAISlots];
+    public DataUnion32[] AnomalyAI { get; } = new DataUnion32[AISlot];
+    public DataUnion64[] AnomalyAI2 { get; } = new DataUnion64[AISlot2];
 
-    public bool[] AIChanged { get; } = new bool[MaxAISlots];
+    public ref Bits32 AIChanged => ref AnomalyAI[^1].bits;
+    public ref Bits64 AIChanged2 => ref AnomalyAI2[^1].bits;
 
-    private float[] InternalAnomalyAI { get; } = new float[MaxAISlots];
+    private DataUnion32[] InternalAnomalyAI { get; } = new DataUnion32[AISlot];
+    private DataUnion64[] InternalAnomalyAI2 { get; } = new DataUnion64[AISlot2];
 
-    private bool[] InternalAIChanged { get; } = new bool[MaxAISlots];
+    private ref Bits32 InternalAIChanged => ref AnomalyAI[^1].bits;
+    private ref Bits64 InternalAIChanged2 => ref AnomalyAI2[^1].bits;
 
     public override GlobalNPC Clone(NPC from, NPC to)
     {
         CAGlobalNPC clone = (CAGlobalNPC)base.Clone(from, to);
 
-        Array.Copy(AnomalyAI, clone.AnomalyAI, MaxAISlots);
-        Array.Copy(AIChanged, clone.AIChanged, MaxAISlots);
-        Array.Copy(InternalAnomalyAI, clone.InternalAnomalyAI, MaxAISlots);
-        Array.Copy(InternalAIChanged, clone.InternalAIChanged, MaxAISlots);
+        Array.Copy(AnomalyAI, clone.AnomalyAI, AISlot);
+        Array.Copy(AnomalyAI2, clone.AnomalyAI2, AISlot2);
+        Array.Copy(InternalAnomalyAI, clone.InternalAnomalyAI, AISlot);
+        Array.Copy(InternalAnomalyAI, clone.InternalAnomalyAI, AISlot2);
 
         return clone;
     }
-
-    public void SetAnomalyAI(float value, int index)
-    {
-        AnomalyAI[index] = value;
-        AIChanged[index] = true;
-    }
-
-    public void SetAnomalyAI(float value, Index index)
-    {
-        AnomalyAI[index] = value;
-        AIChanged[index] = true;
-    }
-
-    public bool GetAnomalyAIBit(int index, byte bitPosition) => BitOperation.GetBit((int)AnomalyAI[index], bitPosition);
-
-    public bool GetAnomalyAIBit(Index index, byte bitPosition) => BitOperation.GetBit((int)AnomalyAI[index], bitPosition);
-
-    public void SetAnomalyAIBit(bool value, int index, byte bitPosition) => SetAnomalyAI(BitOperation.SetBit((int)AnomalyAI[index], bitPosition, value), index);
-
-    public void SetAnomalyAIBit(bool value, Index index, byte bitPosition) => SetAnomalyAI(BitOperation.SetBit((int)AnomalyAI[index], bitPosition, value), index);
-
-    private void SetInternalAnomalyAI(float value, int index)
-    {
-        InternalAnomalyAI[index] = value;
-        InternalAIChanged[index] = true;
-    }
-
-    private void SetInternalAnomalyAI(float value, Index index)
-    {
-        InternalAnomalyAI[index] = value;
-        InternalAIChanged[index] = true;
-    }
-
-    private bool GetInternalAnomalyAIBit(int index, byte bitPosition) => BitOperation.GetBit((int)InternalAnomalyAI[index], bitPosition);
-
-    private bool GetInternalAnomalyAIBit(Index index, byte bitPosition) => BitOperation.GetBit((int)InternalAnomalyAI[index], bitPosition);
-
-    private void SetInternalAnomalyAIBit(bool value, int index, byte bitPosition) => SetInternalAnomalyAI(BitOperation.SetBit((int)InternalAnomalyAI[index], bitPosition, value), index);
-
-    private void SetInternalAnomalyAIBit(bool value, Index index, byte bitPosition) => SetInternalAnomalyAI(BitOperation.SetBit((int)InternalAnomalyAI[index], bitPosition, value), index);
     #endregion Data
 
+    #region 额外数据
     public bool NeverTrippy
     {
-        get => GetInternalAnomalyAIBit(0, 0);
-        set => SetInternalAnomalyAIBit(value, 0, 0);
+        get => InternalAnomalyAI[0].bits[0];
+        set
+        {
+            if (InternalAnomalyAI[0].bits[0] != value)
+            {
+                InternalAnomalyAI[0].bits[0] = value;
+                InternalAIChanged[0] = true;
+            }
+        }
     }
 
     public bool ShouldRunAnomalyAI
     {
-        get => GetInternalAnomalyAIBit(0, 1);
-        set => SetInternalAnomalyAIBit(value, 0, 1);
+        get => InternalAnomalyAI[0].bits[1];
+        set
+        {
+            if (InternalAnomalyAI[0].bits[1] != value)
+            {
+                InternalAnomalyAI[0].bits[1] = value;
+                InternalAIChanged[0] = true;
+            }
+        }
     }
 
     public int AnomalyKilltime
     {
-        get => (int)InternalAnomalyAI[1];
-        private set => SetInternalAnomalyAI(value, 1);
+        get => InternalAnomalyAI[1].i;
+        private set
+        {
+            if (InternalAnomalyAI[1].i != value)
+            {
+                InternalAnomalyAI[1].i = value;
+                InternalAIChanged[1] = true;
+            }
+        }
     }
 
     public int AnomalyAITimer
     {
-        get => (int)InternalAnomalyAI[2];
-        private set => SetInternalAnomalyAI(value, 2);
+        get => InternalAnomalyAI[2].i;
+        private set
+        {
+            if (InternalAnomalyAI[2].i != value)
+            {
+                InternalAnomalyAI[2].i = value;
+                InternalAIChanged[2] = true;
+            }
+        }
     }
 
     public bool IsRunningAnomalyAI => AnomalyAITimer > 0;
 
     public int AnomalyUltraAITimer
     {
-        get => (int)InternalAnomalyAI[3];
-        private set => SetInternalAnomalyAI(value, 3);
+        get => InternalAnomalyAI[3].i;
+        private set
+        {
+            if (InternalAnomalyAI[3].i != value)
+            {
+                InternalAnomalyAI[3].i = value;
+                InternalAIChanged[3] = true;
+            }
+        }
     }
 
     public int AnomalyUltraBarTimer
     {
-        get => (int)InternalAnomalyAI[4];
-        private set => SetInternalAnomalyAI(value, 4);
+        get => InternalAnomalyAI[4].i;
+        private set
+        {
+            if (InternalAnomalyAI[4].i != value)
+            {
+                InternalAnomalyAI[4].i = value;
+                InternalAIChanged[4] = true;
+            }
+        }
     }
 
     public int BossRushAITimer
     {
-        get => (int)InternalAnomalyAI[5];
-        private set => SetInternalAnomalyAI(value, 5);
+        get => InternalAnomalyAI[5].i;
+        private set
+        {
+            if (InternalAnomalyAI[5].i != value)
+            {
+                InternalAnomalyAI[5].i = value;
+                InternalAIChanged[5] = true;
+            }
+        }
     }
+    #endregion 额外数据
 
     #region Defaults
     public override void SetStaticDefaults()
@@ -340,6 +356,10 @@ public class CAGlobalNPC : GlobalNPC
     #endregion Draw
 
     #region Hit
+    public delegate float Orig_DRMath(CalamityGlobalNPC self, NPC npc, float DR);
+    public static Orig_DRMath OrigMethod_CustomDRMath { get; private set; } = null;
+    public static Orig_DRMath OrigMethod_DefaultDRMath { get; private set; } = null;
+
     public override void HitEffect(NPC npc, NPC.HitInfo hit)
     {
         if (npc.TryGetOverride(out CANPCOverride npcOverride))
@@ -372,6 +392,17 @@ public class CAGlobalNPC : GlobalNPC
 
     public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
     {
+        float baseDR = GetBaseDR(npc);
+        StatModifier baseDRModifier = new();
+        StatModifier standardDRModifier = new();
+        StatModifier timedDRModifier = new();
+        if (item.TryGetOverride(out CAItemOverride itemOverride, "ModifyHitNPC_DR"))
+            itemOverride.ModifyHitNPC_DR(npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
+        baseDR = baseDRModifier.ApplyTo(baseDR);
+        float standardDR = standardDRModifier.ApplyTo(baseDR);
+        float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR));
+        modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR, 0f, 1f);
+
         if (npc.TryGetOverride(out CANPCOverride npcOverride))
             npcOverride.ModifyHitByItem(player, item, ref modifiers);
     }
@@ -396,6 +427,17 @@ public class CAGlobalNPC : GlobalNPC
 
     public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
     {
+        float baseDR = GetBaseDR(npc);
+        StatModifier baseDRModifier = new();
+        StatModifier standardDRModifier = new();
+        StatModifier timedDRModifier = new();
+        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride, "ModifyHitNPC_DR"))
+            projectileOverride.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
+        baseDR = baseDRModifier.ApplyTo(baseDR);
+        float standardDR = standardDRModifier.ApplyTo(baseDR);
+        float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR));
+        modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR, 0f, 1f);
+
         if (npc.TryGetOverride(out CANPCOverride npcOverride))
             npcOverride.ModifyHitByProjectile(projectile, ref modifiers);
     }
@@ -479,19 +521,135 @@ public class CAGlobalNPC : GlobalNPC
 
         return true;
     }
+
+    public static float GetBaseDR(NPC npc)
+    {
+        CalamityGlobalNPC calamityNPC = npc.Calamity();
+        return calamityNPC.unbreakableDR ? calamityNPC.DR : (calamityNPC.customDR ? OrigMethod_CustomDRMath : OrigMethod_DefaultDRMath).Invoke(calamityNPC, npc, calamityNPC.DR);
+    }
+
+    public static float GetTimedDR(NPC npc, float baseDR)
+    {
+        if (CAWorld.BossRush || BossRushEvent.BossRushActive)
+            return 0f;
+
+        float timedDR = 0f;
+        CalamityGlobalNPC calamityNPC = npc.Calamity();
+        int killTime = calamityNPC.KillTime;
+        int aiTimer = calamityNPC.AITimer;
+
+        bool isNightProvidence = npc.ModNPC is Providence && !Main.IsItDay();
+        bool isDayEmpress = npc.type == NPCID.HallowBoss && NPC.ShouldEmpressBeEnraged();
+
+        if (killTime > 0 && aiTimer < killTime && !BossRushEvent.BossRushActive && (isNightProvidence || isDayEmpress))
+        {
+            const float tdrFactor = 10f;
+
+            float extraDRLimit = (1f - baseDR) * tdrFactor / 2f;
+            float lifeRatio = (float)npc.life / npc.lifeMax;
+            float killTimeRatio = (float)aiTimer / killTime;
+            float extraDRRatio = Math.Max(1f - lifeRatio - killTimeRatio, 0f);
+
+            timedDR = extraDRLimit * extraDRRatio / (1 + extraDRRatio);
+        }
+
+        return timedDR;
+    }
     #endregion Hit
 
     #region Net
     public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
     {
-        TONetUtils.SendAI(AnomalyAI, AIChanged, binaryWriter);
-        TONetUtils.SendAI(InternalAnomalyAI, InternalAIChanged, binaryWriter);
+        Dictionary<int, float> aiToSend = [];
+        for (int i = 0; i < AISlot - 1; i++)
+        {
+            if (AIChanged[i])
+                aiToSend[i] = AnomalyAI[i].f;
+        }
+        binaryWriter.Write(aiToSend.Count);
+        foreach ((int index, float value) in aiToSend)
+        {
+            binaryWriter.Write(index);
+            binaryWriter.Write(value);
+        }
+        AIChanged = default;
+
+        Dictionary<int, double> aiToSend2 = [];
+        for (int i = 0; i < AISlot2 - 1; i++)
+        {
+            if (AIChanged2[i])
+                aiToSend2[i] = AnomalyAI2[i].d;
+        }
+        binaryWriter.Write(aiToSend2.Count);
+        foreach ((int index, double value) in aiToSend2)
+        {
+            binaryWriter.Write(index);
+            binaryWriter.Write(value);
+        }
+        AIChanged2 = default;
+
+        Dictionary<int, float> aiToSend3 = [];
+        for (int i = 0; i < AISlot - 1; i++)
+        {
+            if (InternalAIChanged[i])
+                aiToSend[i] = InternalAnomalyAI[i].f;
+        }
+        binaryWriter.Write(aiToSend.Count);
+        foreach ((int index, float value) in aiToSend3)
+        {
+            binaryWriter.Write(index);
+            binaryWriter.Write(value);
+        }
+        InternalAIChanged = default;
+
+        Dictionary<int, double> aiToSend4 = [];
+        for (int i = 0; i < AISlot2 - 1; i++)
+        {
+            if (AIChanged2[i])
+                aiToSend2[i] = InternalAnomalyAI2[i].d;
+        }
+        binaryWriter.Write(aiToSend2.Count);
+        foreach ((int index, double value) in aiToSend4)
+        {
+            binaryWriter.Write(index);
+            binaryWriter.Write(value);
+        }
+        InternalAIChanged2 = default;
     }
 
     public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
     {
-        TONetUtils.ReceiveAI(AnomalyAI, binaryReader);
-        TONetUtils.ReceiveAI(InternalAnomalyAI, binaryReader);
+        int recievedAICount = binaryReader.ReadInt32();
+        for (int i = 0; i < recievedAICount; i++)
+            AnomalyAI[binaryReader.ReadInt32()].f = binaryReader.ReadSingle();
+
+        int recievedAICount2 = binaryReader.ReadInt32();
+        for (int i = 0; i < recievedAICount2; i++)
+            AnomalyAI2[binaryReader.ReadInt32()].d = binaryReader.ReadDouble();
+
+        int recievedAICount3 = binaryReader.ReadInt32();
+        for (int i = 0; i < recievedAICount3; i++)
+            InternalAnomalyAI[binaryReader.ReadInt32()].f = binaryReader.ReadSingle();
+
+        int recievedAICount4 = binaryReader.ReadInt32();
+        for (int i = 0; i < recievedAICount4; i++)
+            InternalAnomalyAI2[binaryReader.ReadInt32()].d = binaryReader.ReadDouble();
     }
     #endregion Net
+
+    public class Loader : ITOLoader
+    {
+        void ITOLoader.PostSetupContent()
+        {
+            Type type = typeof(CalamityGlobalNPC);
+            OrigMethod_CustomDRMath = type.GetMethod("CustomDRMath", TOReflectionUtils.UniversalBindingFlags).CreateDelegate<Orig_DRMath>();
+            OrigMethod_DefaultDRMath = type.GetMethod("DefaultDRMath", TOReflectionUtils.UniversalBindingFlags).CreateDelegate<Orig_DRMath>();
+        }
+
+        void ITOLoader.OnModUnload()
+        {
+            OrigMethod_DefaultDRMath = null;
+            OrigMethod_CustomDRMath = null;
+        }
+    }
 }

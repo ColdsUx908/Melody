@@ -4,58 +4,54 @@ public class TOGlobalProjectile : GlobalProjectile
 {
     public override bool InstancePerEntity => true;
 
-    private const int MaxAISlots = 64;
-
     #region Data
-    /// <summary>
-    /// 额外的AI槽位，共64个。
-    /// </summary>
-    private float[] OceanAI { get; } = new float[MaxAISlots];
+    private const int AISlot = 33;
+    private const int AISlot2 = 17;
 
-    private bool[] AIChanged { get; } = new bool[MaxAISlots];
+    private DataUnion32[] OceanAI { get; } = new DataUnion32[AISlot];
+    private DataUnion64[] OceanAI2 { get; } = new DataUnion64[AISlot2];
+
+    private ref Bits32 AIChanged => ref OceanAI[^1].bits;
+    private ref Bits64 AIChanged2 => ref OceanAI2[^1].bits;
 
     public override GlobalProjectile Clone(Projectile from, Projectile to)
     {
         TOGlobalProjectile clone = (TOGlobalProjectile)base.Clone(from, to);
 
-        Array.Copy(OceanAI, clone.OceanAI, MaxAISlots);
-        Array.Copy(AIChanged, clone.AIChanged, MaxAISlots);
+        Array.Copy(OceanAI, clone.OceanAI, AISlot);
+        Array.Copy(OceanAI2, clone.OceanAI2, AISlot2);
 
         return clone;
     }
-
-    private void SetOceanAI(float value, int index)
-    {
-        OceanAI[index] = value;
-        AIChanged[index] = true;
-    }
-
-    private void SetOceanAI(float value, Index index)
-    {
-        OceanAI[index] = value;
-        AIChanged[index] = true;
-    }
-
-    private bool GetOceanAIBit(int index, byte bitPosition) => BitOperation.GetBit((int)OceanAI[index], bitPosition);
-
-    private bool GetOceanAIBit(Index index, byte bitPosition) => BitOperation.GetBit((int)OceanAI[index], bitPosition);
-
-    private void SetOceanAIBit(bool value, int index, byte bitPosition) => SetOceanAI(BitOperation.SetBit((int)OceanAI[index], bitPosition, value), index);
-
-    private void SetOceanAIBit(bool value, Index index, byte bitPosition) => SetOceanAI(BitOperation.SetBit((int)OceanAI[index], bitPosition, value), index);
     #endregion Data
 
+    #region 额外数据
     public bool AlwaysRotating
     {
-        get => GetOceanAIBit(0, 0);
-        set => SetOceanAIBit(value, 0, 0);
+        get => OceanAI[0].bits[0];
+        set
+        {
+            if (OceanAI[0].bits[0] != value)
+            {
+                OceanAI[0].bits[0] = value;
+                AIChanged[0] = true;
+            }
+        }
     }
 
     public float RotationOffset
     {
-        get => OceanAI[1];
-        set => SetOceanAI(value, 1);
+        get => OceanAI[1].f;
+        set
+        {
+            if (OceanAI[1].f != value)
+            {
+                OceanAI[1].f = value;
+                AIChanged[1] = true;
+            }
+        }
     }
+    #endregion 额外数据
 
     #region Defaults
     public override void SetDefaults(Projectile projectile)
@@ -74,6 +70,10 @@ public class TOGlobalProjectile : GlobalProjectile
         if (AlwaysRotating)
             projectile.VelocityToRotation(RotationOffset);
     }
+
+    public override void PostAI(Projectile projectile)
+    {
+    }
     #endregion AI
 
     #region Net
@@ -82,7 +82,33 @@ public class TOGlobalProjectile : GlobalProjectile
         if (!TOMain.SyncEnabled)
             return;
 
-        TONetUtils.SendAI(OceanAI, AIChanged, binaryWriter);
+        Dictionary<int, float> aiToSend = [];
+        for (int i = 0; i < AISlot - 1; i++)
+        {
+            if (AIChanged[i])
+                aiToSend[i] = OceanAI[i].f;
+        }
+        binaryWriter.Write(aiToSend.Count);
+        foreach ((int index, float value) in aiToSend)
+        {
+            binaryWriter.Write(index);
+            binaryWriter.Write(value);
+        }
+        AIChanged = default;
+
+        Dictionary<int, double> aiToSend2 = [];
+        for (int i = 0; i < AISlot2 - 1; i++)
+        {
+            if (AIChanged2[i])
+                aiToSend2[i] = OceanAI2[i].d;
+        }
+        binaryWriter.Write(aiToSend2.Count);
+        foreach ((int index, double value) in aiToSend2)
+        {
+            binaryWriter.Write(index);
+            binaryWriter.Write(value);
+        }
+        AIChanged2 = default;
     }
 
     public override void ReceiveExtraAI(Projectile projectile, BitReader bitReader, BinaryReader binaryReader)
@@ -90,7 +116,13 @@ public class TOGlobalProjectile : GlobalProjectile
         if (!TOMain.SyncEnabled)
             return;
 
-        TONetUtils.ReceiveAI(OceanAI, binaryReader);
+        int recievedAICount = binaryReader.ReadInt32();
+        for (int i = 0; i < recievedAICount; i++)
+            OceanAI[binaryReader.ReadInt32()].f = binaryReader.ReadSingle();
+
+        int recievedAICount2 = binaryReader.ReadInt32();
+        for (int i = 0; i < recievedAICount2; i++)
+            OceanAI2[binaryReader.ReadInt32()].d = binaryReader.ReadDouble();
     }
     #endregion Net
 }

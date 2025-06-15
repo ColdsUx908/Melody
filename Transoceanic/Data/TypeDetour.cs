@@ -10,15 +10,29 @@ using Terraria.Map;
 using Terraria.UI;
 using Terraria.WorldBuilding;
 
-namespace Transoceanic.ExtraGameData;
+namespace Transoceanic.Data;
 
-public abstract class TypeDetour
+public abstract class TypeDetour : ITODetourProvider
 {
-    public virtual void Load() { }
+    public virtual void ApplyDetour() { }
 }
 
 public abstract class TypeDetour<T> : TypeDetour
 {
+    public static Type TargetType { get; } = typeof(T);
+
+    public virtual bool AutoApplyStaticDetours => true;
+
+    public override void ApplyDetour()
+    {
+        base.ApplyDetour();
+        if (AutoApplyStaticDetours)
+        {
+            foreach (MethodInfo detour in GetType().GetRealMethods(TOReflectionUtils.StaticBindingFlags))
+                TODetourUtils.ApplyStaticMethodDetour(detour, TargetType);
+        }
+    }
+
     /// <summary>
     /// 尝试将指定的Detour应用到 <see cref="T"/> 类型的方法上。
     /// </summary>
@@ -29,8 +43,8 @@ public abstract class TypeDetour<T> : TypeDetour
     {
         string methodName = detour.Method.Name;
         Match match = Regex.Match(methodName, methodNamePrefix + @"(?<methodName>.*)$");
-        if (match.Success && GetType().HasRealMethod(methodName, TOReflectionUtils.UniversalBindingFlags))
-            TODetourUtils.ModifyMethodWithDetour<T>(match.Groups["methodName"].Value, detour);
+        if (match.Success && GetType().HasRealMethod(methodName, BindingFlags.Public | BindingFlags.Instance))
+            TODetourUtils.ModifyMethodWithDetour(TargetType.GetMethod(match.Groups["methodName"].Value, BindingFlags.Public | BindingFlags.Instance), detour);
     }
 }
 
@@ -56,8 +70,9 @@ public abstract class ModTypeDetour<T> : TypeDetour<T>
     public delegate void Orig_Unload(T self);
     public virtual void Detour_Unload(Orig_Unload orig, T self) => orig(self);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
+        base.ApplyDetour();
         TryApplyDetour(Detour_Load);
         TryApplyDetour(Detour_IsLoadingEnabled);
         TryApplyDetour(Detour_SetupContent);
@@ -144,9 +159,9 @@ public abstract class ModAccessorySlotDetour<T> : ModTypeDetour<T> where T : Mod
     public delegate void Orig_OnMouseHover(T self, AccessorySlotType context);
     public virtual void Detour_OnMouseHover(Orig_OnMouseHover orig, T self, AccessorySlotType context) => orig(self, context);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_CustomLocation);
         TryApplyDetour(Detour_DyeBackgroundTexture);
         TryApplyDetour(Detour_VanityBackgroundTexture);
@@ -213,9 +228,9 @@ public abstract class ModBiomeDetour<T> : ModSceneEffectDetour<T> where T : ModB
     public delegate void Orig_OnLeave(T self, Player player);
     public virtual void Detour_OnLeave(Orig_OnLeave orig, T self, Player player) => orig(self, player);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_BiomeTorchItemType);
         TryApplyDetour(Detour_BiomeCampfireItemType);
         TryApplyDetour(Detour_DisplayName);
@@ -235,9 +250,9 @@ public abstract class ModBiomeConversionDetour<T> : ModTypeDetour<T> where T : M
     public delegate void Orig_PostSetupContent(T self);
     public virtual void Detour_PostSetupContent(Orig_PostSetupContent orig, T self) => orig(self);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_PostSetupContent);
     }
 }
@@ -292,9 +307,9 @@ public abstract class ModBlockTypeDetour<T> : ModTypeDetour<T> where T : ModBloc
     public delegate void Orig_Convert(T self, int i, int j, int conversionType);
     public virtual void Detour_Convert(Orig_Convert orig, T self, int i, int j, int conversionType) => orig(self, i, j, conversionType);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_GetMapOption);
         TryApplyDetour(Detour_KillSound);
         TryApplyDetour(Detour_NumDust);
@@ -324,9 +339,9 @@ public abstract class ModBossBarDetour<T> : ModTypeDetour<T> where T : ModBossBa
     public delegate void Orig_PostDraw(T self, SpriteBatch spriteBatch, NPC npc, BossBarDrawParams drawParams);
     public virtual void Detour_PostDraw(Orig_PostDraw orig, T self, SpriteBatch spriteBatch, NPC npc, BossBarDrawParams drawParams) => orig(self, spriteBatch, npc, drawParams);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_ModifyInfo);
         TryApplyDetour(Detour_PreDraw);
         TryApplyDetour(Detour_PostDraw);
@@ -351,9 +366,9 @@ public abstract class ModBossBarStyleDetour<T> : ModTypeDetour<T> where T : ModB
     public delegate void Orig_Draw(T self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info);
     public virtual void Detour_Draw(Orig_Draw orig, T self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info) => orig(self, spriteBatch, currentBar, info);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_Update);
         TryApplyDetour(Detour_OnSelected);
         TryApplyDetour(Detour_OnDeselected);
@@ -395,9 +410,9 @@ public abstract class ModBuffDetour<T> : ModTypeDetour<T> where T : ModBuff
     public delegate bool Orig_RightClick(T self, int buffIndex);
     public virtual bool Detour_RightClick(Orig_RightClick orig, T self, int buffIndex) => orig(self, buffIndex);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_UpdatePlayer);
         TryApplyDetour(Detour_UpdateNPC);
         TryApplyDetour(Detour_ReApplyPlayer);
@@ -423,9 +438,9 @@ public abstract class ModCactusDetour<T> : TypeDetour<T> where T : ModCactus
     public delegate Asset<Texture2D> Orig_GetFruitTexture(T self);
     public virtual Asset<Texture2D> Detour_GetFruitTexture(Orig_GetFruitTexture orig, T self) => orig(self);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_SetStaticDefaults);
         TryApplyDetour(Detour_GetTexture);
         TryApplyDetour(Detour_GetFruitTexture);
@@ -446,9 +461,9 @@ public abstract class ModCloudDetour<T> : ModTypeDetour<T> where T : ModCloud
     public delegate bool Orig_Draw(T self, SpriteBatch spriteBatch, Cloud cloud, int cloudIndex, ref DrawData drawData);
     public virtual bool Detour_Draw(Orig_Draw orig, T self, SpriteBatch spriteBatch, Cloud cloud, int cloudIndex, ref DrawData drawData) => orig(self, spriteBatch, cloud, cloudIndex, ref drawData);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_SpawnChance);
         TryApplyDetour(Detour_OnSpawn);
         TryApplyDetour(Detour_Draw);
@@ -461,9 +476,9 @@ public abstract class ModCommandDetour<T> : ModTypeDetour<T> where T : ModComman
     public delegate void Orig_Action(T self, CommandCaller caller, string input, string[] args);
     public virtual void Detour_Action(Orig_Action orig, T self, CommandCaller caller, string input, string[] args) => orig(self, caller, input, args);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_Action);
     }
 }
@@ -490,9 +505,9 @@ public abstract class ModDustDetour<T> : ModTypeDetour<T> where T : ModDust
     public delegate Color? Orig_GetAlpha(T self, Dust dust, Color lightColor);
     public virtual Color? Detour_GetAlpha(Orig_GetAlpha orig, T self, Dust dust, Color lightColor) => orig(self, dust, lightColor);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_PreDraw);
         TryApplyDetour(Detour_OnSpawn);
         TryApplyDetour(Detour_Update);
@@ -543,9 +558,9 @@ public abstract class ModEmoteBubbleDetour<T> : ModTypeDetour<T> where T : ModEm
     public delegate Rectangle? Orig_GetFrameInEmoteMenu(T self, int frame, int frameCounter);
     public virtual Rectangle? Detour_GetFrameInEmoteMenu(Orig_GetFrameInEmoteMenu orig, T self, int frame, int frameCounter) => orig(self, frame, frameCounter);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_IsUnlocked);
         TryApplyDetour(Detour_OnSpawn);
         TryApplyDetour(Detour_UpdateFrame);
@@ -573,9 +588,9 @@ public abstract class ModGoreDetour<T> : ModTypeDetour<T> where T : ModGore
     public delegate Color? Orig_GetAlpha(T self, Gore gore, Color lightColor);
     public virtual Color? Detour_GetAlpha(Orig_GetAlpha orig, T self, Gore gore, Color lightColor) => orig(self, gore, lightColor);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_OnSpawn);
         TryApplyDetour(Detour_Update);
         TryApplyDetour(Detour_GetAlpha);
@@ -592,9 +607,9 @@ public abstract class ModHairDetour<T> : ModTypeDetour<T> where T : ModHair
     public delegate IEnumerable<Condition> Orig_GetUnlockConditions(T self);
     public virtual IEnumerable<Condition> Detour_GetUnlockConditions(Orig_GetUnlockConditions orig, T self) => orig(self);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_AutoStaticDefaults);
         TryApplyDetour(Detour_GetUnlockConditions);
     }
@@ -1094,9 +1109,9 @@ public abstract class ModItemDetour<T> : ModTypeDetour<T> where T : ModItem
     public delegate void Orig_ModifyTooltips(T self, List<TooltipLine> tooltips);
     public virtual void Detour_ModifyTooltips(Orig_ModifyTooltips orig, T self, List<TooltipLine> tooltips) => orig(self, tooltips);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_SetDefaults);
         TryApplyDetour(Detour_OnSpawn);
         TryApplyDetour(Detour_OnCreated);
@@ -1229,9 +1244,9 @@ public abstract class ModKeybindDetour<T> : TypeDetour<T> where T : ModKeybind
     public delegate List<string> Orig_GetAssignedKeys(T self, InputMode mode);
     public virtual List<string> Detour_GetAssignedKeys(Orig_GetAssignedKeys orig, T self, InputMode mode) => orig(self, mode);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_GetAssignedKeys);
     }
 }
@@ -1250,9 +1265,9 @@ public abstract class ModMapLayerDetour<T> : ModTypeDetour<T> where T : ModMapLa
     public delegate void Orig_Draw(T self, ref MapOverlayDrawContext context, ref string text);
     public virtual void Detour_Draw(Orig_Draw orig, T self, ref MapOverlayDrawContext context, ref string text) => orig(self, ref context, ref text);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_GetDefaultPosition);
         TryApplyDetour(Detour_GetModdedConstraints);
         TryApplyDetour(Detour_Draw);
@@ -1281,9 +1296,9 @@ public abstract class ModMenuDetour<T> : ModTypeDetour<T> where T : ModMenu
     public delegate void Orig_PostDrawLogo(T self, SpriteBatch spriteBatch, Vector2 logoDrawCenter, float logoRotation, float logoScale, Color drawColor);
     public virtual void Detour_PostDrawLogo(Orig_PostDrawLogo orig, T self, SpriteBatch spriteBatch, Vector2 logoDrawCenter, float logoRotation, float logoScale, Color drawColor) => orig(self, spriteBatch, logoDrawCenter, logoRotation, logoScale, drawColor);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_OnSelected);
         TryApplyDetour(Detour_OnDeselected);
         TryApplyDetour(Detour_Update);
@@ -1330,9 +1345,9 @@ public abstract class ModMountDetour<T> : ModTypeDetour<T> where T : ModMount
     public delegate bool Orig_Draw(T self, List<DrawData> playerDrawData, int drawType, Player drawPlayer, ref Texture2D texture, ref Texture2D glowTexture, ref Vector2 drawPosition, ref Rectangle frame, ref Color drawColor, ref Color glowColor, ref float rotation, ref SpriteEffects spriteEffects, ref Vector2 drawOrigin, ref float drawScale, float shadow);
     public virtual bool Detour_Draw(Orig_Draw orig, T self, List<DrawData> playerDrawData, int drawType, Player drawPlayer, ref Texture2D texture, ref Texture2D glowTexture, ref Vector2 drawPosition, ref Rectangle frame, ref Color drawColor, ref Color glowColor, ref float rotation, ref SpriteEffects spriteEffects, ref Vector2 drawOrigin, ref float drawScale, float shadow) => orig(self, playerDrawData, drawType, drawPlayer, ref texture, ref glowTexture, ref drawPosition, ref frame, ref drawColor, ref glowColor, ref rotation, ref spriteEffects, ref drawOrigin, ref drawScale, shadow);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_JumpHeight);
         TryApplyDetour(Detour_JumpSpeed);
         TryApplyDetour(Detour_UpdateEffects);
@@ -1671,9 +1686,9 @@ public abstract class ModNPCDetour<T> : ModTypeDetour<T> where T : ModNPC
     public delegate void Orig_EmoteBubblePosition(T self, ref Vector2 position, ref SpriteEffects spriteEffects);
     public virtual void Detour_EmoteBubblePosition(Orig_EmoteBubblePosition orig, T self, ref Vector2 position, ref SpriteEffects spriteEffects) => orig(self, ref position, ref spriteEffects);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_SetDefaults);
         TryApplyDetour(Detour_OnSpawn);
         TryApplyDetour(Detour_AutoStaticDefaults);
@@ -1800,9 +1815,9 @@ public abstract class ModPalmTreeDetour<T> : TypeDetour<T> where T : ModPalmTree
     public delegate Asset<Texture2D> Orig_GetOasisTopTextures(T self);
     public virtual Asset<Texture2D> Detour_GetOasisTopTextures(Orig_GetOasisTopTextures orig, T self) => orig(self);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_SetStaticDefaults);
         TryApplyDetour(Detour_GetTexture);
         TryApplyDetour(Detour_CountsAsTreeType);
@@ -2326,9 +2341,9 @@ public abstract class ModPlayerDetour<T> : ModTypeDetour<T> where T : ModPlayer
     public delegate bool Orig_OnPickup(T self, Item item);
     public virtual bool Detour_OnPickup(Orig_OnPickup orig, T self, Item item) => orig(self, item);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_Initialize);
         TryApplyDetour(Detour_ResetEffects);
         TryApplyDetour(Detour_ResetInfoAccessories);
@@ -2493,9 +2508,9 @@ public abstract class ModPrefixDetour<T> : ModTypeDetour<T> where T : ModPrefix
     public delegate IEnumerable<TooltipLine> Orig_GetTooltipLines(T self, Item item);
     public virtual IEnumerable<TooltipLine> Detour_GetTooltipLines(Orig_GetTooltipLines orig, T self, Item item) => orig(self, item);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_RollChance);
         TryApplyDetour(Detour_CanRoll);
         TryApplyDetour(Detour_SetStats);
@@ -2673,9 +2688,9 @@ public abstract class ModProjectileDetour<T> : ModTypeDetour<T> where T : ModPro
     public delegate void Orig_EmitEnchantmentVisualsAt(T self, Vector2 boxPosition, int boxWidth, int boxHeight);
     public virtual void Detour_EmitEnchantmentVisualsAt(Orig_EmitEnchantmentVisualsAt orig, T self, Vector2 boxPosition, int boxWidth, int boxHeight) => orig(self, boxPosition, boxWidth, boxHeight);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_SetDefaults);
         TryApplyDetour(Detour_OnSpawn);
         TryApplyDetour(Detour_AutoStaticDefaults);
@@ -2758,9 +2773,9 @@ public abstract class ModPylonDetour<T> : ModTileDetour<T> where T : ModPylon
     public delegate void Orig_DrawMapIcon(T self, ref MapOverlayDrawContext context, ref string mouseOverText, TeleportPylonInfo pylonInfo, bool isNearPylon, Color drawColor, float deselectedScale, float selectedScale);
     public virtual void Detour_DrawMapIcon(Orig_DrawMapIcon orig, T self, ref MapOverlayDrawContext context, ref string mouseOverText, TeleportPylonInfo pylonInfo, bool isNearPylon, Color drawColor, float deselectedScale, float selectedScale) => orig(self, ref context, ref mouseOverText, pylonInfo, isNearPylon, drawColor, deselectedScale, selectedScale);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_CanPlacePylon);
         TryApplyDetour(Detour_GetNPCShopEntry);
         TryApplyDetour(Detour_ValidTeleportCheck_NPCCount);
@@ -2783,9 +2798,9 @@ public abstract class ModRarityDetour<T> : ModTypeDetour<T> where T : ModRarity
     public delegate int Orig_GetPrefixedRarity(T self, int offset, float valueMult);
     public virtual int Detour_GetPrefixedRarity(Orig_GetPrefixedRarity orig, T self, int offset, float valueMult) => orig(self, offset, valueMult);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_RarityColor);
         TryApplyDetour(Detour_GetPrefixedRarity);
     }
@@ -2809,9 +2824,9 @@ public abstract class ModResourceDisplaySetDetour<T> : ModTypeDetour<T> where T 
     public delegate bool Orig_PreHover(T self, out bool hoveringLife);
     public virtual bool Detour_PreHover(Orig_PreHover orig, T self, out bool hoveringLife) => orig(self, out hoveringLife);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_PreDrawResources);
         TryApplyDetour(Detour_DrawLife);
         TryApplyDetour(Detour_DrawMana);
@@ -2841,9 +2856,9 @@ public abstract class ModResourceOverlayDetour<T> : ModTypeDetour<T> where T : M
     public delegate bool Orig_DisplayHoverText(T self, PlayerStatsSnapshot snapshot, IPlayerResourcesDisplaySet displaySet, bool drawingLife);
     public virtual bool Detour_DisplayHoverText(Orig_DisplayHoverText orig, T self, PlayerStatsSnapshot snapshot, IPlayerResourcesDisplaySet displaySet, bool drawingLife) => orig(self, snapshot, displaySet, drawingLife);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_PreDrawResource);
         TryApplyDetour(Detour_PostDrawResource);
         TryApplyDetour(Detour_PreDrawResourceDisplay);
@@ -2870,9 +2885,9 @@ public abstract class ModSceneEffectDetour<T> : ModTypeDetour<T> where T : ModSc
     public delegate void Orig_MapBackgroundColor(T self, ref Color color);
     public virtual void Detour_MapBackgroundColor(Orig_MapBackgroundColor orig, T self, ref Color color) => orig(self, ref color);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_GetWeight);
         TryApplyDetour(Detour_IsSceneEffectActive);
         TryApplyDetour(Detour_SpecialVisuals);
@@ -2902,9 +2917,9 @@ public abstract class ModSurfaceBackgroundStyleDetour<T> : ModTypeDetour<T> wher
     public delegate int Orig_ChooseCloseTexture(T self, ref float scale, ref double parallax, ref float a, ref float b);
     public int Detour_ChooseCloseTexture(Orig_ChooseCloseTexture orig, T self, ref float scale, ref double parallax, ref float a, ref float b) => orig(self, ref scale, ref parallax, ref a, ref b);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_ModifyFarFades);
         TryApplyDetour(Detour_ChooseFarTexture);
         TryApplyDetour(Detour_ChooseMiddleTexture);
@@ -3159,9 +3174,9 @@ public abstract class ModSystemDetour<T> : ModTypeDetour<T> where T : ModSystem
     public delegate void Orig_ResizeArrays(T self);
     public void Detour_ResizeArrays(Orig_ResizeArrays orig, T self) => orig(self);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_OnModLoad);
         TryApplyDetour(Detour_OnModUnload);
         TryApplyDetour(Detour_PostSetupContent);
@@ -3404,9 +3419,9 @@ public abstract class ModTileDetour<T> : ModTypeDetour<T> where T : ModTile
     public delegate void Orig_GetTileFlameData(T self, int i, int j, ref TileDrawing.TileFlameData tileFlameData);
     public void Detour_GetTileFlameData(Orig_GetTileFlameData orig, T self, int i, int j, ref TileDrawing.TileFlameData tileFlameData) => orig(self, i, j, ref tileFlameData);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_PostSetDefaults);
         TryApplyDetour(Detour_HasSmartInteract);
         TryApplyDetour(Detour_ModifySmartInteractCoords);
@@ -3480,9 +3495,9 @@ public abstract class ModTileEntityDetour<T> : TypeDetour<T> where T : ModTileEn
     public delegate bool Orig_IsTileValidForEntity(T self, int x, int y);
     public bool Detour_IsTileValidForEntity(Orig_IsTileValidForEntity orig, T self, int x, int y) => orig(self, x, y);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_Hook_AfterPlacement);
         TryApplyDetour(Detour_OnNetPlace);
         TryApplyDetour(Detour_PreGlobalUpdate);
@@ -3542,9 +3557,9 @@ public abstract class ModTreeDetour<T> : TypeDetour<T> where T : ModTree
     public delegate Asset<Texture2D> Orig_GetBranchTextures(T self);
     public virtual Asset<Texture2D> Detour_GetBranchTextures(Orig_GetBranchTextures orig, T self) => orig(self);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_SetStaticDefaults);
         TryApplyDetour(Detour_GetTexture);
         TryApplyDetour(Detour_CountsAsTreeType);
@@ -3566,9 +3581,9 @@ public abstract class ModUndergroundBackgroundStyleDetour<T> : ModTypeDetour<T> 
     public delegate void Orig_FillTextureArray(T self, int[] textureSlots);
     public void Detour_FillTextureArray(Orig_FillTextureArray orig, T self, int[] textureSlots) => orig(self, textureSlots);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_FillTextureArray);
     }
 }
@@ -3591,9 +3606,9 @@ public abstract class ModWallDetour<T> : ModTypeDetour<T> where T : ModWall
     public delegate bool Orig_WallFrame(T self, int i, int j, bool randomizeFrame, ref int style, ref int frameNumber);
     public bool Detour_WallFrame(Orig_WallFrame orig, T self, int i, int j, bool randomizeFrame, ref int style, ref int frameNumber) => orig(self, i, j, randomizeFrame, ref style, ref frameNumber);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_Drop);
         TryApplyDetour(Detour_KillWall);
         TryApplyDetour(Detour_AnimateWall);
@@ -3611,9 +3626,9 @@ public abstract class ModWaterfallStyleDetour<T> : ModTypeDetour<T> where T : Mo
     public delegate void Orig_ColorMultiplier(T self, ref float r, ref float g, ref float b, float a);
     public void Detour_ColorMultiplier(Orig_ColorMultiplier orig, T self, ref float r, ref float g, ref float b, float a) => orig(self, ref r, ref g, ref b, a);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_AddLight);
         TryApplyDetour(Detour_ColorMultiplier);
     }
@@ -3649,9 +3664,9 @@ public abstract class ModWaterStyleDetour<T> : ModTypeDetour<T> where T : ModWat
     public delegate byte Orig_GetRainVariant(T self);
     public byte Detour_GetRainVariant(Orig_GetRainVariant orig, T self) => orig(self);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_ChooseWaterfallStyle);
         TryApplyDetour(Detour_GetSplashDust);
         TryApplyDetour(Detour_GetDropletGore);
@@ -3675,9 +3690,9 @@ public abstract class GlobalTypeDetour<TEntity, TGlobal, TGlobalType> : ModTypeD
     public delegate void Orig_SetDefaults(TGlobalType self, TEntity entity);
     public virtual void Detour_SetDefaults(Orig_SetDefaults orig, TGlobalType self, TEntity entity) => orig(self, entity);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_AppliesToEntity);
         TryApplyDetour(Detour_SetDefaults);
     }
@@ -3725,9 +3740,9 @@ public abstract class GlobalBlockTypeDetour<T> : ModTypeDetour<T> where T : Glob
     public delegate void Orig_ModifyLight(T self, int i, int j, int type, ref float r, ref float g, ref float b);
     public virtual void Detour_ModifyLight(Orig_ModifyLight orig, T self, int i, int j, int type, ref float r, ref float g, ref float b) => orig(self, i, j, type, ref r, ref g, ref b);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_KillSound);
         TryApplyDetour(Detour_NumDust);
         TryApplyDetour(Detour_CreateDust);
@@ -3751,9 +3766,9 @@ public abstract class GlobalBossBarDetour<T> : ModTypeDetour<T> where T : Global
     public delegate void Orig_PostDraw(T self, SpriteBatch spriteBatch, NPC npc, BossBarDrawParams drawParams);
     public virtual void Detour_PostDraw(Orig_PostDraw orig, T self, SpriteBatch spriteBatch, NPC npc, BossBarDrawParams drawParams) => orig(self, spriteBatch, npc, drawParams);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_PreDraw);
         TryApplyDetour(Detour_PostDraw);
     }
@@ -3801,9 +3816,9 @@ public abstract class GlobalBuffDetour<T> : ModTypeDetour<T> where T : GlobalBuf
     public delegate bool Orig_RightClick(T self, int type, int buffIndex);
     public virtual bool Detour_RightClick(Orig_RightClick orig, T self, int type, int buffIndex) => orig(self, type, buffIndex);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_UpdatePlayer);
         TryApplyDetour(Detour_UpdateNPC);
         TryApplyDetour(Detour_ReApplyPlayer);
@@ -3855,9 +3870,9 @@ public abstract class GlobalEmoteBubbleDetour<T> : ModTypeDetour<T> where T : Gl
     public delegate Rectangle? Orig_GetFrameInEmoteMenu(T self, int emoteType, int frame, int frameCounter);
     public virtual Rectangle? Detour_GetFrameInEmoteMenu(Orig_GetFrameInEmoteMenu orig, T self, int emoteType, int frame, int frameCounter) => orig(self, emoteType, frame, frameCounter);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_OnSpawn);
         TryApplyDetour(Detour_UpdateFrame);
         TryApplyDetour(Detour_UpdateFrameInEmoteMenu);
@@ -3880,9 +3895,9 @@ public abstract class GlobalInfoDisplayDetour<T> : ModTypeDetour<T> where T : Gl
     public delegate void Orig_ModifyDisplayParameters(T self, InfoDisplay currentDisplay, ref string displayValue, ref string displayName, ref Color displayColor, ref Color displayShadowColor);
     public virtual void Detour_ModifyDisplayParameters(Orig_ModifyDisplayParameters orig, T self, InfoDisplay currentDisplay, ref string displayValue, ref string displayName, ref Color displayColor, ref Color displayShadowColor) => orig(self, currentDisplay, ref displayValue, ref displayName, ref displayColor, ref displayShadowColor);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_Active);
         TryApplyDetour(Detour_ModifyDisplayParameters);
     }
@@ -4342,9 +4357,9 @@ public abstract class GlobalItemDetour<T> : GlobalTypeDetour<Item, GlobalItem, T
     public delegate void Orig_NetReceive(T self, Item item, BinaryReader reader);
     public virtual void Detour_NetReceive(Orig_NetReceive orig, T self, Item item, BinaryReader reader) => orig(self, item, reader);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_OnCreated);
         TryApplyDetour(Detour_OnSpawn);
         TryApplyDetour(Detour_ChoosePrefix);
@@ -4794,9 +4809,9 @@ public abstract class GlobalNPCDetour<T> : GlobalTypeDetour<NPC, GlobalNPC, T> w
     public delegate void Orig_EmoteBubblePosition(T self, NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects);
     public virtual void Detour_EmoteBubblePosition(Orig_EmoteBubblePosition orig, T self, NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects) => orig(self, npc, ref position, ref spriteEffects);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_SetDefaultsFromNetId);
         TryApplyDetour(Detour_OnSpawn);
         TryApplyDetour(Detour_ApplyDifficultyAndPlayerScaling);
@@ -5040,9 +5055,9 @@ public abstract class GlobalProjectileDetour<T> : GlobalTypeDetour<Projectile, G
     public delegate void Orig_EmitEnchantmentVisualsAt(T self, Projectile projectile, Vector2 boxPosition, int boxWidth, int boxHeight);
     public virtual void Detour_EmitEnchantmentVisualsAt(Orig_EmitEnchantmentVisualsAt orig, T self, Projectile projectile, Vector2 boxPosition, int boxWidth, int boxHeight) => orig(self, projectile, boxPosition, boxWidth, boxHeight);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_OnSpawn);
         TryApplyDetour(Detour_PreAI);
         TryApplyDetour(Detour_AI);
@@ -5110,9 +5125,9 @@ public abstract class GlobalPylonDetour<T> : ModTypeDetour<T> where T : GlobalPy
     public delegate void Orig_PostValidTeleportCheck(T self, TeleportPylonInfo destinationPylonInfo, TeleportPylonInfo nearbyPylonInfo, ref bool destinationPylonValid, ref bool validNearbyPylonFound, ref string errorKey);
     public virtual void Detour_PostValidTeleportCheck(Orig_PostValidTeleportCheck orig, T self, TeleportPylonInfo destinationPylonInfo, TeleportPylonInfo nearbyPylonInfo, ref bool destinationPylonValid, ref bool validNearbyPylonFound, ref string errorKey) => orig(self, destinationPylonInfo, nearbyPylonInfo, ref destinationPylonValid, ref validNearbyPylonFound, ref errorKey);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_PreDrawMapIcon);
         TryApplyDetour(Detour_PreCanPlacePylon);
         TryApplyDetour(Detour_ValidTeleportCheck_PreNPCCount);
@@ -5240,9 +5255,9 @@ public abstract class GlobalTileDetour<T> : GlobalBlockTypeDetour<T> where T : G
     public delegate bool Orig_ShakeTree(T self, int x, int y, TreeTypes treeType);
     public virtual bool Detour_ShakeTree(Orig_ShakeTree orig, T self, int x, int y, TreeTypes treeType) => orig(self, x, y, treeType);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_DropCritterChance);
         TryApplyDetour(Detour_CanDrop);
         TryApplyDetour(Detour_Drop);
@@ -5289,27 +5304,11 @@ public abstract class GlobalWallDetour<T> : GlobalBlockTypeDetour<T> where T : G
     public delegate bool Orig_WallFrame(T self, int i, int j, int type, bool randomizeFrame, ref int style, ref int frameNumber);
     public virtual bool Detour_WallFrame(Orig_WallFrame orig, T self, int i, int j, int type, bool randomizeFrame, ref int style, ref int frameNumber) => orig(self, i, j, type, randomizeFrame, ref style, ref frameNumber);
 
-    public override void Load()
+    public override void ApplyDetour()
     {
-        base.Load();
+        base.ApplyDetour();
         TryApplyDetour(Detour_Drop);
         TryApplyDetour(Detour_KillWall);
         TryApplyDetour(Detour_WallFrame);
     }
-}
-
-public class TypeDetourHelper : ITOLoader
-{
-    internal static List<TypeDetour> DetourInstances { get; } = [];
-
-    void ITOLoader.PostSetupContent()
-    {
-        foreach (TypeDetour detourInstance in TOReflectionUtils.GetTypeInstancesDerivedFrom<TypeDetour>())
-        {
-            DetourInstances.Add(detourInstance);
-            detourInstance.Load();
-        }
-    }
-
-    void ITOLoader.OnModUnload() => DetourInstances.Clear();
 }

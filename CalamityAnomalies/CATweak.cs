@@ -40,14 +40,12 @@ public abstract class CANPCOverride : NPCOverride
     /// <summary>
     /// 在更新灾厄的Boss血条之前调用。
     /// </summary>
-    /// <param name="valid">血条是否绑定到一个有效的NPC。</param>
     /// <returns>返回 <see langword="false"/> 以阻止默认的更新血条方法运行（除对 <see cref="BetterBossHealthBar.BetterBossHPUI.Valid"/> 属性的更新之外）。默认返回 <see langword="true"/>。</returns>
     public virtual bool PreUpdateCalBossBar(BetterBossHealthBar.BetterBossHPUI newBar) => true;
 
     /// <summary>
     /// 在更新灾厄的Boss血条之后调用。
     /// </summary>
-    /// <param name="valid">血条是否绑定到一个有效的NPC。</param>
     public virtual void PostUpdateCalBossBar(BetterBossHealthBar.BetterBossHPUI newBar) { }
 
     /// <summary>
@@ -148,6 +146,14 @@ public abstract class CAProjectileOverride : ProjectileOverride
     /// <br/>默认返回 <see langword="true"/>，即全部允许。
     /// </summary>
     public virtual bool AllowOrigCalMethod(OrigMethodType_CalamityGlobalProjectile type) => true;
+
+    /// <summary>
+    /// 编辑受击NPC的DR。
+    /// </summary>
+    /// <param name="baseDR">由灾厄方法计算出的基础DR。</param>
+    public virtual void ModifyHitNPC_DR(NPC npc, ref NPC.HitModifiers modifiers, float baseDR,
+        ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier)
+    { }
 }
 
 public abstract class CAProjectileOverride<T> : CAProjectileOverride where T : ModProjectile
@@ -220,6 +226,14 @@ public abstract class CAItemOverride : ItemOverride
         AnomalyItem = null;
         CalamityItem = null;
     }
+
+    /// <summary>
+    /// 编辑受击NPC的DR。
+    /// </summary>
+    /// <param name="baseDR">由灾厄方法计算出的基础DR。</param>
+    public virtual void ModifyHitNPC_DR(NPC npc, Player player, ref NPC.HitModifiers modifiers, float baseDR,
+        ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier)
+    { }
 }
 
 public abstract class CAItemOverride<T> : CAItemOverride where T : ModItem

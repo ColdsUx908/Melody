@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.ExtraGameData;
+﻿namespace Transoceanic.Data;
 
 public abstract class EntityOverride<TEntity> where TEntity : Entity
 {

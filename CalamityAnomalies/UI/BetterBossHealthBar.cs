@@ -12,8 +12,8 @@ using static CalamityMod.UI.BossHealthBarManager;
 
 namespace CalamityAnomalies.UI;
 
-[DetourClassTo<BossHealthBarManager>]
-public class BetterBossHealthBar : ITOLoader
+
+public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, ITOLoader
 {
     /// <summary>
     /// 改进的Boss血条UI类。
@@ -26,10 +26,7 @@ public class BetterBossHealthBar : ITOLoader
 
         public int[] CustomOneToManyIndexes { get; }
 
-        /* TODO
-         * 这个字典是未完成的。
-         * 在未来的异象模式中，Boss生成时会绑定自己的所有体节NPC。
-         */
+        // TODO 这个字典是未完成的。在未来的异象模式中，Boss生成时会绑定自己的所有体节NPC。
         public Dictionary<ulong, NPC> CustomOneToMany { get; } = [];
 
         public bool HasSpecialLifeRequirement { get; } = false;
@@ -357,6 +354,7 @@ public class BetterBossHealthBar : ITOLoader
         #endregion 公共绘制方法
     }
 
+
     public static DynamicSpriteFont MouseFont { get; } = FontAssets.MouseText.Value;
     public static DynamicSpriteFont ItemStackFont { get; } = FontAssets.ItemStack.Value;
 
@@ -364,7 +362,7 @@ public class BetterBossHealthBar : ITOLoader
     private const int MaxBars = 6;
     private const int MaxActiveBars = 4;
 
-    public delegate void Orig_Draw(BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info);
+    public override bool AutoApplyStaticDetours => false;
 
     /// <summary>
     /// 灾厄Boss血条总控绘制钩子。
@@ -374,7 +372,7 @@ public class BetterBossHealthBar : ITOLoader
     /// <param name="spriteBatch"></param>
     /// <param name="currentBar"></param>
     /// <param name="info"></param>
-    public static void Detour_Draw(Orig_Draw orig, BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info)
+    public override void Detour_Draw(Orig_Draw orig, BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info)
     {
         int x = Main.screenWidth
             - (Main.playerInventory || Main.invasionType > 0 || Main.pumpkinMoon || Main.snowMoon || DD2Event.Ongoing || AcidRainEvent.AcidRainEventIsOngoing ? 670 : 420);
@@ -397,8 +395,6 @@ public class BetterBossHealthBar : ITOLoader
         }
     }
 
-    public delegate void Orig_Update(BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info);
-
     /// <summary>
     /// 灾厄Boss血条总控更新钩子。
     /// <br/>修复了“卡血条”问题。
@@ -407,7 +403,7 @@ public class BetterBossHealthBar : ITOLoader
     /// <param name="self"></param>
     /// <param name="currentBar"></param>
     /// <param name="info"></param>
-    public static void Detour_Update(Orig_Update orig, BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info)
+    public override void Detour_Update(Orig_Update orig, BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info)
     {
         List<ulong> validIdentifiers = [];
 
@@ -449,8 +445,11 @@ public class BetterBossHealthBar : ITOLoader
         CalamityUtils.DrawBorderStringEightWay(spriteBatch, font, text, baseDrawPosition, mainColor2, borderColor2, scale);
     }
 
-    void ITOLoader.PostSetupContent()
+    public delegate void Orig_Load_1(Mod mod);
+
+    public static void Detour_Load_1(Orig_Load_1 orig, Mod mod)
     {
+        orig(mod);
         MinibossHPBarList.Add(NPCID.LunarTowerVortex);
         MinibossHPBarList.Add(NPCID.LunarTowerStardust);
         MinibossHPBarList.Add(NPCID.LunarTowerNebula);
@@ -475,40 +474,10 @@ public class BetterBossHealthBar : ITOLoader
         OneToMany[ModContent.NPCType<CrimulanPaladin>()] = [];
     }
 
-    void ITOLoader.OnModUnload()
+    public override void ApplyDetour()
     {
-        MinibossHPBarList.Remove(NPCID.LunarTowerVortex);
-        MinibossHPBarList.Remove(NPCID.LunarTowerStardust);
-        MinibossHPBarList.Remove(NPCID.LunarTowerNebula);
-        MinibossHPBarList.Remove(NPCID.LunarTowerSolar);
-        MinibossHPBarList.Remove(NPCID.PirateShip);
-        OneToMany[NPCID.SkeletronHead] = [NPCID.SkeletronHead, NPCID.SkeletronHand];
-        OneToMany[NPCID.SkeletronPrime] = [NPCID.SkeletronPrime, NPCID.PrimeSaw, NPCID.PrimeVice, NPCID.PrimeCannon, NPCID.PrimeLaser];
-        OneToMany[NPCID.Golem] = [NPCID.Golem, NPCID.GolemFistLeft, NPCID.GolemFistRight, NPCID.GolemHead, NPCID.GolemHeadFree];
-        OneToMany[NPCID.BrainofCthulhu] = [NPCID.BrainofCthulhu, NPCID.Creeper];
-        OneToMany[NPCID.MartianSaucerCore] = [NPCID.MartianSaucerCore, NPCID.MartianSaucerTurret, NPCID.MartianSaucerCannon];
-        OneToMany[NPCID.PirateShip] = [NPCID.PirateShip, NPCID.PirateShipCannon];
-        OneToMany[ModContent.NPCType<CeaselessVoid>()] =
-        [
-            ModContent.NPCType<CeaselessVoid>(),
-            ModContent.NPCType<DarkEnergy>()
-        ];
-        OneToMany[ModContent.NPCType<RavagerBody>()] =
-        [
-            ModContent.NPCType<RavagerBody>(),
-            ModContent.NPCType<RavagerClawRight>(),
-            ModContent.NPCType<RavagerClawLeft>(),
-            ModContent.NPCType<RavagerLegRight>(),
-            ModContent.NPCType<RavagerLegLeft>(),
-            ModContent.NPCType<RavagerHead>()
-        ];
-        OneToMany[ModContent.NPCType<EbonianPaladin>()] = OneToMany[ModContent.NPCType<CrimulanPaladin>()] =
-        [
-            ModContent.NPCType<EbonianPaladin>(),
-            ModContent.NPCType<SplitEbonianPaladin>(),
-            ModContent.NPCType<CrimulanPaladin>(),
-            ModContent.NPCType<SplitCrimulanPaladin>()
-        ];
+        base.ApplyDetour();
+        TODetourUtils.ModifyMethodWithDetour(TargetType.GetMethod("Load", BindingFlags.NonPublic | BindingFlags.Static), Detour_Load_1);
     }
 
     void ITOLoader.OnWorldLoad() => _trackingBars.Clear();

@@ -253,7 +253,6 @@ public class CalamityGlobalNPCDetour : GlobalNPCDetour<CalamityGlobalNPC>
 
     public delegate void Orig_BossRushForceDespawnOtherNPCs(CalamityGlobalNPC self, NPC npc, Mod mod);
 
-    [DetourMethodTo<CalamityGlobalNPC>]
     public static void Detour_BossRushForceDespawnOtherNPCs(Orig_BossRushForceDespawnOtherNPCs orig, CalamityGlobalNPC self, NPC npc, Mod mod)
     {
         if (CAWorld.BossRush && !CAWorld.RealBossRushEventActive)
@@ -261,4 +260,8 @@ public class CalamityGlobalNPCDetour : GlobalNPCDetour<CalamityGlobalNPC>
 
         orig(self, npc, mod);
     }
+
+    public delegate void Orig_ApplyDR(CalamityGlobalNPC self, NPC npc, ref NPC.HitModifiers modifiers);
+
+    public static void Detour_ApplyDR(Orig_ApplyDR orig, CalamityGlobalNPC self, NPC npc, ref NPC.HitModifiers modifiers) { }
 }
