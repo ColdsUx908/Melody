@@ -240,8 +240,8 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
         #region 竞技场
         if (!ModNPC.spawnArena && Main.netMode != NetmodeID.MultiplayerClient)
         {
-            ModNPC.safeBox.X = ModNPC.spawnX = ModNPC.spawnXReset = (int)NPC.Center.X - Data.ArenaSize * 8;
             ModNPC.spawnX2 = ModNPC.spawnXReset2 = (int)NPC.Center.X + Data.ArenaSize * 8;
+            ModNPC.safeBox.X = ModNPC.spawnX = ModNPC.spawnXReset = (int)NPC.Center.X - Data.ArenaSize * 8;
             ModNPC.safeBox.Y = ModNPC.spawnY = ModNPC.spawnYReset = (int)NPC.Center.Y - Data.ArenaSize * 8;
             ModNPC.safeBox.Width = Data.ArenaSize * 16;
             ModNPC.safeBox.Height = Data.ArenaSize * 16;
@@ -310,7 +310,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
     {
         NPC.dontTakeDamage = true;
 
-        switch (Timer1)
+        switch (Timer1++)
         {
             case 180:
                 if (TOMain.GeneralClient)
@@ -344,8 +344,6 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
                 Timer1 = 0;
                 break;
         }
-
-        Timer1++;
     }
     #endregion AI
 
@@ -382,7 +380,8 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
             opacity *= self.musicSyncCounter is <= 0 and > -30 ? Utils.GetLerpValue(120, 0, self.musicSyncCounter, true) : 0.75f;
 
             Texture2D forcefieldTexture = ForcefieldTexture.Value;
-            GameShaders.Misc["CalamityMod:SupremeShield"].UseImage1("Images/Misc/Perlin");
+            MiscShaderData miscShaderData = GameShaders.Misc["CalamityMod:SupremeShield"];
+            miscShaderData.UseImage1("Images/Misc/Perlin");
 
             Color forcefieldColor = Color.Cyan;
             Color secondaryForcefieldColor = Color.SkyBlue;
@@ -390,11 +389,11 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
             forcefieldColor *= opacity;
             secondaryForcefieldColor *= opacity;
 
-            GameShaders.Misc["CalamityMod:SupremeShield"].UseSecondaryColor(secondaryForcefieldColor);
-            GameShaders.Misc["CalamityMod:SupremeShield"].UseColor(forcefieldColor);
-            GameShaders.Misc["CalamityMod:SupremeShield"].UseSaturation(1);
-            GameShaders.Misc["CalamityMod:SupremeShield"].UseOpacity(0.65f);
-            GameShaders.Misc["CalamityMod:SupremeShield"].Apply();
+            miscShaderData.UseSecondaryColor(secondaryForcefieldColor);
+            miscShaderData.UseColor(forcefieldColor);
+            miscShaderData.UseSaturation(1);
+            miscShaderData.UseOpacity(0.65f);
+            miscShaderData.Apply();
 
             Texture2D centerTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/CentralGold").Value;
 

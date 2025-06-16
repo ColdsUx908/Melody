@@ -1,8 +1,9 @@
+/*
 using CalamityAnomalies.Items.ItemRarities;
 
 namespace CalamityAnomalies.DeveloperContents;
 
-/*
+
 [AutoloadEquip(EquipType.Wings)]
 public class AscendantWings : LegendaryItem, ILocalizedModType
 {

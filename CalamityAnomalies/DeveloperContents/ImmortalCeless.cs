@@ -1,9 +1,8 @@
-﻿using CalamityAnomalies.Items.ItemRarities;
-using Transoceanic.GlobalInstances;
+﻿/*
+using CalamityAnomalies.Items.ItemRarities;
 
 namespace CalamityAnomalies.DeveloperContents;
 
-/*
 public class ImmortalCeless : LegendaryItem, ILocalizedModType
 {
     #region 传奇

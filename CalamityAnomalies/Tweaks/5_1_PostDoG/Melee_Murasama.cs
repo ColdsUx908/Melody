@@ -366,7 +366,7 @@ public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
             case CryogenShield:
             case AnahitasIceShield:
             case AureusSpawn:
-            case Bumblefuck when CAUtils.PermaFrostActive || (NPC.AnyNPCs<Yharon>(out NPC yharon) && yharon.Ocean().LifeRatio <= 0.55f):
+            case Bumblefuck when CAUtils.PermaFrostActive || (NPC.AnyNPCs(out _, out Yharon yharon) && new YharonPublicizer(yharon).startSecondAI):
             case Bumblefuck2:
             case CeaselessVoid when target.Ocean().LifeRatio < 0.2f:
             case PhantomFuckYou:

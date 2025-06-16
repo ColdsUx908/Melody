@@ -27,7 +27,6 @@ global using Terraria.ModLoader.Core;
 global using Terraria.ModLoader.IO;
 global using Terraria.Utilities;
 global using Transoceanic.Commands;
-global using Transoceanic.Extensions;
 global using Transoceanic.Data;
 global using Transoceanic.GameData;
 global using Transoceanic.GlobalInstances;
@@ -181,23 +180,7 @@ public static class TOMain
 
     public static float GeneralMinutes => GeneralSeconds / 60f;
 
-    public static int GameTimer
-    {
-        get;
-        internal set
-        {
-            field = value;
-            GameSeconds = value / 60f;
-            GameMinutes = GameSeconds / 60f;
-            GameHours = GameMinutes / 60f;
-        }
-    } = 0;
-
-    public static float GameSeconds { get; private set; } = 0f;
-
-    public static float GameMinutes { get; private set; } = 0f;
-
-    public static float GameHours { get; private set; } = 0f;
+    public static TerrariaTimer GameTimer { get; private set; }
 
     public static double Time24Hour { get; private set; } = 0.0;
 

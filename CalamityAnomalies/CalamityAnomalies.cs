@@ -27,7 +27,6 @@ global using Terraria.ModLoader;
 global using Terraria.ModLoader.IO;
 global using Terraria.Utilities;
 global using Transoceanic;
-global using Transoceanic.Extensions;
 global using Transoceanic.Data;
 global using Transoceanic.GameData;
 global using Transoceanic.IL;

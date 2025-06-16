@@ -27,7 +27,6 @@
 	  <Folder Include="Tweaks\2_2_PostMechanics\" />
 	  <Folder Include="Tweaks\3_1_PostPlantera\" />
 	  <Folder Include="Tweaks\3_2_PostGolem\" />
-	  <Folder Include="Tweaks\3_3_PostCultist\" />
 	</ItemGroup>
 	<ItemGroup>
 	  <PackageReference Include="ZLinq" Version="1.4.9" />

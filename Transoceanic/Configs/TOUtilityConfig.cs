@@ -4,10 +4,6 @@ namespace Transoceanic.Configs;
 
 public partial class TOUtilityConfig : ModConfig
 {
-    public TOUtilityConfig()
-    {
-    }
-
     public static TOUtilityConfig Instance { get; private set; }
 
     public override ConfigScope Mode => ConfigScope.ClientSide;

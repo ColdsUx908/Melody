@@ -401,7 +401,7 @@ public class YharonTweak : CANPCTweak<Yharon>
 
         int xPos = 60 * NPC.direction;
         Vector2 vector = Vector2.Normalize(player.Center - NPC.Center) * (NPC.width + 20) / 2f + NPC.Center;
-        Vector2 fromMouth = new Vector2((int)vector.X + xPos, (int)vector.Y - 15);
+        Vector2 fromMouth = new((int)vector.X + xPos, (int)vector.Y - 15);
 
         // Create the arena, but not as a multiplayer client.
         // In single player, the arena gets created and never gets synced because it's single player.
@@ -413,15 +413,16 @@ public class YharonTweak : CANPCTweak<Yharon>
             enraged = false;
             if (TOMain.GeneralClient)
             {
-                safeBox = new()
+                int safeBoxWidth = Main.zenithWorld ? 3000 : Main.getGoodWorld ? 2000 : bossRush ? 4000 : revenge ? 6000 : 7000;
+                safeBox = new Rectangle
                 {
-                    X = (int)(player.Center.X - (Main.zenithWorld ? 1500f : Main.getGoodWorld ? 1000f : bossRush ? 2000f : revenge ? 3000f : 3500f)),
+                    X = (int)(player.Center.X - safeBoxWidth / 2),
                     Y = (int)Main.topWorld,
-                    Width = Main.zenithWorld ? 3000 : Main.getGoodWorld ? 2000 : bossRush ? 4000 : revenge ? 6000 : 7000,
+                    Width = safeBoxWidth,
                     Height = Main.maxTilesY * 16
                 };
                 for (int i = -1; i < 2; i += 2)
-                    Projectile.NewProjectileAction<SkyFlareRevenge>(NPC.GetSource_FromAI(), player.Center + new Vector2(i * (Main.zenithWorld ? 1500f : Main.getGoodWorld ? 1000f : bossRush ? 2000f : revenge ? 3000f : 3500f), 100f), Vector2.Zero, 0, 0f, Main.myPlayer);
+                    Projectile.NewProjectileAction<SkyFlareRevenge>(NPC.GetSource_FromAI(), player.Center + new Vector2(i * safeBoxWidth / 2, 100f), Vector2.Zero, 0, 0f, Main.myPlayer);
             }
 
             // Force Yharon to send a sync packet so that the arena gets sent immediately
@@ -955,7 +956,7 @@ public class YharonTweak : CANPCTweak<Yharon>
                         if (TOMain.GeneralClient)
                         {
                             float bulletHellTeleportLocationDistance = 540f;
-                            Vector2 defaultTeleportLocation = new Vector2(0f, -bulletHellTeleportLocationDistance);
+                            Vector2 defaultTeleportLocation = new(0f, -bulletHellTeleportLocationDistance);
                             Vector2 teleportLocation = player.velocity.SafeNormalize(Vector2.Zero) * -1f * bulletHellTeleportLocationDistance;
                             Vector2 center = player.Center + (teleportLocation == Vector2.Zero ? defaultTeleportLocation : teleportLocation);
                             NPC.Center = center;
@@ -1328,7 +1329,7 @@ public class YharonTweak : CANPCTweak<Yharon>
                         if (TOMain.GeneralClient)
                         {
                             float bulletHellTeleportLocationDistance = 540f;
-                            Vector2 defaultTeleportLocation = new Vector2(0f, -bulletHellTeleportLocationDistance);
+                            Vector2 defaultTeleportLocation = new(0f, -bulletHellTeleportLocationDistance);
                             Vector2 teleportLocation = player.velocity.SafeNormalize(Vector2.Zero) * -1f * bulletHellTeleportLocationDistance;
                             Vector2 center = player.Center + (teleportLocation == Vector2.Zero ? defaultTeleportLocation : teleportLocation);
                             NPC.Center = center;
@@ -1691,12 +1692,9 @@ public class YharonTweak : CANPCTweak<Yharon>
 
         CalamityGlobalNPC.yharonP2 = NPC.whoAmI;
 
-        float phase2GateValue = revenge ? 0.8f : expertMode ? 0.7f : 0.5f;
-        bool phase2 = death || OceanNPC.LifeRatio <= phase2GateValue;
-        float phase3GateValue = death ? 0.65f : revenge ? 0.5f : expertMode ? 0.4f : 0.125f;
-        bool phase3 = OceanNPC.LifeRatio <= phase3GateValue;
-        float phase4GateValue = death ? 0.3f : 0.2f;
-        bool phase4 = OceanNPC.LifeRatio <= phase4GateValue && revenge;
+        bool phase2 = death || OceanNPC.LifeRatio <= (revenge ? 0.8f : expertMode ? 0.7f : 0.5f);
+        bool phase3 = OceanNPC.LifeRatio <= (death ? 0.65f : revenge ? 0.5f : expertMode ? 0.4f : 0.125f);
+        bool phase4 = OceanNPC.LifeRatio <= (death ? 0.3f : revenge ? 0.2f : 0f);
 
         if (NPC.ai[0] is not 5f and not 8f)
         {
@@ -2066,7 +2064,7 @@ public class YharonTweak : CANPCTweak<Yharon>
                                 NPC.SpawnOnPlayer<Bumblefuck>(NPC.FindClosestPlayer());
 
                             float bulletHellTeleportLocationDistance = 540f;
-                            Vector2 defaultTeleportLocation = new Vector2(0f, -bulletHellTeleportLocationDistance);
+                            Vector2 defaultTeleportLocation = new(0f, -bulletHellTeleportLocationDistance);
                             Vector2 teleportLocation = targetData.velocity.SafeNormalize(Vector2.Zero) * -1f * bulletHellTeleportLocationDistance;
                             Vector2 center = targetData.Center + (teleportLocation == Vector2.Zero ? defaultTeleportLocation : teleportLocation);
                             NPC.Center = center;
@@ -2190,7 +2188,7 @@ public class YharonTweak : CANPCTweak<Yharon>
 
                     case 3: // Fireballs
                         {
-                            Vector2 fireSpitFaceDirection = new Vector2((targetData.Center.X > NPC.Center.X) ? 1 : -1, 0f);
+                            Vector2 fireSpitFaceDirection = new((targetData.Center.X > NPC.Center.X) ? 1 : -1, 0f);
                             NPC.spriteDirection = (fireSpitFaceDirection.X > 0f) ? 1 : -1;
                             NPC.velocity = fireSpitFaceDirection * -2f;
 
@@ -2758,6 +2756,7 @@ public class YharonDetour : ModNPCDetour<Yharon>
     public override void Detour_HitEffect(Orig_HitEffect orig, Yharon self, NPC.HitInfo hit)
     {
         NPC npc = self.NPC;
+        CalamityGlobalNPC calamityNPC = npc.Calamity();
         // hit sound
         if (npc.soundDelay == 0)
         {
@@ -2776,7 +2775,6 @@ public class YharonDetour : ModNPCDetour<Yharon>
             bool shouldSummonProj = true;
             if (shouldNotDie)
             {
-                CalamityGlobalNPC calamityNPC = npc.Calamity();
                 //这一堆抽象的运算能够反映出我写代码时的精神状态
                 //什么神人会把亡语弹幕往HitEffect()里塞
                 if ((int)calamityNPC.newAI[2]++ % 3 != 0 || ++calamityNPC.newAI[3] > 6f) //一阶段最多释放6次垂死攻击
@@ -2784,7 +2782,13 @@ public class YharonDetour : ModNPCDetour<Yharon>
                 npc.SyncExtraAI();
             }
             if (shouldSummonProj)
+            {
                 self.DoFireRing(300, (Main.expertMode || BossRushEvent.BossRushActive) ? 125 : 150, -1f, 0f);
+                if (calamityNPC.newAI[3] == 6f)
+                {
+
+                }
+            }
             npc.position.X += (npc.width / 2);
             npc.position.Y += (npc.height / 2);
             npc.width = 300;

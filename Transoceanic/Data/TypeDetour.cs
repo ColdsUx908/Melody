@@ -14,6 +14,10 @@ namespace Transoceanic.Data;
 
 public abstract class TypeDetour : ITODetourProvider
 {
+    /// <summary>
+    /// <inheritdoc/><para/>
+    /// <strong>不要</strong>尝试实现任何与自带方法同名的方法，会导致 <see cref="AmbiguousMatchException"/> 异常。
+    /// </summary>
     public virtual void ApplyDetour() { }
 }
 

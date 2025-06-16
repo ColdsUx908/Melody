@@ -219,7 +219,7 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     public override void OnSpawn(NPC npc, IEntitySource source)
     {
         AllocateIdentifier(); //城镇NPC这类NPC不会拥有在这里被设置标识符的机会
-        SpawnTime = TOMain.GameTimer;
+        SpawnTime = TOMain.GameTimer.TotalTicks;
     }
     #endregion Active
 

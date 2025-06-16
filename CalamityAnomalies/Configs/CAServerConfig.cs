@@ -7,10 +7,6 @@ namespace CalamityAnomalies.Configs;
 
 public class CAServerConfig : ModConfig
 {
-    public CAServerConfig()
-    {
-    }
-
     public static CAServerConfig Instance { get; private set; }
 
     public override ConfigScope Mode => ConfigScope.ClientSide;

@@ -2,7 +2,6 @@
 using CalamityMod.Events;
 using CalamityMod.NPCs.Abyss;
 using CalamityMod.NPCs.Providence;
-using Terraria;
 
 namespace CalamityAnomalies.GlobalInstances;
 

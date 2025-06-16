@@ -15,9 +15,11 @@ namespace CalamityAnomalies;
 
 public static class CAExtensions
 {
-    extension(Player player)
+    extension(Item item)
     {
-        public CAPlayer Anomaly() => player.GetModPlayer<CAPlayer>();
+        public CAGlobalItem Anomaly() => item.GetGlobalItem<CAGlobalItem>();
+
+        public bool TryGetOverride(out CAItemOverride itemOverride, [CallerMemberName] string methodName = null!) => CAOverrideHelper.ItemOverrides.TryGetOverride(item, methodName, out itemOverride);
     }
 
     extension(NPC npc)
@@ -63,17 +65,15 @@ public static class CAExtensions
         public int GetProjectileDamage<T>() where T : ModProjectile => npc.GetProjectileDamage(ModContent.ProjectileType<T>());
     }
 
+    extension(Player player)
+    {
+        public CAPlayer Anomaly() => player.GetModPlayer<CAPlayer>();
+    }
+
     extension(Projectile projectile)
     {
         public CAGlobalProjectile Anomaly() => projectile.GetGlobalProjectile<CAGlobalProjectile>();
 
         public bool TryGetOverride(out CAProjectileOverride projectileOverride, [CallerMemberName] string methodName = null!) => CAOverrideHelper.ProjectileOverrides.TryGetOverride(projectile, methodName, out projectileOverride);
-    }
-
-    extension(Item item)
-    {
-        public CAGlobalItem Anomaly() => item.GetGlobalItem<CAGlobalItem>();
-
-        public bool TryGetOverride(out CAItemOverride itemOverride, [CallerMemberName] string methodName = null!) => CAOverrideHelper.ItemOverrides.TryGetOverride(item, methodName, out itemOverride);
     }
 }

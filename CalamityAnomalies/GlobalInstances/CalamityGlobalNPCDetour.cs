@@ -158,6 +158,7 @@ public class CalamityGlobalNPCDetour : GlobalNPCDetour<CalamityGlobalNPC>
 
         orig(self, npc);
 
+        [NotDetourMethod]
         static void Adjust(NPC npc, bool shouldAdjustStatScaling)
         {
             npc.ApplyCalamityBossHealthBoost();

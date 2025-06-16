@@ -113,7 +113,7 @@ public readonly struct TerrariaTime : IEquatable<TerrariaTime>
     public static TerrariaTime RealTime => new(DateTime.Now);
 }
 
-public struct TerrariaTimer : IEquatable<TerrariaTimer>
+public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTimer>
 {
     public int TotalTicks
     {
@@ -200,6 +200,8 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>
     public override readonly bool Equals(object obj) => obj is TerrariaTimer other && Equals(other);
 
     public readonly bool Equals(TerrariaTimer other) => TotalTicks == other.TotalTicks;
+
+    public readonly int CompareTo(TerrariaTimer other) => TotalTicks.CompareTo(other.TotalTicks);
 
     public static bool operator ==(TerrariaTimer left, TerrariaTimer right) => left.Equals(right);
 

@@ -109,6 +109,9 @@ public class DetourMethodToAttribute : Attribute
 }
 
 [AttributeUsage(AttributeTargets.Method)]
+public class NotDetourMethodAttribute : Attribute { }
+
+[AttributeUsage(AttributeTargets.Method)]
 public class DetourMethodToAttribute<T> : DetourMethodToAttribute
 {
     public DetourMethodToAttribute() : base(typeof(T)) { }
@@ -172,20 +175,16 @@ public static class TODetourUtils
 {
     public static void ModifyMethodWithDetour(MethodBase target, MethodInfo detour)
     {
-        if (target is null || detour is null)
-        {
-            return;
-        }
+        ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(detour);
         DetourConfig detourConfig = detour.GetAttribute<CustomDetourConfigAttribute>()?.DetourConfig;
         TODetourHelper.Detours.Add(detourConfig is not null ? new(target, detour, detourConfig, true) : new(target, detour, true));
     }
 
     public static void ModifyMethodWithDetour(MethodBase target, Delegate detour)
     {
-        if (target is null || detour is null)
-        {
-            return;
-        }
+        ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(detour);
         DetourConfig detourConfig = detour.Method.GetAttribute<CustomDetourConfigAttribute>()?.DetourConfig;
         TODetourHelper.Detours.Add(detourConfig is not null ? new(target, detour, detourConfig, true) : new(target, detour, true));
     }
@@ -199,13 +198,13 @@ public static class TODetourUtils
     public static void ModifyMethodWithDetour<T>(string methodName, Delegate detour) => ModifyMethodWithDetour(typeof(T), methodName, detour);
 
     private const string DefaultPrefix = "Detour_";
-    [StringSyntax(StringSyntaxAttribute.Regex)]
-    private const string Pattern = @"(?<methodName>.*)$";
-    [StringSyntax(StringSyntaxAttribute.Regex)]
-    private const string Pattern2 = @"(?<typeName>[^_]+)_(?<methodName>.*)$";
+    [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern = @"(?<methodName>.*)$";
+    [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern2 = @"(?<typeName>[^_]+)_(?<methodName>.*)$";
 
     public static void ApplyStaticMethodDetour(MethodInfo detour, Type targetType)
     {
+        if (detour.HasAttribute<NotDetourMethodAttribute>())
+            return;
         string prefix = detour.GetAttribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
         Match match = Regex.Match(detour.Name, prefix + Pattern);
         if (match.Success)
@@ -214,6 +213,8 @@ public static class TODetourUtils
 
     public static void ApplyTypedStaticMethodDetour(MethodInfo detour, Type[] targetTypes)
     {
+        if (detour.HasAttribute<NotDetourMethodAttribute>())
+            return;
         string prefix = detour.GetAttribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
         Match match = Regex.Match(detour.Name, prefix + Pattern2);
         if (match.Success)

@@ -368,14 +368,6 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
 
     public override bool AutoApplyStaticDetours => false;
 
-    /// <summary>
-    /// 灾厄Boss血条总控绘制钩子。
-    /// </summary>
-    /// <param name="orig"></param>
-    /// <param name="self"></param>
-    /// <param name="spriteBatch"></param>
-    /// <param name="currentBar"></param>
-    /// <param name="info"></param>
     public override void Detour_Draw(Orig_Draw orig, BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info)
     {
         int x = Main.screenWidth
@@ -399,14 +391,6 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
         }
     }
 
-    /// <summary>
-    /// 灾厄Boss血条总控更新钩子。
-    /// <br/>修复了“卡血条”问题。
-    /// </summary>
-    /// <param name="orig"></param>
-    /// <param name="self"></param>
-    /// <param name="currentBar"></param>
-    /// <param name="info"></param>
     public override void Detour_Update(Orig_Update orig, BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info)
     {
         List<ulong> validIdentifiers = [];
@@ -415,14 +399,14 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
         {
             ulong fromNPC = npc.Ocean().Identifier;
             string overridingName = null;
-            if (npc.type == ModContent.NPCType<Apollo>())
-                overridingName = CalamityUtils.GetTextValue("UI.ExoTwinsName" + (npc.ModNPC<Apollo>().exoMechdusa ? "Hekate" : "Normal"));
+            if (npc.ModNPC is Apollo apollo)
+                overridingName = CalamityUtils.GetTextValue("UI.ExoTwinsName" + (apollo.exoMechdusa ? "Hekate" : "Normal"));
 
             if (_trackingBars.ContainsKey(fromNPC) && npc.active)
                 validIdentifiers.Add(fromNPC);
             else if (_trackingBars.Values.Count < MaxBars
                 && npc.IsABoss()
-                && !(npc.type is NPCID.EaterofWorldsBody or NPCID.EaterofWorldsTail || npc.type == ModContent.NPCType<Artemis>())
+                && !(npc.type is NPCID.EaterofWorldsBody or NPCID.EaterofWorldsTail || npc.ModNPC is Artemis)
                 || MinibossHPBarList.Contains(npc.type) || npc.Calamity().CanHaveBossHealthBar)
             {
                 _trackingBars.Add(fromNPC, new(npc.whoAmI, overridingName));
