@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections;
+using System.ComponentModel;
 using MonoMod.RuntimeDetour;
 
 namespace Transoceanic.IL;
@@ -137,7 +138,64 @@ public interface ITODetourProvider
 
 public class TODetourHelper : ITOLoader
 {
-    internal static List<Hook> Detours { get; } = [];
+    public class DetourContainer : IEnumerable<Hook>
+    {
+        private readonly Dictionary<Type, Dictionary<MethodBase, List<Hook>>> _data = [];
+
+        public void Add(Hook hook)
+        {
+            ArgumentNullException.ThrowIfNull(hook);
+            Type targetType = hook.Source.DeclaringType;
+            if (!_data.TryGetValue(targetType, out Dictionary<MethodBase, List<Hook>> methodHooks))
+                _data[targetType] = methodHooks = [];
+            if (!methodHooks.TryGetValue(hook.Source, out List<Hook> hooks))
+                methodHooks[hook.Source] = hooks = [];
+            hooks.Add(hook);
+        }
+
+        public void Clear()
+        {
+            foreach (Dictionary<MethodBase, List<Hook>> methodHooks in _data.Values)
+            {
+                foreach (List<Hook> hooks in methodHooks.Values)
+                {
+                    foreach (Hook hook in hooks)
+                        hook.Undo();
+                    hooks.Clear();
+                }
+                methodHooks.Clear();
+            }
+            _data.Clear();
+        }
+
+        public bool TryGetHooks(MethodBase targetMethod, out List<Hook> hooks)
+        {
+            ArgumentNullException.ThrowIfNull(targetMethod);
+            foreach (Dictionary<MethodBase, List<Hook>> methodHooks in _data.Values)
+            {
+                if (methodHooks.TryGetValue(targetMethod, out hooks) && hooks.Count > 0)
+                    return true;
+            }
+            hooks = null;
+            return false;
+        }
+
+        public IEnumerator<Hook> GetEnumerator()
+        {
+            foreach (Dictionary<MethodBase, List<Hook>> methodHooks in _data.Values)
+            {
+                foreach (List<Hook> hooks in methodHooks.Values)
+                {
+                    foreach (Hook hook in hooks)
+                        yield return hook;
+                }
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    internal static DetourContainer Detours { get; } = [];
 
     void ITOLoader.PostSetupContent()
     {
@@ -163,12 +221,7 @@ public class TODetourHelper : ITOLoader
         foreach (ITODetourProvider detourProvider in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITODetourProvider>().OrderByDescending(k => k.LoadPriority))
             detourProvider.ApplyDetour();
     }
-    void ITOLoader.OnModUnload()
-    {
-        foreach (Hook hook in Detours)
-            hook.Undo();
-        Detours.Clear();
-    }
+    void ITOLoader.OnModUnload() => Detours.Clear();
 }
 
 public static class TODetourUtils

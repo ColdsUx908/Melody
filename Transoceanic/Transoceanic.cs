@@ -141,9 +141,13 @@ public static class TOMain
 
     public static Type Type_Main { get; } = typeof(Main);
 
-    public static GameModeData GameModeData => (GameModeData)Type_Main.GetField("_currentGameModeInfo", TOReflectionUtils.UniversalBindingFlags).GetValue(null);
+    public static Assembly TerrariaAssembly { get; } = Type_Main.Assembly;
 
-    public static TOIterator<Projectile> ActiveProjectiles => TOIteratorFactory.NewActiveProjectileIterator();
+    public static Type[] TerrariaTypes { get; } = TerrariaAssembly.GetTypes();
+
+    public static FieldInfo Main__currentGameModInfo { get; } = Type_Main.GetField("_currentGameModeInfo", TOReflectionUtils.UniversalBindingFlags);
+
+    public static GameModeData GameModeData => (GameModeData)Main__currentGameModInfo.GetValue(null);
 
     public static bool MasterMode => TrueMasterMode || JourneyMasterMode;
 
@@ -245,7 +249,9 @@ public static class TOMain
             GameTimer = 0;
         }
     }
+    #endregion ShouldUpdate
 
+    #region ShouldLoad
     public class Load : ITOLoader
     {
         void ITOLoader.Load()
@@ -265,5 +271,5 @@ public static class TOMain
             BossActive = false;
         }
     }
-    #endregion ShouldUpdate
+    #endregion ShouldLoad
 }

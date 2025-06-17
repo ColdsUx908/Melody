@@ -667,6 +667,8 @@ public static class TOExtensions
 
     extension(Projectile)
     {
+        public static TOIterator<Projectile> ActiveProjectiles => TOIteratorFactory.NewActiveProjectileIterator();
+
         /// <summary>
         /// 生成一个新的Projectile，并在生成后执行一个Action。
         /// </summary>
