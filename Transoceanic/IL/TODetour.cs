@@ -125,7 +125,7 @@ public interface ITODetourProvider
 {
     /// <summary>
     /// 应用Detour逻辑。
-    /// <br/>使用 <see cref="TODetourUtils.ModifyMethodWithDetour(MethodBase, Delegate)"/> 或 <see cref="TODetourUtils.ModifyMethodWithDetour(MethodBase, MethodInfo)"/> 来实现Detour逻辑，
+    /// <br/>使用 <see cref="TODetourUtils.Modify{TDelegate}(MethodBase, TDelegate)"/> 或 <see cref="TODetourUtils.Modify(MethodBase, MethodInfo)"/> 来实现Detour逻辑，
     /// <br/>以便在 <see cref="TODetourHelper.Detours"/> 中注册Detour，并自动加载和卸载。
     /// </summary>
     public abstract void ApplyDetour();
@@ -138,7 +138,7 @@ public interface ITODetourProvider
 
 public class TODetourHelper : ITOLoader
 {
-    public class DetourContainer : IEnumerable<Hook>
+    public class DetourSet : IEnumerable<Hook>
     {
         private readonly Dictionary<Type, Dictionary<MethodBase, List<Hook>>> _data = [];
 
@@ -151,6 +151,20 @@ public class TODetourHelper : ITOLoader
             if (!methodHooks.TryGetValue(hook.Source, out List<Hook> hooks))
                 methodHooks[hook.Source] = hooks = [];
             hooks.Add(hook);
+        }
+
+        public bool RemoveFirst(Hook hook)
+        {
+            ArgumentNullException.ThrowIfNull(hook);
+            Type targetType = hook.Source.DeclaringType;
+            if (!_data.TryGetValue(targetType, out Dictionary<MethodBase, List<Hook>> methodHooks))
+                return false;
+            foreach (List<Hook> hooks in methodHooks.Values)
+            {
+                if (hooks.Remove(hook))
+                    return true;
+            }
+            return false;
         }
 
         public void Clear()
@@ -195,7 +209,7 @@ public class TODetourHelper : ITOLoader
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-    internal static DetourContainer Detours { get; } = [];
+    internal static DetourSet Detours { get; } = [];
 
     void ITOLoader.PostSetupContent()
     {
@@ -226,55 +240,61 @@ public class TODetourHelper : ITOLoader
 
 public static class TODetourUtils
 {
-    public static void ModifyMethodWithDetour(MethodBase target, MethodInfo detour)
+    public static Hook Modify(MethodBase target, MethodInfo detour)
     {
         ArgumentNullException.ThrowIfNull(target);
         ArgumentNullException.ThrowIfNull(detour);
         DetourConfig detourConfig = detour.GetAttribute<CustomDetourConfigAttribute>()?.DetourConfig;
-        TODetourHelper.Detours.Add(detourConfig is not null ? new(target, detour, detourConfig, true) : new(target, detour, true));
+        Hook hook = detourConfig is not null ? new(target, detour, detourConfig, true) : new(target, detour, true);
+        TODetourHelper.Detours.Add(hook);
+        return hook;
     }
 
-    public static void ModifyMethodWithDetour(MethodBase target, Delegate detour)
+    public static Hook Modify<TDelegate>(MethodBase target, TDelegate detour) where TDelegate : Delegate
     {
         ArgumentNullException.ThrowIfNull(target);
         ArgumentNullException.ThrowIfNull(detour);
         DetourConfig detourConfig = detour.Method.GetAttribute<CustomDetourConfigAttribute>()?.DetourConfig;
-        TODetourHelper.Detours.Add(detourConfig is not null ? new(target, detour, detourConfig, true) : new(target, detour, true));
+        Hook hook = detourConfig is not null ? new(target, detour, detourConfig, true) : new(target, detour, true);
+        TODetourHelper.Detours.Add(hook);
+        return hook;
     }
 
-    public static void ModifyMethodWithDetour(Type targetType, string methodName, MethodInfo detour) => ModifyMethodWithDetour(targetType.GetMethod(methodName, TOReflectionUtils.UniversalBindingFlags), detour);
+    public static Hook Modify(Type targetType, string methodName, MethodInfo detour) => Modify(targetType.GetMethod(methodName, TOReflectionUtils.UniversalBindingFlags), detour);
 
-    public static void ModifyMethodWithDetour(Type targetType, string methodName, Delegate detour) => ModifyMethodWithDetour(targetType.GetMethod(methodName, TOReflectionUtils.UniversalBindingFlags), detour);
+    public static Hook Modify<TDelegate>(Type targetType, string methodName, TDelegate detour) where TDelegate : Delegate => Modify(targetType.GetMethod(methodName, TOReflectionUtils.UniversalBindingFlags), detour);
 
-    public static void ModifyMethodWithDetour<T>(string methodName, MethodInfo detour) => ModifyMethodWithDetour(typeof(T), methodName, detour);
+    public static Hook Modify<T>(string methodName, MethodInfo detour) => Modify(typeof(T), methodName, detour);
 
-    public static void ModifyMethodWithDetour<T>(string methodName, Delegate detour) => ModifyMethodWithDetour(typeof(T), methodName, detour);
+    public static Hook Modify<T, TDelegate>(string methodName, TDelegate detour) where TDelegate : Delegate => Modify(typeof(T), methodName, detour);
 
     private const string DefaultPrefix = "Detour_";
     [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern = @"(?<methodName>.*)$";
     [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern2 = @"(?<typeName>[^_]+)_(?<methodName>.*)$";
 
-    public static void ApplyStaticMethodDetour(MethodInfo detour, Type targetType)
+    public static Hook ApplyStaticMethodDetour(MethodInfo detour, Type targetType)
     {
         if (detour.HasAttribute<NotDetourMethodAttribute>())
-            return;
+            return null;
         string prefix = detour.GetAttribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
         Match match = Regex.Match(detour.Name, prefix + Pattern);
         if (match.Success)
-            ModifyMethodWithDetour(detour.GetAttribute<CustomDetourTargetAttribute>()?.TargetMethod ?? targetType.GetMethod(match.Groups["methodName"].Value, TOReflectionUtils.UniversalBindingFlags), detour);
+            return Modify(detour.GetAttribute<CustomDetourTargetAttribute>()?.TargetMethod ?? targetType.GetMethod(match.Groups["methodName"].Value, TOReflectionUtils.UniversalBindingFlags), detour);
+        return null;
     }
 
-    public static void ApplyTypedStaticMethodDetour(MethodInfo detour, Type[] targetTypes)
+    public static Hook ApplyTypedStaticMethodDetour(MethodInfo detour, Type[] targetTypes)
     {
         if (detour.HasAttribute<NotDetourMethodAttribute>())
-            return;
+            return null;
         string prefix = detour.GetAttribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
         Match match = Regex.Match(detour.Name, prefix + Pattern2);
         if (match.Success)
         {
             Type targetType = targetTypes.AsValueEnumerable().FirstOrDefault(k => k.Name == match.Groups["typeName"].Value);
             if (targetType is not null)
-                ModifyMethodWithDetour(detour.GetAttribute<CustomDetourTargetAttribute>()?.TargetMethod ?? targetType.GetMethod(match.Groups["methodName"].Value, TOReflectionUtils.UniversalBindingFlags), detour);
+                return Modify(detour.GetAttribute<CustomDetourTargetAttribute>()?.TargetMethod ?? targetType.GetMethod(match.Groups["methodName"].Value, TOReflectionUtils.UniversalBindingFlags), detour);
         }
+        return null;
     }
 }

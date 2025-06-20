@@ -19,14 +19,14 @@ public static class CAExtensions
     {
         public CAGlobalItem Anomaly() => item.GetGlobalItem<CAGlobalItem>();
 
-        public bool TryGetOverride(out CAItemOverride itemOverride, [CallerMemberName] string methodName = null!) => CAOverrideHelper.ItemOverrides.TryGetOverride(item, methodName, out itemOverride);
+        public bool TryGetOverride(out CAItemBehavior itemOverride, [CallerMemberName] string methodName = null!) => CABehaviorHelper.ItemBehaviors.TryGetBehavior(item, methodName, out itemOverride);
     }
 
     extension(NPC npc)
     {
         public CAGlobalNPC Anomaly() => npc.GetGlobalNPC<CAGlobalNPC>();
 
-        public bool TryGetOverride(out CANPCOverride npcOverride, [CallerMemberName] string methodName = null!) => CAOverrideHelper.NPCOverrides.TryGetOverride(npc, methodName, out npcOverride);
+        public bool TryGetOverride(out CANPCBehavior npcOverride, [CallerMemberName] string methodName = null!) => CABehaviorHelper.NPCBehaviors.TryGetBehavior(npc, methodName, out npcOverride);
 
         public bool DesertScourge => npc.ModNPC is DesertScourgeHead or DesertScourgeBody or DesertScourgeTail;
 
@@ -68,12 +68,14 @@ public static class CAExtensions
     extension(Player player)
     {
         public CAPlayer Anomaly() => player.GetModPlayer<CAPlayer>();
+
+        public NewCalamityPlayer NewCalamity() => player.GetModPlayer<NewCalamityPlayer>();
     }
 
     extension(Projectile projectile)
     {
         public CAGlobalProjectile Anomaly() => projectile.GetGlobalProjectile<CAGlobalProjectile>();
 
-        public bool TryGetOverride(out CAProjectileOverride projectileOverride, [CallerMemberName] string methodName = null!) => CAOverrideHelper.ProjectileOverrides.TryGetOverride(projectile, methodName, out projectileOverride);
+        public bool TryGetOverride(out CAProjectileBehavior projectileOverride, [CallerMemberName] string methodName = null!) => CABehaviorHelper.ProjectileBehaviors.TryGetBehavior(projectile, methodName, out projectileOverride);
     }
 }

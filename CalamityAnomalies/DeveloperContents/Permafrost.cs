@@ -12,7 +12,7 @@ using static CalamityMod.Projectiles.Boss.SCalRitualDrama;
 
 namespace CalamityAnomalies.DeveloperContents;
 
-public class Permafrost : CANPCOverride<SupremeCalamitas>
+public class Permafrost : CANPCBehavior<SupremeCalamitas>
 {
     #region 枚举、数值、属性、AI状态
     public enum AttackType
@@ -427,7 +427,7 @@ public class Permafrost : CANPCOverride<SupremeCalamitas>
     #endregion Draw
 }
 
-public class PermafrostRitualDrama : CAProjectileOverride<SCalRitualDrama>
+public class PermafrostRitualDrama : CAProjectileBehavior<SCalRitualDrama>
 {
     private const string localizationPrefix = CAMain.ModLocalizationPrefix + "DeveloperContents.Permafrost.";
 

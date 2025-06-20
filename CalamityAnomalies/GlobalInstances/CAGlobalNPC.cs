@@ -136,35 +136,33 @@ public class CAGlobalNPC : GlobalNPC
     #region Defaults
     public override void SetStaticDefaults()
     {
-        foreach (CANPCOverride npcOverride in CAOverrideHelper.NPCOverrides.Values)
+        foreach (CANPCBehavior npcOverride in CABehaviorHelper.NPCBehaviors)
             npcOverride.SetStaticDefaults();
     }
 
     public override void SetDefaults(NPC npc)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.SetDefaults();
     }
 
     public override void SetDefaultsFromNetId(NPC npc)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.SetDefaultsFromNetId();
     }
     #endregion Defaults
 
-    #region Active
+    #region Lifetime
     public override void OnSpawn(NPC npc, IEntitySource source)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
-        {
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.OnSpawn(source);
-        }
     }
 
     public override bool CheckActive(NPC npc)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
         {
             if (!npcOverride.CheckActive())
                 return false;
@@ -175,7 +173,7 @@ public class CAGlobalNPC : GlobalNPC
 
     public override bool CheckDead(NPC npc)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
         {
             if (!npcOverride.CheckDead())
                 return false;
@@ -186,7 +184,7 @@ public class CAGlobalNPC : GlobalNPC
 
     public override bool SpecialOnKill(NPC npc)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
         {
             if (npcOverride.SpecialOnKill())
                 return true;
@@ -197,7 +195,7 @@ public class CAGlobalNPC : GlobalNPC
 
     public override bool PreKill(NPC npc)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
         {
             if (!npcOverride.PreKill())
                 return false;
@@ -208,10 +206,8 @@ public class CAGlobalNPC : GlobalNPC
 
     public override void OnKill(NPC npc)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
-        {
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.OnKill();
-        }
 
         if (npc.ModNPC is EidolonWyrmHead && !DownedBossSystem.downedPrimordialWyrm)
             DownedBossSystem.downedPrimordialWyrm = true;
@@ -221,7 +217,7 @@ public class CAGlobalNPC : GlobalNPC
             player.Anomaly().DownedBossCalamity.BossesOnKill(npc);
         }
     }
-    #endregion Active
+    #endregion Lifetime
 
     #region AI
     public override bool PreAI(NPC npc)
@@ -230,7 +226,7 @@ public class CAGlobalNPC : GlobalNPC
 
         CalamityGlobalNPC calamityNPC = npc.Calamity();
 
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
         {
             //禁用灾厄动态伤害减免。
             if (calamityNPC.KillTime >= 1 && calamityNPC.AITimer < calamityNPC.KillTime)
@@ -279,13 +275,13 @@ public class CAGlobalNPC : GlobalNPC
 
     public override void AI(NPC npc)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.AI();
     }
 
     public override void PostAI(NPC npc)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.PostAI();
     }
     #endregion AI
@@ -293,7 +289,7 @@ public class CAGlobalNPC : GlobalNPC
     #region Draw
     public override void FindFrame(NPC npc, int frameHeight)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.FindFrame(frameHeight);
     }
 
@@ -302,7 +298,7 @@ public class CAGlobalNPC : GlobalNPC
         if (Main.LocalPlayer.Calamity().trippy && !NeverTrippy)
             return TOMain.DiscoColor;
 
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
         {
             Color? result = npcOverride.GetAlpha(drawColor);
             if (result is not null)
@@ -314,7 +310,7 @@ public class CAGlobalNPC : GlobalNPC
 
     public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
         {
             if (!npcOverride.PreDraw(spriteBatch, screenPos, drawColor))
                 return false;
@@ -325,31 +321,31 @@ public class CAGlobalNPC : GlobalNPC
 
     public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.PostDraw(spriteBatch, screenPos, drawColor);
     }
 
     public override void DrawBehind(NPC npc, int index)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.DrawBehind(index);
     }
 
     public override void BossHeadSlot(NPC npc, ref int index)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.BossHeadSlot(ref index);
     }
 
     public override void BossHeadRotation(NPC npc, ref float rotation)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.BossHeadRotation(ref rotation);
     }
 
     public override void BossHeadSpriteEffects(NPC npc, ref SpriteEffects spriteEffects)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.BossHeadSpriteEffects(ref spriteEffects);
     }
     #endregion Draw
@@ -361,13 +357,13 @@ public class CAGlobalNPC : GlobalNPC
 
     public override void HitEffect(NPC npc, NPC.HitInfo hit)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.HitEffect(hit);
     }
 
     public override bool? CanBeHitByItem(NPC npc, Player player, Item item)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
         {
             bool? result = npcOverride.CanBeHitByItem(player, item);
             if (result is not null)
@@ -379,7 +375,7 @@ public class CAGlobalNPC : GlobalNPC
 
     public override bool? CanCollideWithPlayerMeleeAttack(NPC npc, Player player, Item item, Rectangle meleeAttackHitbox)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
         {
             bool? result = npcOverride.CanCollideWithPlayerMeleeAttack(player, item, meleeAttackHitbox);
             if (result is not null)
@@ -395,26 +391,26 @@ public class CAGlobalNPC : GlobalNPC
         StatModifier baseDRModifier = new();
         StatModifier standardDRModifier = new();
         StatModifier timedDRModifier = new();
-        if (item.TryGetOverride(out CAItemOverride itemOverride, "ModifyHitNPC_DR"))
+        if (item.TryGetOverride(out CAItemBehavior itemOverride, "ModifyHitNPC_DR"))
             itemOverride.ModifyHitNPC_DR(npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         baseDR = baseDRModifier.ApplyTo(baseDR);
         float standardDR = standardDRModifier.ApplyTo(baseDR);
         float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR));
         modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR, 0f, 1f);
 
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.ModifyHitByItem(player, item, ref modifiers);
     }
 
     public override void OnHitByItem(NPC npc, Player player, Item item, NPC.HitInfo hit, int damageDone)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.OnHitByItem(player, item, hit, damageDone);
     }
 
     public override bool? CanBeHitByProjectile(NPC npc, Projectile projectile)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
         {
             bool? result = npcOverride.CanBeHitByProjectile(projectile);
             if (result is not null)
@@ -430,26 +426,26 @@ public class CAGlobalNPC : GlobalNPC
         StatModifier baseDRModifier = new();
         StatModifier standardDRModifier = new();
         StatModifier timedDRModifier = new();
-        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride, "ModifyHitNPC_DR"))
+        if (projectile.TryGetOverride(out CAProjectileBehavior projectileOverride, "ModifyHitNPC_DR"))
             projectileOverride.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         baseDR = baseDRModifier.ApplyTo(baseDR);
         float standardDR = standardDRModifier.ApplyTo(baseDR);
         float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR));
         modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR, 0f, 1f);
 
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.ModifyHitByProjectile(projectile, ref modifiers);
     }
 
     public override void OnHitByProjectile(NPC npc, Projectile projectile, NPC.HitInfo hit, int damageDone)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.OnHitByProjectile(projectile, hit, damageDone);
     }
 
     public override bool CanBeHitByNPC(NPC npc, NPC attacker)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
         {
             if (!npcOverride.CanBeHitByNPC(attacker))
                 return false;
@@ -460,13 +456,13 @@ public class CAGlobalNPC : GlobalNPC
 
     public override void ModifyIncomingHit(NPC npc, ref NPC.HitModifiers modifiers)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.ModifyIncomingHit(ref modifiers);
     }
 
     public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
         {
             if (!npcOverride.CanHitPlayer(target, ref cooldownSlot))
                 return false;
@@ -477,19 +473,19 @@ public class CAGlobalNPC : GlobalNPC
 
     public override void ModifyHitPlayer(NPC npc, Player target, ref Player.HurtModifiers modifiers)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.ModifyHitPlayer(target, ref modifiers);
     }
 
     public override void OnHitPlayer(NPC npc, Player target, Player.HurtInfo hurtInfo)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.OnHitPlayer(target, hurtInfo);
     }
 
     public override bool CanHitNPC(NPC npc, NPC target)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
         {
             if (!npcOverride.CanHitNPC(target))
                 return false;
@@ -500,19 +496,19 @@ public class CAGlobalNPC : GlobalNPC
 
     public override void ModifyHitNPC(NPC npc, NPC target, ref NPC.HitModifiers modifiers)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.ModifyHitNPC(target, ref modifiers);
     }
 
     public override void OnHitNPC(NPC npc, NPC target, NPC.HitInfo hit)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
             npcOverride.OnHitNPC(target, hit);
     }
 
     public override bool ModifyCollisionData(NPC npc, Rectangle victimHitbox, ref int immunityCooldownSlot, ref MultipliableFloat damageMultiplier, ref Rectangle npcHitbox)
     {
-        if (npc.TryGetOverride(out CANPCOverride npcOverride))
+        if (npc.TryGetOverride(out CANPCBehavior npcOverride))
         {
             if (!npcOverride.ModifyCollisionData(victimHitbox, ref immunityCooldownSlot, ref damageMultiplier, ref npcHitbox))
                 return false;

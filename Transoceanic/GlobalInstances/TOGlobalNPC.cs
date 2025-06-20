@@ -9,14 +9,14 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     /// 标识符分配器。
     /// <br/>进入世界时重置为0。
     /// </summary>
-    private static ulong _identifierAllocator;
+    private static long _identifierAllocator;
 
     /// <summary>
     /// NPC的标识符。
     /// <br/>若NPC在进入世界后生成，则标识符为正数。
     /// <br/>不同步。
     /// </summary>
-    public ulong Identifier { get; private set; } = 0;
+    public long Identifier { get; private set; } = -1;
 
     public void AllocateIdentifier() => Identifier = ++_identifierAllocator;
 
@@ -296,12 +296,12 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     #region Load
     void ITOLoader.Load()
     {
-        _identifierAllocator = 0ul;
+        _identifierAllocator = 0;
     }
 
     void ITOLoader.UnLoad()
     {
-        _identifierAllocator = 0ul;
+        _identifierAllocator = 0;
     }
     #endregion Load
 }

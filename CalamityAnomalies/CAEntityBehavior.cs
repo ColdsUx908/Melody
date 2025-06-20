@@ -2,7 +2,25 @@
 
 namespace CalamityAnomalies;
 
-#region Override
+#region Player
+public abstract class CAPlayerBehavior : PlayerBehavior
+{
+    public CAPlayer AnomalyPlayer { get; private set; } = null;
+
+    public CalamityPlayer CalamityPlayer { get; private set; } = null;
+
+    public NewCalamityPlayer NewCalamityPlayer { get; private set; } = null;
+
+    public override void Connect(Player player)
+    {
+        base.Connect(player);
+        AnomalyPlayer = player.Anomaly();
+        CalamityPlayer = player.Calamity();
+        NewCalamityPlayer = player.NewCalamity();
+    }
+}
+#endregion
+
 #region NPC
 public enum OrigMethodType_CalamityGlobalNPC
 {
@@ -11,7 +29,7 @@ public enum OrigMethodType_CalamityGlobalNPC
     PreDraw,
 }
 
-public abstract class CANPCOverride : NPCOverride
+public abstract class CANPCBehavior : NPCBehavior
 {
     public CAGlobalNPC AnomalyNPC { get; private set; } = null;
 
@@ -22,13 +40,6 @@ public abstract class CANPCOverride : NPCOverride
         base.Connect(npc);
         AnomalyNPC = npc.Anomaly();
         CalamityNPC = npc.Calamity();
-    }
-
-    public override void Disconnect()
-    {
-        base.Disconnect();
-        AnomalyNPC = null;
-        CalamityNPC = null;
     }
 
     /// <summary>
@@ -70,49 +81,43 @@ public abstract class CANPCOverride : NPCOverride
     public virtual void ModifyCalBossBarHeight(BetterBossHealthBar.BetterBossHPUI newBar, ref int height) { }
 }
 
-public abstract class CANPCOverride<T> : CANPCOverride where T : ModNPC
+public abstract class CANPCBehavior<T> : CANPCBehavior where T : ModNPC
 {
     public static Type Type { get; } = typeof(T);
 
     public T ModNPC { get; private set; } = null;
 
-    public override int OverrideType => ModContent.NPCType<T>();
+    public override int ApplyingType => ModContent.NPCType<T>();
 
     public override void Connect(NPC npc)
     {
         base.Connect(npc);
         ModNPC = npc.GetModNPC<T>();
     }
-
-    public override void Disconnect()
-    {
-        base.Disconnect();
-        ModNPC = null;
-    }
 }
 
-public abstract class AnomalyNPCOverride : CANPCOverride
+public abstract class AnomalyNPCBehavior : CANPCBehavior
 {
     public override decimal Priority => 10m;
 
     public override bool ShouldProcess => CAWorld.Anomaly;
 }
 
-public abstract class AnomalyNPCOverride<T> : CANPCOverride<T> where T : ModNPC
+public abstract class AnomalyNPCBehavior<T> : CANPCBehavior<T> where T : ModNPC
 {
     public override decimal Priority => 10m;
 
     public override bool ShouldProcess => CAWorld.Anomaly;
 }
 
-public abstract class CANPCTweak : CANPCOverride
+public abstract class CANPCTweak : CANPCBehavior
 {
     public override decimal Priority => 5m;
 
     public override bool ShouldProcess => CAMain.Tweak;
 }
 
-public abstract class CANPCTweak<T> : CANPCOverride<T> where T : ModNPC
+public abstract class CANPCTweak<T> : CANPCBehavior<T> where T : ModNPC
 {
     public override decimal Priority => 5m;
 
@@ -128,7 +133,7 @@ public enum OrigMethodType_CalamityGlobalProjectile
     PreDraw,
 }
 
-public abstract class CAProjectileOverride : ProjectileOverride
+public abstract class CAProjectileBehavior : ProjectileBehavior
 {
     public CAGlobalProjectile AnomalyProjectile { get; private set; } = null;
 
@@ -156,49 +161,43 @@ public abstract class CAProjectileOverride : ProjectileOverride
     { }
 }
 
-public abstract class CAProjectileOverride<T> : CAProjectileOverride where T : ModProjectile
+public abstract class CAProjectileBehavior<T> : CAProjectileBehavior where T : ModProjectile
 {
     public static Type Type { get; } = typeof(T);
 
     public T ModProjectile { get; private set; } = null;
 
-    public override int OverrideType => ModContent.ProjectileType<T>();
+    public override int ApplyingType => ModContent.ProjectileType<T>();
 
     public override void Connect(Projectile projectile)
     {
         base.Connect(projectile);
         ModProjectile = projectile.GetModProjectile<T>();
     }
-
-    public override void Disconnect()
-    {
-        base.Disconnect();
-        ModProjectile = null;
-    }
 }
 
-public abstract class AnomalyProjectileOverride : CAProjectileOverride
+public abstract class AnomalyProjectileBehavior : CAProjectileBehavior
 {
     public override decimal Priority => 10m;
 
     public override bool ShouldProcess => CAWorld.Anomaly;
 }
 
-public abstract class AnomalyProjecileOverride<T> : CAProjectileOverride<T> where T : ModProjectile
+public abstract class AnomalyProjecileBehavior<T> : CAProjectileBehavior<T> where T : ModProjectile
 {
     public override decimal Priority => 10m;
 
     public override bool ShouldProcess => CAWorld.Anomaly;
 }
 
-public abstract class CAProjectileTweak : CAProjectileOverride
+public abstract class CAProjectileTweak : CAProjectileBehavior
 {
     public override decimal Priority => 5m;
 
     public override bool ShouldProcess => CAMain.Tweak;
 }
 
-public abstract class CAProjectileTweak<T> : CAProjectileOverride<T> where T : ModProjectile
+public abstract class CAProjectileTweak<T> : CAProjectileBehavior<T> where T : ModProjectile
 {
     public override decimal Priority => 5m;
 
@@ -207,7 +206,7 @@ public abstract class CAProjectileTweak<T> : CAProjectileOverride<T> where T : M
 #endregion Projectile
 
 #region Item
-public abstract class CAItemOverride : ItemOverride
+public abstract class CAItemBehavior : ItemBehavior
 {
     public CAGlobalItem AnomalyItem { get; private set; } = null;
 
@@ -220,13 +219,6 @@ public abstract class CAItemOverride : ItemOverride
         CalamityItem = item.Calamity();
     }
 
-    public override void Disconnect()
-    {
-        base.Disconnect();
-        AnomalyItem = null;
-        CalamityItem = null;
-    }
-
     /// <summary>
     /// 编辑受击NPC的DR。
     /// </summary>
@@ -236,35 +228,29 @@ public abstract class CAItemOverride : ItemOverride
     { }
 }
 
-public abstract class CAItemOverride<T> : CAItemOverride where T : ModItem
+public abstract class CAItemBehavior<T> : CAItemBehavior where T : ModItem
 {
     public static Type Type { get; } = typeof(T);
 
     public T ModItem { get; private set; } = null;
 
-    public override int OverrideType => ModContent.ItemType<T>();
+    public override int ApplyingType => ModContent.ItemType<T>();
 
     public override void Connect(Item item)
     {
         base.Connect(item);
         ModItem = item.GetModItem<T>();
     }
-
-    public override void Disconnect()
-    {
-        base.Disconnect();
-        ModItem = null;
-    }
 }
 
-public abstract class CAItemTweak : CAItemOverride
+public abstract class CAItemTweak : CAItemBehavior
 {
     public override decimal Priority => 5m;
 
     public override bool ShouldProcess => CAMain.Tweak;
 }
 
-public abstract class CAItemTweak<T> : CAItemOverride<T> where T : ModItem
+public abstract class CAItemTweak<T> : CAItemBehavior<T> where T : ModItem
 {
     public override decimal Priority => 5m;
 
@@ -272,27 +258,30 @@ public abstract class CAItemTweak<T> : CAItemOverride<T> where T : ModItem
 }
 #endregion Item
 
-public class CAOverrideHelper : ITOLoader
+public class CABehaviorHelper : ITOLoader
 {
-    internal static EntityOverrideDictionary<NPC, CANPCOverride> NPCOverrides { get; } = [];
+    internal static NontypedEntityBehaviorSet<Player, CAPlayerBehavior> PlayerBehaviors { get; } = [];
 
-    internal static EntityOverrideDictionary<Projectile, CAProjectileOverride> ProjectileOverrides { get; } = [];
+    internal static TypedEntityBehaviorSet<NPC, CANPCBehavior> NPCBehaviors { get; } = [];
 
-    internal static EntityOverrideDictionary<Item, CAItemOverride> ItemOverrides { get; } = [];
+    internal static TypedEntityBehaviorSet<Projectile, CAProjectileBehavior> ProjectileBehaviors { get; } = [];
+
+    internal static TypedEntityBehaviorSet<Item, CAItemBehavior> ItemBehaviors { get; } = [];
 
     void ITOLoader.PostSetupContent()
     {
         Assembly assembly = CAMain.Assembly;
-        NPCOverrides.FillOverrides(assembly);
-        ProjectileOverrides.FillOverrides(assembly);
-        ItemOverrides.FillOverrides(assembly);
+        PlayerBehaviors.FillSet(assembly);
+        NPCBehaviors.FillSet(assembly);
+        ProjectileBehaviors.FillSet(assembly);
+        ItemBehaviors.FillSet(assembly);
     }
 
     void ITOLoader.OnModUnload()
     {
-        NPCOverrides.Clear();
-        ProjectileOverrides.Clear();
-        ItemOverrides.Clear();
+        PlayerBehaviors.Clear();
+        NPCBehaviors.Clear();
+        ProjectileBehaviors.Clear();
+        ItemBehaviors.Clear();
     }
 }
-#endregion Override

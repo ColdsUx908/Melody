@@ -29,6 +29,7 @@ global using Terraria.Utilities;
 global using Transoceanic;
 global using Transoceanic.Data;
 global using Transoceanic.GameData;
+global using Transoceanic.GlobalInstances;
 global using Transoceanic.IL;
 global using Transoceanic.Localization;
 global using Transoceanic.MathHelp;

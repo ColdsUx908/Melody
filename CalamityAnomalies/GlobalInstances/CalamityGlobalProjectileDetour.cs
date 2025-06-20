@@ -20,7 +20,7 @@ public class CalamityGlobalProjectileDetour : GlobalProjectileDetour<CalamityGlo
 
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalProjectile self, Projectile projectile)
     {
-        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
+        if (projectile.TryGetOverride(out CAProjectileBehavior projectileOverride))
         {
             if (!projectileOverride.AllowOrigCalMethod(OrigMethodType_CalamityGlobalProjectile.PreAI))
                 return true;
@@ -40,7 +40,7 @@ public class CalamityGlobalProjectileDetour : GlobalProjectileDetour<CalamityGlo
 
     public override Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalProjectile self, Projectile projectile, Color lightColor)
     {
-        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
+        if (projectile.TryGetOverride(out CAProjectileBehavior projectileOverride))
         {
             if (!projectileOverride.AllowOrigCalMethod(OrigMethodType_CalamityGlobalProjectile.GetAlpha))
                 return null;
@@ -51,7 +51,7 @@ public class CalamityGlobalProjectileDetour : GlobalProjectileDetour<CalamityGlo
 
     public override bool Detour_PreDraw(Orig_PreDraw orig, CalamityGlobalProjectile self, Projectile projectile, ref Color lightColor)
     {
-        if (projectile.TryGetOverride(out CAProjectileOverride projectileOverride))
+        if (projectile.TryGetOverride(out CAProjectileBehavior projectileOverride))
         {
             if (!projectileOverride.AllowOrigCalMethod(OrigMethodType_CalamityGlobalProjectile.PreDraw))
                 return true;

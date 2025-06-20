@@ -27,7 +27,7 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
         public int[] CustomOneToManyIndexes { get; }
 
         // TODO 这个字典是未完成的。在未来的异象模式中，Boss生成时会绑定自己的所有体节NPC。
-        public Dictionary<ulong, NPC> CustomOneToMany { get; } = [];
+        public Dictionary<long, NPC> CustomOneToMany { get; } = [];
 
         public bool HasSpecialLifeRequirement { get; } = false;
 
@@ -39,7 +39,7 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
 
         public NPC NPC { get; }
 
-        public ulong Identifier { get; }
+        public long Identifier { get; }
 
         public CAGlobalNPC AnomalyNPC { get; }
 
@@ -177,7 +177,7 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
             }
 
             long result = NPCType == NPCID.PirateShip ? 0L : NPC.life;
-            foreach ((ulong identifier, NPC npc) in CustomOneToMany)
+            foreach ((long identifier, NPC npc) in CustomOneToMany)
             {
                 if (npc.Ocean().Identifier == identifier && npc.active && npc.life > 0)
                     result += npc.life;
@@ -197,7 +197,7 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
             }
 
             long result = NPCType == NPCID.PirateShip ? 0L : NPC.lifeMax;
-            foreach ((ulong identifier, NPC npc) in CustomOneToMany)
+            foreach ((long identifier, NPC npc) in CustomOneToMany)
             {
                 if (npc.Ocean().Identifier == identifier && npc.active && npc.lifeMax > 0)
                     result += npc.lifeMax;
@@ -207,7 +207,7 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
 
         private bool PreUpdate()
         {
-            if (NPC.TryGetOverride(out CANPCOverride npcOverride, "PreUpdateCalBossBar"))
+            if (NPC.TryGetOverride(out CANPCBehavior npcOverride, "PreUpdateCalBossBar"))
             {
                 if (!npcOverride.PreUpdateCalBossBar(this))
                     return false;
@@ -218,7 +218,7 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
 
         private void ModifyCalBossBarHeight()
         {
-            if (NPC.TryGetOverride(out CANPCOverride npcOverride, "CustomCalBossBarHeight"))
+            if (NPC.TryGetOverride(out CANPCBehavior npcOverride, "CustomCalBossBarHeight"))
             {
                 int height = 70;
                 npcOverride.ModifyCalBossBarHeight(this, ref height);
@@ -228,7 +228,7 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
 
         private void PostUpdate()
         {
-            if (NPC.TryGetOverride(out CANPCOverride npcOverride, "PostUpdateCalBossBar"))
+            if (NPC.TryGetOverride(out CANPCBehavior npcOverride, "PostUpdateCalBossBar"))
                 npcOverride.PostUpdateCalBossBar(this);
         }
 
@@ -276,7 +276,7 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
 
         private bool PreDraw(SpriteBatch spriteBatch, int x, int y)
         {
-            if (NPC.TryGetOverride(out CANPCOverride npcOverride, "PreDrawCalBossBar"))
+            if (NPC.TryGetOverride(out CANPCBehavior npcOverride, "PreDrawCalBossBar"))
             {
                 if (!npcOverride.PreDrawCalBossBar(this, spriteBatch, x, y))
                     return false;
@@ -287,7 +287,7 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
 
         private void PostDraw(SpriteBatch spriteBatch, int x, int y)
         {
-            if (NPC.TryGetOverride(out CANPCOverride npcOverride, "PostDrawCalBossBar"))
+            if (NPC.TryGetOverride(out CANPCBehavior npcOverride, "PostDrawCalBossBar"))
                 npcOverride.PostDrawCalBossBar(this, spriteBatch, x, y);
         }
 
@@ -362,7 +362,7 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
     public static DynamicSpriteFont MouseFont { get; } = FontAssets.MouseText.Value;
     public static DynamicSpriteFont ItemStackFont { get; } = FontAssets.ItemStack.Value;
 
-    private static readonly Dictionary<ulong, BetterBossHPUI> _trackingBars = [];
+    private static readonly Dictionary<long, BetterBossHPUI> _trackingBars = [];
     private const int MaxBars = 6;
     private const int MaxActiveBars = 4;
 
@@ -393,11 +393,11 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
 
     public override void Detour_Update(Orig_Update orig, BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info)
     {
-        List<ulong> validIdentifiers = [];
+        List<long> validIdentifiers = [];
 
         foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(k => !BossExclusionList.Contains(k.type)))
         {
-            ulong fromNPC = npc.Ocean().Identifier;
+            long fromNPC = npc.Ocean().Identifier;
             string overridingName = null;
             if (npc.ModNPC is Apollo apollo)
                 overridingName = CalamityUtils.GetTextValue("UI.ExoTwinsName" + (apollo.exoMechdusa ? "Hekate" : "Normal"));
@@ -413,7 +413,7 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
             }
         }
 
-        foreach ((ulong identifier, BetterBossHPUI newBar) in _trackingBars)
+        foreach ((long identifier, BetterBossHPUI newBar) in _trackingBars)
         {
             newBar.Update(validIdentifiers.Contains(identifier));
             if (newBar.CloseAnimationTimer >= 120)
@@ -433,9 +433,11 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
         CalamityUtils.DrawBorderStringEightWay(spriteBatch, font, text, baseDrawPosition, mainColor2, borderColor2, scale);
     }
 
-    public delegate void Orig_Load_1(Mod mod);
+    //灾厄还没有重写这个静态方法，所以要手动绑定
 
-    public static void Detour_Load_1(Orig_Load_1 orig, Mod mod)
+    public delegate void Orig_Load__Mod(Mod mod);
+
+    public static void Detour_Load(Orig_Load__Mod orig, Mod mod)
     {
         orig(mod);
         MinibossHPBarList.Add(NPCID.LunarTowerVortex);
@@ -465,7 +467,7 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
     public override void ApplyDetour()
     {
         base.ApplyDetour();
-        TODetourUtils.ModifyMethodWithDetour(TargetType.GetMethod("Load", BindingFlags.NonPublic | BindingFlags.Static), Detour_Load_1);
+        TODetourUtils.Modify<Action<Orig_Load__Mod, Mod>> (TargetType.GetMethod("Load", BindingFlags.NonPublic | BindingFlags.Static), Detour_Load);
     }
 
     void ITOLoader.OnWorldLoad() => _trackingBars.Clear();

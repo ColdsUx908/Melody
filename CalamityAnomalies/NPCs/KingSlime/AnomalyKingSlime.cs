@@ -2,7 +2,7 @@
 
 namespace CalamityAnomalies.NPCs.KingSlime;
 
-public class AnomalyKingSlime : AnomalyNPCOverride
+public class AnomalyKingSlime : AnomalyNPCBehavior
 {
     #region 枚举、数值、属性、AI状态
     public enum AttackType
@@ -269,7 +269,7 @@ public class AnomalyKingSlime : AnomalyNPCOverride
 
     #endregion 枚举、数值、属性、AI状态
 
-    public override int OverrideType => NPCID.KingSlime;
+    public override int ApplyingType => NPCID.KingSlime;
 
     public override bool AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC type) => type switch
     {

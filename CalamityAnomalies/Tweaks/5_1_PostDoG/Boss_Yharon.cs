@@ -210,12 +210,6 @@ public class YharonTweak : CANPCTweak<Yharon>
         YharonPublicizer = new(ModNPC);
     }
 
-    public override void Disconnect()
-    {
-        YharonPublicizer = null;
-        base.Disconnect();
-    }
-
     #region Active
     public override bool CheckDead()
     {

@@ -2,7 +2,7 @@
 
 namespace CalamityAnomalies.NPCs.KingSlime;
 
-public class AnomalyJewelEmerald : AnomalyNPCOverride
+public class AnomalyJewelEmerald : AnomalyNPCBehavior
 {
     #region 枚举、数值、属性
     public enum AttackType
@@ -50,7 +50,7 @@ public class AnomalyJewelEmerald : AnomalyNPCOverride
     }
     #endregion 枚举、数值、属性
 
-    public override int OverrideType => ModContent.NPCType<KingSlimeJewelEmerald>();
+    public override int ApplyingType => ModContent.NPCType<KingSlimeJewelEmerald>();
 
     public override bool PreAI()
     {
