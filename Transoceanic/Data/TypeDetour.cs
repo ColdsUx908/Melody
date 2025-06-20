@@ -1,4 +1,5 @@
-﻿using Terraria.GameContent.Bestiary;
+﻿using MonoMod.RuntimeDetour;
+using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.Drawing;
 using Terraria.GameContent.ObjectInteractions;
 using Terraria.GameContent.UI;
@@ -38,18 +39,19 @@ public abstract class TypeDetour<T> : TypeDetour
     }
 
     /// <summary>
-    /// 尝试将指定的Detour应用到 <see cref="T"/> 类型的方法上。
+    /// 尝试将指定的Detour应用到 <see cref="T"/> 类型的公共实例方法上。
     /// </summary>
     /// <remarks>这个方法会检查当前类型中是否存在指定的方法，仅在存在时则应用Detour逻辑。</remarks>
     /// <typeparam name="TDelegate">委托类型。</typeparam>
     /// <param name="detour">Detour逻辑的委托。该委托必须是一个与目标方法的签名匹配的具名方法，且方法名必须是 <c>{methodNamePrefix}{methodName}</c> 的形式。</param>
     /// <param name="methodNamePrefix"><c>methodName</c> 应用的方法名前缀。</param>
-    protected void TryApplyDetour<TDelegate>(TDelegate detour, string methodNamePrefix = "Detour_") where TDelegate : Delegate
+    protected Hook TryApplyDetour<TDelegate>(TDelegate detour, string methodNamePrefix = "Detour_") where TDelegate : Delegate
     {
         string methodName = detour.Method.Name;
         Match match = Regex.Match(methodName, methodNamePrefix + @"(?<methodName>.*)$");
         if (match.Success && GetType().HasRealMethod(methodName, BindingFlags.Public | BindingFlags.Instance))
-            TODetourUtils.Modify(TargetType.GetMethod(match.Groups["methodName"].Value, BindingFlags.Public | BindingFlags.Instance), detour);
+            return TODetourUtils.Modify(TargetType.GetMethod(match.Groups["methodName"].Value, BindingFlags.Public | BindingFlags.Instance), detour);
+        return null;
     }
 }
 

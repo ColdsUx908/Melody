@@ -207,9 +207,9 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
 
         private bool PreUpdate()
         {
-            if (NPC.TryGetOverride(out CANPCBehavior npcOverride, "PreUpdateCalBossBar"))
+            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, "PreUpdateCalBossBar"))
             {
-                if (!npcOverride.PreUpdateCalBossBar(this))
+                if (!npcBehavior.PreUpdateCalBossBar(this))
                     return false;
             }
 
@@ -218,18 +218,18 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
 
         private void ModifyCalBossBarHeight()
         {
-            if (NPC.TryGetOverride(out CANPCBehavior npcOverride, "CustomCalBossBarHeight"))
+            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, "CustomCalBossBarHeight"))
             {
                 int height = 70;
-                npcOverride.ModifyCalBossBarHeight(this, ref height);
+                npcBehavior.ModifyCalBossBarHeight(this, ref height);
                 Height = height;
             }
         }
 
         private void PostUpdate()
         {
-            if (NPC.TryGetOverride(out CANPCBehavior npcOverride, "PostUpdateCalBossBar"))
-                npcOverride.PostUpdateCalBossBar(this);
+            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, "PostUpdateCalBossBar"))
+                npcBehavior.PostUpdateCalBossBar(this);
         }
 
         public new void Draw(SpriteBatch spriteBatch, int x, int y)
@@ -276,9 +276,9 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
 
         private bool PreDraw(SpriteBatch spriteBatch, int x, int y)
         {
-            if (NPC.TryGetOverride(out CANPCBehavior npcOverride, "PreDrawCalBossBar"))
+            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, "PreDrawCalBossBar"))
             {
-                if (!npcOverride.PreDrawCalBossBar(this, spriteBatch, x, y))
+                if (!npcBehavior.PreDrawCalBossBar(this, spriteBatch, x, y))
                     return false;
             }
 
@@ -287,8 +287,8 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
 
         private void PostDraw(SpriteBatch spriteBatch, int x, int y)
         {
-            if (NPC.TryGetOverride(out CANPCBehavior npcOverride, "PostDrawCalBossBar"))
-                npcOverride.PostDrawCalBossBar(this, spriteBatch, x, y);
+            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, "PostDrawCalBossBar"))
+                npcBehavior.PostDrawCalBossBar(this, spriteBatch, x, y);
         }
 
         #region 公共绘制方法
@@ -435,9 +435,9 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
 
     //灾厄还没有重写这个静态方法，所以要手动绑定
 
-    public delegate void Orig_Load__Mod(Mod mod);
+    public delegate void Orig_Load_0_Mod(Mod mod);
 
-    public static void Detour_Load(Orig_Load__Mod orig, Mod mod)
+    public static void Detour_Load(Orig_Load_0_Mod orig, Mod mod)
     {
         orig(mod);
         MinibossHPBarList.Add(NPCID.LunarTowerVortex);
@@ -467,7 +467,7 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
     public override void ApplyDetour()
     {
         base.ApplyDetour();
-        TODetourUtils.Modify<Action<Orig_Load__Mod, Mod>> (TargetType.GetMethod("Load", BindingFlags.NonPublic | BindingFlags.Static), Detour_Load);
+        TODetourUtils.Modify<Action<Orig_Load_0_Mod, Mod>>(TargetType.GetMethod("Load", BindingFlags.NonPublic | BindingFlags.Static), Detour_Load);
     }
 
     void ITOLoader.OnWorldLoad() => _trackingBars.Clear();

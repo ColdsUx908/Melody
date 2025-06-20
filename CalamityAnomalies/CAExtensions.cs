@@ -19,14 +19,14 @@ public static class CAExtensions
     {
         public CAGlobalItem Anomaly() => item.GetGlobalItem<CAGlobalItem>();
 
-        public bool TryGetOverride(out CAItemBehavior itemOverride, [CallerMemberName] string methodName = null!) => CABehaviorHelper.ItemBehaviors.TryGetBehavior(item, methodName, out itemOverride);
+        public bool TryGetBehavior(out CAItemBehavior itemBehavior, [CallerMemberName] string methodName = null!) => CABehaviorHelper.ItemBehaviors.TryGetBehavior(item, methodName, out itemBehavior);
     }
 
     extension(NPC npc)
     {
         public CAGlobalNPC Anomaly() => npc.GetGlobalNPC<CAGlobalNPC>();
 
-        public bool TryGetOverride(out CANPCBehavior npcOverride, [CallerMemberName] string methodName = null!) => CABehaviorHelper.NPCBehaviors.TryGetBehavior(npc, methodName, out npcOverride);
+        public bool TryGetBehavior(out CANPCBehavior npcBehavior, [CallerMemberName] string methodName = null!) => CABehaviorHelper.NPCBehaviors.TryGetBehavior(npc, methodName, out npcBehavior);
 
         public bool DesertScourge => npc.ModNPC is DesertScourgeHead or DesertScourgeBody or DesertScourgeTail;
 
@@ -76,6 +76,6 @@ public static class CAExtensions
     {
         public CAGlobalProjectile Anomaly() => projectile.GetGlobalProjectile<CAGlobalProjectile>();
 
-        public bool TryGetOverride(out CAProjectileBehavior projectileOverride, [CallerMemberName] string methodName = null!) => CABehaviorHelper.ProjectileBehaviors.TryGetBehavior(projectile, methodName, out projectileOverride);
+        public bool TryGetBehavior(out CAProjectileBehavior projectileBehavior, [CallerMemberName] string methodName = null!) => CABehaviorHelper.ProjectileBehaviors.TryGetBehavior(projectile, methodName, out projectileBehavior);
     }
 }

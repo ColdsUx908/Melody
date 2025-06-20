@@ -24,10 +24,6 @@ public abstract class TypedEntityBehavior<TEntity> : EntityBehaviorBase<TEntity>
     public abstract int ApplyingType { get; }
 
     public virtual bool ShouldProcess => true;
-
-    public virtual void Load() { }
-
-    public virtual void SetDefaults() { }
 }
 
 public abstract class EntityBehaviorSetBase<TEntity, TBehavior> : IEnumerable<TBehavior>
@@ -64,43 +60,43 @@ public class TypedEntityBehaviorSet<TEntity, TBehavior> : EntityBehaviorSetBase<
     where TEntity : Entity
     where TBehavior : TypedEntityBehavior<TEntity>
 {
-    private readonly Dictionary<int, List<(TBehavior overrideInstance, HashSet<string> overrideMethods)>> _data = [];
+    private readonly Dictionary<int, List<(TBehavior behaviorInstance, HashSet<string> behaviorMethods)>> _data = [];
 
     public override IEnumerator<TBehavior> GetEnumerator()
     {
-        foreach ((_, List<(TBehavior overrideInstance, HashSet<string> overrideMethods)> overrides) in _data)
+        foreach (List<(TBehavior behaviorInstance, HashSet<string> behaviorMethods)> behaviors in _data.Values)
         {
-            foreach ((TBehavior overrideInstance, HashSet<string> _) in overrides)
-                yield return overrideInstance;
+            foreach ((TBehavior behaviorInstance, HashSet<string> _) in behaviors)
+                yield return behaviorInstance;
         }
     }
 
     /// <summary>
-    /// 尝试获取指定实体的Override实例。
+    /// 尝试获取指定实体的行为实例。
     /// <br/>按照 <see cref="TypedEntityBehavior{TEntity}.Priority"/> 降序寻找通过 <see cref="TypedEntityBehavior{TEntity}.ShouldProcess"/> 检测的实现了指定方法的Override实例。
     /// </summary>
     /// <param name="entity"></param>
     /// <param name="methodName"></param>
-    /// <param name="overrideInstance"></param>
+    /// <param name="behaviorInstance"></param>
     /// <returns></returns>
-    public bool TryGetBehavior(TEntity entity, string methodName, [NotNullWhen(true)] out TBehavior overrideInstance)
+    public bool TryGetBehavior(TEntity entity, string methodName, [NotNullWhen(true)] out TBehavior behaviorInstance)
     {
-        if (_data.TryGetValue(entity.EntityType, out List<(TBehavior overrideInstance, HashSet<string> overridenMethods)> overrideList))
+        if (_data.TryGetValue(entity.EntityType, out List<(TBehavior behaviorInstance, HashSet<string> behaviorMethods)> behaviorList))
         {
-            foreach ((TBehavior temp, HashSet<string> overrideMethods) in overrideList)
+            foreach ((TBehavior temp, HashSet<string> behaviorMethods) in behaviorList)
             {
-                if (!overrideMethods.Contains(methodName))
+                if (!behaviorMethods.Contains(methodName))
                     continue;
 
                 temp.Connect(entity);
                 if (temp.ShouldProcess)
                 {
-                    overrideInstance = temp;
+                    behaviorInstance = temp;
                     return true;
                 }
             }
         }
-        overrideInstance = null;
+        behaviorInstance = null;
         return false;
     }
 
@@ -109,9 +105,9 @@ public class TypedEntityBehaviorSet<TEntity, TBehavior> : EntityBehaviorSetBase<
         _data.Clear();
         _data.AddRange(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>(assemblyToSearch)
             .GroupBy(k => k.ApplyingType).ToDictionary(keySelector: k => k.Key, elementSelector: k => (
-            from overrideInstance in k.AsValueEnumerable()
-            orderby overrideInstance.Priority
-            select (overrideInstance, overrideInstance.GetType().GetOverrideMethodNames(TOReflectionUtils.UniversalBindingFlags).ToHashSet())
+            from behaviorInstance in k.AsValueEnumerable()
+            orderby behaviorInstance.Priority
+            select (behaviorInstance, behaviorInstance.GetType().GetOverrideMethodNames(TOReflectionUtils.UniversalBindingFlags).ToHashSet())
             ).ToList()));
     }
 
@@ -1251,6 +1247,11 @@ public abstract class NPCBehavior : TypedEntityBehavior<NPC>
 
     #region Defaults
     /// <summary>
+    /// 设置基本属性。
+    /// </summary>
+    public virtual void SetDefaults() { }
+
+    /// <summary>
     /// 设置负数type的NPC的额外属性。
     /// </summary>
     public virtual void SetDefaultsFromNetId() { }
@@ -1529,6 +1530,13 @@ public abstract class ProjectileBehavior : TypedEntityBehavior<Projectile>
     #endregion 实成员
 
     #region 虚成员
+    #region Defaults
+    /// <summary>
+    /// 设置基本属性。
+    /// </summary>
+    public virtual void SetDefaults() { }
+    #endregion Defaults
+
     #region AI
     /// <summary>
     /// AI。
@@ -1697,6 +1705,11 @@ public abstract class ItemBehavior : TypedEntityBehavior<Item>
 
     #region 虚成员
     #region Defaults
+    /// <summary>
+    /// 设置基本属性。
+    /// </summary>
+    public virtual void SetDefaults() { }
+
     /// <summary>
     /// Override this method to add <see cref="Recipe"/>s to the game.<br/>
     /// The <see href="https://github.com/tModLoader/tModLoader/wiki/Basic-Recipes">Basic Recipes Guide</see> teaches how to add new recipes to the game and how to manipulate existing recipes.<br/>

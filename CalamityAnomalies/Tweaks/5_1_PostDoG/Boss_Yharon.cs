@@ -17,8 +17,10 @@ namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
  * 3. 在转换阶段时获得97%无法削减的伤害减免（BossRush时为99%）。
  */
 
-public record YharonPublicizer(Yharon Yharon)
+public record YharonPublicizer
 {
+    public static YharonPublicizer Instance { get; } = new();
+
     private static readonly Type type = typeof(Yharon);
     private static readonly FieldInfo self_safeBox = type.GetField("safeBox", TOReflectionUtils.UniversalBindingFlags);
     private static readonly FieldInfo self_enraged = type.GetField("enraged", TOReflectionUtils.UniversalBindingFlags);
@@ -31,6 +33,10 @@ public record YharonPublicizer(Yharon Yharon)
     private static readonly FieldInfo self_spawnArena = type.GetField("spawnArena", TOReflectionUtils.UniversalBindingFlags);
     private static readonly FieldInfo self_invincibilityCounter = type.GetField("invincibilityCounter", TOReflectionUtils.UniversalBindingFlags);
     private static readonly FieldInfo self_fastChargeTelegraphTime = type.GetField("fastChargeTelegraphTime", TOReflectionUtils.UniversalBindingFlags);
+
+    public Yharon Yharon { get; set; } = null;
+
+    private YharonPublicizer() { }
 
 #pragma warning disable IDE1006
     public Rectangle safeBox
@@ -111,7 +117,7 @@ public class YharonTweak : CANPCTweak<Yharon>
         public const int Phase2InvincibilityTime = 900;
     }
 
-    public YharonPublicizer YharonPublicizer { get; private set; } = null;
+    public YharonPublicizer YharonPublicizer => YharonPublicizer.Instance;
 
 #pragma warning disable IDE1006
     public Rectangle safeBox
@@ -207,7 +213,7 @@ public class YharonTweak : CANPCTweak<Yharon>
     public override void Connect(NPC npc)
     {
         base.Connect(npc);
-        YharonPublicizer = new(ModNPC);
+        YharonPublicizer.Instance.Yharon = ModNPC;
     }
 
     #region Active
@@ -1713,12 +1719,15 @@ public class YharonTweak : CANPCTweak<Yharon>
         bool invincible = invincibilityCounter++ < Data.Phase2InvincibilityTime;
         if (invincible)
         {
-            int newLifeMax = InitialLifeMax + (int)(InitialLifeMax / 10.0 / Data.Phase2InvincibilityTime * invincibilityCounter);
+            int newLifeMax = InitialLifeMax + InitialLifeMax + (int)(
+                (Main.zenithWorld ? InitialLifeMax : InitialLifeMax / 10.0)
+                / Data.Phase2InvincibilityTime * invincibilityCounter); //GFB中会重生至二倍生命值
             int increasedLifeMax = newLifeMax - NPC.lifeMax;
-            NPC.lifeMax += increasedLifeMax;
+            if (increasedLifeMax > 0)
+                NPC.lifeMax += increasedLifeMax;
 
             //对数插值: y = ln((e - 1)x / 900 + 1)
-            int newLife = (int)MathHelper.Lerp(NPC.life, NPC.lifeMax * (0.1f + invincibilityCounter / 1000f), MathF.Log((MathF.E - 1) * invincibilityCounter / 900f + 1));
+            int newLife = (int)MathHelper.Lerp(NPC.life, NPC.lifeMax * (0.1f + invincibilityCounter / 1000f), MathF.Log((MathF.E - 1) * invincibilityCounter / Data.Phase2GateValue + 1));
             int increasedLife = Math.Clamp(newLife - NPC.life + increasedLifeMax, 0, NPC.lifeMax - NPC.life);
 
             if (increasedLife > 0)
@@ -2761,28 +2770,31 @@ public class YharonDetour : ModNPCDetour<Yharon>
         for (int k = 0; k < 5; k++)
             Dust.NewDustAction(npc.Center, npc.width, npc.height, DustID.Blood, d => d.velocity = new Vector2(hit.HitDirection, -1f));
 
-        YharonPublicizer yharonPublicizer = new(self);
+        YharonPublicizer yharonPublicizer = YharonPublicizer.Instance;
         bool shouldNotDie = !yharonPublicizer.startSecondAI || yharonPublicizer.invincibilityCounter < YharonTweak.Data.Phase2InvincibilityTime;
 
         if (npc.life <= 0)
         {
             bool shouldSummonProj = true;
+            bool summonBuffedProj = false;
             if (shouldNotDie)
             {
-                //这一堆抽象的运算能够反映出我写代码时的精神状态
-                //什么神人会把亡语弹幕往HitEffect()里塞
-                if ((int)calamityNPC.newAI[2]++ % 3 != 0 || ++calamityNPC.newAI[3] > 6f) //一阶段最多释放6次垂死攻击
-                    shouldSummonProj = false;
+                switch ((int)calamityNPC.newAI[2]++)
+                {
+                    case 0 or 3 or 6 or 10 or 15:
+                        break;
+                    case 20:
+                        summonBuffedProj = true;
+                        break;
+                    default:
+                        shouldSummonProj = false;
+                        break;
+                }
                 npc.SyncExtraAI();
             }
             if (shouldSummonProj)
-            {
-                self.DoFireRing(300, (Main.expertMode || BossRushEvent.BossRushActive) ? 125 : 150, -1f, 0f);
-                if (calamityNPC.newAI[3] == 6f)
-                {
+                self.DoFireRing(300, summonBuffedProj ? 2000 : ((Main.expertMode || BossRushEvent.BossRushActive) ? 125 : 150), -1f, 0f);
 
-                }
-            }
             npc.position.X += (npc.width / 2);
             npc.position.Y += (npc.height / 2);
             npc.width = 300;

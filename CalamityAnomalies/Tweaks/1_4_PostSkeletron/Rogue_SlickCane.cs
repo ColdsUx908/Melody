@@ -2,7 +2,10 @@
 
 namespace CalamityAnomalies.Tweaks._1_4_PostSkeletron;
 
-//盗贼手杖
+/* 盗贼手杖
+ * 改动
+ * 在LR难度下，击中血肉墙眼睛时必定暴击。
+ */
 
 public class SlickCaneProjectileTweak : CAProjectileTweak<SlickCaneProjectile>
 {

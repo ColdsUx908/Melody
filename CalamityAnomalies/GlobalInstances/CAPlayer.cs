@@ -558,10 +558,27 @@ public class CAPlayer : ModPlayer
         }
     }
 
-    public DownedBoss DownedBossCalamity { get; } = new();
-    public DownedBoss DownedBossAnomaly { get; } = new();
+    public DownedBoss DownedBossCalamity { get; private set; } = new();
+    public DownedBoss DownedBossAnomaly { get; private set; } = new();
 
     public bool AntiEPBPlayer { get; set; } = false;
+
+    public override ModPlayer Clone(Player newEntity)
+    {
+        CAPlayer clone = (CAPlayer)base.Clone(newEntity);
+
+        clone.DownedBossCalamity = DownedBossCalamity;
+        clone.DownedBossAnomaly = DownedBossAnomaly;
+        clone.AntiEPBPlayer = AntiEPBPlayer;
+
+        return clone;
+    }
+
+    public override void SetStaticDefaults()
+    {
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+            behavior.SetStaticDefaults();
+    }
 
     public override void Initialize()
     {
