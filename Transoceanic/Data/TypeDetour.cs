@@ -45,12 +45,12 @@ public abstract class TypeDetour<T> : TypeDetour
     /// <typeparam name="TDelegate">委托类型。</typeparam>
     /// <param name="detour">Detour逻辑的委托。该委托必须是一个与目标方法的签名匹配的具名方法，且方法名必须是 <c>{methodNamePrefix}{methodName}</c> 的形式。</param>
     /// <param name="methodNamePrefix"><c>methodName</c> 应用的方法名前缀。</param>
-    protected Hook TryApplyDetour<TDelegate>(TDelegate detour, string methodNamePrefix = "Detour_") where TDelegate : Delegate
+    protected Hook TryApplyDetour<TDelegate>(TDelegate detour, string methodNamePrefix = "Detour_", BindingFlags flags = BindingFlags.Public | BindingFlags.Instance) where TDelegate : Delegate
     {
         string methodName = detour.Method.Name;
         Match match = Regex.Match(methodName, methodNamePrefix + @"(?<methodName>.*)$");
         if (match.Success && GetType().HasRealMethod(methodName, BindingFlags.Public | BindingFlags.Instance))
-            return TODetourUtils.Modify(TargetType.GetMethod(match.Groups["methodName"].Value, BindingFlags.Public | BindingFlags.Instance), detour);
+            return TODetourUtils.Modify(TargetType.GetMethod(match.Groups["methodName"].Value, flags), detour);
         return null;
     }
 }

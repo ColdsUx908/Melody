@@ -30,7 +30,7 @@ public record TOModReferenceContainer
     public Mod Mod { get; private set; } = null;
 }
 
-public class TOModReferences : ITOLoader
+public class TOModReferences : IResourceLoader
 {
     //按字母顺序排列
     public static TOModReferenceContainer CA { get; private set; }
@@ -69,14 +69,8 @@ public class TOModReferences : ITOLoader
     public static TOModReferenceContainer ThoriumRework { get; private set; }
     public static TOModReferenceContainer WrathoftheGods { get; private set; }
 
-    decimal ITOLoader.GetPriority(LoaderMethodType type) => type switch
-    {
-        LoaderMethodType.PostSetupContent => 10m,
-        LoaderMethodType.OnModUnload => -10m,
-        _ => 0m
-    };
-
-    void ITOLoader.PostSetupContent()
+    [LoadPriority(10)]
+    void IResourceLoader.PostSetupContent()
     {
         CA = new("CalamityAnomalies");
         Calamity = new("CalamityMod");
@@ -115,7 +109,7 @@ public class TOModReferences : ITOLoader
         WrathoftheGods = new("NoxusBoss");
     }
 
-    void ITOLoader.OnModUnload()
+    void IResourceLoader.OnModUnload()
     {
         CA = null;
         Calamity = null;

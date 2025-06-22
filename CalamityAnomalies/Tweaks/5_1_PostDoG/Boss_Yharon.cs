@@ -17,9 +17,9 @@ namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
  * 3. 在转换阶段时获得97%无法削减的伤害减免（BossRush时为99%）。
  */
 
-public record YharonPublicizer
+public record Yharon_Publicizer
 {
-    public static YharonPublicizer Instance { get; } = new();
+    public static Yharon_Publicizer Instance { get; } = new();
 
     private static readonly Type type = typeof(Yharon);
     private static readonly FieldInfo self_safeBox = type.GetField("safeBox", TOReflectionUtils.UniversalBindingFlags);
@@ -36,7 +36,13 @@ public record YharonPublicizer
 
     public Yharon Yharon { get; set; } = null;
 
-    private YharonPublicizer() { }
+    public Yharon_Publicizer SetYharon(Yharon yharon)
+    {
+        Yharon = yharon;
+        return this;
+    }
+
+    private Yharon_Publicizer() { }
 
 #pragma warning disable IDE1006
     public Rectangle safeBox
@@ -107,7 +113,7 @@ public record YharonPublicizer
 #pragma warning restore IDE1006
 }
 
-public class YharonTweak : CANPCTweak<Yharon>
+public class Yharon_Tweak : CANPCTweak<Yharon>
 {
     #region 数据、属性
     public static class Data
@@ -117,7 +123,7 @@ public class YharonTweak : CANPCTweak<Yharon>
         public const int Phase2InvincibilityTime = 900;
     }
 
-    public YharonPublicizer YharonPublicizer => YharonPublicizer.Instance;
+    public Yharon_Publicizer YharonPublicizer => Yharon_Publicizer.Instance;
 
 #pragma warning disable IDE1006
     public Rectangle safeBox
@@ -213,7 +219,7 @@ public class YharonTweak : CANPCTweak<Yharon>
     public override void Connect(NPC npc)
     {
         base.Connect(npc);
-        YharonPublicizer.Instance.Yharon = ModNPC;
+        Yharon_Publicizer.Instance.Yharon = ModNPC;
     }
 
     #region Active
@@ -2745,7 +2751,7 @@ public class YharonTweak : CANPCTweak<Yharon>
     #endregion AI
 }
 
-public class YharonDetour : ModNPCDetour<Yharon>
+public class Yharon_Detour : ModNPCDetour<Yharon>
 {
     public override void Detour_SetDefaults(Orig_SetDefaults orig, Yharon self)
     {
@@ -2770,8 +2776,8 @@ public class YharonDetour : ModNPCDetour<Yharon>
         for (int k = 0; k < 5; k++)
             Dust.NewDustAction(npc.Center, npc.width, npc.height, DustID.Blood, d => d.velocity = new Vector2(hit.HitDirection, -1f));
 
-        YharonPublicizer yharonPublicizer = YharonPublicizer.Instance;
-        bool shouldNotDie = !yharonPublicizer.startSecondAI || yharonPublicizer.invincibilityCounter < YharonTweak.Data.Phase2InvincibilityTime;
+        Yharon_Publicizer yharonPublicizer = Yharon_Publicizer.Instance;
+        bool shouldNotDie = !yharonPublicizer.startSecondAI || yharonPublicizer.invincibilityCounter < Yharon_Tweak.Data.Phase2InvincibilityTime;
 
         if (npc.life <= 0)
         {

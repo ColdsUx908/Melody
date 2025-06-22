@@ -53,6 +53,18 @@ public class NontypedEntityBehaviorSet<TEntity, TBehavior> : EntityBehaviorSetBa
 
     public override IEnumerator<TBehavior> GetEnumerator() => _data.GetEnumerator();
 
+    public IEnumerable<TBehavior> this[TEntity entity]
+    {
+        get
+        {
+            foreach (TBehavior behavior in this)
+            {
+                behavior.Connect(entity);
+                yield return behavior;
+            }
+        }
+    }
+
     public override void Clear() => _data.Clear();
 }
 

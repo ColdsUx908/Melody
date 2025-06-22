@@ -102,11 +102,11 @@ namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
  *   灾难，灾祸 - 130%伤害
  */
 
-public class MurasamaTweak : CAItemTweak<Murasama>
+public class Murasama_Tweak : CAItemTweak<Murasama>
 {
     public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
     {
-        if (!MurasamaUtils.IsSam(player))
+        if (!Murasama_Utils.IsSam(player))
         {
             if (DownedBossSystem.downedYharon)
                 damage.Base = -Item.damage + 3000f;
@@ -164,13 +164,13 @@ public class MurasamaTweak : CAItemTweak<Murasama>
 
     public override void ModifyWeaponKnockback(Player player, ref StatModifier knockback)
     {
-        if (MurasamaUtils.IsSam(player) && CAWorld.LR)
+        if (Murasama_Utils.IsSam(player) && CAWorld.LR)
             knockback *= 2f;
     }
 
     public override bool? CanHitNPC(Player player, NPC target)
     {
-        if (MurasamaUtils.IsSam(player))
+        if (Murasama_Utils.IsSam(player))
         {
             if (Main.zenithWorld && target.ModNPC is HiveTumor && NPC.AnyNPCs<HiveTumor>())
                 return false;
@@ -184,7 +184,55 @@ public class MurasamaTweak : CAItemTweak<Murasama>
     }
 }
 
-public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
+public class Murasama_Detour : ModItemDetour<Murasama>
+{
+    public override bool Detour_PreDrawInInventory(Orig_PreDrawInInventory orig, Murasama self, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
+    {
+        Texture2D texture;
+
+        if (Murasama_Utils.Unlocked(Main.LocalPlayer))
+        {
+            //0 = 6 frames, 8 = 3 frames]
+            texture = ModContent.Request<Texture2D>(self.Texture).Value;
+            spriteBatch.Draw(texture, position, self.Item.GetCurrentFrame(ref self.frame, ref self.frameCounter, 2, 13), Color.White, 0f, origin, scale, SpriteEffects.None, 0);
+        }
+        else
+        {
+            texture = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Melee/MurasamaSheathed").Value;
+            spriteBatch.Draw(texture, position, null, Color.White, 0f, origin, scale, SpriteEffects.None, 0);
+        }
+
+        return false;
+    }
+
+    public override bool Detour_PreDrawInWorld(Orig_PreDrawInWorld orig, Murasama self, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
+    {
+        Texture2D texture;
+
+        if (Murasama_Utils.Unlocked(Main.LocalPlayer))
+        {
+            texture = ModContent.Request<Texture2D>(self.Texture).Value;
+            spriteBatch.Draw(texture, self.Item.position - Main.screenPosition, self.Item.GetCurrentFrame(ref self.frame, ref self.frameCounter, 2, 13), lightColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
+        }
+        else
+        {
+            texture = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Melee/MurasamaSheathed").Value;
+            spriteBatch.Draw(texture, self.Item.position - Main.screenPosition, null, lightColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
+        }
+
+        return false;
+    }
+
+    public override void Detour_PostDrawInWorld(Orig_PostDrawInWorld orig, Murasama self, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, float rotation, float scale, int whoAmI)
+    {
+        Texture2D texture = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Melee/MurasamaGlow").Value;
+        spriteBatch.Draw(texture, self.Item.position - Main.screenPosition, self.Item.GetCurrentFrame(ref self.frame, ref self.frameCounter, 2, 13, false), Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
+    }
+
+    public override bool Detour_CanUseItem(Orig_CanUseItem orig, Murasama self, Player player) => player.ownedProjectileCounts[self.Item.shoot] < 1 && Murasama_Utils.Unlocked(player);
+}
+
+public class MurasamaSlash_Tweak : CAProjectileTweak<MurasamaSlash>
 {
     public int OriginalDamage
     {
@@ -201,13 +249,13 @@ public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
 
     public override void SetDefaults()
     {
-        if (MurasamaUtils.IsSam(Owner))
+        if (Murasama_Utils.IsSam(Owner))
             Projectile.ArmorPenetration += 200;
     }
 
     public override bool PreAI()
     {
-        bool isSam = MurasamaUtils.IsSam(Owner);
+        bool isSam = Murasama_Utils.IsSam(Owner);
         CalamityPlayer calamityPlayer = Owner.Calamity();
         bool rageModeActive = calamityPlayer.rageModeActive;
         bool adrenalineModeActive = calamityPlayer.adrenalineModeActive;
@@ -308,7 +356,7 @@ public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
 
     public override void ModifyDamageHitbox(ref Rectangle hitbox)
     {
-        if (MurasamaUtils.IsSam(Owner))
+        if (Murasama_Utils.IsSam(Owner))
         {
             int hitboxBonus = ModProjectile.Slash3 ? 130 : 70;
             hitbox.Inflate(hitboxBonus, hitboxBonus);
@@ -317,7 +365,7 @@ public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
 
     public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
     {
-        if (!MurasamaUtils.IsSam(Owner))
+        if (!Murasama_Utils.IsSam(Owner))
             return;
 
         if (target.Ravager)
@@ -366,7 +414,7 @@ public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
             case CryogenShield:
             case AnahitasIceShield:
             case AureusSpawn:
-            case Bumblefuck when CAUtils.PermaFrostActive || (NPC.AnyNPCs(out _, out Yharon yharon) && new YharonPublicizer(yharon).startSecondAI):
+            case Bumblefuck when CAUtils.PermaFrostActive || (NPC.AnyNPCs(out _, out Yharon yharon) && Yharon_Publicizer.Instance.SetYharon(yharon).startSecondAI):
             case Bumblefuck2:
             case CeaselessVoid when target.Ocean().LifeRatio < 0.2f:
             case PhantomFuckYou:
@@ -444,7 +492,7 @@ public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
 
     public override void ModifyHitNPC_DR(NPC npc, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier)
     {
-        if (MurasamaUtils.IsSam(Owner))
+        if (Murasama_Utils.IsSam(Owner))
         {
             baseDRModifier.Base *= 0f;
             timedDRModifier *= 0f;
@@ -454,73 +502,7 @@ public class MurasamaSlashTweak : CAProjectileTweak<MurasamaSlash>
     }
 }
 
-public class MurasamaDetour : ModItemDetour<Murasama>
-{
-    public override bool Detour_PreDrawInInventory(Orig_PreDrawInInventory orig, Murasama self, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
-    {
-        if (!CAMain.Tweak)
-            return orig(self, spriteBatch, position, frame, drawColor, itemColor, origin, scale);
-
-        Texture2D texture;
-
-        if (MurasamaUtils.Unlocked(Main.LocalPlayer))
-        {
-            //0 = 6 frames, 8 = 3 frames]
-            texture = ModContent.Request<Texture2D>(self.Texture).Value;
-            spriteBatch.Draw(texture, position, self.Item.GetCurrentFrame(ref self.frame, ref self.frameCounter, 2, 13), Color.White, 0f, origin, scale, SpriteEffects.None, 0);
-        }
-        else
-        {
-            texture = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Melee/MurasamaSheathed").Value;
-            spriteBatch.Draw(texture, position, null, Color.White, 0f, origin, scale, SpriteEffects.None, 0);
-        }
-
-        return false;
-    }
-
-    public override bool Detour_PreDrawInWorld(Orig_PreDrawInWorld orig, Murasama self, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
-    {
-        if (!CAMain.Tweak)
-            return orig(self, spriteBatch, lightColor, alphaColor, ref rotation, ref scale, whoAmI);
-
-        Texture2D texture;
-
-        if (MurasamaUtils.Unlocked(Main.LocalPlayer))
-        {
-            texture = ModContent.Request<Texture2D>(self.Texture).Value;
-            spriteBatch.Draw(texture, self.Item.position - Main.screenPosition, self.Item.GetCurrentFrame(ref self.frame, ref self.frameCounter, 2, 13), lightColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
-        }
-        else
-        {
-            texture = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Melee/MurasamaSheathed").Value;
-            spriteBatch.Draw(texture, self.Item.position - Main.screenPosition, null, lightColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
-        }
-
-        return false;
-    }
-
-    public override void Detour_PostDrawInWorld(Orig_PostDrawInWorld orig, Murasama self, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, float rotation, float scale, int whoAmI)
-    {
-        if (!CAMain.Tweak || !MurasamaUtils.Unlocked(Main.LocalPlayer))
-        {
-            orig(self, spriteBatch, lightColor, alphaColor, rotation, scale, whoAmI);
-            return;
-        }
-
-        Texture2D texture = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Melee/MurasamaGlow").Value;
-        spriteBatch.Draw(texture, self.Item.position - Main.screenPosition, self.Item.GetCurrentFrame(ref self.frame, ref self.frameCounter, 2, 13, false), Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
-    }
-
-    public override bool Detour_CanUseItem(Orig_CanUseItem orig, Murasama self, Player player)
-    {
-        if (!CAMain.Tweak)
-            return orig(self, player);
-
-        return player.ownedProjectileCounts[self.Item.shoot] < 1 && MurasamaUtils.Unlocked(player);
-    }
-}
-
-public static class MurasamaUtils
+public static class Murasama_Utils
 {
     public static bool IsSam(Player player) => player.name == "Jetstream Sam";
 

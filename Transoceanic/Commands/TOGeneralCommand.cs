@@ -102,13 +102,13 @@ public class TOGeneralChatCommand : ModCommand
     }
 }
 
-public class TOCommandHelper : ITOLoader
+public class TOCommandHelper : IResourceLoader
 {
     internal static Dictionary<string, ITOCommand> CommandSet { get; } = [];
 
     private const string localizationPrefix = TOMain.ModLocalizationPrefix + "Commands.GeneralCommand.";
 
-    void ITOLoader.PostSetupContent()
+    void IResourceLoader.PostSetupContent()
     {
         foreach (ITOCommand commandContainer in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOCommand>())
         {
@@ -117,7 +117,7 @@ public class TOCommandHelper : ITOLoader
         }
     }
 
-    void ITOLoader.OnModUnload()
+    void IResourceLoader.OnModUnload()
     {
         CommandSet.Clear();
     }

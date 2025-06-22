@@ -113,15 +113,11 @@ public abstract class AnomalyNPCBehavior<T> : CANPCBehavior<T> where T : ModNPC
 public abstract class CANPCTweak : CANPCBehavior
 {
     public override decimal Priority => 5m;
-
-    public override bool ShouldProcess => CAMain.Tweak;
 }
 
 public abstract class CANPCTweak<T> : CANPCBehavior<T> where T : ModNPC
 {
     public override decimal Priority => 5m;
-
-    public override bool ShouldProcess => CAMain.Tweak;
 }
 #endregion NPC
 
@@ -193,15 +189,11 @@ public abstract class AnomalyProjecileBehavior<T> : CAProjectileBehavior<T> wher
 public abstract class CAProjectileTweak : CAProjectileBehavior
 {
     public override decimal Priority => 5m;
-
-    public override bool ShouldProcess => CAMain.Tweak;
 }
 
 public abstract class CAProjectileTweak<T> : CAProjectileBehavior<T> where T : ModProjectile
 {
     public override decimal Priority => 5m;
-
-    public override bool ShouldProcess => CAMain.Tweak;
 }
 #endregion Projectile
 
@@ -246,19 +238,15 @@ public abstract class CAItemBehavior<T> : CAItemBehavior where T : ModItem
 public abstract class CAItemTweak : CAItemBehavior
 {
     public override decimal Priority => 5m;
-
-    public override bool ShouldProcess => CAMain.Tweak;
 }
 
 public abstract class CAItemTweak<T> : CAItemBehavior<T> where T : ModItem
 {
     public override decimal Priority => 5m;
-
-    public override bool ShouldProcess => CAMain.Tweak;
 }
 #endregion Item
 
-public class CABehaviorHelper : ITOLoader
+public class CABehaviorHelper : IResourceLoader
 {
     internal static NontypedEntityBehaviorSet<Player, CAPlayerBehavior> PlayerBehaviors { get; } = [];
 
@@ -268,7 +256,7 @@ public class CABehaviorHelper : ITOLoader
 
     internal static TypedEntityBehaviorSet<Item, CAItemBehavior> ItemBehaviors { get; } = [];
 
-    void ITOLoader.PostSetupContent()
+    void IResourceLoader.PostSetupContent()
     {
         Assembly assembly = CAMain.Assembly;
         PlayerBehaviors.FillSet(assembly);
@@ -277,7 +265,7 @@ public class CABehaviorHelper : ITOLoader
         ItemBehaviors.FillSet(assembly);
     }
 
-    void ITOLoader.OnModUnload()
+    void IResourceLoader.OnModUnload()
     {
         PlayerBehaviors.Clear();
         NPCBehaviors.Clear();

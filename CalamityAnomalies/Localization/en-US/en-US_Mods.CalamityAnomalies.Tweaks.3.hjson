@@ -1,0 +1,8 @@
+2: {
+	Header: Post Golem
+
+	SoaringInsignia: {
+		Tooltip0: Increases wing flight time by 1.3x
+		Tooltip1: Increases movement speed by 1.15x, jump speed by 36% and acceleration by 1.35x
+	}
+}

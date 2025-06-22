@@ -632,16 +632,16 @@ public class CAGlobalNPC : GlobalNPC
     }
     #endregion Net
 
-    public class Loader : ITOLoader
+    public class Loader : IResourceLoader
     {
-        void ITOLoader.PostSetupContent()
+        void IResourceLoader.PostSetupContent()
         {
             Type type = typeof(CalamityGlobalNPC);
             OrigMethod_CustomDRMath = type.GetMethod("CustomDRMath", TOReflectionUtils.UniversalBindingFlags).CreateDelegate<Orig_DRMath>();
             OrigMethod_DefaultDRMath = type.GetMethod("DefaultDRMath", TOReflectionUtils.UniversalBindingFlags).CreateDelegate<Orig_DRMath>();
         }
 
-        void ITOLoader.OnModUnload()
+        void IResourceLoader.OnModUnload()
         {
             OrigMethod_DefaultDRMath = null;
             OrigMethod_CustomDRMath = null;

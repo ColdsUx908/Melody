@@ -18,15 +18,15 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="Tweaks\1_1_Beginning\" />
+	  <Folder Include="Tweaks\3_3_PostCultist\" />
 	  <Folder Include="Tweaks\4_2_PostProvidence\" />
-	  <Folder Include="Tweaks\4_3_PostPolterghast\" />
 	  <Folder Include="Tweaks\5_2_PostYharon\" />
 	  <Folder Include="Tweaks\1_2_PostEvil1\" />
 	  <Folder Include="Tweaks\1_3_PostEvil2\" />
 	  <Folder Include="Tweaks\2_1_Hardmode\" />
 	  <Folder Include="Tweaks\2_2_PostMechanics\" />
 	  <Folder Include="Tweaks\3_1_PostPlantera\" />
-	  <Folder Include="Tweaks\3_2_PostGolem\" />
+	  <Folder Include="Tweaks\6_Endgame\" />
 	</ItemGroup>
 	<ItemGroup>
 	  <PackageReference Include="ZLinq" Version="1.4.9" />

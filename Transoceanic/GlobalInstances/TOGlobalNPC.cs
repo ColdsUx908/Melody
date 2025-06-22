@@ -299,7 +299,7 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
         _identifierAllocator = 0;
     }
 
-    void ITOLoader.UnLoad()
+    void ITOLoader.Unload()
     {
         _identifierAllocator = 0;
     }

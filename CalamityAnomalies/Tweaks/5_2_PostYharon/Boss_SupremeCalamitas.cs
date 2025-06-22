@@ -4,7 +4,7 @@ using CalamityMod.Projectiles.Boss;
 
 namespace CalamityAnomalies.Tweaks._5_3_LastBoss;
 
-public class SupremeCalamitasDetour : ModNPCDetour<SupremeCalamitas>
+public class SupremeCalamitas_Detour : ModNPCDetour<SupremeCalamitas>
 {
     public override bool Detour_CheckDead(Orig_CheckDead orig, SupremeCalamitas self)
     {
@@ -29,7 +29,7 @@ public class SupremeCalamitasDetour : ModNPCDetour<SupremeCalamitas>
     }
 }
 
-public class SCalBrimstoneGigablastDetour : ModProjectileDetour<SCalBrimstoneGigablast>
+public class SCalBrimstoneGigablast_Detour : ModProjectileDetour<SCalBrimstoneGigablast>
 {
     public override void Detour_OnKill(Orig_OnKill orig, SCalBrimstoneGigablast self, int timeLeft)
     {
@@ -50,7 +50,7 @@ public class SCalBrimstoneGigablastDetour : ModProjectileDetour<SCalBrimstoneGig
     }
 }
 
-public class SCalBrimstoneFireblastDetour : ModProjectileDetour<SCalBrimstoneFireblast>
+public class SCalBrimstoneFireblast_Detour : ModProjectileDetour<SCalBrimstoneFireblast>
 {
     public override void Detour_OnKill(Orig_OnKill orig, SCalBrimstoneFireblast self, int timeLeft)
     {

@@ -56,13 +56,13 @@ public class Transoceanic : Mod
         try
         {
             Instance = this;
-            foreach ((Type type, ITOLoader loader) in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(TOMain.Assembly).AsValueEnumerable()
-                .OrderByDescending(k => k.instance.GetPriority(LoaderMethodType.Load)))
+
+            foreach (ITOLoader loader in
+                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(TOMain.Assembly).AsValueEnumerable()
+                orderby pair.type.GetMethod("Load", TOReflectionUtils.UniversalBindingFlags)?.GetAttribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+                select pair.instance)
             {
-                if (!type.MustHaveRealMethodWith("Load", "Unload", TOReflectionUtils.UniversalBindingFlags))
-                    throw new Exception($"[{type.Name}] must implement Unload with Load implemented.");
-                else
-                    loader.Load();
+                loader.Load();
             }
         }
         finally
@@ -74,13 +74,12 @@ public class Transoceanic : Mod
 
     public override void PostSetupContent()
     {
-        foreach ((Type type, ITOLoader loader) in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>().AsValueEnumerable()
-            .OrderByDescending(k => k.instance.GetPriority(LoaderMethodType.PostSetupContent)))
+        foreach (IResourceLoader loader in
+            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IResourceLoader>().AsValueEnumerable()
+            orderby pair.type.GetMethod("PostSetupContent", TOReflectionUtils.UniversalBindingFlags)?.GetAttribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+            select pair.instance)
         {
-            if (!type.MustHaveRealMethodWith("PostSetUpContents", "OnModUnload", TOReflectionUtils.UniversalBindingFlags))
-                throw new Exception($"[{type.Name}] must implement OnModUnload with PostSetupContent implemented.");
-            else
-                loader.PostSetupContent();
+            loader.PostSetupContent();
         }
     }
 
@@ -91,10 +90,12 @@ public class Transoceanic : Mod
         {
             if (Loaded)
             {
-                foreach (ITOLoader loader in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITOLoader>(TOMain.Assembly).AsValueEnumerable()
-                    .OrderByDescending(k => k.GetPriority(LoaderMethodType.UnLoad)))
+                foreach (ITOLoader loader in (
+                    from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>().AsValueEnumerable()
+                    orderby pair.type.GetMethod("Load", TOReflectionUtils.UniversalBindingFlags)?.GetAttribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+                    select pair.instance).Reverse())
                 {
-                    loader.UnLoad();
+                    loader.Unload();
                 }
                 TOMain.SyncEnabled = false;
                 Instance = null;
@@ -259,7 +260,7 @@ public static class TOMain
             GameTimer = 0;
         }
 
-        void ITOLoader.UnLoad()
+        void ITOLoader.Unload()
         {
             GameTimer = 0;
             Time24Hour = 0.0;

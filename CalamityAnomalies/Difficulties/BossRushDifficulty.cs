@@ -9,7 +9,7 @@ namespace CalamityAnomalies.Difficulties;
 /// BossRush难度。
 /// <br/>所有相关更改均用钩子实现。
 /// </summary>
-public class BossRushMode : DifficultyMode, ITOLoader
+public class BossRushMode : DifficultyMode, IResourceLoader
 {
     private const string localizationPrefix = CAMain.ModLocalizationPrefix + "Difficulty.BossRushMode.";
 
@@ -50,7 +50,7 @@ public class BossRushMode : DifficultyMode, ITOLoader
         ChatTextColor = BossRushModeColor;
     }
 
-    void ITOLoader.PostSetupContent()
+    void IResourceLoader.PostSetupContent()
     {
         Instance = this;
         if (CAServerConfig.Instance.BossRushDifficulty)
@@ -60,7 +60,7 @@ public class BossRushMode : DifficultyMode, ITOLoader
         }
     }
 
-    void ITOLoader.OnModUnload()
+    void IResourceLoader.OnModUnload()
     {
         DifficultyModeSystem.Difficulties.Remove(Instance);
         DifficultyModeSystem.CalculateDifficultyData();

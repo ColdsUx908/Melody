@@ -42,28 +42,78 @@ public class CalamityAnomalies : Mod
 {
     internal static CalamityAnomalies Instance { get; private set; }
 
+    internal static bool Loading { get; private set; } = false;
+
+    internal static bool Loaded { get; private set; } = false;
+
+    internal static bool Unloading { get; private set; } = false;
+
+    internal static bool Unloaded { get; private set; } = false;
+
     public override void Load()
     {
-        Instance = this;
+        Loading = true;
+        try
+        {
+            Instance = this;
+
+            foreach (ICALoader loader in
+                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(CAMain.Assembly).AsValueEnumerable()
+                orderby pair.type.GetMethod("Load", TOReflectionUtils.UniversalBindingFlags)?.GetAttribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+                select pair.instance)
+            {
+                loader.Load();
+            }
+        }
+        finally
+        {
+            Loaded = true;
+            Loading = false;
+        }
     }
 
     public override void Unload()
     {
-        Instance = null;
+        Unloading = true;
+        try
+        {
+            if (Loaded)
+            {
+                foreach (ICALoader loader in (
+                    from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(CAMain.Assembly).AsValueEnumerable()
+                    orderby pair.type.GetMethod("Load", TOReflectionUtils.UniversalBindingFlags)?.GetAttribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+                    select pair.instance).Reverse())
+                {
+                    loader.Unload();
+                }
+                Instance = null;
+            }
+        }
+        finally
+        {
+            Unloaded = true;
+            Unloading = false;
+        }
     }
 }
 
 public static class CAMain
 {
-    /// <summary>
-    /// 是否启用了平衡修改。
-    /// <br/>不要直接使用 <see cref="CAServerConfig.TweaksEnabled"/>。
-    /// </summary>
-    public static bool Tweak => CAServerConfig.Instance?.TweaksEnabled ?? false;
-
     public static Assembly Assembly { get; } = CalamityAnomalies.Instance.Code;
 
+    public static string ModName { get; } = CalamityAnomalies.Instance.Name;
+
+    public static Color MainColor { get; } = Color.HotPink;
+
+    public static Color SecondaryColor { get; } = Color.Pink;
+
+    public static List<Color> ColorList { get; } = [MainColor, SecondaryColor];
+
+    public static Color GetGradientColor(float ratio = 0.5f) => ColorList.LerpMany(TOMathHelper.GetTimeSin(ratio / 2f, unsigned: true));
+
     public const string ModLocalizationPrefix = "Mods.CalamityAnomalies.";
+
+    public const string TweakLocalizationPrefix = ModLocalizationPrefix + "Tweaks.";
 
     public const string TexturePrefix = "CalamityAnomalies/Textures/";
 
@@ -73,15 +123,15 @@ public static class CAMain
 
     public static Color AnomalyUltramundaneColor { get; } = new(0xE8, 0x97, 0xFF);
 
-    public class Load : ITOLoader
+    public class Load : IResourceLoader
     {
-        void ITOLoader.PostSetupContent()
+        void IResourceLoader.PostSetupContent()
         {
             CalamityModInstance = (CalamityMod_)Type_CalamityMod.GetField("Instance", TOReflectionUtils.StaticBindingFlags).GetValue(null);
             TOMain.SyncEnabled = true;
         }
 
-        void ITOLoader.OnModUnload()
+        void IResourceLoader.OnModUnload()
         {
             CalamityModInstance = null;
         }

@@ -1,4 +1,5 @@
-﻿using CalamityMod.NPCs.AquaticScourge;
+﻿using System.Text.RegularExpressions;
+using CalamityMod.NPCs.AquaticScourge;
 using CalamityMod.NPCs.DesertScourge;
 using CalamityMod.NPCs.DevourerofGods;
 using CalamityMod.NPCs.ExoMechs.Apollo;
@@ -20,6 +21,65 @@ public static class CAExtensions
         public CAGlobalItem Anomaly() => item.GetGlobalItem<CAGlobalItem>();
 
         public bool TryGetBehavior(out CAItemBehavior itemBehavior, [CallerMemberName] string methodName = null!) => CABehaviorHelper.ItemBehaviors.TryGetBehavior(item, methodName, out itemBehavior);
+    }
+
+    extension(List<TooltipLine> tooltips)
+    {
+        public void ModifyTooltip_CATweak(Predicate<TooltipLine> predicate, Action<TooltipLine> action)
+        {
+            ArgumentNullException.ThrowIfNull(predicate);
+            ArgumentNullException.ThrowIfNull(action);
+            for (int i = 0; i < tooltips.Count; i++)
+            {
+                TooltipLine line = tooltips[i];
+                if (predicate(line))
+                {
+                    action(line);
+                    line.OverrideColor = CAMain.GetGradientColor(0.25f);
+                    return;
+                }
+            }
+        }
+
+        public void ModifyVanillaTooltipByName_CATweak(string name, Action<TooltipLine> action) =>
+            tooltips.ModifyTooltip_CATweak(k => k.Mod == "Terraria" && k.Name == name, action);
+
+        public void ModifyTooltipByNum_CATweak(int num, Action<TooltipLine> action) =>
+            tooltips.ModifyVanillaTooltipByName_CATweak($"Tooltip{num}", action);
+
+        public void ModifyOrAddCATooltip(int num, Action<TooltipLine> action, bool tweak = true)
+        {
+            ArgumentNullException.ThrowIfNull(action);
+
+            for (int i = tooltips.Count - 1; i >= 0; i--)
+            {
+                TooltipLine line = tooltips[i];
+
+                if (line.Mod == "CalamityAnomalies")
+                {
+                    Match match = Regex.Match(line.Name, @"^Tooltip(\d+)$");
+                    if (!match.Success)
+                        continue;
+                    int lineNum = int.Parse(match.Groups[1].Value);
+                    if (lineNum == num)
+                    {
+                        action(line);
+                        return;
+                    }
+                    if (lineNum < num)
+                    {
+                        tooltips.Insert(i + 1, CAUtils.CreateNewTooltipLine(num, action, tweak));
+                        return;
+                    }
+                }
+            }
+
+            int lastTerrariaIndex = tooltips.FindLastTerrariaTooltipIndex();
+            if (lastTerrariaIndex == -1)
+                tooltips.Add(CAUtils.CreateNewTooltipLine(num, action, tweak));
+            else
+                tooltips.Insert(lastTerrariaIndex + 1, CAUtils.CreateNewTooltipLine(num, action, tweak));
+        }
     }
 
     extension(NPC npc)

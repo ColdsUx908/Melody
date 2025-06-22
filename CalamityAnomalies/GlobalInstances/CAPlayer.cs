@@ -563,6 +563,12 @@ public class CAPlayer : ModPlayer
 
     public bool AntiEPBPlayer { get; set; } = false;
 
+    /// <summary>
+    /// 提升玩家翅膀飞行时间的乘区。
+    /// <br/>每个索引独立计算。
+    /// </summary>
+    public AddableFloat[] WingTimeMaxMultipliers { get; private set; } = new AddableFloat[3];
+
     public override ModPlayer Clone(Player newEntity)
     {
         CAPlayer clone = (CAPlayer)base.Clone(newEntity);
@@ -570,37 +576,42 @@ public class CAPlayer : ModPlayer
         clone.DownedBossCalamity = DownedBossCalamity;
         clone.DownedBossAnomaly = DownedBossAnomaly;
         clone.AntiEPBPlayer = AntiEPBPlayer;
+        clone.WingTimeMaxMultipliers = WingTimeMaxMultipliers;
 
         return clone;
     }
 
     public override void SetStaticDefaults()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.SetStaticDefaults();
     }
 
     public override void Initialize()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.Initialize();
     }
 
     public override void ResetEffects()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        AntiEPBPlayer = false;
+        for (int i = 0; i < WingTimeMaxMultipliers.Length; i++)
+            WingTimeMaxMultipliers[i] = AddableFloat.Zero;
+
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ResetEffects();
     }
 
     public override void ResetInfoAccessories()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ResetInfoAccessories();
     }
 
     public override void RefreshInfoAccessoriesFromTeamPlayers(Player otherPlayer)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.RefreshInfoAccessoriesFromTeamPlayers(otherPlayer);
     }
 
@@ -609,7 +620,7 @@ public class CAPlayer : ModPlayer
         health = StatModifier.Default;
         mana = StatModifier.Default;
 
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
         {
             behavior.ModifyMaxStats(out StatModifier newHealth, out StatModifier newMana);
             health = health.CombineWith(newHealth);
@@ -619,13 +630,13 @@ public class CAPlayer : ModPlayer
 
     public override void UpdateDead()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.UpdateDead();
     }
 
     public override void PreSaveCustomData()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PreSaveCustomData();
     }
 
@@ -634,7 +645,7 @@ public class CAPlayer : ModPlayer
         DownedBossCalamity.SaveData(tag, "PlayerDownedBossCalamity");
         DownedBossAnomaly.SaveData(tag, "PlayerDownedBossAnomaly");
 
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.SaveData(tag);
     }
 
@@ -643,222 +654,230 @@ public class CAPlayer : ModPlayer
         DownedBossCalamity.LoadData(tag, "PlayerDownedBossCalamity");
         DownedBossAnomaly.LoadData(tag, "PlayerDownedBossAnomaly");
 
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.LoadData(tag);
     }
 
     public override void PreSavePlayer()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PreSavePlayer();
     }
 
     public override void PostSavePlayer()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PostSavePlayer();
     }
 
     public override void CopyClientState(ModPlayer targetCopy)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.CopyClientState(targetCopy);
     }
 
     public override void SyncPlayer(int toWho, int fromWho, bool newPlayer)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.SyncPlayer(toWho, fromWho, newPlayer);
     }
 
     public override void SendClientChanges(ModPlayer clientPlayer)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.SendClientChanges(clientPlayer);
     }
 
     public override void UpdateBadLifeRegen()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.UpdateBadLifeRegen();
     }
 
     public override void UpdateLifeRegen()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.UpdateLifeRegen();
     }
 
     public override void NaturalLifeRegen(ref float regen)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.NaturalLifeRegen(ref regen);
     }
 
     public override void UpdateAutopause()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.UpdateAutopause();
     }
 
     public override void PreUpdate()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PreUpdate();
     }
 
     public override void ProcessTriggers(TriggersSet triggersSet)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ProcessTriggers(triggersSet);
     }
 
     public override void ArmorSetBonusActivated()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ArmorSetBonusActivated();
     }
 
     public override void ArmorSetBonusHeld(int holdTime)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ArmorSetBonusHeld(holdTime);
     }
 
     public override void SetControls()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.SetControls();
     }
 
     public override void PreUpdateBuffs()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PreUpdateBuffs();
     }
 
     public override void PostUpdateBuffs()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PostUpdateBuffs();
     }
 
     public override void UpdateEquips()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.UpdateEquips();
     }
 
     public override void PostUpdateEquips()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PostUpdateEquips();
     }
 
     public override void UpdateVisibleAccessories()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.UpdateVisibleAccessories();
     }
 
     public override void UpdateVisibleVanityAccessories()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.UpdateVisibleVanityAccessories();
     }
 
     public override void UpdateDyes()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.UpdateDyes();
     }
 
     public override void PostUpdateMiscEffects()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PostUpdateMiscEffects();
+
+        if (Player.wingTimeMax > 0)
+        {
+            float multiplier = 1f;
+            foreach (AddableFloat wingTimeMaxMultiplier in WingTimeMaxMultipliers)
+                multiplier *= (1f + wingTimeMaxMultiplier.Value);
+            Player.wingTimeMax = (int)(Player.wingTimeMax * multiplier);
+        }
     }
 
     public override void PostUpdateRunSpeeds()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PostUpdateRunSpeeds();
     }
 
     public override void PreUpdateMovement()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PreUpdateMovement();
     }
 
     public override void PostUpdate()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PostUpdate();
     }
 
     public override void ModifyExtraJumpDurationMultiplier(ExtraJump jump, ref float duration)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyExtraJumpDurationMultiplier(jump, ref duration);
     }
 
     public override bool CanStartExtraJump(ExtraJump jump)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.CanStartExtraJump(jump);
         return result;
     }
 
     public override void OnExtraJumpStarted(ExtraJump jump, ref bool playSound)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnExtraJumpStarted(jump, ref playSound);
     }
 
     public override void OnExtraJumpEnded(ExtraJump jump)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnExtraJumpEnded(jump);
     }
 
     public override void OnExtraJumpRefreshed(ExtraJump jump)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnExtraJumpRefreshed(jump);
     }
 
     public override void ExtraJumpVisuals(ExtraJump jump)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ExtraJumpVisuals(jump);
     }
 
     public override bool CanShowExtraJumpVisuals(ExtraJump jump)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.CanShowExtraJumpVisuals(jump);
         return result;
     }
 
     public override void OnExtraJumpCleared(ExtraJump jump)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnExtraJumpCleared(jump);
     }
 
     public override void FrameEffects()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.FrameEffects();
     }
 
     public override bool ImmuneTo(PlayerDeathReason damageSource, int cooldownCounter, bool dodgeable)
     {
         bool result = false;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result |= behavior.ImmuneTo(damageSource, cooldownCounter, dodgeable);
         return result;
     }
@@ -866,7 +885,7 @@ public class CAPlayer : ModPlayer
     public override bool FreeDodge(Player.HurtInfo info)
     {
         bool result = false;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result |= behavior.FreeDodge(info);
         return result;
     }
@@ -874,75 +893,75 @@ public class CAPlayer : ModPlayer
     public override bool ConsumableDodge(Player.HurtInfo info)
     {
         bool result = false;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result |= behavior.ConsumableDodge(info);
         return result;
     }
 
     public override void ModifyHurt(ref Player.HurtModifiers modifiers)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyHurt(ref modifiers);
     }
 
     public override void OnHurt(Player.HurtInfo info)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnHurt(info);
     }
 
     public override void PostHurt(Player.HurtInfo info)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PostHurt(info);
     }
 
     public override bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genDust, ref PlayerDeathReason damageSource)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.PreKill(damage, hitDirection, pvp, ref playSound, ref genDust, ref damageSource);
         return result;
     }
 
     public override void Kill(double damage, int hitDirection, bool pvp, PlayerDeathReason damageSource)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.Kill(damage, hitDirection, pvp, damageSource);
     }
 
     public override bool PreModifyLuck(ref float luck)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.PreModifyLuck(ref luck);
         return result;
     }
 
     public override void ModifyLuck(ref float luck)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyLuck(ref luck);
     }
 
     public override bool PreItemCheck()
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.PreItemCheck();
         return result;
     }
 
     public override void PostItemCheck()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PostItemCheck();
     }
 
     public override float UseTimeMultiplier(Item item)
     {
         float result = 1f;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result *= behavior.UseTimeMultiplier(item);
         return result;
     }
@@ -950,7 +969,7 @@ public class CAPlayer : ModPlayer
     public override float UseAnimationMultiplier(Item item)
     {
         float result = 1f;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result *= behavior.UseAnimationMultiplier(item);
         return result;
     }
@@ -958,110 +977,110 @@ public class CAPlayer : ModPlayer
     public override float UseSpeedMultiplier(Item item)
     {
         float result = 1f;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result *= behavior.UseSpeedMultiplier(item);
         return result;
     }
 
     public override void GetHealLife(Item item, bool quickHeal, ref int healValue)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.GetHealLife(item, quickHeal, ref healValue);
     }
 
     public override void GetHealMana(Item item, bool quickHeal, ref int healValue)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.GetHealMana(item, quickHeal, ref healValue);
     }
 
     public override void ModifyManaCost(Item item, ref float reduce, ref float mult)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyManaCost(item, ref reduce, ref mult);
     }
 
     public override void OnMissingMana(Item item, int neededMana)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnMissingMana(item, neededMana);
     }
 
     public override void OnConsumeMana(Item item, int manaConsumed)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnConsumeMana(item, manaConsumed);
     }
 
     public override void ModifyWeaponDamage(Item item, ref StatModifier damage)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyWeaponDamage(item, ref damage);
     }
 
     public override void ModifyWeaponKnockback(Item item, ref StatModifier knockback)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyWeaponKnockback(item, ref knockback);
     }
 
     public override void ModifyWeaponCrit(Item item, ref float crit)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyWeaponCrit(item, ref crit);
     }
 
     public override bool CanConsumeAmmo(Item weapon, Item ammo)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.CanConsumeAmmo(weapon, ammo);
         return result;
     }
 
     public override void OnConsumeAmmo(Item weapon, Item ammo)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnConsumeAmmo(weapon, ammo);
     }
 
     public override bool CanShoot(Item item)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.CanShoot(item);
         return result;
     }
 
     public override void ModifyShootStats(Item item, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyShootStats(item, ref position, ref velocity, ref type, ref damage, ref knockback);
     }
 
     public override bool Shoot(Item item, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.Shoot(item, source, position, velocity, type, damage, knockback);
         return result;
     }
 
     public override void MeleeEffects(Item item, Rectangle hitbox)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.MeleeEffects(item, hitbox);
     }
 
     public override void EmitEnchantmentVisualsAt(Projectile projectile, Vector2 boxPosition, int boxWidth, int boxHeight)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.EmitEnchantmentVisualsAt(projectile, boxPosition, boxWidth, boxHeight);
     }
 
     public override bool? CanCatchNPC(NPC target, Item item)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
         {
             bool? result = behavior.CanCatchNPC(target, item);
             if (result is not null)
@@ -1072,33 +1091,33 @@ public class CAPlayer : ModPlayer
 
     public override void OnCatchNPC(NPC npc, Item item, bool failed)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnCatchNPC(npc, item, failed);
     }
 
     public override void ModifyItemScale(Item item, ref float scale)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyItemScale(item, ref scale);
     }
 
     public override void OnHitAnything(float x, float y, Entity victim)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnHitAnything(x, y, victim);
     }
 
     public override bool CanHitNPC(NPC target)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.CanHitNPC(target);
         return result;
     }
 
     public override bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, NPC target)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
         {
             bool? result = behavior.CanMeleeAttackCollideWithNPC(item, meleeAttackHitbox, target);
             if (result is not null)
@@ -1109,19 +1128,19 @@ public class CAPlayer : ModPlayer
 
     public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyHitNPC(target, ref modifiers);
     }
 
     public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnHitNPC(target, hit, damageDone);
     }
 
     public override bool? CanHitNPCWithItem(Item item, NPC target)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
         {
             bool? result = behavior.CanHitNPCWithItem(item, target);
             if (result is not null)
@@ -1132,19 +1151,19 @@ public class CAPlayer : ModPlayer
 
     public override void ModifyHitNPCWithItem(Item item, NPC target, ref NPC.HitModifiers modifiers)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyHitNPCWithItem(item, target, ref modifiers);
     }
 
     public override void OnHitNPCWithItem(Item item, NPC target, NPC.HitInfo hit, int damageDone)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnHitNPCWithItem(item, target, hit, damageDone);
     }
 
     public override bool? CanHitNPCWithProj(Projectile proj, NPC target)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
         {
             bool? result = behavior.CanHitNPCWithProj(proj, target);
             if (result is not null)
@@ -1155,20 +1174,20 @@ public class CAPlayer : ModPlayer
 
     public override void ModifyHitNPCWithProj(Projectile proj, NPC target, ref NPC.HitModifiers modifiers)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyHitNPCWithProj(proj, target, ref modifiers);
     }
 
     public override void OnHitNPCWithProj(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnHitNPCWithProj(proj, target, hit, damageDone);
     }
 
     public override bool CanHitPvp(Item item, Player target)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.CanHitPvp(item, target);
         return result;
     }
@@ -1176,7 +1195,7 @@ public class CAPlayer : ModPlayer
     public override bool CanHitPvpWithProj(Projectile proj, Player target)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.CanHitPvpWithProj(proj, target);
         return result;
     }
@@ -1184,64 +1203,64 @@ public class CAPlayer : ModPlayer
     public override bool CanBeHitByNPC(NPC npc, ref int cooldownSlot)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.CanBeHitByNPC(npc, ref cooldownSlot);
         return result;
     }
 
     public override void ModifyHitByNPC(NPC npc, ref Player.HurtModifiers modifiers)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyHitByNPC(npc, ref modifiers);
     }
 
     public override void OnHitByNPC(NPC npc, Player.HurtInfo hurtInfo)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnHitByNPC(npc, hurtInfo);
     }
 
     public override bool CanBeHitByProjectile(Projectile proj)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.CanBeHitByProjectile(proj);
         return result;
     }
 
     public override void ModifyHitByProjectile(Projectile proj, ref Player.HurtModifiers modifiers)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyHitByProjectile(proj, ref modifiers);
     }
 
     public override void OnHitByProjectile(Projectile proj, Player.HurtInfo hurtInfo)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnHitByProjectile(proj, hurtInfo);
     }
 
     public override void ModifyFishingAttempt(ref FishingAttempt attempt)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyFishingAttempt(ref attempt);
     }
 
     public override void CatchFish(FishingAttempt attempt, ref int itemDrop, ref int npcSpawn, ref AdvancedPopupRequest sonar, ref Vector2 sonarPosition)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.CatchFish(attempt, ref itemDrop, ref npcSpawn, ref sonar, ref sonarPosition);
     }
 
     public override void ModifyCaughtFish(Item fish)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyCaughtFish(fish);
     }
 
     public override bool? CanConsumeBait(Item bait)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
         {
             bool? result = behavior.CanConsumeBait(bait);
             if (result is not null)
@@ -1252,86 +1271,86 @@ public class CAPlayer : ModPlayer
 
     public override void GetFishingLevel(Item fishingRod, Item bait, ref float fishingLevel)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.GetFishingLevel(fishingRod, bait, ref fishingLevel);
     }
 
     public override void AnglerQuestReward(float rareMultiplier, List<Item> rewardItems)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.AnglerQuestReward(rareMultiplier, rewardItems);
     }
 
     public override void GetDyeTraderReward(List<int> rewardPool)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.GetDyeTraderReward(rewardPool);
     }
 
     public override void DrawEffects(PlayerDrawSet drawInfo, ref float r, ref float g, ref float b, ref float a, ref bool fullBright)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.DrawEffects(drawInfo, ref r, ref g, ref b, ref a, ref fullBright);
     }
 
     public override void ModifyDrawInfo(ref PlayerDrawSet drawInfo)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyDrawInfo(ref drawInfo);
     }
 
     public override void ModifyDrawLayerOrdering(IDictionary<PlayerDrawLayer, PlayerDrawLayer.Position> positions)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyDrawLayerOrdering(positions);
     }
 
     public override void HideDrawLayers(PlayerDrawSet drawInfo)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.HideDrawLayers(drawInfo);
     }
 
     public override void ModifyScreenPosition()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyScreenPosition();
     }
 
     public override void ModifyZoom(ref float zoom)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyZoom(ref zoom);
     }
 
     public override void PlayerConnect()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PlayerConnect();
     }
 
     public override void PlayerDisconnect()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PlayerDisconnect();
     }
 
     public override void OnEnterWorld()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnEnterWorld();
     }
 
     public override void OnRespawn()
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.OnRespawn();
     }
 
     public override bool ShiftClickSlot(Item[] inventory, int context, int slot)
     {
         bool result = false;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result |= behavior.ShiftClickSlot(inventory, context, slot);
         return result;
     }
@@ -1339,35 +1358,35 @@ public class CAPlayer : ModPlayer
     public override bool HoverSlot(Item[] inventory, int context, int slot)
     {
         bool result = false;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result |= behavior.HoverSlot(inventory, context, slot);
         return result;
     }
 
     public override void PostSellItem(NPC vendor, Item[] shopInventory, Item item)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PostSellItem(vendor, shopInventory, item);
     }
 
     public override bool CanSellItem(NPC vendor, Item[] shopInventory, Item item)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.CanSellItem(vendor, shopInventory, item);
         return result;
     }
 
     public override void PostBuyItem(NPC vendor, Item[] shopInventory, Item item)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PostBuyItem(vendor, shopInventory, item);
     }
 
     public override bool CanBuyItem(NPC vendor, Item[] shopInventory, Item item)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.CanBuyItem(vendor, shopInventory, item);
         return result;
     }
@@ -1375,14 +1394,14 @@ public class CAPlayer : ModPlayer
     public override bool CanUseItem(Item item)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.CanUseItem(item);
         return result;
     }
 
     public override bool? CanAutoReuseItem(Item item)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
         {
             bool? result = behavior.CanAutoReuseItem(item);
             if (result is not null)
@@ -1394,27 +1413,27 @@ public class CAPlayer : ModPlayer
     public override bool ModifyNurseHeal(NPC nurse, ref int health, ref bool removeDebuffs, ref string chatText)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.ModifyNurseHeal(nurse, ref health, ref removeDebuffs, ref chatText);
         return result;
     }
 
     public override void ModifyNursePrice(NPC nurse, int health, bool removeDebuffs, ref int price)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyNursePrice(nurse, health, removeDebuffs, ref price);
     }
 
     public override void PostNurseHeal(NPC nurse, int health, bool removeDebuffs, int price)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.PostNurseHeal(nurse, health, removeDebuffs, price);
     }
 
     public override IEnumerable<Item> AddStartingItems(bool mediumCoreDeath)
     {
         List<Item> allItems = [];
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
         {
             IEnumerable<Item> items = behavior.AddStartingItems(mediumCoreDeath);
             if (items is not null)
@@ -1425,7 +1444,7 @@ public class CAPlayer : ModPlayer
 
     public override void ModifyStartingInventory(IReadOnlyDictionary<string, List<Item>> itemsByMod, bool mediumCoreDeath)
     {
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ModifyStartingInventory(itemsByMod, mediumCoreDeath);
     }
 
@@ -1433,7 +1452,7 @@ public class CAPlayer : ModPlayer
     {
         itemConsumedCallback = null;
         List<Item> allItems = [];
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
         {
             IEnumerable<Item> items = behavior.AddMaterialsForCrafting(out ItemConsumedCallback callback);
             if (items is not null)
@@ -1446,7 +1465,7 @@ public class CAPlayer : ModPlayer
     public override bool OnPickup(Item item)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.OnPickup(item);
         return result;
     }
@@ -1454,7 +1473,7 @@ public class CAPlayer : ModPlayer
     public override bool CanBeTeleportedTo(Vector2 teleportPosition, string context)
     {
         bool result = true;
-        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors)
+        foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             result &= behavior.CanBeTeleportedTo(teleportPosition, context);
         return result;
     }

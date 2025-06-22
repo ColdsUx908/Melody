@@ -18,16 +18,6 @@ public class CAServerConfig : ModConfig
     [Header("Content")]
 
     [ReloadRequired]
-    [DefaultValue(
-#if TWEAK
-        true
-#else
-        false
-#endif
-        )]
-    public bool TweaksEnabled { get; set; }
-
-    [ReloadRequired]
     [DefaultValue(false)]
     public bool BossRushDifficulty { get; set; }
 }

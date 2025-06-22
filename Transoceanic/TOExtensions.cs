@@ -1,7 +1,4 @@
-﻿using Ionic.Zlib;
-using Terraria;
-
-namespace Transoceanic;
+﻿namespace Transoceanic;
 
 public static class TOExtensions
 {
@@ -58,7 +55,7 @@ public static class TOExtensions
     {
         public void ReplyLocalizedText(string key, Color? textColor = null) => caller.Reply(Language.GetTextValue(key), textColor ?? Color.White);
 
-        public void ReplyLocalizedTextWith(string key, Color? textColor = null, params object[] args) => caller.Reply(TOLocalizationUtils.GetTextFormat(key, args), textColor ?? Color.White);
+        public void ReplyLocalizedTextWith(string key, Color? textColor = null, params object[] args) => caller.Reply(Language.GetTextFormat(key, args), textColor ?? Color.White);
 
         public void ReplyStringBuilder(StringBuilder builder, Color? textColor = null) => caller.Reply(builder.ToString(), textColor ?? Color.White);
 
@@ -290,6 +287,46 @@ public static class TOExtensions
         public bool TryGetModItem<T>([NotNullWhen(true)] out T result) where T : ModItem => (result = item.GetModItem<T>()) is not null;
     }
 
+    extension(Language)
+    {
+        public static string GetTextFormat(string key, params object[] args) => Language.GetText(key).Format(args);
+    }
+
+    extension(List<TooltipLine> tooltips)
+    {
+        public int FindLastTerrariaTooltipIndex()
+        {
+            for (int i = tooltips.Count - 1; i >= 0; i--)
+            {
+                TooltipLine line = tooltips[i];
+                if (line.Mod == "Terraria" && line.Name.StartsWith("Tooltip"))
+                    return i;
+            }
+            return -1;
+        }
+
+        public void ModifyTooltip(Predicate<TooltipLine> predicate, Action<TooltipLine> action)
+        {
+            ArgumentNullException.ThrowIfNull(predicate);
+            ArgumentNullException.ThrowIfNull(action);
+            for (int i = 0; i < tooltips.Count; i++)
+            {
+                TooltipLine line = tooltips[i];
+                if (predicate(line))
+                {
+                    action(line);
+                    return;
+                }
+            }
+        }
+
+        public void ModifyVanillaTooltipByName(string name, Action<TooltipLine> action) =>
+            tooltips.ModifyTooltip(k => k.Mod == "Terraria" && k.Name == name, action);
+
+        public void ModifyTooltipByNum(int num, Action<TooltipLine> action) =>
+            tooltips.ModifyVanillaTooltipByName($"Tooltip{num}", action);
+    }
+
     extension(MethodBase method)
     {
         public bool HasAttribute<T>() where T : Attribute => method.GetAttribute<T>() is not null;
@@ -329,8 +366,7 @@ public static class TOExtensions
             get
             {
                 MethodInfo baseDefinition = method.GetBaseDefinition();
-                return baseDefinition.DeclaringType != method.DeclaringType &&
-                       !baseDefinition.DeclaringType.IsInterface;
+                return baseDefinition.DeclaringType != method.DeclaringType && !baseDefinition.DeclaringType.IsInterface;
             }
         }
 
@@ -837,7 +873,7 @@ public static class TOExtensions
     {
         public void AppendLocalizedLine(string key) => builder.AppendLine(Language.GetTextValue(key));
 
-        public void AppendLocalizedLineWith(string key, params object[] args) => builder.AppendLine(TOLocalizationUtils.GetTextFormat(key, args));
+        public void AppendLocalizedLineWith(string key, params object[] args) => builder.AppendLine(Language.GetTextFormat(key, args));
 
         public void AppendTODebugErrorMessage()
         {
@@ -856,11 +892,21 @@ public static class TOExtensions
     extension(Type type)
     {
         /// <summary>
+        /// 检查指定类型中是否存在对应方法。
+        /// </summary>
+        /// <param name="methodName"></param>
+        /// <param name="flags"></param>
+        /// <param name="methodInfo"></param>
+        /// <returns></returns>
+        public bool HasMethod(string methodName, BindingFlags flags, out MethodInfo methodInfo) =>
+            (methodInfo = type.GetMethod(methodName, flags)) is not null;
+
+        /// <summary>
         /// 获取指定类型中所有由该类型声明的方法。
         /// </summary>
         /// <param name="flags"></param>
         /// <returns></returns>
-        public IEnumerable<MethodInfo> GetRealMethods(BindingFlags flags) => type.GetMethods(flags).Where(k => k.DeclaringType == type);
+        public MethodInfo[] GetRealMethods(BindingFlags flags) => type.GetMethods(flags | BindingFlags.DeclaredOnly);
 
         /// <summary>
         /// 检查指定类型是否声明了对应方法。
@@ -870,7 +916,7 @@ public static class TOExtensions
         /// <param name="methodInfo"></param>
         /// <returns></returns>
         public bool HasRealMethod(string methodName, BindingFlags flags, out MethodInfo methodInfo) =>
-            (methodInfo = type.GetRealMethods(flags).FirstOrDefault(k => k.Name == methodName)) is not null;
+            type.HasMethod(methodName, flags | BindingFlags.DeclaredOnly, out methodInfo);
 
         /// <summary>
         /// 检查指定类型是否声明了对应方法。

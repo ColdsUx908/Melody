@@ -1,0 +1,9 @@
+3: {
+	Header: Post Polterghast
+
+	AscendantInsignia: {
+		Tooltip0: Increases wing flight time by 1.5x
+		Tooltip1: Increases movement speed by 1.25x, jump speed by 60% and acceleration by 1.35x
+		Tooltip3: Ascension has a 30 second cooldown
+	}
+}

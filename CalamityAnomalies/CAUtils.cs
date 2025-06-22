@@ -28,6 +28,17 @@ public static class CAUtils
             return false;
         }
     }
+
+    public static void LogILFailure(string name, string reason) => CalamityAnomalies.Instance.Logger.Warn($"IL edit \"{name}\" failed! {reason}");
+
+    public static TooltipLine CreateNewTooltipLine(int num, Action<TooltipLine> action, bool tweak)
+    {
+        TooltipLine newLine = new(CalamityAnomalies.Instance, $"Tooltip{num}", "");
+        if (tweak)
+            newLine.OverrideColor = CAMain.GetGradientColor(0.25f);
+        action(newLine);
+        return newLine;
+    }
 }
 
 [DetourClassTo(typeof(CalamityUtils))]

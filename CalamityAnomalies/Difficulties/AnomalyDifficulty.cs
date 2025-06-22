@@ -4,7 +4,7 @@ using CalamityMod.World;
 
 namespace CalamityAnomalies.Difficulties;
 
-public class AnomalyMode : DifficultyMode, ITOLoader
+public class AnomalyMode : DifficultyMode, IResourceLoader
 {
     private const string localizationPrefix = CAMain.ModLocalizationPrefix + "Difficulty.AnomalyMode.";
 
@@ -40,16 +40,16 @@ public class AnomalyMode : DifficultyMode, ITOLoader
         ActivationTextKey = localizationPrefix + "AnomalyActivate";
         DeactivationTextKey = localizationPrefix + "AnomalyDeactivate";
         ActivationSound = SupremeCalamitas.BulletHellEndSound;
-        ChatTextColor = Color.HotPink;
+        ChatTextColor = CAMain.MainColor;
     }
 
-    void ITOLoader.PostSetupContent()
+    void IResourceLoader.PostSetupContent()
     {
         DifficultyModeSystem.Difficulties.Add(Instance = this);
         DifficultyModeSystem.CalculateDifficultyData();
     }
 
-    void ITOLoader.OnModUnload()
+    void IResourceLoader.OnModUnload()
     {
         DifficultyModeSystem.Difficulties.Remove(Instance);
         DifficultyModeSystem.CalculateDifficultyData();
@@ -121,7 +121,7 @@ public sealed class AnomalyManagement : ModSystem
     private static void ZenithInfo()
     {
         if (TOMain.GeneralClient)
-            TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyUltraInvalidZenith", Color.HotPink);
+            TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "AnomalyUltraInvalidZenith", CAMain.MainColor);
         //SoundEngine.PlaySound();
     }
 

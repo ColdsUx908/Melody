@@ -2,11 +2,6 @@
 
 public partial class TOPlayer : ModPlayer
 {
-    #region 特殊事件
-    public bool Celesgod { get; set; } = false;
-    public bool Annigod { get; set; } = false;
-    #endregion 特殊事件
-
     #region 透支生命值
 
     /// <summary>
@@ -55,28 +50,6 @@ public partial class TOPlayer : ModPlayer
     public override void PreUpdate()
     {
         GameTime++;
-        switch (Player.name)
-        {
-            case "Celessalia":
-                Celesgod = Annigod = true;
-                if (GameTime == 300)
-                {
-                    //TOLocalizationUtils.ChatLocalizedText(TOMain.ModLocalizationPrefix + "Gods.CelessAlive", TOMain.CelestialColor, Player);
-                    //TOLocalizationUtils.ChatLocalizedText(TOMain.ModLocalizationPrefix + "Gods.AnniBehind", TOMain.CelestialColor, Player);
-                }
-                break;
-            case "Anniah":
-                Celesgod = false;
-                Annigod = true;
-                if (GameTime == 300)
-                {
-                    //TOLocalizationUtils.ChatLocalizedText(TOMain.ModLocalizationPrefix + "Gods.AnniAlive", TOMain.CelestialColor, Player);
-                }
-                break;
-            default:
-                Celesgod = Annigod = false;
-                break;
-        }
     }
 
     public override void PostUpdate()

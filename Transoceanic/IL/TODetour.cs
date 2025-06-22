@@ -136,7 +136,7 @@ public interface ITODetourProvider
     public virtual decimal LoadPriority => 0m;
 }
 
-public class TODetourHelper : ITOLoader
+public class TODetourHelper : IResourceLoader
 {
     public class DetourSet : IEnumerable<Hook>
     {
@@ -211,15 +211,14 @@ public class TODetourHelper : ITOLoader
 
     internal static DetourSet Detours { get; } = [];
 
-    void ITOLoader.PostSetupContent()
+    void IResourceLoader.PostSetupContent()
     {
         Detours.Clear();
 
         foreach ((Type type, DetourClassToAttribute attribute) in TOReflectionUtils.GetTypesWithAttribute<DetourClassToAttribute>())
         {
             Type targetType = attribute.TargetType;
-            foreach (MethodInfo detour in type.GetRealMethods(TOReflectionUtils.StaticBindingFlags))
-                TODetourUtils.ApplyStaticMethodDetour(detour, targetType);
+            TODetourUtils.ApplyAllStaticMethodDetoursOfType(type, targetType);
         }
 
         foreach ((Type type, MultiDetourClassToAttribute attribute) in TOReflectionUtils.GetTypesWithAttribute<MultiDetourClassToAttribute>())
@@ -235,7 +234,8 @@ public class TODetourHelper : ITOLoader
         foreach (ITODetourProvider detourProvider in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITODetourProvider>().OrderByDescending(k => k.LoadPriority))
             detourProvider.ApplyDetour();
     }
-    void ITOLoader.OnModUnload() => Detours.Clear();
+
+    void IResourceLoader.OnModUnload() => Detours.Clear();
 }
 
 public static class TODetourUtils
@@ -277,7 +277,7 @@ public static class TODetourUtils
         if (detour.HasAttribute<NotDetourMethodAttribute>())
             return null;
         string prefix = detour.GetAttribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
-        Match match = Regex.Match(detour.Name, prefix + Pattern);
+        Match match = Regex.Match(detour.Name, "^" + prefix + Pattern);
         if (match.Success)
             return Modify(detour.GetAttribute<CustomDetourTargetAttribute>()?.TargetMethod ?? targetType.GetMethod(match.Groups["methodName"].Value, TOReflectionUtils.UniversalBindingFlags), detour);
         return null;
@@ -288,7 +288,7 @@ public static class TODetourUtils
         if (detour.HasAttribute<NotDetourMethodAttribute>())
             return null;
         string prefix = detour.GetAttribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
-        Match match = Regex.Match(detour.Name, prefix + Pattern2);
+        Match match = Regex.Match(detour.Name, "^" + prefix + Pattern2);
         if (match.Success)
         {
             Type targetType = targetTypes.AsValueEnumerable().FirstOrDefault(k => k.Name == match.Groups["typeName"].Value);
@@ -296,5 +296,11 @@ public static class TODetourUtils
                 return Modify(detour.GetAttribute<CustomDetourTargetAttribute>()?.TargetMethod ?? targetType.GetMethod(match.Groups["methodName"].Value, TOReflectionUtils.UniversalBindingFlags), detour);
         }
         return null;
+    }
+
+    public static void ApplyAllStaticMethodDetoursOfType(Type type, Type targetType)
+    {
+        foreach (MethodInfo detour in type.GetRealMethods(TOReflectionUtils.StaticBindingFlags))
+            ApplyStaticMethodDetour(detour, targetType);
     }
 }

@@ -7,7 +7,7 @@ namespace CalamityAnomalies.Tweaks._1_4_PostSkeletron;
  * 在LR难度下，击中血肉墙眼睛时必定暴击。
  */
 
-public class SlickCaneProjectileTweak : CAProjectileTweak<SlickCaneProjectile>
+public class SlickCaneProjectile_Tweak : CAProjectileTweak<SlickCaneProjectile>
 {
     public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
     {
