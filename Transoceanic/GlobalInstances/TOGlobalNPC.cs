@@ -7,18 +7,17 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     #region Data
     /// <summary>
     /// 标识符分配器。
-    /// <br/>进入世界时重置为0。
     /// </summary>
     private static long _identifierAllocator;
+
+    private long? _identifier = null;
 
     /// <summary>
     /// NPC的标识符。
     /// <br/>若NPC在进入世界后生成，则标识符为正数。
     /// <br/>不同步。
     /// </summary>
-    public long Identifier { get; private set; } = -1;
-
-    public void AllocateIdentifier() => Identifier = ++_identifierAllocator;
+    public long Identifier => _identifier ??= ++_identifierAllocator;
 
     /// <summary>
     /// NPC生成时 <see cref="TOMain.GameTimer"/> 的值。
@@ -39,7 +38,6 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     {
         TOGlobalNPC clone = (TOGlobalNPC)base.Clone(from, to);
 
-        clone.Identifier = Identifier;
         clone.SpawnTime = SpawnTime;
         Array.Copy(OceanAI, clone.OceanAI, AISlot);
         Array.Copy(OceanAI2, clone.OceanAI2, AISlot2);
@@ -142,6 +140,17 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
 
     public bool TryGetMaster<T>(out NPC master) where T : ModNPC => TryGetMaster(ModContent.NPCType<T>(), out master);
 
+    public bool TryGetMaster<T>(out NPC master, out T modNPC) where T : ModNPC
+    {
+        if (TryGetMaster(ModContent.NPCType<T>(), out master))
+        {
+            modNPC = master.GetModNPC<T>();
+            return true;
+        }
+        modNPC = null;
+        return false;
+    }
+
     public int Timer1
     {
         get => OceanAI[27].i;
@@ -218,7 +227,6 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     #region Active
     public override void OnSpawn(NPC npc, IEntitySource source)
     {
-        AllocateIdentifier(); //城镇NPC这类NPC不会拥有在这里被设置标识符的机会
         SpawnTime = TOMain.GameTimer.TotalTicks;
     }
     #endregion Active

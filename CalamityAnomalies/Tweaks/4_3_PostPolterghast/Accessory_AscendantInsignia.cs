@@ -1,4 +1,5 @@
-﻿using CalamityMod.Items.Accessories;
+﻿using CalamityAnomalies.Tweaks._5_2_PostYharon;
+using CalamityMod.Items.Accessories;
 using Terraria.GameInput;
 
 namespace CalamityAnomalies.Tweaks._4_3_PostPolterghast;
@@ -15,13 +16,21 @@ namespace CalamityAnomalies.Tweaks._4_3_PostPolterghast;
 
 public class AscendantInsignia_Tweak : CAItemTweak<AscendantInsignia>
 {
-    private const string prefix = CAMain.TweakLocalizationPrefix + "4.3.AscendantInsignia.";
+    private const string localizationPrefix = CAMain.TweakLocalizationPrefix + "4.3.AscendantInsignia.";
+
+    public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
+    {
+        CAPlayer anomalyPlayer = Main.LocalPlayer.Anomaly();
+        if (anomalyPlayer.YharimsGift > 0 && anomalyPlayer.YharimsGiftBuff == YharimsGift_Tweak.CurrentBuff.AscendantInsignia)
+            YharimsGift_Tweak.DrawEnergyBehindItem(position);
+        return true;
+    }
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
-        tooltips.ModifyTooltipByNum_CATweak(0, k => k.Text = Language.GetTextValue(prefix + "Tooltip0"));
-        tooltips.ModifyTooltipByNum_CATweak(1, k => k.Text = Language.GetTextValue(prefix + "Tooltip1"));
-        tooltips.ModifyTooltipByNum_CATweak(3, k => k.Text = Language.GetTextValue(prefix + "Tooltip3"));
+        tooltips.ModifyTooltipByNum_CATweak(0, k => k.Text = Language.GetTextValue(localizationPrefix + "Tooltip0"));
+        tooltips.ModifyTooltipByNum_CATweak(1, k => k.Text = Language.GetTextValue(localizationPrefix + "Tooltip1"));
+        tooltips.ModifyTooltipByNum_CATweak(3, k => k.Text = Language.GetTextValue(localizationPrefix + "Tooltip3"));
     }
 }
 

@@ -139,7 +139,7 @@ public abstract class PlayerDownedBoss
     public bool SantaNK1 { get; set; } = false;
     public bool IceQueen { get; set; } = false;
     public bool Betsy { get; set; } = false;
-    public bool Dreadnautilus { get; set; }
+    public bool Dreadnautilus { get; set; } = false;
 
     public bool SolarTower { get; set; } = false;
     public bool VortexTower { get; set; } = false;

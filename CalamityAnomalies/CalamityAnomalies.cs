@@ -107,7 +107,7 @@ public static class CAMain
 
     public static Color SecondaryColor { get; } = Color.Pink;
 
-    public static List<Color> ColorList { get; } = [MainColor, SecondaryColor];
+    public static List<Color> ColorList { get; } = [MainColor, SecondaryColor, MainColor];
 
     public static Color GetGradientColor(float ratio = 0.5f) => ColorList.LerpMany(TOMathHelper.GetTimeSin(ratio / 2f, unsigned: true));
 
@@ -116,6 +116,8 @@ public static class CAMain
     public const string TweakLocalizationPrefix = ModLocalizationPrefix + "Tweaks.";
 
     public const string TexturePrefix = "CalamityAnomalies/Textures/";
+
+    public const string CalamityModLocalizationPrefix = "Mods.CalamityMod.";
 
     public static Type Type_CalamityMod { get; } = typeof(CalamityMod_);
 

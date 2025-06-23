@@ -1,0 +1,8 @@
+2: {
+	Header: Post Yharon
+
+	YharimsGift: {
+		BuffChange: Current buff accessory changed to: {0}
+		CATooltip0: Current buff accessory: {0}
+	}
+}

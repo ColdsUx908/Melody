@@ -953,9 +953,7 @@ public static class TOExtensions
         /// </summary>
         /// <param name="flags"></param>
         /// <returns></returns>
-        public IEnumerable<string> GetOverrideMethodNames(BindingFlags flags) =>
-            from MethodInfo method in type.GetOverrideMethods(flags)
-            select method.FullName;
+        public IEnumerable<string> GetOverrideMethodNames(BindingFlags flags) => type.GetOverrideMethods(flags).Select(k => k.Name);
     }
 
     extension(Vector2 vector)

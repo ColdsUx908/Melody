@@ -7,9 +7,18 @@ public class CAGlobalItem : GlobalItem
 {
     public override bool InstancePerEntity => true;
 
+    private const int dataSlot = 32;
+    private const int dataSlot2 = 16;
+
+    public DataUnion32[] Data { get; } = new DataUnion32[dataSlot];
+    public DataUnion64[] Data2 { get; } = new DataUnion64[dataSlot2];
+
     public override GlobalItem Clone(Item from, Item to)
     {
         CAGlobalItem clone = (CAGlobalItem)base.Clone(from, to);
+
+        Array.Copy(Data, clone.Data, dataSlot);
+        Array.Copy(Data2, clone.Data2, dataSlot2);
 
         return clone;
     }
@@ -184,8 +193,7 @@ public class CAGlobalItem : GlobalItem
             itemBehavior.PostDrawInWorld(spriteBatch, lightColor, alphaColor, rotation, scale, whoAmI);
     }
 
-    public override bool PreDrawInInventory(Item item, SpriteBatch spriteBatch, Vector2 position, Rectangle frame,
-        Color drawColor, Color itemColor, Vector2 origin, float scale)
+    public override bool PreDrawInInventory(Item item, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
     {
         if (item.TryGetBehavior(out CAItemBehavior itemBehavior))
         {
@@ -196,8 +204,7 @@ public class CAGlobalItem : GlobalItem
         return true;
     }
 
-    public override void PostDrawInInventory(Item item, SpriteBatch spriteBatch, Vector2 position, Rectangle frame,
-        Color drawColor, Color itemColor, Vector2 origin, float scale)
+    public override void PostDrawInInventory(Item item, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
     {
         if (item.TryGetBehavior(out CAItemBehavior itemBehavior))
             itemBehavior.PostDrawInInventory(spriteBatch, position, frame, drawColor, itemColor, origin, scale);
@@ -482,17 +489,13 @@ public class CAGlobalItem : GlobalItem
     public override void ModifyHitNPC(Item item, Player player, NPC target, ref NPC.HitModifiers modifiers)
     {
         if (item.TryGetBehavior(out CAItemBehavior itemBehavior))
-        {
             itemBehavior.ModifyHitNPC(player, target, ref modifiers);
-        }
     }
 
     public override void OnHitNPC(Item item, Player player, NPC target, NPC.HitInfo hit, int damageDone)
     {
         if (item.TryGetBehavior(out CAItemBehavior itemBehavior))
-        {
             itemBehavior.OnHitNPC(player, target, hit, damageDone);
-        }
     }
 
     public override bool CanHitPvp(Item item, Player player, Player target)
@@ -510,17 +513,13 @@ public class CAGlobalItem : GlobalItem
     public override void ModifyHitPvp(Item item, Player player, Player target, ref Player.HurtModifiers modifiers)
     {
         if (item.TryGetBehavior(out CAItemBehavior itemBehavior))
-        {
             itemBehavior.ModifyHitPvp(player, target, ref modifiers);
-        }
     }
 
     public override void OnHitPvp(Item item, Player player, Player target, Player.HurtInfo hurtInfo)
     {
         if (item.TryGetBehavior(out CAItemBehavior itemBehavior))
-        {
             itemBehavior.OnHitPvp(player, target, hurtInfo);
-        }
     }
     #endregion Hit
 
@@ -562,6 +561,7 @@ public class CAGlobalItem : GlobalItem
             if (!itemBehavior.CanResearch())
                 return false;
         }
+
         return true;
     }
 
@@ -733,6 +733,20 @@ public class CAGlobalItem : GlobalItem
     }
     #endregion Net
 
+    #region Data
+    public override void SaveData(Item item, TagCompound tag)
+    {
+        if (item.TryGetBehavior(out CAItemBehavior itemBehavior))
+            itemBehavior.SaveData(tag);
+    }
+
+    public override void LoadData(Item item, TagCompound tag)
+    {
+        if (item.TryGetBehavior(out CAItemBehavior itemBehavior))
+            itemBehavior.LoadData(tag);
+    }
+    #endregion Data
+
     #region NotOverriden
     public override bool? CanConsumeBait(Player player, Item bait) => null;
 
@@ -774,9 +788,7 @@ public class CAGlobalItem : GlobalItem
 
     public override void SplitStack(Item destination, Item source, int numToTransfer) { }
 
-    public override void DrawArmorColor(EquipType type, int slot, Player drawPlayer, float shadow, ref Color color,
-        ref int glowMask, ref Color glowMaskColor)
-    { }
+    public override void DrawArmorColor(EquipType type, int slot, Player drawPlayer, float shadow, ref Color color, ref int glowMask, ref Color glowMaskColor) { }
 
     public override void ArmorArmGlowMask(int slot, Player drawPlayer, float shadow, ref int glowMask, ref Color color) { }
 
@@ -796,10 +808,4 @@ public class CAGlobalItem : GlobalItem
 
     public override void AnglerChat(int type, ref string chat, ref string catchLocation) { }
     #endregion NotOverriden
-
-    #region Data
-    public override void SaveData(Item item, TagCompound tag) { }
-
-    public override void LoadData(Item item, TagCompound tag) { }
-    #endregion Data
 }

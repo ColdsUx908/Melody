@@ -1,4 +1,7 @@
-﻿using CalamityMod.NPCs.Abyss;
+﻿using CalamityAnomalies.Tweaks._5_2_PostYharon;
+using CalamityMod.Items.Accessories;
+using CalamityMod.NPCs.Abyss;
+using CalamityMod.NPCs.AcidRain;
 using CalamityMod.NPCs.AquaticScourge;
 using CalamityMod.NPCs.AstrumAureus;
 using CalamityMod.NPCs.AstrumDeus;
@@ -10,6 +13,7 @@ using CalamityMod.NPCs.Crabulon;
 using CalamityMod.NPCs.Cryogen;
 using CalamityMod.NPCs.DesertScourge;
 using CalamityMod.NPCs.DevourerofGods;
+using CalamityMod.NPCs.GreatSandShark;
 using CalamityMod.NPCs.HiveMind;
 using CalamityMod.NPCs.OldDuke;
 using CalamityMod.NPCs.Perforator;
@@ -20,6 +24,7 @@ using CalamityMod.NPCs.Ravager;
 using CalamityMod.NPCs.Signus;
 using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.NPCs.StormWeaver;
+using CalamityMod.NPCs.SunkenSea;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.NPCs.Yharon;
 using Terraria.GameInput;
@@ -86,15 +91,30 @@ public class CAPlayer : ModPlayer
                 }
             }
         } = false;
+        /// <summary>
+        /// 单锁（击败星流巨械和灾厄之一）。
+        /// </summary>
         public bool LastBoss { get; set; } = false;
+        /// <summary>
+        /// 万物的焦点。
+        /// </summary>
         public bool Focus { get; set; } = false;
         public bool PrimordialWyrm { get; set; } = false;
 
-        public bool GSS { get; set; } = false;
-        public bool CLAM { get; set; } = false;
-        public bool CLAMHardMode { get; set; } = false;
+        public bool GreatSandShark { get; set; } = false;
+        public bool GiantClam { get; set; } = false;
+        public bool GiantClamHardmode { get; set; } = false;
+        /// <summary>
+        /// 峭咽潭。
+        /// </summary>
         public bool CragmawMire { get; set; } = false;
+        /// <summary>
+        /// 渊海狂鲨。
+        /// </summary>
         public bool Mauler { get; set; } = false;
+        /// <summary>
+        /// 辐核骇兽。
+        /// </summary>
         public bool NuclearTerror { get; set; } = false;
 
         public bool EoCAcidRain { get; set; } = false;
@@ -109,6 +129,13 @@ public class CAPlayer : ModPlayer
         {
             base.WorldPolluted();
 
+            //灾厄添加的原版Boss跟踪
+            if (DownedBossSystem.downedDreadnautilus)
+                Dreadnautilus = true;
+            if (DownedBossSystem.downedBetsy)
+                Betsy = true;
+
+            //灾厄Boss
             if (DownedBossSystem.downedDesertScourge)
                 DesertScourge = true;
             if (DownedBossSystem.downedCrabulon)
@@ -171,12 +198,13 @@ public class CAPlayer : ModPlayer
             if (DownedBossSystem.downedPrimordialWyrm)
                 PrimordialWyrm = true;
 
+            //灾厄迷你Boss
             if (DownedBossSystem.downedGSS)
-                GSS = true;
+                GreatSandShark = true;
             if (DownedBossSystem.downedCLAM)
-                CLAM = true;
+                GiantClam = true;
             if (DownedBossSystem.downedCLAMHardMode)
-                CLAMHardMode = true;
+                GiantClamHardmode = true;
             if (DownedBossSystem.downedCragmawMire)
                 CragmawMire = true;
             if (DownedBossSystem.downedMauler)
@@ -184,6 +212,7 @@ public class CAPlayer : ModPlayer
             if (DownedBossSystem.downedNuclearTerror)
                 NuclearTerror = true;
 
+            //灾厄事件
             if (DownedBossSystem.downedEoCAcidRain)
                 EoCAcidRain = true;
             if (DownedBossSystem.downedAquaticScourgeAcidRain)
@@ -266,12 +295,12 @@ public class CAPlayer : ModPlayer
             if (PrimordialWyrm)
                 downed.Add("PrimordialWyrm");
 
-            if (GSS)
-                downed.Add("GSS");
-            if (CLAM)
-                downed.Add("CLAM");
-            if (CLAMHardMode)
-                downed.Add("CLAMHardMode");
+            if (GreatSandShark)
+                downed.Add("GreatSandShark");
+            if (GiantClam)
+                downed.Add("GiantClam");
+            if (GiantClamHardmode)
+                downed.Add("GiantClamHardmode");
             if (CragmawMire)
                 downed.Add("CragmawMire");
             if (Mauler)
@@ -356,12 +385,12 @@ public class CAPlayer : ModPlayer
             if (downedLoaded.Contains("PrimordialWyrm"))
                 PrimordialWyrm = true;
 
-            if (downedLoaded.Contains("GSS"))
-                GSS = true;
-            if (downedLoaded.Contains("CLAM"))
-                CLAM = true;
-            if (downedLoaded.Contains("CLAMHardMode"))
-                CLAMHardMode = true;
+            if (downedLoaded.Contains("GreatSandShark"))
+                GreatSandShark = true;
+            if (downedLoaded.Contains("GiantClam"))
+                GiantClam = true;
+            if (downedLoaded.Contains("GiantClamHardmode"))
+                GiantClamHardmode = true;
             if (downedLoaded.Contains("CragmawMire"))
                 CragmawMire = true;
             if (downedLoaded.Contains("Mauler"))
@@ -553,34 +582,59 @@ public class CAPlayer : ModPlayer
                 case EidolonWyrmHead:
                     PrimordialWyrm = true;
                     break;
-                    //灾厄迷你Boss未完成
+                //灾厄迷你Boss未完成
+
+                case GreatSandShark _:
+                    GreatSandShark = true;
+                    break;
+                case Clam:
+                    GiantClam = true;
+                    if (Main.hardMode)
+                        GiantClamHardmode = true;
+                    break;
+                case CragmawMire _:
+                    CragmawMire = true;
+                    break;
+                case Mauler _:
+                    Mauler = true;
+                    break;
+                case NuclearTerror _:
+                    NuclearTerror = true;
+                    break;
             }
         }
     }
 
+    public bool AntiEPBPlayer { get; set; } = false;
+
     public DownedBoss DownedBossCalamity { get; private set; } = new();
     public DownedBoss DownedBossAnomaly { get; private set; } = new();
-
-    public bool AntiEPBPlayer { get; set; } = false;
 
     /// <summary>
     /// 提升玩家翅膀飞行时间的乘区。
     /// <br/>每个索引独立计算。
     /// </summary>
-    public AddableFloat[] WingTimeMaxMultipliers { get; private set; } = new AddableFloat[3];
+    public AddableFloat[] WingTimeMaxMultipliers { get; } = new AddableFloat[3];
+
+    public int YharimsGift { get; set; } = 0;
+
+    public YharimsGift_Tweak.CurrentBuff YharimsGiftBuff { get; set; } = YharimsGift_Tweak.CurrentBuff.None;
 
     public override ModPlayer Clone(Player newEntity)
     {
         CAPlayer clone = (CAPlayer)base.Clone(newEntity);
 
+        clone.AntiEPBPlayer = AntiEPBPlayer;
         clone.DownedBossCalamity = DownedBossCalamity;
         clone.DownedBossAnomaly = DownedBossAnomaly;
-        clone.AntiEPBPlayer = AntiEPBPlayer;
-        clone.WingTimeMaxMultipliers = WingTimeMaxMultipliers;
+        Array.Copy(WingTimeMaxMultipliers, clone.WingTimeMaxMultipliers, WingTimeMaxMultipliers.Length);
+        clone.YharimsGift = YharimsGift;
+        clone.YharimsGiftBuff = YharimsGiftBuff;
 
         return clone;
     }
 
+    #region Behavior
     public override void SetStaticDefaults()
     {
         foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
@@ -598,6 +652,8 @@ public class CAPlayer : ModPlayer
         AntiEPBPlayer = false;
         for (int i = 0; i < WingTimeMaxMultipliers.Length; i++)
             WingTimeMaxMultipliers[i] = AddableFloat.Zero;
+        if (YharimsGift > 0)
+            YharimsGift--;
 
         foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.ResetEffects();
@@ -644,6 +700,7 @@ public class CAPlayer : ModPlayer
     {
         DownedBossCalamity.SaveData(tag, "PlayerDownedBossCalamity");
         DownedBossAnomaly.SaveData(tag, "PlayerDownedBossAnomaly");
+        tag["YharimsGiftBuff"] = (int)YharimsGiftBuff;
 
         foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.SaveData(tag);
@@ -653,6 +710,10 @@ public class CAPlayer : ModPlayer
     {
         DownedBossCalamity.LoadData(tag, "PlayerDownedBossCalamity");
         DownedBossAnomaly.LoadData(tag, "PlayerDownedBossAnomaly");
+        if (tag.TryGet("YharimsGiftBuff", out int yharimsGiftBuff))
+            YharimsGiftBuff = (YharimsGift_Tweak.CurrentBuff)yharimsGiftBuff;
+        else
+            YharimsGiftBuff = YharimsGift_Tweak.CurrentBuff.None;
 
         foreach (CAPlayerBehavior behavior in CABehaviorHelper.PlayerBehaviors[Player])
             behavior.LoadData(tag);
@@ -1477,4 +1538,5 @@ public class CAPlayer : ModPlayer
             result &= behavior.CanBeTeleportedTo(teleportPosition, context);
         return result;
     }
+    #endregion Behavior
 }

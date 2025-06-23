@@ -240,9 +240,6 @@ public static class TOMain
         public override void OnWorldLoad()
         {
             GameTimer = 0;
-
-            foreach (NPC npc in NPC.ActiveNPCs)
-                npc.Ocean().AllocateIdentifier();
         }
 
         public override void OnWorldUnload()

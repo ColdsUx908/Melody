@@ -2,7 +2,7 @@
 
 /* 翱翔徽章
  * 改动
- * 翅膀飞行时间乘1.5（原版：无限飞行，原灾厄：提升25%）。
+ * 翅膀飞行时间乘1.3（原版：无限飞行，原灾厄：提升25%）。
  * 移动速度乘1.15（原版：提升10%）。
  * 跳跃速度提升36%（与原版相同，原灾厄：10%）。
  * 加速度乘1.35（原版：1.75，原灾厄：1.1）。
@@ -10,13 +10,14 @@
 
 public class SoaringInsignia_Tweak : CAItemTweak
 {
-    private const string prefix = CAMain.TweakLocalizationPrefix + "3.2.SoaringInsignia.";
+    private const string localizationPrefix = CAMain.TweakLocalizationPrefix + "3.2.SoaringInsignia.";
+
     public override int ApplyingType => ItemID.EmpressFlightBooster;
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
-        tooltips.ModifyTooltipByNum_CATweak(0, k => k.Text = Language.GetTextValue(prefix + "Tooltip0"));
-        tooltips.ModifyTooltipByNum_CATweak(1, k => k.Text = Language.GetTextValue(prefix + "Tooltip1"));
+        tooltips.ModifyTooltipByNum_CATweak(0, k => k.Text = Language.GetTextValue(localizationPrefix + "Tooltip0"));
+        tooltips.ModifyTooltipByNum_CATweak(1, k => k.Text = Language.GetTextValue(localizationPrefix + "Tooltip1"));
     }
 }
 

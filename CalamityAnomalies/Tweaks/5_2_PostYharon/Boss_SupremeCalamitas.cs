@@ -56,7 +56,6 @@ public class SCalBrimstoneFireblast_Detour : ModProjectileDetour<SCalBrimstoneFi
     {
         if (CAWorld.Anomaly)
         {
-
         }
         else if (CAWorld.BossRush)
         {

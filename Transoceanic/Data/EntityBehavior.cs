@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using MonoMod.Utils;
+using Terraria.GameContent.Bestiary;
+using Terraria.GameContent.UI;
 using Terraria.GameInput;
 
 namespace Transoceanic.Data;
@@ -53,6 +55,11 @@ public class NontypedEntityBehaviorSet<TEntity, TBehavior> : EntityBehaviorSetBa
 
     public override IEnumerator<TBehavior> GetEnumerator() => _data.GetEnumerator();
 
+    /// <summary>
+    /// 通过指定实体获取Behavior集合。
+    /// </summary>
+    /// <remarks>每个Behavior示例返回前均与指定实体相连接。</remarks>
+    /// <param name="entity">待连接实体。</param>
     public IEnumerable<TBehavior> this[TEntity entity]
     {
         get
@@ -85,7 +92,7 @@ public class TypedEntityBehaviorSet<TEntity, TBehavior> : EntityBehaviorSetBase<
 
     /// <summary>
     /// 尝试获取指定实体的行为实例。
-    /// <br/>按照 <see cref="TypedEntityBehavior{TEntity}.Priority"/> 降序寻找通过 <see cref="TypedEntityBehavior{TEntity}.ShouldProcess"/> 检测的实现了指定方法的Override实例。
+    /// <br/>按照 <see cref="EntityBehaviorBase{TEntity}.Priority"/> 降序寻找通过 <see cref="TypedEntityBehavior{TEntity}.ShouldProcess"/> 检测的实现了指定方法的Override实例。
     /// </summary>
     /// <param name="entity"></param>
     /// <param name="methodName"></param>
@@ -117,9 +124,9 @@ public class TypedEntityBehaviorSet<TEntity, TBehavior> : EntityBehaviorSetBase<
         _data.Clear();
         _data.AddRange(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>(assemblyToSearch)
             .GroupBy(k => k.ApplyingType).ToDictionary(keySelector: k => k.Key, elementSelector: k => (
-            from behaviorInstance in k.AsValueEnumerable()
-            orderby behaviorInstance.Priority
-            select (behaviorInstance, behaviorInstance.GetType().GetOverrideMethodNames(TOReflectionUtils.UniversalBindingFlags).ToHashSet())
+                from behaviorInstance in k.AsValueEnumerable()
+                orderby behaviorInstance.Priority
+                select (behaviorInstance, behaviorInstance.GetType().GetOverrideMethodNames(TOReflectionUtils.UniversalBindingFlags).ToHashSet())
             ).ToList()));
     }
 
@@ -1251,12 +1258,6 @@ public abstract class NPCBehavior : TypedEntityBehavior<NPC>
     #endregion 实成员
 
     #region 虚成员
-    /// <summary>
-    /// NPC是否应用Boss无敌帧。
-    /// <br/>默认返回 <see langword="null"/>，即沿用默认设置。
-    /// </summary>
-    public virtual bool? UseBossImmunityCooldownID => null;
-
     #region Defaults
     /// <summary>
     /// 设置基本属性。
@@ -1267,6 +1268,44 @@ public abstract class NPCBehavior : TypedEntityBehavior<NPC>
     /// 设置负数type的NPC的额外属性。
     /// </summary>
     public virtual void SetDefaultsFromNetId() { }
+
+    /// <summary>
+    /// Allows you to customize this NPC's stats when the difficulty is expert or higher.<br/>
+    /// This runs after <see cref="NPC.value"/>,  <see cref="NPC.lifeMax"/>,  <see cref="NPC.damage"/>,  <see cref="NPC.knockBackResist"/> have been adjusted for the current difficulty, (expert/master/FTW)<br/>
+    /// It is common to multiply lifeMax by the balance factor, and sometimes adjust knockbackResist.<br/>
+    /// <br/>
+    /// Eg:<br/>
+    /// <code>lifeMax = (int)(lifeMax * balance * bossAdjustment)</code>
+    /// </summary>
+    /// <param name="numPlayers">The number of active players</param>
+    /// <param name="balance">Scaling factor that increases by a fraction for each player</param>
+    /// <param name="bossAdjustment">An extra reduction factor to be applied to boss life in high difficulty modes</param>
+    public virtual void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) { }
+
+    /// <summary>
+    /// Allows you to set an NPC's information in the Bestiary.
+    /// </summary>
+    /// <param name="database"></param>
+    /// <param name="bestiaryEntry"></param>
+    public virtual void SetBestiary(BestiaryDatabase database, BestiaryEntry bestiaryEntry) { }
+
+    /// <summary>
+    /// Allows you to modify the type name of this NPC dynamically.
+    /// </summary>
+    public virtual void ModifyTypeName(ref string typeName) { }
+
+    /// <summary>
+    /// Allows you to modify the bounding box for hovering over the given NPC (affects things like whether or not its name is displayed).
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="boundingBox">The bounding box used for determining whether or not the NPC counts as being hovered over.</param>
+    public virtual void ModifyHoverBoundingBox(ref Rectangle boundingBox) { }
+
+    /// <summary>
+    /// This is where you reset any fields you add to your subclass to their default states. This is necessary in order to reset your fields if they are conditionally set by a tick update but the condition is no longer satisfied.
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    public virtual void ResetEffects() { }
     #endregion Defaults
 
     #region Lifetime
@@ -1306,6 +1345,16 @@ public abstract class NPCBehavior : TypedEntityBehavior<NPC>
     /// <br/>这个钩子仅在单人模式或服务器上运行。对于客户端效果（如灰尘、血迹和声音），使用 <see cref="HitEffect(NPC.HitInfo)"/>。
     /// </summary>
     public virtual void OnKill() { }
+
+    /// <summary>
+    /// Allows you to add and modify NPC loot tables to drop on death and to appear in the Bestiary.<br/>
+    /// The <see href="https://github.com/tModLoader/tModLoader/wiki/Basic-NPC-Drops-and-Loot-1.4">Basic NPC Drops and Loot 1.4 Guide</see> explains how to use this hook to modify npc loot.
+    /// <br/> This hook only runs once per npc type during mod loading, any dynamic behavior must be contained in the rules themselves.
+    /// </summary>
+    /// <param name="npcLoot">A reference to the item drop database for this npc type.</param>
+    public virtual void ModifyNPCLoot(NPCLoot npcLoot) { }
+
+
     #endregion Lifetime
 
     #region AI
@@ -1339,6 +1388,13 @@ public abstract class NPCBehavior : TypedEntityBehavior<NPC>
     /// <param name="drawColor">原始绘制颜色。</param>
     /// <returns>返回 <see langword="null"/> 以使用默认颜色。</returns>
     public virtual Color? GetAlpha(Color drawColor) => null;
+
+    /// <summary>
+    /// Allows you to add special visual effects to an NPC (such as creating dust), and modify the color in which the NPC is drawn.
+    /// <para/> Called on all clients.
+    /// </summary>
+    /// <param name="drawColor"></param>
+    public virtual void DrawEffects(ref Color drawColor) { }
 
     /// <summary>
     /// 在绘制NPC之前调用。
@@ -1378,6 +1434,19 @@ public abstract class NPCBehavior : TypedEntityBehavior<NPC>
     /// 允许你在地图上翻转NPC的Boss头图标。
     /// </summary>
     public virtual void BossHeadSpriteEffects(ref SpriteEffects spriteEffects) { }
+
+    /// <summary>
+    /// Allows you to control how the health bar for the given NPC is drawn. The hbPosition parameter is the same as Main.hbPosition; it determines whether the health bar gets drawn above or below the NPC by default. The scale parameter is the health bar's size. By default, it will be the normal 1f; most bosses set this to 1.5f. Return null to let the normal vanilla health-bar-drawing code to run. Return false to stop the health bar from being drawn. Return true to draw the health bar in the position specified by the position parameter (note that this is the world position, not screen position).
+    /// <para/> Called on all clients.
+    /// </summary>
+    /// <param name="hbPosition"></param>
+    /// <param name="scale"></param>
+    /// <param name="position"></param>
+    /// <returns></returns>
+    public virtual bool? DrawHealthBar(byte hbPosition, ref float scale, ref Vector2 position)
+    {
+        return null;
+    }
     #endregion Draw
 
     #region Hit
@@ -1520,6 +1589,234 @@ public abstract class NPCBehavior : TypedEntityBehavior<NPC>
     /// <returns></returns>
     public virtual bool ModifyCollisionData(Rectangle victimHitbox, ref int immunityCooldownSlot, ref MultipliableFloat damageMultiplier, ref Rectangle npcHitbox) => true;
     #endregion Hit
+
+    #region SpecialEffects
+    /// <summary>
+    /// Allows you to make the NPC either regenerate health or take damage over time by setting <see cref="NPC.lifeRegen"/>. This is useful for implementing damage over time debuffs such as <see cref="BuffID.Poisoned"/> or <see cref="BuffID.OnFire"/>. Regeneration or damage will occur at a rate of half of <see cref="NPC.lifeRegen"/> per second.
+    /// <para/> Essentially, modders implementing damage over time debuffs should subtract from <see cref="NPC.lifeRegen"/> a number that is twice as large as the intended damage per second. See <see href="https://github.com/tModLoader/tModLoader/blob/stable/ExampleMod/Common/GlobalNPCs/DamageOverTimeGlobalNPC.cs#L16">DamageOverTimeGlobalNPC.cs</see> for an example of this.
+    /// <para/> The damage parameter is the number that appears above the NPC's head if it takes damage over time.
+    /// <para/> Multiple debuffs work together by following some conventions: <see cref="NPC.lifeRegen"/> should not be assigned a number, rather it should be subtracted from. <paramref name="damage"/> should only be assigned if the intended popup text is larger then its current value.
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="damage"></param>
+    public virtual void UpdateLifeRegen(ref int damage) { }
+
+    /// <summary>
+    /// Allows you to determine how and when an NPC can fall through platforms and similar tiles.
+    /// <para/> Return true to allow an NPC to fall through platforms, false to prevent it. Returns null by default, applying vanilla behaviors (based on aiStyle and type).
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    public virtual bool? CanFallThroughPlatforms()
+    {
+        return null;
+    }
+
+    /// <summary>
+    /// Allows you to determine whether the given item can catch the given NPC.<br></br>
+    /// Return true or false to say the given NPC can or cannot be caught, respectively, regardless of vanilla rules.
+    /// <para/> Returns null by default, which allows vanilla's NPC catching rules to decide the target's fate.
+    /// <para/> If this returns false, <see cref="CombinedHooks.OnCatchNPC"/> is never called.
+    /// <para/> NOTE: this does not classify the given item as an NPC-catching tool, which is necessary for catching NPCs in the first place. To do that, you will need to use the "CatchingTool" set in ItemID.Sets.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="item">The item with which the player is trying to catch the given NPC.</param>
+    /// <param name="player">The player attempting to catch the given NPC.</param>
+    /// <returns></returns>
+    public virtual bool? CanBeCaughtBy(Item item, Player player)
+    {
+        return null;
+    }
+
+    /// <summary>
+    /// Allows you to make things happen when the given item attempts to catch the given NPC.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="player">The player attempting to catch the given NPC.</param>
+    /// <param name="item">The item used to catch the given NPC.</param>
+    /// <param name="failed">Whether or not the given NPC has been successfully caught.</param>
+    public virtual void OnCaughtBy(Player player, Item item, bool failed) { }
+
+    /// <summary>
+    /// Allows you to determine whether this NPC can talk with the player. Return true to allow talking with the player, return false to block this NPC from talking with the player, and return null to use the vanilla code for whether the NPC can talk. Returns null by default.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <returns></returns>
+    public virtual bool? CanChat()
+    {
+        return null;
+    }
+
+    /// <summary>
+    /// Allows you to modify the chat message of any NPC that the player can talk to.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="chat"></param>
+    public virtual void GetChat(ref string chat) { }
+
+    /// <summary>
+    /// Allows you to determine if something can happen whenever a button is clicked on this NPC's chat window. The firstButton parameter tells whether the first button or second button (button and button2 from SetChatButtons) was clicked. Return false to prevent the normal code for this button from running. Returns true by default.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="firstButton"></param>
+    /// <returns></returns>
+    public virtual bool PreChatButtonClicked(bool firstButton)
+    {
+        return true;
+    }
+
+    /// <summary>
+    /// Allows you to make something happen whenever a button is clicked on this NPC's chat window. The firstButton parameter tells whether the first button or second button (button and button2 from SetChatButtons) was clicked.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="firstButton"></param>
+    public virtual void OnChatButtonClicked(bool firstButton) { }
+
+    /// <summary>
+    /// Allows you to modify the contents of a shop whenever player opens it. <br/>
+    /// If possible, use <see cref="ModifyShop(NPCShop)"/> instead, to reduce mod conflicts and improve compatibility.
+    /// Note that for special shops like travelling merchant, the <paramref name="shopName"/> may not correspond to a <see cref="NPCShop"/> in the <see cref="NPCShopDatabase"/>
+    /// <para/> Also note that unused slots in <paramref name="items"/> are null while <see cref="Item.IsAir"/> entries are entries that have a reserved slot (<see cref="NPCShop.Entry.SlotReserved"/>) but did not have their conditions met. These should not be overwritten.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="shopName">The full name of the shop being opened. See <see cref="NPCShopDatabase.GetShopName"/> for the format. </param>
+    /// <param name="items">Items in the shop including 'air' items in empty slots.</param>
+    public virtual void ModifyActiveShop(string shopName, Item[] items) { }
+
+    /// <summary>
+    /// Whether this NPC can be teleported to a King or Queen statue. Return true to allow the NPC to teleport to the statue, return false to block this NPC from teleporting to the statue, and return null to use the vanilla code for whether the NPC can teleport to the statue. Returns null by default.
+    /// <para/> Called in single player or on the server only.
+    /// </summary>
+    /// <param name="toKingStatue">Whether the NPC is being teleported to a King or Queen statue.</param>
+    public virtual bool? CanGoToStatue(bool toKingStatue)
+    {
+        return null;
+    }
+
+    /// <summary>
+    /// Allows you to make things happen when this NPC teleports to a King or Queen statue.
+    /// <para/> Called in single player or on the server only.
+    /// </summary>
+    /// <param name="toKingStatue">Whether the NPC was teleported to a King or Queen statue.</param>
+    public virtual void OnGoToStatue(bool toKingStatue) { }
+
+    /// <summary>
+    /// Allows you to determine the damage and knockback of a town NPC's attack before the damage is scaled. (More information on scaling in GlobalNPC.BuffTownNPCs.)
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="damage"></param>
+    /// <param name="knockback"></param>
+    public virtual void TownNPCAttackStrength(ref int damage, ref float knockback) { }
+
+    /// <summary>
+    /// Allows you to determine the cooldown between each of a town NPC's attack. The cooldown will be a number greater than or equal to the first parameter, and less then the sum of the two parameters.
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="cooldown"></param>
+    /// <param name="randExtraCooldown"></param>
+    public virtual void TownNPCAttackCooldown(ref int cooldown, ref int randExtraCooldown) { }
+
+    /// <summary>
+    /// Allows you to determine the projectile type of a town NPC's attack, and how long it takes for the projectile to actually appear. This hook is only used when the town NPC has an attack type of 0 (throwing), 1 (shooting), or 2 (magic).
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="projType"></param>
+    /// <param name="attackDelay"></param>
+    public virtual void TownNPCAttackProj(ref int projType, ref int attackDelay) { }
+
+    /// <summary>
+    /// Allows you to determine the speed at which a town NPC throws a projectile when it attacks. Multiplier is the speed of the projectile, gravityCorrection is how much extra the projectile gets thrown upwards, and randomOffset allows you to randomize the projectile's velocity in a square centered around the original velocity. This hook is only used when the town NPC has an attack type of 0 (throwing), 1 (shooting), or 2 (magic).
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="multiplier"></param>
+    /// <param name="gravityCorrection"></param>
+    /// <param name="randomOffset"></param>
+    public virtual void TownNPCAttackProjSpeed(ref float multiplier, ref float gravityCorrection, ref float randomOffset) { }
+
+    /// <summary>
+    /// Allows you to tell the game that a town NPC has already created a projectile and will still create more projectiles as part of a single attack so that the game can animate the NPC's attack properly. Only used when the town NPC has an attack type of 1 (shooting).
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="inBetweenShots"></param>
+    public virtual void TownNPCAttackShoot(ref bool inBetweenShots) { }
+
+    /// <summary>
+    /// Allows you to control the brightness of the light emitted by a town NPC's aura when it performs a magic attack. Only used when the town NPC has an attack type of 2 (magic)
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="auraLightMultiplier"></param>
+    public virtual void TownNPCAttackMagic(ref float auraLightMultiplier) { }
+
+    /// <summary>
+    /// Allows you to determine the width and height of the item a town NPC swings when it attacks, which controls the range of the NPC's swung weapon. Only used when the town NPC has an attack type of 3 (swinging).
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="itemWidth"></param>
+    /// <param name="itemHeight"></param>
+    public virtual void TownNPCAttackSwing(ref int itemWidth, ref int itemHeight) { }
+
+    /// <summary>
+    /// Allows you to customize how a town NPC's weapon is drawn when the NPC is shooting (the NPC must have an attack type of 1). <paramref name="scale"/> is a multiplier for the item's drawing size, <paramref name="item"/> is the Texture2D instance of the item to be drawn, <paramref name="itemFrame"/> is the section of the texture to draw, and <paramref name="horizontalHoldoutOffset"/> is how far away the item should be drawn from the NPC.
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="item"></param>
+    /// <param name="itemFrame"></param>
+    /// <param name="scale"></param>
+    /// <param name="horizontalHoldoutOffset"></param>
+    public virtual void DrawTownAttackGun(ref Texture2D item, ref Rectangle itemFrame, ref float scale, ref int horizontalHoldoutOffset) { }
+
+
+    /// <inheritdoc cref="ModNPC.DrawTownAttackSwing" />
+    public virtual void DrawTownAttackSwing(ref Texture2D item, ref Rectangle itemFrame, ref int itemSize, ref float scale, ref Vector2 offset) { }
+
+    /// <summary>
+    /// Allows you to make a npc be saved even if it's not a townNPC and NPCID.Sets.SavesAndLoads[npc.type] is false.
+    /// <br/><b>NOTE:</b> A town NPC will always be saved (except the Travelling Merchant that never will).
+    /// <br/><b>NOTE:</b> A NPC that needs saving will not despawn naturally.
+    /// </summary>
+    /// <returns></returns>
+    public virtual bool NeedSaving()
+    {
+        return false;
+    }
+
+    /// <summary>
+    /// Allows you to save custom data for the given npc.
+    /// <br/>
+    /// <br/><b>NOTE:</b> The provided tag is always empty by default, and is provided as an argument only for the sake of convenience and optimization.
+    /// <br/><b>NOTE:</b> Try to only save data that isn't default values.
+    /// <br/><b>NOTE:</b> The npc may be saved even if NeedSaving returns false and npc is not a townNPC, if another mod returns true on NeedSaving.
+    /// </summary>
+    /// <param name="tag">The TagCompound to save data into. Note that this is always empty by default, and is provided as an argument</param>
+    public virtual void SaveData(TagCompound tag) { }
+
+    /// <summary>
+    /// Allows you to load custom data that you have saved for the given npc.
+    /// </summary>
+    /// <param name="tag"></param>
+    public virtual void LoadData(TagCompound tag) { }
+
+    /// <summary>
+    /// Allows you to change the emote that the NPC will pick
+    /// <para/> Called in single player or on the server only.
+    /// </summary>
+    /// <param name="closestPlayer">The <see cref="Player"/> closest to the NPC. You can check the biome the player is in and let the NPC pick the emote that corresponds to the biome.</param>
+    /// <param name="emoteList">A list of emote IDs from which the NPC will randomly select one</param>
+    /// <param name="otherAnchor">A <see cref="WorldUIAnchor"/> instance that indicates the target of this emote conversation. Use this to get the instance of the <see cref="NPC"/> or <see cref="Player"/> this NPC is talking to.</param>
+    /// <returns>Return null to use vanilla mechanic (pick one from the list), otherwise pick the emote by the returned ID. Returning -1 will prevent the emote from being used. Returns null by default</returns>
+    public virtual int? PickEmote(Player closestPlayer, List<int> emoteList, WorldUIAnchor otherAnchor)
+    {
+        return null;
+    }
+
+    /// <inheritdoc cref="ModNPC.ChatBubblePosition(ref Vector2, ref SpriteEffects)"/>
+    public virtual void ChatBubblePosition(ref Vector2 position, ref SpriteEffects spriteEffects) { }
+
+    /// <inheritdoc cref="ModNPC.PartyHatPosition(ref Vector2, ref SpriteEffects)"/>
+    public virtual void PartyHatPosition(ref Vector2 position, ref SpriteEffects spriteEffects) { }
+
+    /// <inheritdoc cref="ModNPC.EmoteBubblePosition(ref Vector2, ref SpriteEffects)"/>
+    public virtual void EmoteBubblePosition(ref Vector2 position, ref SpriteEffects spriteEffects) { }
+    #endregion SpecialEffects
     #endregion 虚成员
 }
 
@@ -1549,6 +1846,48 @@ public abstract class ProjectileBehavior : TypedEntityBehavior<Projectile>
     public virtual void SetDefaults() { }
     #endregion Defaults
 
+    #region Lifetime
+    /// <summary>
+    /// Gets called when any projectiles spawns in world
+    /// <para/> Called on the client or server spawning the projectile via Projectile.NewProjectile.
+    /// </summary>
+    public virtual void OnSpawn(IEntitySource source) { }
+
+    /// <summary>
+    /// Allows you to determine how a projectile interacts with tiles. Return false if you completely override or cancel a projectile's tile collision behavior. Returns true by default.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="width"> The width of the hitbox the projectile will use for tile collision. If vanilla or a mod don't modify it, defaults to projectile.width. </param>
+    /// <param name="height"> The height of the hitbox the projectile will use for tile collision. If vanilla or a mod don't modify it, defaults to projectile.height. </param>
+    /// <param name="fallThrough"> Whether or not the projectile falls through platforms and similar tiles. </param>
+    /// <param name="hitboxCenterFrac"> Determines by how much the tile collision hitbox's position (top left corner) will be offset from the projectile's real center. If vanilla or a mod don't modify it, defaults to half the hitbox size (new Vector2(0.5f, 0.5f)). </param>
+    /// <returns></returns>
+	public virtual bool TileCollideStyle(ref int width, ref int height, ref bool fallThrough, ref Vector2 hitboxCenterFrac) => true;
+
+    /// <summary>
+    /// Allows you to determine what happens when a projectile collides with a tile. OldVelocity is the velocity before tile collision. The velocity that takes tile collision into account can be found with projectile.velocity. Return true to allow the vanilla tile collision code to take place (which normally kills the projectile). Returns true by default.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="oldVelocity"></param>
+    /// <returns></returns>
+    public virtual bool OnTileCollide(Vector2 oldVelocity) => true;
+
+    /// <summary>
+    /// Allows you to determine whether the vanilla code for Kill and the Kill hook will be called. Return false to stop them from being called. Returns true by default. Note that this does not stop the projectile from dying.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="timeLeft"></param>
+    /// <returns></returns>
+    public virtual bool PreKill(int timeLeft) => true;
+
+    /// <summary>
+    /// Allows you to control what happens when a projectile is killed (for example, creating dust or making sounds).
+    /// <para/> Can be called on the local client or server, depending on who owns the projectile.
+    /// </summary>
+    /// <param name="timeLeft"></param>
+    public virtual void OnKill(int timeLeft) { }
+    #endregion Lifetime
+
     #region AI
     /// <summary>
     /// AI。
@@ -1565,6 +1904,13 @@ public abstract class ProjectileBehavior : TypedEntityBehavior<Projectile>
     /// AI。
     /// </summary>
     public virtual void PostAI() { }
+
+    /// <summary>
+    /// Whether or not the given projectile should update its position based on factors such as its velocity, whether it is in liquid, etc. Return false to make its velocity have no effect on its position. Returns true by default.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <returns></returns>
+    public virtual bool ShouldUpdatePosition() => true;
     #endregion AI
 
     #region Hit
@@ -1664,7 +2010,6 @@ public abstract class ProjectileBehavior : TypedEntityBehavior<Projectile>
     /// <summary>
     /// Allows you to determine the color and transparency in which a projectile is drawn. Return null to use the default color (normally light and buff color). Returns null by default.
     /// </summary>
-    /// <param name="projectile"></param>
     /// <param name="lightColor"></param>
     /// <returns></returns>
     public virtual Color? GetAlpha(Color lightColor) => null;
@@ -1677,7 +2022,6 @@ public abstract class ProjectileBehavior : TypedEntityBehavior<Projectile>
     /// <summary>
     /// Allows you to draw things behind a projectile, or to modify the way the projectile is drawn. Use the <c>Main.EntitySpriteDraw</c> method for drawing. Return false to stop the vanilla projectile drawing code (useful if you're manually drawing the projectile). Returns true by default.
     /// </summary>
-    /// <param name="projectile"> The projectile. </param>
     /// <param name="lightColor"> The color of the light at the projectile's center. </param>
     public virtual bool PreDraw(ref Color lightColor) => true;
 
@@ -1698,6 +2042,46 @@ public abstract class ProjectileBehavior : TypedEntityBehavior<Projectile>
     /// <param name="overWiresUI"></param>
     public virtual void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI) { }
     #endregion Draw
+
+    #region SpecialEffects
+    /// <summary>
+    /// How many of this type of grappling hook the given player can latch onto blocks before the hooks start disappearing. Change the numHooks parameter to determine this; by default it will be 3.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual void NumGrappleHooks(Player player, ref int numHooks) { }
+
+    /// <summary>
+    /// The speed at which the grapple retreats back to the player after not hitting anything. Defaults to 11, but vanilla hooks go up to 24.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void GrappleRetreatSpeed(Player player, ref float speed) { }
+
+    /// <summary>
+    /// The speed at which the grapple pulls the player after hitting something. Defaults to 11, but the Bat Hook uses 16.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void GrapplePullSpeed(Player player, ref float speed) { }
+
+    /// <summary>
+    /// The location that the grappling hook pulls the player to. Defaults to the center of the hook projectile.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void GrappleTargetPoint(Player player, ref float grappleX, ref float grappleY) { }
+
+    /// <summary>
+    /// Whether or not the grappling hook can latch onto the given position in tile coordinates.
+    /// <para/> This position may be air or an actuated tile!
+    /// <para/> Return true to make it latch, false to prevent it, or null to apply vanilla conditions. Returns null by default.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual bool? GrappleCanLatchOnTo(Player player, int x, int y) => null;
+
+    /// <inheritdoc cref="ModProjectile.PrepareBombToBlow"/>
+    public virtual void PrepareBombToBlow() { }
+
+    /// <inheritdoc cref="ModProjectile.EmitEnchantmentVisualsAt"/>
+    public virtual void EmitEnchantmentVisualsAt(Vector2 boxPosition, int boxWidth, int boxHeight) { }
+    #endregion SpecialEffects
     #endregion 虚成员
 }
 
@@ -1839,15 +2223,12 @@ public abstract class ItemBehavior : TypedEntityBehavior<Item>
     /// <summary>
     /// <inheritdoc cref="ModItem.PreDrawInInventory(SpriteBatch, Vector2, Rectangle, Color, Color, Vector2, float)"/>
     /// </summary>
-    public virtual bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame,
-        Color drawColor, Color itemColor, Vector2 origin, float scale) => true;
+    public virtual bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale) => true;
 
     /// <summary>
     /// <inheritdoc cref="ModItem.PostDrawInInventory(SpriteBatch, Vector2, Rectangle, Color, Color, Vector2, float)"/>
     /// </summary>
-    public virtual void PostDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame,
-        Color drawColor, Color itemColor, Vector2 origin, float scale)
-    { }
+    public virtual void PostDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale) { }
     #endregion Draw
 
     #region Prefix
@@ -2286,5 +2667,23 @@ public abstract class ItemBehavior : TypedEntityBehavior<Item>
     /// </summary>
     public virtual void ModifyTooltips(List<TooltipLine> tooltips) { }
     #endregion Tooltip
+
+    #region Data
+    /// <summary>
+    /// Allows you to save custom data for this item.
+    /// <br/>
+    /// <br/><b>NOTE:</b> The provided tag is always empty by default, and is provided as an argument only for the sake of convenience and optimization.
+    /// <br/><b>NOTE:</b> Try to only save data that isn't default values.
+    /// </summary>
+    /// <param name="tag"> The TagCompound to save data into. Note that this is always empty by default, and is provided as an argument only for the sake of convenience and optimization. </param>
+    public virtual void SaveData(TagCompound tag) { }
+
+    /// <summary>
+    /// Allows you to load custom data that you have saved for this item.
+    /// <br/><b>Try to write defensive loading code that won't crash if something's missing.</b>
+    /// </summary>
+    /// <param name="tag"> The TagCompound to load data from. </param>
+    public virtual void LoadData(TagCompound tag) { }
+    #endregion Data
     #endregion 虚成员
 }

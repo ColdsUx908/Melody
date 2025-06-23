@@ -3,6 +3,5 @@ author = ColdsUx
 version = 0.1
 dllReferences = ZLinq
 modReferences = CalamityMod, Transoceanic
-hideCode = true
 sortAfter = CalamityMod, Transoceanic
 buildIgnore = .vs\*, Properties\*, *.sln, obj\*, bin\*

@@ -1,4 +1,5 @@
-﻿namespace CalamityAnomalies.GlobalInstances;
+﻿
+namespace CalamityAnomalies.GlobalInstances;
 
 public partial class CAGlobalProjectile : GlobalProjectile
 {
@@ -48,6 +49,53 @@ public partial class CAGlobalProjectile : GlobalProjectile
     }
     #endregion Defaults
 
+    #region Lifetime
+    public override void OnSpawn(Projectile projectile, IEntitySource source)
+    {
+        if (projectile.TryGetBehavior(out CAProjectileBehavior projectileBehavior))
+            projectileBehavior.OnSpawn(source);
+    }
+
+    public override bool TileCollideStyle(Projectile projectile, ref int width, ref int height, ref bool fallThrough, ref Vector2 hitboxCenterFrac)
+    {
+        if (projectile.TryGetBehavior(out CAProjectileBehavior projectileBehavior))
+        {
+            if (!projectileBehavior.TileCollideStyle(ref width, ref height, ref fallThrough, ref hitboxCenterFrac))
+                return false;
+        }
+
+        return true;
+    }
+
+    public override bool OnTileCollide(Projectile projectile, Vector2 oldVelocity)
+    {
+        if (projectile.TryGetBehavior(out CAProjectileBehavior projectileBehavior))
+        {
+            if (!projectileBehavior.OnTileCollide(oldVelocity))
+                return false;
+        }
+
+        return true;
+    }
+
+    public override bool PreKill(Projectile projectile, int timeLeft)
+    {
+        if (projectile.TryGetBehavior(out CAProjectileBehavior projectileBehavior))
+        {
+            if (!projectileBehavior.PreKill(timeLeft))
+                return false;
+        }
+
+        return true;
+    }
+
+    public override void OnKill(Projectile projectile, int timeLeft)
+    {
+        if (projectile.TryGetBehavior(out CAProjectileBehavior projectileBehavior))
+            projectileBehavior.OnKill(timeLeft);
+    }
+    #endregion Lifetime
+
     #region AI
     public override bool PreAI(Projectile projectile)
     {
@@ -70,6 +118,16 @@ public partial class CAGlobalProjectile : GlobalProjectile
     {
         if (projectile.TryGetBehavior(out CAProjectileBehavior projectileBehavior))
             projectileBehavior.PostAI();
+    }
+
+    public override bool ShouldUpdatePosition(Projectile projectile)
+    {
+        if (projectile.TryGetBehavior(out CAProjectileBehavior projectileBehavior))
+        {
+            if (!projectileBehavior.ShouldUpdatePosition())
+                return false;
+        }
+        return true;
     }
     #endregion AI
 
@@ -239,6 +297,62 @@ public partial class CAGlobalProjectile : GlobalProjectile
         return null;
     }
     #endregion Hit
+
+    #region SpecialEffects
+    public override void NumGrappleHooks(Projectile projectile, Player player, ref int numHooks)
+    {
+        if (projectile.TryGetBehavior(out CAProjectileBehavior projectileBehavior))
+            projectileBehavior.NumGrappleHooks(player, ref numHooks);
+    }
+
+    public override void GrappleRetreatSpeed(Projectile projectile, Player player, ref float speed)
+    {
+        if (projectile.TryGetBehavior(out CAProjectileBehavior projectileBehavior))
+            projectileBehavior.GrappleRetreatSpeed(player, ref speed);
+    }
+
+    public override void GrapplePullSpeed(Projectile projectile, Player player, ref float speed)
+    {
+        if (projectile.TryGetBehavior(out CAProjectileBehavior projectileBehavior))
+            projectileBehavior.GrapplePullSpeed(player, ref speed);
+    }
+
+    public override void GrappleTargetPoint(Projectile projectile, Player player, ref float grappleX, ref float grappleY)
+    {
+        if (projectile.TryGetBehavior(out CAProjectileBehavior projectileBehavior))
+            projectileBehavior.GrappleTargetPoint(player, ref grappleX, ref grappleY);
+    }
+
+    public override bool? GrappleCanLatchOnTo(Projectile projectile, Player player, int x, int y)
+    {
+        if (projectile.TryGetBehavior(out CAProjectileBehavior projectileBehavior))
+        {
+            bool? result = projectileBehavior.GrappleCanLatchOnTo(player, x, y);
+            if (result is not null)
+                return result;
+        }
+
+        return null;
+    }
+
+    public override void PrepareBombToBlow(Projectile projectile)
+    {
+        if (projectile.TryGetBehavior(out CAProjectileBehavior projectileBehavior))
+            projectileBehavior.PrepareBombToBlow();
+    }
+
+    public override void EmitEnchantmentVisualsAt(Projectile projectile, Vector2 boxPosition, int boxWidth, int boxHeight)
+    {
+        if (projectile.TryGetBehavior(out CAProjectileBehavior projectileBehavior))
+            projectileBehavior.EmitEnchantmentVisualsAt(boxPosition, boxWidth, boxHeight);
+    }
+    #endregion SpecialEffects
+
+    #region NotOverriden
+    public override bool? CanUseGrapple(int type, Player player) => null;
+
+    public override void UseGrapple(Player player, ref int type) { }
+    #endregion NotOverriden
 
     #region Net
     public override void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter)
