@@ -5787,10 +5787,11 @@ public sealed class TypeDetourUpdateReminder : IResourceLoader
 {
     private static readonly bool DisplayDetails = true;
 
+
     void IResourceLoader.PostSetupContent()
     {
         bool hasWarn = false;
-        IEnumerable<(Type source, Type target, Predicate<string> sourceIgnore, Predicate<string> targetIgnore)> typesToVerify =
+        List<(Type source, Type target, Predicate<string> sourceIgnore, Predicate<string> targetIgnore)> typesToVerify =
         [
             (typeof(ModType), typeof(ModTypeDetour<>), null, null),
             (typeof(ModAccessorySlot), typeof(ModAccessorySlotDetour<>), null, null),

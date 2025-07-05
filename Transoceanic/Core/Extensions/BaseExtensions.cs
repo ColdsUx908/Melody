@@ -127,7 +127,7 @@ public static partial class TOExtensions
         /// </summary>
         public bool IsRealVirtualOrAbstract => method.IsVirtual && !method.IsOverride && !method.IsFinal;
 
-        public bool IsRealVirtual => method.IsRealVirtual && !method.IsAbstract;
+        public bool IsRealVirtual => method.IsRealVirtualOrAbstract && !method.IsAbstract;
 
         /// <summary>
         /// 判定指定方法是否实现了指定接口类型。
@@ -160,7 +160,7 @@ public static partial class TOExtensions
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public bool IsInterfaceImplementationOf<T>() => method.IsInterfaceImplementationOf(typeof(T));
+        public bool IsInterfaceImplementationOf<T>() where T : class => method.IsInterfaceImplementationOf(typeof(T));
 
         /// <summary>
         /// 判定指定方法是否实现了某个接口类型。

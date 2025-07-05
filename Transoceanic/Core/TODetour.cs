@@ -244,7 +244,7 @@ public static class TODetourUtils
     [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern = @"(?<methodName>[\s\S]*?)(?:__[\s\S]*)?$";
     [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern2 = @"(?<typeName>[^_]+)_(?<methodName>[\s\S]*?)(?:__[\s\S]*)?$";
 
-    public static bool EvaluateDetourName(string name, out string sourceName, string prefix = DefaultPrefix)
+    public static bool EvaluateDetourName(string name, [NotNullWhen(true)] out string sourceName, string prefix = DefaultPrefix)
     {
         Match match = Regex.Match(name, "^" + prefix + Pattern);
         if (match.Success)
