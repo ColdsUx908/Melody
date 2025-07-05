@@ -25,7 +25,7 @@
 	  <Folder Include="Tweaks\2_1_Hardmode\" />
 	  <Folder Include="Tweaks\2_2_PostMechanics\" />
 	  <Folder Include="Tweaks\3_1_PostPlantera\" />
-	  <Folder Include="Tweaks\6_Endgame\" />
+	  <Folder Include="Tweaks\6_Focus\" />
 	</ItemGroup>
 	<ItemGroup>
 	  <PackageReference Include="ZLinq" Version="1.4.9" />

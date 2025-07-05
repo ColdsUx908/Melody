@@ -1,5 +1,4 @@
-﻿using CalamityAnomalies.Systems;
-using CalamityMod.Items.Accessories;
+﻿using CalamityMod.Items.Accessories;
 using CalamityMod.Particles;
 using Terraria.GameInput;
 
@@ -41,11 +40,13 @@ public class YharimsGift_Tweak : CAItemTweak<YharimsGift>
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
-        tooltips.ModifyOrAddCATooltip(0, k =>
-        {
-            k.Text = Language.GetTextFormat(localizationPrefix + "CATooltip0", BuffName);
-            k.OverrideColor = Color.Gold;
-        });
+        CreateTooltipModifier(tooltips)
+            .ClearAllCATooltips()
+            .AddCATooltip(k =>
+            {
+                k.Text = Language.GetTextFormat(localizationPrefix + "CATooltip0", BuffName);
+                k.OverrideColor = Color.Gold;
+            }, false);
     }
 
     private static readonly ChargingEnergyParticleSet _enchantmentEnergyParticles = new(-1, 3, Color.Orange, Color.White, 0.04f, 32f);
@@ -65,7 +66,7 @@ public class YharimsGift_Player : CAPlayerBehavior
 
     public override void ProcessTriggers(TriggersSet triggersSet)
     {
-        if (CAKeybindSystem.ChangeYharimsGiftBuff.JustPressed)
+        if (CAKeybinds.ChangeYharimsGiftBuff.JustPressed)
         {
             YharimsGift_Tweak.CurrentBuffNum++;
             TOLocalizationUtils.ChatLocalizedTextWith(localizationPrefix + "BuffChange", Main.LocalPlayer, Color.Gold, YharimsGift_Tweak.BuffName);

@@ -7,13 +7,13 @@ using Terraria.GameContent.UI;
 
 namespace CalamityAnomalies.GlobalInstances;
 
-public class CAGlobalNPC : GlobalNPC
+public sealed class CAGlobalNPC : GlobalNPCWithBehavior<CANPCBehavior>, IResourceLoader
 {
-    public override bool InstancePerEntity => true;
+    public override SingleEntityBehaviorSet<NPC, CANPCBehavior> BehaviorSet => CABehaviorHelper.NPCBehaviors;
 
     #region Data
-    private const int AISlot = 32;
-    private const int AISlot2 = 16;
+    private const int AISlot = 33;
+    private const int AISlot2 = 17;
 
     public DataUnion32[] AnomalyAI { get; } = new DataUnion32[AISlot];
     public DataUnion64[] AnomalyAI2 { get; } = new DataUnion64[AISlot2];
@@ -136,105 +136,37 @@ public class CAGlobalNPC : GlobalNPC
     #endregion 额外数据
 
     #region Defaults
-    public override void SetStaticDefaults()
-    {
-        foreach (CANPCBehavior npcBehavior in CABehaviorHelper.NPCBehaviors)
-            npcBehavior.SetStaticDefaults();
-    }
+    public override void SetStaticDefaults() => base.SetStaticDefaults();
 
-    public override void SetDefaults(NPC npc)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.SetDefaults();
-    }
+    public override void SetDefaults(NPC npc) => base.SetDefaults(npc);
 
-    public override void SetDefaultsFromNetId(NPC npc)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.SetDefaultsFromNetId();
-    }
+    public override void SetDefaultsFromNetId(NPC npc) => base.SetDefaultsFromNetId(npc);
 
-    public override void ApplyDifficultyAndPlayerScaling(NPC npc, int numPlayers, float balance, float bossAdjustment)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.ApplyDifficultyAndPlayerScaling(numPlayers, balance, bossAdjustment);
-    }
+    public override void ApplyDifficultyAndPlayerScaling(NPC npc, int numPlayers, float balance, float bossAdjustment) => base.ApplyDifficultyAndPlayerScaling(npc, numPlayers, balance, bossAdjustment);
 
-    public override void SetBestiary(NPC npc, BestiaryDatabase database, BestiaryEntry bestiaryEntry)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.SetBestiary(database, bestiaryEntry);
-    }
+    public override void SetBestiary(NPC npc, BestiaryDatabase database, BestiaryEntry bestiaryEntry) => base.SetBestiary(npc, database, bestiaryEntry);
 
-    public override void ModifyTypeName(NPC npc, ref string typeName)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.ModifyTypeName(ref typeName);
-    }
+    public override void ModifyTypeName(NPC npc, ref string typeName) => base.ModifyTypeName(npc, ref typeName);
 
-    public override void ModifyHoverBoundingBox(NPC npc, ref Rectangle boundingBox)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.ModifyHoverBoundingBox(ref boundingBox);
-    }
+    public override void ModifyHoverBoundingBox(NPC npc, ref Rectangle boundingBox) => base.ModifyHoverBoundingBox(npc, ref boundingBox);
 
-    public override void ResetEffects(NPC npc)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.ResetEffects();
-    }
+    public override ITownNPCProfile ModifyTownNPCProfile(NPC npc) => base.ModifyTownNPCProfile(npc);
+
+    public override void ModifyNPCNameList(NPC npc, List<string> nameList) => base.ModifyNPCNameList(npc, nameList);
+
+    public override void ResetEffects(NPC npc) => base.ResetEffects(npc);
     #endregion Defaults
 
     #region Lifetime
-    public override void OnSpawn(NPC npc, IEntitySource source)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.OnSpawn(source);
-    }
+    public override void OnSpawn(NPC npc, IEntitySource source) => base.OnSpawn(npc, source);
 
-    public override bool CheckActive(NPC npc)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            if (!npcBehavior.CheckActive())
-                return false;
-        }
+    public override bool CheckActive(NPC npc) => base.CheckActive(npc);
 
-        return true;
-    }
+    public override bool CheckDead(NPC npc) => base.CheckDead(npc);
 
-    public override bool CheckDead(NPC npc)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            if (!npcBehavior.CheckDead())
-                return false;
-        }
+    public override bool SpecialOnKill(NPC npc) => base.SpecialOnKill(npc);
 
-        return true;
-    }
-
-    public override bool SpecialOnKill(NPC npc)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            if (npcBehavior.SpecialOnKill())
-                return true;
-        }
-
-        return false;
-    }
-
-    public override bool PreKill(NPC npc)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            if (!npcBehavior.PreKill())
-                return false;
-        }
-
-        return true;
-    }
+    public override bool PreKill(NPC npc) => base.PreKill(npc);
 
     public override void OnKill(NPC npc)
     {
@@ -246,15 +178,10 @@ public class CAGlobalNPC : GlobalNPC
             player.Anomaly().DownedBossCalamity.BossesOnKill(npc);
         }
 
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.OnKill();
+        base.OnKill(npc);
     }
 
-    public override void ModifyNPCLoot(NPC npc, NPCLoot npcLoot)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.ModifyNPCLoot(npcLoot);
-    }
+    public override void ModifyNPCLoot(NPC npc, NPCLoot npcLoot) => base.ModifyNPCLoot(npc, npcLoot);
     #endregion Lifetime
 
     #region AI
@@ -311,99 +238,37 @@ public class CAGlobalNPC : GlobalNPC
         return result;
     }
 
-    public override void AI(NPC npc)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.AI();
-    }
+    public override void AI(NPC npc) => base.AI(npc);
 
-    public override void PostAI(NPC npc)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.PostAI();
-    }
+    public override void PostAI(NPC npc) => base.PostAI(npc);
     #endregion AI
 
     #region Draw
-    public override void FindFrame(NPC npc, int frameHeight)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.FindFrame(frameHeight);
-    }
+    public override void FindFrame(NPC npc, int frameHeight) => base.FindFrame(npc, frameHeight);
 
     public override Color? GetAlpha(NPC npc, Color drawColor)
     {
         if (Main.LocalPlayer.Calamity().trippy && !NeverTrippy)
             return TOMain.DiscoColor;
 
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            Color? result = npcBehavior.GetAlpha(drawColor);
-            if (result is not null)
-                return result;
-        }
-
-        return null;
+        return base.GetAlpha(npc, drawColor);
     }
 
-    public override void DrawEffects(NPC npc, ref Color drawColor)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.DrawEffects(ref drawColor);
-    }
+    public override void DrawEffects(NPC npc, ref Color drawColor) => base.DrawEffects(npc, ref drawColor);
 
-    public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            if (!npcBehavior.PreDraw(spriteBatch, screenPos, drawColor))
-                return false;
-        }
+    public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) => base.PreDraw(npc, spriteBatch, screenPos, drawColor);
 
-        return true;
-    }
+    public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) => base.PostDraw(npc, spriteBatch, screenPos, drawColor);
 
-    public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.PostDraw(spriteBatch, screenPos, drawColor);
-    }
+    public override void DrawBehind(NPC npc, int index) => base.DrawBehind(npc, index);
 
-    public override void DrawBehind(NPC npc, int index)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.DrawBehind(index);
-    }
+    public override void BossHeadSlot(NPC npc, ref int index) => base.BossHeadSlot(npc, ref index);
 
-    public override void BossHeadSlot(NPC npc, ref int index)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.BossHeadSlot(ref index);
-    }
+    public override void BossHeadRotation(NPC npc, ref float rotation) => base.BossHeadRotation(npc, ref rotation);
 
-    public override void BossHeadRotation(NPC npc, ref float rotation)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.BossHeadRotation(ref rotation);
-    }
+    public override void BossHeadSpriteEffects(NPC npc, ref SpriteEffects spriteEffects) => base.BossHeadSpriteEffects(npc, ref spriteEffects);
 
-    public override void BossHeadSpriteEffects(NPC npc, ref SpriteEffects spriteEffects)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.BossHeadSpriteEffects(ref spriteEffects);
-    }
-
-    public override bool? DrawHealthBar(NPC npc, byte hbPosition, ref float scale, ref Vector2 position)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            bool? result = npcBehavior.DrawHealthBar(hbPosition, ref scale, ref position);
-            if (result is not null)
-                return result;
-        }
-
-        return null;
-    }
+    public override bool? DrawHealthBar(NPC npc, byte hbPosition, ref float scale, ref Vector2 position) => base.DrawHealthBar(npc, hbPosition, ref scale, ref position);
     #endregion Draw
 
     #region Hit
@@ -411,35 +276,11 @@ public class CAGlobalNPC : GlobalNPC
     public static Orig_DRMath OrigMethod_CustomDRMath { get; private set; } = null;
     public static Orig_DRMath OrigMethod_DefaultDRMath { get; private set; } = null;
 
-    public override void HitEffect(NPC npc, NPC.HitInfo hit)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.HitEffect(hit);
-    }
+    public override void HitEffect(NPC npc, NPC.HitInfo hit) => base.HitEffect(npc, hit);
 
-    public override bool? CanBeHitByItem(NPC npc, Player player, Item item)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            bool? result = npcBehavior.CanBeHitByItem(player, item);
-            if (result is not null)
-                return result;
-        }
+    public override bool? CanBeHitByItem(NPC npc, Player player, Item item) => base.CanBeHitByItem(npc, player, item);
 
-        return null;
-    }
-
-    public override bool? CanCollideWithPlayerMeleeAttack(NPC npc, Player player, Item item, Rectangle meleeAttackHitbox)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            bool? result = npcBehavior.CanCollideWithPlayerMeleeAttack(player, item, meleeAttackHitbox);
-            if (result is not null)
-                return result;
-        }
-
-        return null;
-    }
+    public override bool? CanCollideWithPlayerMeleeAttack(NPC npc, Player player, Item item, Rectangle meleeAttackHitbox) => base.CanCollideWithPlayerMeleeAttack(npc, player, item, meleeAttackHitbox);
 
     public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
     {
@@ -454,27 +295,12 @@ public class CAGlobalNPC : GlobalNPC
         float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR));
         modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR, 0f, 1f);
 
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.ModifyHitByItem(player, item, ref modifiers);
+        base.ModifyHitByItem(npc, player, item, ref modifiers);
     }
 
-    public override void OnHitByItem(NPC npc, Player player, Item item, NPC.HitInfo hit, int damageDone)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.OnHitByItem(player, item, hit, damageDone);
-    }
+    public override void OnHitByItem(NPC npc, Player player, Item item, NPC.HitInfo hit, int damageDone) => base.OnHitByItem(npc, player, item, hit, damageDone);
 
-    public override bool? CanBeHitByProjectile(NPC npc, Projectile projectile)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            bool? result = npcBehavior.CanBeHitByProjectile(projectile);
-            if (result is not null)
-                return result;
-        }
-
-        return null;
-    }
+    public override bool? CanBeHitByProjectile(NPC npc, Projectile projectile) => base.CanBeHitByProjectile(npc, projectile);
 
     public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
     {
@@ -489,89 +315,28 @@ public class CAGlobalNPC : GlobalNPC
         float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR));
         modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR, 0f, 1f);
 
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.ModifyHitByProjectile(projectile, ref modifiers);
+        base.ModifyHitByProjectile(npc, projectile, ref modifiers);
     }
 
-    public override void OnHitByProjectile(NPC npc, Projectile projectile, NPC.HitInfo hit, int damageDone)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.OnHitByProjectile(projectile, hit, damageDone);
-    }
+    public override void OnHitByProjectile(NPC npc, Projectile projectile, NPC.HitInfo hit, int damageDone) => base.OnHitByProjectile(npc, projectile, hit, damageDone);
 
-    public override bool CanBeHitByNPC(NPC npc, NPC attacker)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            if (!npcBehavior.CanBeHitByNPC(attacker))
-                return false;
-        }
+    public override bool CanBeHitByNPC(NPC npc, NPC attacker) => base.CanBeHitByNPC(npc, attacker);
 
-        return true;
-    }
+    public override void ModifyIncomingHit(NPC npc, ref NPC.HitModifiers modifiers) => base.ModifyIncomingHit(npc, ref modifiers);
 
-    public override void ModifyIncomingHit(NPC npc, ref NPC.HitModifiers modifiers)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.ModifyIncomingHit(ref modifiers);
-    }
+    public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot) => base.CanHitPlayer(npc, target, ref cooldownSlot);
 
-    public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            if (!npcBehavior.CanHitPlayer(target, ref cooldownSlot))
-                return false;
-        }
+    public override void ModifyHitPlayer(NPC npc, Player target, ref Player.HurtModifiers modifiers) => base.ModifyHitPlayer(npc, target, ref modifiers);
 
-        return true;
-    }
+    public override void OnHitPlayer(NPC npc, Player target, Player.HurtInfo hurtInfo) => base.OnHitPlayer(npc, target, hurtInfo);
 
-    public override void ModifyHitPlayer(NPC npc, Player target, ref Player.HurtModifiers modifiers)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.ModifyHitPlayer(target, ref modifiers);
-    }
+    public override bool CanHitNPC(NPC npc, NPC target) => base.CanHitNPC(npc, target);
 
-    public override void OnHitPlayer(NPC npc, Player target, Player.HurtInfo hurtInfo)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.OnHitPlayer(target, hurtInfo);
-    }
+    public override void ModifyHitNPC(NPC npc, NPC target, ref NPC.HitModifiers modifiers) => base.ModifyHitNPC(npc, target, ref modifiers);
 
-    public override bool CanHitNPC(NPC npc, NPC target)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            if (!npcBehavior.CanHitNPC(target))
-                return false;
-        }
+    public override void OnHitNPC(NPC npc, NPC target, NPC.HitInfo hit) => base.OnHitNPC(npc, target, hit);
 
-        return true;
-    }
-
-    public override void ModifyHitNPC(NPC npc, NPC target, ref NPC.HitModifiers modifiers)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.ModifyHitNPC(target, ref modifiers);
-    }
-
-    public override void OnHitNPC(NPC npc, NPC target, NPC.HitInfo hit)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.OnHitNPC(target, hit);
-    }
-
-    public override bool ModifyCollisionData(NPC npc, Rectangle victimHitbox, ref int immunityCooldownSlot, ref MultipliableFloat damageMultiplier, ref Rectangle npcHitbox)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            if (!npcBehavior.ModifyCollisionData(victimHitbox, ref immunityCooldownSlot, ref damageMultiplier, ref npcHitbox))
-                return false;
-        }
-
-        return true;
-    }
+    public override bool ModifyCollisionData(NPC npc, Rectangle victimHitbox, ref int immunityCooldownSlot, ref MultipliableFloat damageMultiplier, ref Rectangle npcHitbox) => base.ModifyCollisionData(npc, victimHitbox, ref immunityCooldownSlot, ref damageMultiplier, ref npcHitbox);
 
     public static float GetBaseDR(NPC npc)
     {
@@ -609,208 +374,62 @@ public class CAGlobalNPC : GlobalNPC
     #endregion Hit
 
     #region SpecialEffects
-    public override void UpdateLifeRegen(NPC npc, ref int damage)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.UpdateLifeRegen(ref damage);
-    }
+    public override void UpdateLifeRegen(NPC npc, ref int damage) => base.UpdateLifeRegen(npc, ref damage);
 
-    public override bool? CanFallThroughPlatforms(NPC npc)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            bool? result = npcBehavior.CanFallThroughPlatforms();
-            if (result is not null)
-                return result;
-        }
+    public override bool? CanFallThroughPlatforms(NPC npc) => base.CanFallThroughPlatforms(npc);
 
-        return null;
-    }
+    public override bool? CanBeCaughtBy(NPC npc, Item item, Player player) => base.CanBeCaughtBy(npc, item, player);
 
-    public override bool? CanBeCaughtBy(NPC npc, Item item, Player player)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            bool? result = npcBehavior.CanBeCaughtBy(item, player);
-            if (result is not null)
-                return result;
-        }
+    public override void OnCaughtBy(NPC npc, Player player, Item item, bool failed) => base.OnCaughtBy(npc, player, item, failed);
 
-        return null;
-    }
+    public override bool? CanChat(NPC npc) => base.CanChat(npc);
 
-    public override void OnCaughtBy(NPC npc, Player player, Item item, bool failed)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.OnCaughtBy(player, item, failed);
-    }
+    public override void GetChat(NPC npc, ref string chat) => base.GetChat(npc, ref chat);
 
-    public override bool? CanChat(NPC npc)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            bool? result = npcBehavior.CanChat();
-            if (result is not null)
-                return result;
-        }
+    public override bool PreChatButtonClicked(NPC npc, bool firstButton) => base.PreChatButtonClicked(npc, firstButton);
 
-        return null;
-    }
+    public override void OnChatButtonClicked(NPC npc, bool firstButton) => base.OnChatButtonClicked(npc, firstButton);
 
-    public override void GetChat(NPC npc, ref string chat)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.GetChat(ref chat);
-    }
+    public override void ModifyActiveShop(NPC npc, string shopName, Item[] items) => base.ModifyActiveShop(npc, shopName, items);
 
-    public override bool PreChatButtonClicked(NPC npc, bool firstButton)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            if (!npcBehavior.PreChatButtonClicked(firstButton))
-                return false;
-        }
+    public override bool? CanGoToStatue(NPC npc, bool toKingStatue) => base.CanGoToStatue(npc, toKingStatue);
 
-        return true;
-    }
+    public override void OnGoToStatue(NPC npc, bool toKingStatue) => base.OnGoToStatue(npc, toKingStatue);
 
-    public override void OnChatButtonClicked(NPC npc, bool firstButton)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.OnChatButtonClicked(firstButton);
-    }
+    public override void TownNPCAttackStrength(NPC npc, ref int damage, ref float knockback) => base.TownNPCAttackStrength(npc, ref damage, ref knockback);
 
-    public override void ModifyActiveShop(NPC npc, string shopName, Item[] items)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.ModifyActiveShop(shopName, items);
-    }
+    public override void TownNPCAttackCooldown(NPC npc, ref int cooldown, ref int randExtraCooldown) => base.TownNPCAttackCooldown(npc, ref cooldown, ref randExtraCooldown);
 
-    public override bool? CanGoToStatue(NPC npc, bool toKingStatue)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            bool? result = npcBehavior.CanGoToStatue(toKingStatue);
-            if (result is not null)
-                return result;
-        }
+    public override void TownNPCAttackProj(NPC npc, ref int projType, ref int attackDelay) => base.TownNPCAttackProj(npc, ref projType, ref attackDelay);
 
-        return null;
-    }
+    public override void TownNPCAttackProjSpeed(NPC npc, ref float multiplier, ref float gravityCorrection, ref float randomOffset) => base.TownNPCAttackProjSpeed(npc, ref multiplier, ref gravityCorrection, ref randomOffset);
 
-    public override void OnGoToStatue(NPC npc, bool toKingStatue)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.OnGoToStatue(toKingStatue);
-    }
+    public override void TownNPCAttackShoot(NPC npc, ref bool inBetweenShots) => base.TownNPCAttackShoot(npc, ref inBetweenShots);
 
-    public override void TownNPCAttackStrength(NPC npc, ref int damage, ref float knockback)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.TownNPCAttackStrength(ref damage, ref knockback);
-    }
+    public override void TownNPCAttackMagic(NPC npc, ref float auraLightMultiplier) => base.TownNPCAttackMagic(npc, ref auraLightMultiplier);
 
-    public override void TownNPCAttackCooldown(NPC npc, ref int cooldown, ref int randExtraCooldown)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.TownNPCAttackCooldown(ref cooldown, ref randExtraCooldown);
-    }
+    public override void TownNPCAttackSwing(NPC npc, ref int itemWidth, ref int itemHeight) => base.TownNPCAttackSwing(npc, ref itemWidth, ref itemHeight);
 
-    public override void TownNPCAttackProj(NPC npc, ref int projType, ref int attackDelay)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.TownNPCAttackProj(ref projType, ref attackDelay);
-    }
+    public override void DrawTownAttackGun(NPC npc, ref Texture2D item, ref Rectangle itemFrame, ref float scale, ref int horizontalHoldoutOffset) => base.DrawTownAttackGun(npc, ref item, ref itemFrame, ref scale, ref horizontalHoldoutOffset);
 
-    public override void TownNPCAttackProjSpeed(NPC npc, ref float multiplier, ref float gravityCorrection, ref float randomOffset)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.TownNPCAttackProjSpeed(ref multiplier, ref gravityCorrection, ref randomOffset);
-    }
+    public override void DrawTownAttackSwing(NPC npc, ref Texture2D item, ref Rectangle itemFrame, ref int itemSize, ref float scale, ref Vector2 offset) => base.DrawTownAttackSwing(npc, ref item, ref itemFrame, ref itemSize, ref scale, ref offset);
 
-    public override void TownNPCAttackShoot(NPC npc, ref bool inBetweenShots)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.TownNPCAttackShoot(ref inBetweenShots);
-    }
+    public override int? PickEmote(NPC npc, Player closestPlayer, List<int> emoteList, WorldUIAnchor otherAnchor) => base.PickEmote(npc, closestPlayer, emoteList, otherAnchor);
 
-    public override void TownNPCAttackMagic(NPC npc, ref float auraLightMultiplier)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.TownNPCAttackMagic(ref auraLightMultiplier);
-    }
+    public override void ChatBubblePosition(NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects) => base.ChatBubblePosition(npc, ref position, ref spriteEffects);
 
-    public override void TownNPCAttackSwing(NPC npc, ref int itemWidth, ref int itemHeight)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.TownNPCAttackSwing(ref itemWidth, ref itemHeight);
-    }
+    public override void PartyHatPosition(NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects) => base.PartyHatPosition(npc, ref position, ref spriteEffects);
 
-    public override void DrawTownAttackGun(NPC npc, ref Texture2D item, ref Rectangle itemFrame, ref float scale, ref int horizontalHoldoutOffset)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.DrawTownAttackGun(ref item, ref itemFrame, ref scale, ref horizontalHoldoutOffset);
-    }
-
-    public override void DrawTownAttackSwing(NPC npc, ref Texture2D item, ref Rectangle itemFrame, ref int itemSize, ref float scale, ref Vector2 offset)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.DrawTownAttackSwing(ref item, ref itemFrame, ref itemSize, ref scale, ref offset);
-    }
-
-    public override bool NeedSaving(NPC npc)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            if (npcBehavior.NeedSaving())
-                return true;
-        }
-
-        return false;
-    }
-
-    public override void SaveData(NPC npc, TagCompound tag)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.SaveData(tag);
-    }
-
-    public override void LoadData(NPC npc, TagCompound tag)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.LoadData(tag);
-    }
-
-    public override int? PickEmote(NPC npc, Player closestPlayer, List<int> emoteList, WorldUIAnchor otherAnchor)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-        {
-            int? result = npcBehavior.PickEmote(closestPlayer, emoteList, otherAnchor);
-            if (result is not null)
-                return result;
-        }
-
-        return null;
-    }
-
-    public override void ChatBubblePosition(NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.ChatBubblePosition(ref position, ref spriteEffects);
-    }
-
-    public override void PartyHatPosition(NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.PartyHatPosition(ref position, ref spriteEffects);
-    }
-
-    public override void EmoteBubblePosition(NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects)
-    {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior))
-            npcBehavior.EmoteBubblePosition(ref position, ref spriteEffects);
-    }
+    public override void EmoteBubblePosition(NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects) => base.EmoteBubblePosition(npc, ref position, ref spriteEffects);
     #endregion SpecialEffects
+
+    #region WorldSaving
+    public override bool NeedSaving(NPC npc) => base.NeedSaving(npc);
+
+    public override void SaveData(NPC npc, TagCompound tag) => base.SaveData(npc, tag);
+
+    public override void LoadData(NPC npc, TagCompound tag) => base.LoadData(npc, tag);
+    #endregion WorldSaving
 
     #region NotOverriden
     public override void ModifyGlobalLoot(GlobalLoot globalLoot) { }
@@ -910,19 +529,16 @@ public class CAGlobalNPC : GlobalNPC
     }
     #endregion Net
 
-    public class Loader : IResourceLoader
+    void IResourceLoader.PostSetupContent()
     {
-        void IResourceLoader.PostSetupContent()
-        {
-            Type type = typeof(CalamityGlobalNPC);
-            OrigMethod_CustomDRMath = type.GetMethod("CustomDRMath", TOReflectionUtils.UniversalBindingFlags).CreateDelegate<Orig_DRMath>();
-            OrigMethod_DefaultDRMath = type.GetMethod("DefaultDRMath", TOReflectionUtils.UniversalBindingFlags).CreateDelegate<Orig_DRMath>();
-        }
+        Type type = typeof(CalamityGlobalNPC);
+        OrigMethod_CustomDRMath = type.GetMethod("CustomDRMath", TOReflectionUtils.UniversalBindingFlags).CreateDelegate<Orig_DRMath>();
+        OrigMethod_DefaultDRMath = type.GetMethod("DefaultDRMath", TOReflectionUtils.UniversalBindingFlags).CreateDelegate<Orig_DRMath>();
+    }
 
-        void IResourceLoader.OnModUnload()
-        {
-            OrigMethod_DefaultDRMath = null;
-            OrigMethod_CustomDRMath = null;
-        }
+    void IResourceLoader.OnModUnload()
+    {
+        OrigMethod_DefaultDRMath = null;
+        OrigMethod_CustomDRMath = null;
     }
 }

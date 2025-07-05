@@ -11,7 +11,7 @@ public unsafe struct DataUnion32
 }
 
 [StructLayout(LayoutKind.Explicit)]
-public unsafe struct DataUnion64
+public struct DataUnion64
 {
     [FieldOffset(0)] public double d;
     [FieldOffset(0)] public long l;

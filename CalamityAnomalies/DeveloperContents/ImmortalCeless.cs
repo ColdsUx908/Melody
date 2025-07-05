@@ -3,7 +3,7 @@ using CalamityAnomalies.Items.ItemRarities;
 
 namespace CalamityAnomalies.DeveloperContents;
 
-public class ImmortalCeless : LegendaryItem, ILocalizedModType
+public class ImmortalCeless : LegendaryItem
 {
     #region 传奇
     public int Phase_1 { get; private set; } = 1; //Max: 6
@@ -127,7 +127,7 @@ public class ImmortalCeless : LegendaryItem, ILocalizedModType
     private static readonly int ProjBlood = ModContent.ProjectileType<ImmortalBloodRain>();
     //private static readonly int godType = ModContent.ProjectileType<ImmortalGod>();
 
-    public new string LocalizationCategory => "DeveloperContents";
+    public override string LocalizationCategory => "DeveloperContents";
 
     public override void SetDefaults()
     {
@@ -201,9 +201,9 @@ public class ImmortalCeless : LegendaryItem, ILocalizedModType
     public override float UseTimeMultiplier(Player player) => player.altFunctionUse == 2 ? 1f : 10f;
 }
 
-public class ImmortalIceRain : ModProjectile, ILocalizedModType
+public class ImmortalIceRain : ModProjectile
 {
-    public new string LocalizationCategory => "DeveloperContents";
+    public override string LocalizationCategory => "DeveloperContents";
 
     public override string Texture => CAMain.TexturePrefix + "Touhou/Ice2";
 
@@ -346,9 +346,9 @@ public class ImmortalIceRain : ModProjectile, ILocalizedModType
     public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => CalamityUtils.CircularHitboxCollision(Projectile.Center, 4f, targetHitbox);
 }
 
-public class ImmortalBloodRain : ModProjectile, ILocalizedModType
+public class ImmortalBloodRain : ModProjectile
 {
-    public new string LocalizationCategory => "DeveloperContents";
+    public override string LocalizationCategory => "DeveloperContents";
 
     public override string Texture => CAMain.TexturePrefix + "Touhou/Ice3";
 

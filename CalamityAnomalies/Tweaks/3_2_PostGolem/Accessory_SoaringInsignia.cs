@@ -16,8 +16,9 @@ public class SoaringInsignia_Tweak : CAItemTweak
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
-        tooltips.ModifyTooltipByNum_CATweak(0, k => k.Text = Language.GetTextValue(localizationPrefix + "Tooltip0"));
-        tooltips.ModifyTooltipByNum_CATweak(1, k => k.Text = Language.GetTextValue(localizationPrefix + "Tooltip1"));
+        CreateTooltipModifier(tooltips)
+            .ModifyWithCATweakColor(0, k => k.Text = Language.GetTextValue(localizationPrefix + "Tooltip0"))
+            .ModifyWithCATweakColor(1, k => k.Text = Language.GetTextValue(localizationPrefix + "Tooltip1"));
     }
 }
 

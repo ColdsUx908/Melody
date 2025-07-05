@@ -1,5 +1,4 @@
-﻿using CalamityAnomalies.Difficulties;
-using CalamityMod.Events;
+﻿using CalamityMod.Events;
 using CalamityMod.NPCs.CeaselessVoid;
 using CalamityMod.NPCs.ExoMechs.Apollo;
 using CalamityMod.NPCs.ExoMechs.Artemis;
@@ -435,9 +434,9 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
 
     //灾厄还没有重写这个静态方法，所以要手动绑定
 
-    public delegate void Orig_Load_0_Mod(Mod mod);
+    public delegate void Orig_Load__Mod(Mod mod);
 
-    public static void Detour_Load(Orig_Load_0_Mod orig, Mod mod)
+    public static void Detour_Load__Mod(Orig_Load__Mod orig, Mod mod)
     {
         orig(mod);
         MinibossHPBarList.Add(NPCID.LunarTowerVortex);
@@ -467,7 +466,7 @@ public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, 
     public override void ApplyDetour()
     {
         base.ApplyDetour();
-        TryApplyDetour<Action<Orig_Load_0_Mod, Mod>>(Detour_Load, flags: BindingFlags.NonPublic | BindingFlags.Static);
+        TryApplyDetour(Detour_Load__Mod, true);
     }
 
     void IResourceLoader.OnWorldLoad() => _trackingBars.Clear();

@@ -12,7 +12,7 @@ public static partial class TOLocalizationUtils
             ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(text), textColor ?? Color.White);
     }
 
-    public static void ChatLiteralText(string text, Color? textColor = null, params Player[] receivers)
+    public static void ChatLiteralText(string text, Color? textColor = null, params ReadOnlySpan<Player> receivers)
     {
         if (Main.netMode == NetmodeID.SinglePlayer)
             Main.NewText(text, textColor ?? Color.White);
@@ -31,7 +31,7 @@ public static partial class TOLocalizationUtils
             ChatHelper.BroadcastChatMessage(NetworkText.FromKey(key), textColor ?? Color.White);
     }
 
-    public static void ChatLocalizedText(string key, Color? textColor = null, params Player[] receivers)
+    public static void ChatLocalizedText(string key, Color? textColor = null, params ReadOnlySpan<Player> receivers)
     {
         if (Main.netMode == NetmodeID.SinglePlayer)
             Main.NewText(Language.GetTextValue(key), textColor ?? Color.White);
@@ -76,6 +76,21 @@ public static partial class TOLocalizationUtils
         else
             ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(builder.ToString()), textcolor ?? Color.White);
     }
+
+    public static void ChatStringBuilder(StringBuilder builder, Color? textcolor = null, params ReadOnlySpan<Player> receivers)
+        {
+        if (Main.netMode == NetmodeID.SinglePlayer)
+            Main.NewText(builder.ToString(), textcolor ?? Color.White);
+        else
+        {
+            foreach (Player player in receivers)
+                ChatHelper.SendChatMessageToClient(NetworkText.FromLiteral(builder.ToString()), textcolor ?? Color.White, player.whoAmI);
+        }
+    }
+
+    public static void ChatEmptyLine() => ChatLiteralText("");
+
+    public static void ChatEmptyLine(params ReadOnlySpan<Player> receivers) => ChatLiteralText("", null, receivers);
 
     public static StringBuilder CreateWithDebugHeader()
     {

@@ -9,6 +9,6 @@ public abstract class CalamityPlayerDetour : ModPlayerDetour<CalamityPlayer>
     public override void ApplyDetour()
     {
         base.ApplyDetour();
-        TryApplyDetour(Detour_OtherBuffEffects, flags: BindingFlags.NonPublic | BindingFlags.Instance);
+        TryApplyDetour(Detour_OtherBuffEffects);
     }
 }

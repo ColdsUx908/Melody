@@ -27,12 +27,14 @@ global using Terraria.ModLoader.Core;
 global using Terraria.ModLoader.IO;
 global using Terraria.Utilities;
 global using Transoceanic.Commands;
+global using Transoceanic.Core;
+global using Transoceanic.Core.Extensions;
+global using Transoceanic.Core.Utilities;
 global using Transoceanic.Data;
 global using Transoceanic.GameData;
 global using Transoceanic.GlobalInstances;
-global using Transoceanic.IL;
 global using Transoceanic.Localization;
-global using Transoceanic.MathHelp;
+global using Transoceanic.Maths;
 global using ZLinq;
 using Terraria.GameContent.Creative;
 
@@ -166,6 +168,8 @@ public static class TOMain
     public const string DebugPrefix = ModLocalizationPrefix + "DEBUG.";
 
     public const string DebugErrorMessageKey = ModLocalizationPrefix + "DEBUG.ErrorMessage";
+
+    public static Color TODebugWarnColor { get; } = Color.Orange;
 
     public static Color TODebugErrorColor { get; } = new(0xFF, 0x00, 0x00);
 

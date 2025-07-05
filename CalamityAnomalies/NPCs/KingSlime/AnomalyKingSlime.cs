@@ -1,4 +1,5 @@
 ﻿using CalamityMod.NPCs.NormalNPCs;
+using Terraria;
 
 namespace CalamityAnomalies.NPCs.KingSlime;
 
@@ -353,7 +354,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
                 break;
         }
 
-        TeleportTimer += (float)Math.Max(NPC.Center.Y - Target.Center.Y, 0f) > 0f ? 3f : MathHelper.Lerp(1f, 1.5f, OceanNPC.LifeRatioReverse);
+        TeleportTimer += Math.Max(NPC.Center.Y - Target.Center.Y, 0f) > 0f ? 3f : MathHelper.Lerp(1f, 1.5f, OceanNPC.LifeRatioReverse);
 
         ChangeScale();
         TrySpawnMinions();
@@ -646,9 +647,9 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
     private Vector2 Jump_VelocityInitial => CurrentAttack switch
     {
         AttackType.NormalJump_Phase1 => new(
-            MathHelper.Lerp(5f, 7.5f, OceanNPC.LifeRatioReverse) * NPC.direction, -7.5f * (1f + Math.Min((float)Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 800f, 0.75f))),
+            MathHelper.Lerp(5f, 7.5f, OceanNPC.LifeRatioReverse) * NPC.direction, -7.5f * (1f + Math.Min(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 800f, 0.75f))),
         AttackType.HighJump_Phase1 => new(
-            MathHelper.Lerp(7.5f, 10f, OceanNPC.LifeRatioReverse) * NPC.direction, -10f * (1f + Math.Min((float)Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 800f, 1.25f))),
+            MathHelper.Lerp(7.5f, 10f, OceanNPC.LifeRatioReverse) * NPC.direction, -10f * (1f + Math.Min(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 800f, 1.25f))),
         AttackType.RapidJump_Phase1 => new(
             MathHelper.Lerp(10f, 12.5f, OceanNPC.LifeRatioReverse) * NPC.direction, -5f),
         _ => Vector2.Zero
@@ -689,7 +690,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
             case 0: //寻的
                 Vector2? destination = null;
                 //Vector2 randomDefault = Main.rand.NextBool() ? Vector2.UnitX : -Vector2.UnitX;
-                Vector2 vectorAimedAheadOfTarget = Target.Center + new Vector2((float)Math.Round(Target.velocity.X / 2f), 0f).ToCustomLength(800f);
+                Vector2 vectorAimedAheadOfTarget = Target.Center + new Vector2(MathF.Round(Target.velocity.X / 2f), 0f).ToCustomLength(800f);
                 Point predictiveTeleportPoint = vectorAimedAheadOfTarget.ToTileCoordinates();
                 predictiveTeleportPoint.X = Math.Clamp(predictiveTeleportPoint.X, 10, Main.maxTilesX - 10);
                 predictiveTeleportPoint.Y = Math.Clamp(predictiveTeleportPoint.Y, 10, Main.maxTilesY - 10);
@@ -705,7 +706,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
                         if (potentialTile.LiquidType != LiquidID.Lava
                             && Collision.CanHitLine(NPC.Center, 0, 0, predictiveTeleportPoint.ToVector2() * 16, 0, 0))
                         {
-                            destination = new((teleportTileX + 0.5f) * 16f, (teleportTileY + 1f) * 16f);
+                            destination = new Vector2((teleportTileX + 0.5f) * 16f, (teleportTileY + 1f) * 16f);
                             break; //在此处退出循环
                         }
                         else
@@ -731,6 +732,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
                 {
                     TeleportScaleMultiplier = 0.2f;
                     NPC.Bottom = TeleportDestination;
+                    Gore.NewGore(NPC.GetSource_FromAI(), NPC.Center + new Vector2(-40f, -(float)NPC.height / 2), NPC.velocity, GoreID.KingSlimeCrown);
                     if (JewelSapphireAlive) //移动蓝宝石
                     {
                         JewelSapphire.Center = NPC.Center - new Vector2(0f, 200f);
