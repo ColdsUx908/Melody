@@ -28,8 +28,8 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     private const int AISlot = 33;
     private const int AISlot2 = 17;
 
-    private DataUnion32[] OceanAI { get; } = new DataUnion32[AISlot];
-    private DataUnion64[] OceanAI2 { get; } = new DataUnion64[AISlot2];
+    private Union32[] OceanAI { get; } = new Union32[AISlot];
+    private Union64[] OceanAI2 { get; } = new Union64[AISlot2];
 
     private ref Bits32 AIChanged => ref OceanAI[^1].bits;
     private ref Bits64 AIChanged2 => ref OceanAI2[^1].bits;

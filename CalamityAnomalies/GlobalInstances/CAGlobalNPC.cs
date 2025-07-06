@@ -15,14 +15,14 @@ public sealed class CAGlobalNPC : GlobalNPCWithBehavior<CANPCBehavior>, IResourc
     private const int AISlot = 33;
     private const int AISlot2 = 17;
 
-    public DataUnion32[] AnomalyAI { get; } = new DataUnion32[AISlot];
-    public DataUnion64[] AnomalyAI2 { get; } = new DataUnion64[AISlot2];
+    public Union32[] AnomalyAI { get; } = new Union32[AISlot];
+    public Union64[] AnomalyAI2 { get; } = new Union64[AISlot2];
 
     public ref Bits32 AIChanged => ref AnomalyAI[^1].bits;
     public ref Bits64 AIChanged2 => ref AnomalyAI2[^1].bits;
 
-    private DataUnion32[] InternalAnomalyAI { get; } = new DataUnion32[AISlot];
-    private DataUnion64[] InternalAnomalyAI2 { get; } = new DataUnion64[AISlot2];
+    private Union32[] InternalAnomalyAI { get; } = new Union32[AISlot];
+    private Union64[] InternalAnomalyAI2 { get; } = new Union64[AISlot2];
 
     private ref Bits32 InternalAIChanged => ref AnomalyAI[^1].bits;
     private ref Bits64 InternalAIChanged2 => ref AnomalyAI2[^1].bits;
@@ -395,6 +395,8 @@ public sealed class CAGlobalNPC : GlobalNPCWithBehavior<CANPCBehavior>, IResourc
     public override bool? CanGoToStatue(NPC npc, bool toKingStatue) => base.CanGoToStatue(npc, toKingStatue);
 
     public override void OnGoToStatue(NPC npc, bool toKingStatue) => base.OnGoToStatue(npc, toKingStatue);
+
+    public override bool ModifyDeathMessage(NPC npc, ref NetworkText customText, ref Color color) => base.ModifyDeathMessage(npc, ref customText, ref color);
 
     public override void TownNPCAttackStrength(NPC npc, ref int damage, ref float knockback) => base.TownNPCAttackStrength(npc, ref damage, ref knockback);
 

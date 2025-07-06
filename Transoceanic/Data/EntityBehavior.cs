@@ -4,7 +4,7 @@ using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
 
-namespace Transoceanic.GameData;
+namespace Transoceanic.Data;
 
 #region Core
 public abstract class EntityBehaviorBase<TEntity> where TEntity : Entity
@@ -1460,10 +1460,7 @@ public abstract class NPCBehavior : SingleEntityBehavior<NPC>
     /// <param name="scale"></param>
     /// <param name="position"></param>
     /// <returns></returns>
-    public virtual bool? DrawHealthBar(byte hbPosition, ref float scale, ref Vector2 position)
-    {
-        return null;
-    }
+    public virtual bool? DrawHealthBar(byte hbPosition, ref float scale, ref Vector2 position) => null;
     #endregion Draw
 
     #region Hit
@@ -1623,10 +1620,7 @@ public abstract class NPCBehavior : SingleEntityBehavior<NPC>
     /// <para/> Return true to allow an NPC to fall through platforms, false to prevent it. Returns null by default, applying vanilla behaviors (based on aiStyle and type).
     /// <para/> Called on the server and clients.
     /// </summary>
-    public virtual bool? CanFallThroughPlatforms()
-    {
-        return null;
-    }
+    public virtual bool? CanFallThroughPlatforms() => null;
 
     /// <summary>
     /// Allows you to determine whether the given item can catch the given NPC.<br></br>
@@ -1639,10 +1633,7 @@ public abstract class NPCBehavior : SingleEntityBehavior<NPC>
     /// <param name="item">The item with which the player is trying to catch the given NPC.</param>
     /// <param name="player">The player attempting to catch the given NPC.</param>
     /// <returns></returns>
-    public virtual bool? CanBeCaughtBy(Item item, Player player)
-    {
-        return null;
-    }
+    public virtual bool? CanBeCaughtBy(Item item, Player player) => null;
 
     /// <summary>
     /// Allows you to make things happen when the given item attempts to catch the given NPC.
@@ -1658,10 +1649,7 @@ public abstract class NPCBehavior : SingleEntityBehavior<NPC>
     /// <para/> Called on the local client only.
     /// </summary>
     /// <returns></returns>
-    public virtual bool? CanChat()
-    {
-        return null;
-    }
+    public virtual bool? CanChat() => null;
 
     /// <summary>
     /// Allows you to modify the chat message of any NPC that the player can talk to.
@@ -1676,10 +1664,7 @@ public abstract class NPCBehavior : SingleEntityBehavior<NPC>
     /// </summary>
     /// <param name="firstButton"></param>
     /// <returns></returns>
-    public virtual bool PreChatButtonClicked(bool firstButton)
-    {
-        return true;
-    }
+    public virtual bool PreChatButtonClicked(bool firstButton) => true;
 
     /// <summary>
     /// Allows you to make something happen whenever a button is clicked on this NPC's chat window. The firstButton parameter tells whether the first button or second button (button and button2 from SetChatButtons) was clicked.
@@ -1704,10 +1689,7 @@ public abstract class NPCBehavior : SingleEntityBehavior<NPC>
     /// <para/> Called in single player or on the server only.
     /// </summary>
     /// <param name="toKingStatue">Whether the NPC is being teleported to a King or Queen statue.</param>
-    public virtual bool? CanGoToStatue(bool toKingStatue)
-    {
-        return null;
-    }
+    public virtual bool? CanGoToStatue(bool toKingStatue) => null;
 
     /// <summary>
     /// Allows you to make things happen when this NPC teleports to a King or Queen statue.
@@ -1715,6 +1697,13 @@ public abstract class NPCBehavior : SingleEntityBehavior<NPC>
     /// </summary>
     /// <param name="toKingStatue">Whether the NPC was teleported to a King or Queen statue.</param>
     public virtual void OnGoToStatue(bool toKingStatue) { }
+
+    /// <summary>
+    /// Allows you to modify the death message of a town NPC or boss. This also affects what the dropped tombstone will say in the case of a town NPC. The text color can also be modified.
+    /// <para/> When modifying the death message, use <see cref="NPC.GetFullNetName"/> to retrieve the NPC name to use in substitutions.
+    /// <para/> Return false to skip the vanilla code for sending the message. This is useful if the death message is handled by this method or if the message should be skipped for any other reason, such as if there are multiple bosses. Returns true by default.
+    /// </summary>
+    public virtual bool ModifyDeathMessage(ref NetworkText customText, ref Color color) => true;
 
     /// <summary>
     /// Allows you to determine the damage and knockback of a town NPC's attack before the damage is scaled. (More information on scaling in GlobalNPC.BuffTownNPCs.)
@@ -1791,10 +1780,7 @@ public abstract class NPCBehavior : SingleEntityBehavior<NPC>
     /// <br/><b>NOTE:</b> A NPC that needs saving will not despawn naturally.
     /// </summary>
     /// <returns></returns>
-    public virtual bool NeedSaving()
-    {
-        return false;
-    }
+    public virtual bool NeedSaving() => false;
 
     /// <summary>
     /// Allows you to save custom data for the given npc.
@@ -1820,10 +1806,7 @@ public abstract class NPCBehavior : SingleEntityBehavior<NPC>
     /// <param name="emoteList">A list of emote IDs from which the NPC will randomly select one</param>
     /// <param name="otherAnchor">A <see cref="WorldUIAnchor"/> instance that indicates the target of this emote conversation. Use this to get the instance of the <see cref="NPC"/> or <see cref="Player"/> this NPC is talking to.</param>
     /// <returns>Return null to use vanilla mechanic (pick one from the list), otherwise pick the emote by the returned ID. Returning -1 will prevent the emote from being used. Returns null by default</returns>
-    public virtual int? PickEmote(Player closestPlayer, List<int> emoteList, WorldUIAnchor otherAnchor)
-    {
-        return null;
-    }
+    public virtual int? PickEmote(Player closestPlayer, List<int> emoteList, WorldUIAnchor otherAnchor) => null;
 
     /// <inheritdoc cref="ModNPC.ChatBubblePosition(ref Vector2, ref SpriteEffects)"/>
     public virtual void ChatBubblePosition(ref Vector2 position, ref SpriteEffects spriteEffects) { }
@@ -2685,7 +2668,7 @@ public abstract class ItemBehavior : SingleEntityBehavior<Item>
     public virtual void ModifyTooltips(List<TooltipLine> tooltips) { }
     #endregion Tooltip
 
-    #region Data
+    #region WorldSaving
     /// <summary>
     /// Allows you to save custom data for this item.
     /// <br/>
@@ -2701,7 +2684,15 @@ public abstract class ItemBehavior : SingleEntityBehavior<Item>
     /// </summary>
     /// <param name="tag"> The TagCompound to load data from. </param>
     public virtual void LoadData(TagCompound tag) { }
-    #endregion Data
+    #endregion WorldSaving
+
+    #region Net
+    /// <inheritdoc cref="ModItem.NetSend"/>
+    public virtual void NetSend(BinaryWriter writer) { }
+
+    /// <inheritdoc cref="ModItem.NetReceive"/>
+    public virtual void NetReceive(BinaryReader reader) { }
+    #endregion Net
     #endregion 虚成员
 }
 #endregion Behavior
@@ -4054,6 +4045,16 @@ public abstract class GlobalNPCWithBehavior<TNPCBehavior> : GlobalNPC where TNPC
             npcBehavior.OnGoToStatue(toKingStatue);
     }
 
+    public override bool ModifyDeathMessage(NPC npc, ref NetworkText customText, ref Color color)
+    {
+        if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
+        {
+            if (!npcBehavior.ModifyDeathMessage(ref customText, ref color))
+                return false;
+        }
+        return true;
+    }
+
     public override void TownNPCAttackStrength(NPC npc, ref int damage, ref float knockback)
     {
         if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
@@ -5150,5 +5151,19 @@ public abstract class GlobalItemWithBehavior<TItemBehavior> : GlobalItem where T
             itemBehavior.LoadData(tag);
     }
     #endregion WorldSaving
+
+    #region Net
+    public override void NetSend(Item item, BinaryWriter writer)
+    {
+        if (TryGetBehavior(item, out TItemBehavior itemBehavior))
+            itemBehavior.NetSend(writer);
+    }
+
+    public override void NetReceive(Item item, BinaryReader reader)
+    {
+        if (TryGetBehavior(item, out TItemBehavior itemBehavior))
+            itemBehavior.NetReceive(reader);
+    }
+    #endregion Net
 }
 #endregion Global

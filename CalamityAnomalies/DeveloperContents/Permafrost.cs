@@ -1,5 +1,4 @@
-﻿using CalamityAnomalies.UI;
-using CalamityMod.NPCs.Cryogen;
+﻿using CalamityMod.NPCs.Cryogen;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.NPCs.TownNPCs;
 using CalamityMod.Particles;

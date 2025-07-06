@@ -12,7 +12,7 @@ using Terraria.Map;
 using Terraria.UI;
 using Terraria.WorldBuilding;
 
-namespace Transoceanic.GameData;
+namespace Transoceanic.RuntimeEditing;
 
 public abstract class TypeDetour : ITODetourProvider
 {
@@ -5785,9 +5785,6 @@ public abstract class GlobalWallDetour<T> : GlobalBlockTypeDetour<T> where T : G
 
 public sealed class TypeDetourUpdateReminder : IResourceLoader
 {
-    private static readonly bool DisplayDetails = true;
-
-
     void IResourceLoader.PostSetupContent()
     {
         bool hasWarn = false;
@@ -5873,9 +5870,6 @@ public sealed class TypeDetourUpdateReminder : IResourceLoader
         }
     }
 
-    private static bool DetourMatch(string sourceName, string targetName) =>
-        TODetourUtils.EvaluateDetourName(targetName, out string sourceNameGot) && sourceNameGot == sourceName;
-
     private static (List<string> sourceMissing, List<string> targetMissing) CompareVirtualMethods(Type source, Type target, Func<string, string, bool> match, Predicate<string> sourceIgnore = null, Predicate<string> targetIgnore = null)
     {
         match ??= (s, t) => s == t;
@@ -5899,6 +5893,9 @@ public sealed class TypeDetourUpdateReminder : IResourceLoader
         }
         return (sourceMissing, targetMissing);
     }
+
+    private static bool DetourMatch(string sourceName, string targetName) =>
+        TODetourUtils.EvaluateDetourName(targetName, out string sourceNameGot) && sourceNameGot == sourceName;
 
     private static bool ShouldMethodBeChecked(MethodInfo method) =>
         (method.IsRealVirtual || method.IsAbstract) && !method.IsGenericMethod && !method.HasAttribute<ObsoleteAttribute>() && method.CanBeAccessedOutsideAssembly;

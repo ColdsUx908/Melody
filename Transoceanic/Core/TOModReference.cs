@@ -69,7 +69,7 @@ public sealed class TOModReferences : IResourceLoader
     public static TOModReferenceContainer ThoriumRework { get; private set; }
     public static TOModReferenceContainer WrathoftheGods { get; private set; }
 
-    [LoadPriority(10)]
+    [LoadPriority(1000)]
     void IResourceLoader.PostSetupContent()
     {
         CA = new("CalamityAnomalies");

@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.GameData;
+﻿namespace Transoceanic.Data;
 
 public abstract class LegendaryItem : ModItem
 {

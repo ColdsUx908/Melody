@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using MonoMod.RuntimeDetour;
 
-namespace Transoceanic.Core;
+namespace Transoceanic.RuntimeEditing;
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class CustomDetourTargetAttribute : Attribute

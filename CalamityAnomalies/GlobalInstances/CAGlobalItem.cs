@@ -9,8 +9,8 @@ public sealed class CAGlobalItem : GlobalItemWithBehavior<CAItemBehavior>
     private const int dataSlot = 33;
     private const int dataSlot2 = 17;
 
-    public DataUnion32[] Data { get; } = new DataUnion32[dataSlot];
-    public DataUnion64[] Data2 { get; } = new DataUnion64[dataSlot2];
+    public Union32[] Data { get; } = new Union32[dataSlot];
+    public Union64[] Data2 { get; } = new Union64[dataSlot2];
 
     public override GlobalItem Clone(Item from, Item to)
     {
@@ -226,6 +226,12 @@ public sealed class CAGlobalItem : GlobalItemWithBehavior<CAItemBehavior>
     public override void LoadData(Item item, TagCompound tag) => base.LoadData(item, tag);
     #endregion WorldSaving
 
+    #region Net
+    public override void NetSend(Item item, BinaryWriter writer) => base.NetSend(item, writer);
+
+    public override void NetReceive(Item item, BinaryReader reader) => base.NetReceive(item, reader);
+    #endregion Net
+
     #region NotOverriden
     public override bool? CanConsumeBait(Player player, Item bait) => null;
 
@@ -287,14 +293,4 @@ public sealed class CAGlobalItem : GlobalItemWithBehavior<CAItemBehavior>
 
     public override void AnglerChat(int type, ref string chat, ref string catchLocation) { }
     #endregion NotOverriden
-
-    #region Net
-    public override void NetSend(Item item, BinaryWriter writer)
-    {
-    }
-
-    public override void NetReceive(Item item, BinaryReader reader)
-    {
-    }
-    #endregion Net
 }

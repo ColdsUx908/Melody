@@ -1,6 +1,4 @@
-﻿
-
-namespace CalamityAnomalies.GlobalInstances;
+﻿namespace CalamityAnomalies.GlobalInstances;
 
 public sealed class CAGlobalProjectile : GlobalProjectileWithBehavior<CAProjectileBehavior>
 {
@@ -10,14 +8,14 @@ public sealed class CAGlobalProjectile : GlobalProjectileWithBehavior<CAProjecti
     private const int AISlot = 33;
     private const int AISlot2 = 17;
 
-    public DataUnion32[] AnomalyAI { get; } = new DataUnion32[AISlot];
-    public DataUnion64[] AnomalyAI2 { get; } = new DataUnion64[AISlot2];
+    public Union32[] AnomalyAI { get; } = new Union32[AISlot];
+    public Union64[] AnomalyAI2 { get; } = new Union64[AISlot2];
 
     public ref Bits32 AIChanged => ref AnomalyAI[^1].bits;
     public ref Bits64 AIChanged2 => ref AnomalyAI2[^1].bits;
 
-    private DataUnion32[] InternalAnomalyAI { get; } = new DataUnion32[AISlot];
-    private DataUnion64[] InternalAnomalyAI2 { get; } = new DataUnion64[AISlot2];
+    private Union32[] InternalAnomalyAI { get; } = new Union32[AISlot];
+    private Union64[] InternalAnomalyAI2 { get; } = new Union64[AISlot2];
 
     private ref Bits32 InternalAIChanged => ref AnomalyAI[^1].bits;
     private ref Bits64 InternalAIChanged2 => ref AnomalyAI2[^1].bits;

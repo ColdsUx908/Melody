@@ -1,6 +1,6 @@
 ﻿using Terraria.Chat;
 
-namespace Transoceanic.Localization;
+namespace Transoceanic.Core.Utilities;
 
 public static partial class TOLocalizationUtils
 {
@@ -78,7 +78,7 @@ public static partial class TOLocalizationUtils
     }
 
     public static void ChatStringBuilder(StringBuilder builder, Color? textcolor = null, params ReadOnlySpan<Player> receivers)
-        {
+    {
         if (Main.netMode == NetmodeID.SinglePlayer)
             Main.NewText(builder.ToString(), textcolor ?? Color.White);
         else

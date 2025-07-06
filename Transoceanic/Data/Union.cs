@@ -1,7 +1,7 @@
 ﻿namespace Transoceanic.Data;
 
 [StructLayout(LayoutKind.Explicit)]
-public unsafe struct DataUnion32
+public unsafe struct Union32
 {
     [FieldOffset(0)] public float f;
     [FieldOffset(0)] public int i;
@@ -11,7 +11,7 @@ public unsafe struct DataUnion32
 }
 
 [StructLayout(LayoutKind.Explicit)]
-public struct DataUnion64
+public struct Union64
 {
     [FieldOffset(0)] public double d;
     [FieldOffset(0)] public long l;

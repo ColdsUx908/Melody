@@ -21,14 +21,18 @@ public class ItemTooltipModifier
                 _tooltip0 = i;
         }
 
-        for (int i = tooltips.Count - 1 - 1; i >= _tooltip0; i--)
+        for (int i = tooltips.Count - 1; i >= _tooltip0; i--)
         {
             TooltipLine line = tooltips[i];
-            Match match = Regex.Match(line.Name, @"^Tooltip(\d+)$");
-            if (match.Success)
+            if (line.Mod == "Terraria")
             {
-                _tooltipLast = i;
-                _tooltipMax = int.Parse(match.Groups[1].Value);
+                Match match = Regex.Match(line.Name, @"^Tooltip(?<num>\d+)$");
+                if (match.Success)
+                {
+                    _tooltipLast = i;
+                    _tooltipMax = int.Parse(match.Groups["num"].Value);
+                    break;
+                }
             }
         }
     }

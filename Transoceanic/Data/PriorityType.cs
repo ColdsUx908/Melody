@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.GameData;
+﻿namespace Transoceanic.Data;
 
 /// <summary>
 /// NPC优先级设定。

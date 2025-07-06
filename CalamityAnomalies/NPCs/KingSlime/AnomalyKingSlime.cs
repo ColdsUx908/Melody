@@ -1,5 +1,4 @@
 ﻿using CalamityMod.NPCs.NormalNPCs;
-using Terraria;
 
 namespace CalamityAnomalies.NPCs.KingSlime;
 

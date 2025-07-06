@@ -1,5 +1,4 @@
 ﻿using CalamityAnomalies.Tweaks._5_2_PostYharon;
-using CalamityMod.Items.Accessories;
 using CalamityMod.NPCs.Abyss;
 using CalamityMod.NPCs.AcidRain;
 using CalamityMod.NPCs.AquaticScourge;
@@ -358,6 +357,8 @@ public sealed class CAPlayer : ModPlayerWithBehavior<CAPlayerBehavior>
     public override bool OnPickup(Item item) => base.OnPickup(item);
 
     public override bool CanBeTeleportedTo(Vector2 teleportPosition, string context) => base.CanBeTeleportedTo(teleportPosition, context);
+
+    public override void OnEquipmentLoadoutSwitched(int oldLoadoutIndex, int loadoutIndex) => base.OnEquipmentLoadoutSwitched(oldLoadoutIndex, loadoutIndex);
 }
 
 public class PlayerDownedBossCalamity : PlayerDownedBoss
