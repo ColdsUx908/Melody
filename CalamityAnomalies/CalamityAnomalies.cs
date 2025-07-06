@@ -43,7 +43,7 @@ global using CalamityMod_ = CalamityMod.CalamityMod;
 
 namespace CalamityAnomalies;
 
-public class CalamityAnomalies : Mod
+public sealed class CalamityAnomalies : Mod
 {
     internal static CalamityAnomalies Instance { get; private set; }
 
@@ -102,7 +102,7 @@ public class CalamityAnomalies : Mod
     }
 }
 
-public static class CAMain
+public sealed class CAMain : IResourceLoader
 {
     public static Assembly Assembly { get; } = CalamityAnomalies.Instance.Code;
 
@@ -130,17 +130,14 @@ public static class CAMain
 
     public static Color AnomalyUltramundaneColor { get; } = new(0xE8, 0x97, 0xFF);
 
-    public class Load : IResourceLoader
+    void IResourceLoader.PostSetupContent()
     {
-        void IResourceLoader.PostSetupContent()
-        {
-            CalamityModInstance = (CalamityMod_)Type_CalamityMod.GetField("Instance", TOReflectionUtils.StaticBindingFlags).GetValue(null);
-            TOMain.SyncEnabled = true;
-        }
+        CalamityModInstance = (CalamityMod_)Type_CalamityMod.GetField("Instance", TOReflectionUtils.StaticBindingFlags).GetValue(null);
+        TOMain.SyncEnabled = true;
+    }
 
-        void IResourceLoader.OnModUnload()
-        {
-            CalamityModInstance = null;
-        }
+    void IResourceLoader.OnModUnload()
+    {
+        CalamityModInstance = null;
     }
 }

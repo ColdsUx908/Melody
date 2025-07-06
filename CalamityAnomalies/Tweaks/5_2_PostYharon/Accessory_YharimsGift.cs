@@ -10,6 +10,26 @@ public class YharimsGift_Tweak : CAItemTweak<YharimsGift>
 
     private const string localizationPrefix2 = CAMain.CalamityModLocalizationPrefix + "Items.Accessories.";
 
+    public override void UpdateAccessory(Player player, bool hideVisual)
+    {
+        CAPlayer anomalyPlayer = player.Anomaly();
+        if (anomalyPlayer.YharimsGift < 2)
+            anomalyPlayer.YharimsGift++;
+        _enchantmentEnergyParticles.Update();
+    }
+
+    public override void ModifyTooltips(List<TooltipLine> tooltips)
+    {
+        CreateTooltipModifier(tooltips)
+            .ClearAllCATooltips()
+            .AddCATooltip(k =>
+            {
+                k.Text = Language.GetTextFormat(localizationPrefix + "CATooltip0", BuffName);
+                k.OverrideColor = Color.Gold;
+            }, false);
+    }
+
+    #region 礼物
     public enum CurrentBuff
     {
         None = -1,
@@ -30,34 +50,19 @@ public class YharimsGift_Tweak : CAItemTweak<YharimsGift>
         _ => "None"
     };
 
-    public override void UpdateAccessory(Player player, bool hideVisual)
-    {
-        CAPlayer anomalyPlayer = player.Anomaly();
-        if (anomalyPlayer.YharimsGift < 2)
-            anomalyPlayer.YharimsGift++;
-        _enchantmentEnergyParticles.Update();
-    }
-
-    public override void ModifyTooltips(List<TooltipLine> tooltips)
-    {
-        CreateTooltipModifier(tooltips)
-            .ClearAllCATooltips()
-            .AddCATooltip(k =>
-            {
-                k.Text = Language.GetTextFormat(localizationPrefix + "CATooltip0", BuffName);
-                k.OverrideColor = Color.Gold;
-            }, false);
-    }
-
+    public static Color GiftColor => Color.Lerp(Color.Orange, Color.Gold, TOMathHelper.GetTimeSin(0.2f, 0.4f, TOMathHelper.PiOver3, true));
+    
     private static readonly ChargingEnergyParticleSet _enchantmentEnergyParticles = new(-1, 3, Color.Orange, Color.White, 0.04f, 32f);
 
-    public static void DrawEnergyBehindItem(Vector2 position, Color? edgeColor = null, Color? centerColor = null)
+    public static void DrawEnergyAndBorderBehindItem(Item item, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Vector2 origin, float scale)
     {
-        _enchantmentEnergyParticles.EdgeColor = edgeColor ?? Color.Orange;
-        _enchantmentEnergyParticles.CenterColor = centerColor ?? Color.White;
+        _enchantmentEnergyParticles.EdgeColor = GiftColor;
+        _enchantmentEnergyParticles.CenterColor = Color.White;
         _enchantmentEnergyParticles.InterpolationSpeed = MathHelper.Lerp(0.065f, 0.1f, TOMathHelper.GetTimeSin(0.5f, 0.7f, TOMathHelper.PiOver3, true));
         _enchantmentEnergyParticles.DrawSet(position + Main.screenPosition);
+        item.DrawInventoryWithBorder(spriteBatch, position, frame, origin, scale, 12, TOMathHelper.GetTimeSin(0.25f, 0.7f, TOMathHelper.PiOver12, true) + 1f, GiftColor);
     }
+    #endregion 礼物
 }
 
 public class YharimsGift_Player : CAPlayerBehavior

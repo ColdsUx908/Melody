@@ -17,7 +17,7 @@ namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
  * 3. 在转换阶段时获得97%无法削减的伤害减免（BossRush时为99%）。
  */
 
-public record Yharon_Publicizer
+public sealed record Yharon_Publicizer
 {
     public static Yharon_Publicizer Instance { get; } = new();
 

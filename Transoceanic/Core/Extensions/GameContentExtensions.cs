@@ -241,6 +241,13 @@ public static partial class TOExtensions
         public T GetModItem<T>() where T : ModItem => item.ModItem as T;
 
         public bool TryGetModItem<T>([NotNullWhen(true)] out T result) where T : ModItem => (result = item.GetModItem<T>()) is not null;
+
+        public void DrawInventoryWithBorder(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Vector2 origin, float scale,
+            int way, float borderWidth, Color borderColor)
+        {
+            Texture2D texture = TextureAssets.Item[item.type].Value;
+            TODrawUtils.DrawBorderTexture(spriteBatch, texture, position, frame, borderColor, origin: origin, scale: scale, way: way, borderWidth: borderWidth);
+        }
     }
 
     extension(Language)

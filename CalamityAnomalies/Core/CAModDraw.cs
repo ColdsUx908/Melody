@@ -3,7 +3,7 @@
 namespace CalamityAnomalies.Core;
 
 //TODO: 非常酷的Mod绘制方法
-public class CAModDraw : ITODetourProvider
+public sealed class CAModDraw : ITODetourProvider
 {
     public static void Detour_Draw(On_UIModItem.Orig_Draw orig, object self, SpriteBatch spriteBatch)
     {

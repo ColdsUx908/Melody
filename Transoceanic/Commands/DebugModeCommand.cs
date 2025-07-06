@@ -3,7 +3,7 @@
 /// <summary>
 /// 开启或关闭调试模式的命令。
 /// </summary>
-public class DebugModeCommand : ITOCommand
+public sealed class DebugModeCommand : ITOCommand
 {
     public CommandType Type => CommandType.Chat;
 

@@ -21,8 +21,8 @@ public class AscendantInsignia_Tweak : CAItemTweak<AscendantInsignia>
     public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
     {
         CAPlayer anomalyPlayer = Main.LocalPlayer.Anomaly();
-        if (anomalyPlayer.YharimsGift > 0 && anomalyPlayer.YharimsGiftBuff == YharimsGift_Tweak.CurrentBuff.AscendantInsignia)
-            YharimsGift_Tweak.DrawEnergyBehindItem(position);
+        if (anomalyPlayer.HasYharimsGift && anomalyPlayer.YharimsGiftBuff == YharimsGift_Tweak.CurrentBuff.AscendantInsignia)
+            YharimsGift_Tweak.DrawEnergyAndBorderBehindItem(Item, spriteBatch, position, frame, origin, scale);
         return true;
     }
 

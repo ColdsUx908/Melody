@@ -2,7 +2,7 @@
 
 namespace CalamityAnomalies.GlobalInstances;
 
-public class CalamityGlobalProjectileDetour : GlobalProjectileDetour<CalamityGlobalProjectile>
+public sealed class CalamityGlobalProjectileDetour : GlobalProjectileDetour<CalamityGlobalProjectile>
 {
     public override void Detour_SetDefaults(Orig_SetDefaults orig, CalamityGlobalProjectile self, Projectile projectile)
     {

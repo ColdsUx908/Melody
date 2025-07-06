@@ -5,7 +5,7 @@ namespace CalamityAnomalies.Core;
 /// <summary>
 /// 提供世界变量。
 /// </summary>
-public class CAWorld
+public sealed class CAWorld : ModSystem
 {
     /// <summary>
     /// 异象模式。
@@ -46,28 +46,25 @@ public class CAWorld
     /// </summary>
     public static bool LDG => CalamityWorld.LegendaryMode && CalamityWorld.death && Main.zenithWorld;
 
-    public class CAWorldSavingSystem : ModSystem
+    public override void OnWorldLoad()
     {
-        public override void OnWorldLoad()
-        {
-            AnomalyUltramundane = false;
-        }
+        AnomalyUltramundane = false;
+    }
 
-        public override void OnWorldUnload()
-        {
-            AnomalyUltramundane = false;
-        }
+    public override void OnWorldUnload()
+    {
+        AnomalyUltramundane = false;
+    }
 
-        public override void SaveWorldData(TagCompound tag)
-        {
-            tag["Anomaly"] = Anomaly;
-            tag["BossRush"] = BossRush;
-        }
+    public override void SaveWorldData(TagCompound tag)
+    {
+        tag["Anomaly"] = Anomaly;
+        tag["BossRush"] = BossRush;
+    }
 
-        public override void LoadWorldData(TagCompound tag)
-        {
-            Anomaly = tag.GetBool("Anomaly");
-            BossRush = tag.GetBool("BossRush");
-        }
+    public override void LoadWorldData(TagCompound tag)
+    {
+        Anomaly = tag.GetBool("Anomaly");
+        BossRush = tag.GetBool("BossRush");
     }
 }

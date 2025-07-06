@@ -13,7 +13,7 @@ public enum LoaderMethodType
 }
 
 [AttributeUsage(AttributeTargets.Method)]
-public class LoadPriorityAttribute : Attribute
+public sealed class LoadPriorityAttribute : Attribute
 {
     /// <summary>
     /// 加载优先级。

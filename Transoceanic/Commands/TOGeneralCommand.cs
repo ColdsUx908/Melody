@@ -16,34 +16,12 @@ public interface ITOCommand
     public virtual void Help(CommandCaller caller, string[] args) { }
 }
 
-public class CommandCallInfo
+public sealed record CommandCallInfo(CommandType CommandType, string Command, CommandCaller Caller, string[] Args)
 {
-    public CommandCaller Caller { get; }
-
-    public CommandType CommandType { get; }
-
-    public string Command { get; }
-
-    public string[] Args { get; }
-
-    public CommandCallInfo(CommandType commandType, string command, CommandCaller caller, string[] args)
-    {
-        CommandType = commandType;
-        Command = command;
-        Caller = caller;
-        Args = args;
-    }
-
-    public CommandCallInfo(ITOCommand commandInstance, CommandCaller caller, string[] args)
-    {
-        CommandType = commandInstance.Type;
-        Command = commandInstance.Command;
-        Caller = caller;
-        Args = args;
-    }
+    public CommandCallInfo(ITOCommand commandInstance, CommandCaller caller, string[] args) : this(commandInstance.Type, commandInstance.Command, caller, args) { }
 }
 
-public class CommandArgumentException : Exception
+public sealed class CommandArgumentException : Exception
 {
     public CommandCallInfo CallInfo { get; }
 
@@ -71,7 +49,7 @@ public class CommandArgumentException : Exception
     }
 }
 
-public class TOGeneralChatCommand : ModCommand
+public sealed class TOGeneralChatCommand : ModCommand
 {
     public override CommandType Type => CommandType.Chat;
 
@@ -102,7 +80,7 @@ public class TOGeneralChatCommand : ModCommand
     }
 }
 
-public class TOCommandHelper : IResourceLoader
+public sealed class TOCommandHelper : IResourceLoader
 {
     internal static Dictionary<string, ITOCommand> CommandSet { get; } = [];
 

@@ -38,7 +38,7 @@ using Terraria.GameContent.Creative;
 
 namespace Transoceanic;
 
-public class Transoceanic : Mod
+public sealed class Transoceanic : Mod
 {
     internal static Transoceanic Instance { get; private set; }
 
@@ -109,7 +109,7 @@ public class Transoceanic : Mod
     }
 }
 
-public static class TOMain
+public sealed class TOMain : ITOLoader
 {
     #region NotUpdate
 
@@ -252,24 +252,21 @@ public static class TOMain
     #endregion ShouldUpdate
 
     #region ShouldLoad
-    public class Load : ITOLoader
+    void ITOLoader.Load()
     {
-        void ITOLoader.Load()
-        {
-            GameTimer = 0;
-        }
+        GameTimer = 0;
+    }
 
-        void ITOLoader.Unload()
-        {
-            GameTimer = 0;
-            Time24Hour = 0.0;
-            TerrariaTime = default;
-            TrueMasterMode = false;
-            JourneyMasterMode = false;
-            LegendaryMode = false;
-            BossList = [];
-            BossActive = false;
-        }
+    void ITOLoader.Unload()
+    {
+        GameTimer = 0;
+        Time24Hour = 0.0;
+        TerrariaTime = default;
+        TrueMasterMode = false;
+        JourneyMasterMode = false;
+        LegendaryMode = false;
+        BossList = [];
+        BossActive = false;
     }
     #endregion ShouldLoad
 }

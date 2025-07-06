@@ -47,6 +47,8 @@ public sealed class CAPlayer : ModPlayerWithBehavior<CAPlayerBehavior>
 
     public int YharimsGift { get; set; } = 0;
 
+    public bool HasYharimsGift => YharimsGift > 0;
+
     public YharimsGift_Tweak.CurrentBuff YharimsGiftBuff { get; set; } = YharimsGift_Tweak.CurrentBuff.None;
 
     public override ModPlayer Clone(Player newEntity)
@@ -101,10 +103,7 @@ public sealed class CAPlayer : ModPlayerWithBehavior<CAPlayerBehavior>
     {
         DownedBossCalamity.LoadData(tag, "PlayerDownedBossCalamity");
         DownedBossAnomaly.LoadData(tag, "PlayerDownedBossAnomaly");
-        if (tag.TryGet("YharimsGiftBuff", out int yharimsGiftBuff))
-            YharimsGiftBuff = (YharimsGift_Tweak.CurrentBuff)yharimsGiftBuff;
-        else
-            YharimsGiftBuff = YharimsGift_Tweak.CurrentBuff.None;
+        YharimsGiftBuff = tag.TryGet("YharimsGiftBuff", out int yharimsGiftBuff) ? (YharimsGift_Tweak.CurrentBuff)yharimsGiftBuff : YharimsGift_Tweak.CurrentBuff.None;
 
         base.LoadData(tag);
     }

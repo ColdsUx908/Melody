@@ -3,7 +3,7 @@ using Terraria.ModLoader.Config;
 
 namespace CalamityAnomalies.Configs;
 
-public class CAServerConfig : ModConfig
+public sealed class CAServerConfig : ModConfig
 {
     public static CAServerConfig Instance { get; private set; }
 

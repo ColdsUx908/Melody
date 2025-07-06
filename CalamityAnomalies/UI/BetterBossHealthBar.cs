@@ -12,12 +12,12 @@ using static CalamityMod.UI.BossHealthBarManager;
 namespace CalamityAnomalies.UI;
 
 
-public class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, IResourceLoader
+public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, IResourceLoader
 {
     /// <summary>
     /// 改进的Boss血条UI类。
     /// </summary>
-    public class BetterBossHPUI : BossHPUI
+    public sealed class BetterBossHPUI : BossHPUI
     {
         public static Color BaseColor { get; } = new(240, 240, 255);
 

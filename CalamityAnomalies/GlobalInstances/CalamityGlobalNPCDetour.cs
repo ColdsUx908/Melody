@@ -19,7 +19,7 @@ using static CalamityMod.NPCs.CalamityGlobalNPC;
 
 namespace CalamityAnomalies.GlobalInstances;
 
-public class CalamityGlobalNPCDetour : GlobalNPCDetour<CalamityGlobalNPC>
+public sealed class CalamityGlobalNPCDetour : GlobalNPCDetour<CalamityGlobalNPC>
 {
     public override void Detour_SetDefaults(Orig_SetDefaults orig, CalamityGlobalNPC self, NPC npc)
     {

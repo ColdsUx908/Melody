@@ -1,6 +1,6 @@
 ﻿namespace CalamityAnomalies.Core;
 
-public class CAKeybinds : ModSystem
+public sealed class CAKeybinds : ModSystem
 {
     public static ModKeybind ChangeYharimsGiftBuff { get; private set; }
 

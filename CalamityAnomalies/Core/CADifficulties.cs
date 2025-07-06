@@ -5,7 +5,7 @@ using CalamityMod.World;
 
 namespace CalamityAnomalies.Core;
 
-public class AnomalyMode : DifficultyMode
+public sealed class AnomalyMode : DifficultyMode
 {
     private const string localizationPrefix = CAMain.ModLocalizationPrefix + "Difficulty.AnomalyMode.";
 
@@ -49,7 +49,7 @@ public class AnomalyMode : DifficultyMode
 /// BossRush难度。
 /// <br/>所有相关更改均用钩子实现。
 /// </summary>
-public class BossRushMode : DifficultyMode
+public sealed class BossRushMode : DifficultyMode
 {
     private const string localizationPrefix = CAMain.ModLocalizationPrefix + "Difficulty.BossRushMode.";
 
