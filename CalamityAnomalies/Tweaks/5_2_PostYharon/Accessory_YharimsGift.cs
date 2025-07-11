@@ -64,7 +64,9 @@ public static class YharimsGift_Handler
             {
                 TOGlobalItem blessingOcean = item.Ocean();
                 TOGlobalItem giftOcean = anomalyPlayer.LastYharimsGift.Ocean();
-                item.DrawInventoryWithBorder(spriteBatch, position, frame, origin, scale, 24, (TOMathHelper.GetTimeSin(0.5f, 0.7f, TOMathHelper.PiOver12, true) + 2.5f) * Math.Min(blessingOcean.GetEquippedTimer(40), giftOcean.GetEquippedTimer(40)) / 40f, GiftColor2);
+                int val1 = blessingOcean.GetEquippedTimer(40);
+                int val2 = giftOcean.GetEquippedTimer(40);
+                item.DrawInventoryWithBorder(spriteBatch, position, frame, origin, scale, 24, (TOMathHelper.GetTimeSin(0.5f, 0.7f, TOMathHelper.PiOver12, true) + 2.5f) * Math.Min(val1, val2) / 40f, GiftColor2);
             }
         }
     }

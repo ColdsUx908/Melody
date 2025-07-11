@@ -20,7 +20,7 @@ public class TOGlobalItem : GlobalItem
     private int _lastEquippedTime = -1;
     private int _lastUnequippedTime = -1;
     private bool ShouldUpdateLastEquippedTime => _internalEquipped && _lastEquippedTime <= _lastUnequippedTime;
-    private bool ShouldUpdateLastUnequippedTime => !_internalEquipped && _lastUnequippedTime <= _lastEquippedTime;
+    private bool ShouldUpdateLastUnequippedTime => Main.hasFocus && !_internalEquipped && _lastUnequippedTime <= _lastEquippedTime;
 
     public bool IsEquipped => _lastEquippedTime > _lastUnequippedTime;
 
