@@ -18,7 +18,8 @@ public abstract class TypeDetour : ITODetourProvider
 {
     /// <summary>
     /// <inheritdoc/><para/>
-    /// 实现任何与自带方法同名的方法时，<strong>必须</strong>在方法调用中指定泛型参数或通过反射实现。
+    /// <strong>避免</strong>实现任何与自带方法同名的方法。
+    /// <br/>如果需要重载方法，使用 <c>Detour_{methodName}__{paramNames}</c> 方法名格式。
     /// </summary>
     public virtual void ApplyDetour() { }
 }
@@ -27,47 +28,18 @@ public abstract class TypeDetour<T> : TypeDetour
 {
     public static Type TargetType { get; } = typeof(T);
 
-    public virtual bool AutoApplyStaticDetours => true;
-
-    public override void ApplyDetour()
-    {
-        base.ApplyDetour();
-        if (AutoApplyStaticDetours)
-        {
-            foreach (MethodInfo detour in GetType().GetRealMethods(TOReflectionUtils.StaticBindingFlags))
-                TODetourUtils.ApplyStaticMethodDetour(detour, TargetType);
-        }
-    }
-
     /// <summary>
-    /// 尝试将指定的Detour应用到 <see cref="T"/> 类型的公共实例方法上。
+    /// 尝试将指定的Detour应用到 <see cref="T"/> 类型的。
     /// </summary>
     /// <remarks>这个方法仅会在类型实际上重写了Detour方法时应用。</remarks>
     /// <typeparam name="TDelegate">委托类型。</typeparam>
-    /// <param name="detour">Detour逻辑的委托。该委托必须是一个与目标方法的签名匹配的具名方法，且方法名必须是 <c>{methodNamePrefix}{methodName}</c> 的形式。</param>
-    /// <param name="staticSource">目标方法是否为静态。</param>
-    /// <param name="prefix"><c>methodName</c> 应用的方法名前缀。</param>
-    protected Hook TryApplyDetour<TDelegate>(TDelegate detour, bool staticSource = false, string prefix = "Detour_") where TDelegate : Delegate =>
-        detour.Method.DeclaringType == GetType() && TODetourUtils.EvaluateDetourName(detour.Method.Name, out string sourceName, prefix)
-        ? TODetourUtils.Modify(
-            staticSource ? TargetType.GetMethod(sourceName, TOReflectionUtils.StaticBindingFlags, detour.Method.ParameterTypes[1..])
-            : TargetType.GetMethod(sourceName, TOReflectionUtils.InstanceBindingFlags, detour.Method.ParameterTypes[2..]), detour)
-        : null;
-
-    /// <summary>
-    /// 尝试将指定的Detour应用到 <see cref="T"/> 类型的公共实例方法上。
-    /// </summary>
-    /// <remarks>这个方法仅会在类型实际上重写了Detour方法时应用。</remarks>
-    /// <typeparam name="TDelegate">委托类型。</typeparam>
-    /// <param name="detour">Detour逻辑的委托。该委托必须是一个与目标方法的签名匹配的具名方法，且方法名必须是 <c>{methodNamePrefix}{methodName}</c> 的形式。</param>
-    /// <param name="paramOffset">Detour方法偏移量。
-    /// <br/>应设置为目标方法第一个参数在Detour方法中的索引。
-    /// <br/>例如，若Detour方法含有 <c>orig</c> 和 <c>self</c> 参数，则应设置为 <c>2</c>。
+    /// <param name="detour">Detour逻辑的委托。该委托必须是一个与目标方法的签名匹配的具名方法，且方法名必须符合 <see cref="TODetourUtils.EvaluateDetourName(MethodInfo, out string)"/> 的要求。</param>
+    /// <param name="hasThis">目标方法是否为实例方法（有 <see langword="this"/> 指针）。
+    /// <br/>会影响获取方法时的参数偏移量（<see langword="true"/> 为2，反之为1）和 <c>bindingAttr</c> 实参。
     /// </param>
-    /// <param name="prefix"><c>methodName</c> 应用的方法名前缀。</param>
-    protected Hook TryApplyDetour<TDelegate>(TDelegate detour, int paramOffset, string prefix = "Detour_") where TDelegate : Delegate =>
-        detour.Method.DeclaringType == GetType() && TODetourUtils.EvaluateDetourName(detour.Method.Name, out string sourceName, prefix)
-        ? TODetourUtils.Modify(TargetType.GetMethod(sourceName, TOReflectionUtils.UniversalBindingFlags, detour.Method.ParameterTypes[paramOffset..]), detour)
+    protected Hook TryApplyDetour<TDelegate>(TDelegate detour, bool hasThis = true) where TDelegate : Delegate =>
+        detour.Method.DeclaringType == GetType() && TODetourUtils.EvaluateDetourName(detour.Method, out string sourceName)
+        ? TODetourUtils.Modify(TargetType, sourceName, hasThis, detour)
         : null;
 }
 
@@ -5788,7 +5760,7 @@ public sealed class TypeDetourUpdateReminder : IResourceLoader
     void IResourceLoader.PostSetupContent()
     {
         bool hasWarn = false;
-        List<(Type source, Type target, Predicate<string> sourceIgnore, Predicate<string> targetIgnore)> typesToVerify =
+        List<(Type source, Type target, Predicate<MethodInfo> sourceIgnore, Predicate<MethodInfo> targetIgnore)> typesToVerify =
         [
             (typeof(ModType), typeof(ModTypeDetour<>), null, null),
             (typeof(ModAccessorySlot), typeof(ModAccessorySlotDetour<>), null, null),
@@ -5848,7 +5820,7 @@ public sealed class TypeDetourUpdateReminder : IResourceLoader
         StringBuilder builder = new();
         builder.AppendLine("Update Required: TypeDetour.cs");
 
-        foreach ((Type source, Type target, Predicate<string> sourceIgnore, Predicate<string> targetIgnore) in typesToVerify)
+        foreach ((Type source, Type target, Predicate<MethodInfo> sourceIgnore, Predicate<MethodInfo> targetIgnore) in typesToVerify)
         {
             (List<string> sourceMissing, List<string> targetMissing) = CompareVirtualMethods(source, target, DetourMatch, sourceIgnore, targetIgnore);
             if (sourceMissing.Count > 0)
@@ -5870,32 +5842,32 @@ public sealed class TypeDetourUpdateReminder : IResourceLoader
         }
     }
 
-    private static (List<string> sourceMissing, List<string> targetMissing) CompareVirtualMethods(Type source, Type target, Func<string, string, bool> match, Predicate<string> sourceIgnore = null, Predicate<string> targetIgnore = null)
+    private static (List<string> sourceMissing, List<string> targetMissing) CompareVirtualMethods(Type source, Type target, Func<MethodInfo, MethodInfo, bool> match, Predicate<MethodInfo> sourceIgnore = null, Predicate<MethodInfo> targetIgnore = null)
     {
         match ??= (s, t) => s == t;
         List<string> sourceMissing = [];
         List<string> targetMissing = [];
-        IEnumerable<string> sourceMethods = source.GetRealMethods(TOReflectionUtils.InstanceBindingFlags).Where(ShouldMethodBeChecked).Select(k => k.Name);
-        IEnumerable<string> targetMethods = target.GetRealMethods(TOReflectionUtils.InstanceBindingFlags).Where(ShouldMethodBeChecked).Select(k => k.Name);
-        foreach (string name in sourceMethods)
+        IEnumerable<MethodInfo> sourceMethods = source.GetRealMethods(TOReflectionUtils.InstanceBindingFlags).Where(ShouldMethodBeChecked);
+        IEnumerable<MethodInfo> targetMethods = target.GetRealMethods(TOReflectionUtils.InstanceBindingFlags).Where(ShouldMethodBeChecked);
+        foreach (MethodInfo sourceMethod in sourceMethods)
         {
-            if (sourceIgnore?.Invoke(name) ?? false)
+            if (sourceIgnore?.Invoke(sourceMethod) ?? false)
                 continue;
-            if (!targetMethods.Any(k => match(name, k)))
-                targetMissing.Add(name);
+            if (!targetMethods.Any(m => match(sourceMethod, m)))
+                targetMissing.Add(sourceMethod.Name);
         }
-        foreach (string name in targetMethods)
+        foreach (MethodInfo targetMethod in targetMethods)
         {
-            if (targetIgnore?.Invoke(name) ?? false)
+            if (targetIgnore?.Invoke(targetMethod) ?? false)
                 continue;
-            if (!sourceMethods.Any(k => match(k, name)))
-                sourceMissing.Add(name);
+            if (!sourceMethods.Any(m => match(m, targetMethod)))
+                sourceMissing.Add(targetMethod.Name);
         }
         return (sourceMissing, targetMissing);
     }
 
-    private static bool DetourMatch(string sourceName, string targetName) =>
-        TODetourUtils.EvaluateDetourName(targetName, out string sourceNameGot) && sourceNameGot == sourceName;
+    private static bool DetourMatch(MethodInfo sourceMethod, MethodInfo targetMethod) =>
+        TODetourUtils.EvaluateDetourName(targetMethod, out string sourceNameGot) && sourceNameGot == sourceMethod.Name;
 
     private static bool ShouldMethodBeChecked(MethodInfo method) =>
         (method.IsRealVirtual || method.IsAbstract) && !method.IsGenericMethod && !method.HasAttribute<ObsoleteAttribute>() && method.CanBeAccessedOutsideAssembly;

@@ -3,6 +3,7 @@ using MonoMod.Utils;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
+using Transoceanic.RuntimeEditing;
 
 namespace Transoceanic.Data;
 
@@ -49,7 +50,7 @@ public class GlobalEntityBehaviorSet<TEntity, TBehavior> : EntityBehaviorSetBase
 {
     private readonly List<TBehavior> _data = [];
 
-    public override void FillSet(Assembly assemblyToSearch) => _data.AddRange(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>(assemblyToSearch).OrderByDescending(k => k.Priority));
+    public override void FillSet(Assembly assemblyToSearch) => _data.AddRange(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>(assemblyToSearch).OrderByDescending(b => b.Priority));
 
     public override IEnumerator<TBehavior> GetEnumerator() => _data.GetEnumerator();
 
@@ -118,14 +119,24 @@ public class SingleEntityBehaviorSet<TEntity, TBehavior> : EntityBehaviorSetBase
     }
 
     public override void FillSet(Assembly assemblyToSearch) =>
-        _data.AddRange(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>(assemblyToSearch)
-            .GroupBy(k => k.ApplyingType).ToDictionary(keySelector: k => k.Key, elementSelector: k => (
-                from behaviorInstance in k.AsValueEnumerable()
-                orderby behaviorInstance.Priority
+        _data.AddRange(
+            TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>(assemblyToSearch).GroupBy(b => b.ApplyingType)
+            .ToDictionary(g => g.Key, g => (
+                from behaviorInstance in g.AsValueEnumerable()
+                orderby behaviorInstance.Priority descending
                 select (behaviorInstance, behaviorInstance.GetType().GetOverrideMethodNames(TOReflectionUtils.UniversalBindingFlags).ToHashSet())
-            ).ToList()));
+                ).ToList()));
 
-    public override void Clear() => _data.Clear();
+    public override void Clear()
+    {
+        foreach ((_, List<(TBehavior behaviorInstance, HashSet<string> behaviorMethods)> behaviorList) in _data)
+        {
+            foreach ((_, HashSet<string> behaviorMethods) in behaviorList)
+                behaviorMethods.Clear();
+            behaviorList.Clear();
+        }
+        _data.Clear();
+    }
 }
 #endregion Core
 
@@ -2700,7 +2711,7 @@ public abstract class ItemBehavior : SingleEntityBehavior<Item>
 #region Global
 public abstract class ModPlayerWithBehavior<TPlayerBehavior> : ModPlayer where TPlayerBehavior : PlayerBehavior
 {
-    public abstract GlobalEntityBehaviorSet<Player, TPlayerBehavior> BehaviorSet { get; }
+    protected abstract GlobalEntityBehaviorSet<Player, TPlayerBehavior> BehaviorSet { get; }
 
     public override void SetStaticDefaults()
     {
@@ -3590,7 +3601,7 @@ public abstract class ModPlayerWithBehavior<TPlayerBehavior> : ModPlayer where T
 
 public abstract class GlobalNPCWithBehavior<TNPCBehavior> : GlobalNPC where TNPCBehavior : NPCBehavior
 {
-    public abstract SingleEntityBehaviorSet<NPC, TNPCBehavior> BehaviorSet { get; }
+    protected abstract SingleEntityBehaviorSet<NPC, TNPCBehavior> BehaviorSet { get; }
 
     public virtual bool TryGetBehavior(NPC npc, out TNPCBehavior npcBehavior, [CallerMemberName] string methodName = null!) => BehaviorSet.TryGetBehavior(npc, methodName, out npcBehavior);
 
@@ -4166,7 +4177,7 @@ public abstract class GlobalNPCWithBehavior<TNPCBehavior> : GlobalNPC where TNPC
 
 public abstract class GlobalProjectileWithBehavior<TProjectileBehavior> : GlobalProjectile where TProjectileBehavior : ProjectileBehavior
 {
-    public abstract SingleEntityBehaviorSet<Projectile, TProjectileBehavior> BehaviorSet { get; }
+    protected abstract SingleEntityBehaviorSet<Projectile, TProjectileBehavior> BehaviorSet { get; }
 
     public virtual bool TryGetBehavior(Projectile projectile, out TProjectileBehavior projectileBehavior, [CallerMemberName] string methodName = null!) => BehaviorSet.TryGetBehavior(projectile, methodName, out projectileBehavior);
 
@@ -4473,7 +4484,7 @@ public abstract class GlobalProjectileWithBehavior<TProjectileBehavior> : Global
 
 public abstract class GlobalItemWithBehavior<TItemBehavior> : GlobalItem where TItemBehavior : ItemBehavior
 {
-    public abstract SingleEntityBehaviorSet<Item, TItemBehavior> BehaviorSet { get; }
+    protected abstract SingleEntityBehaviorSet<Item, TItemBehavior> BehaviorSet { get; }
 
     public virtual bool TryGetBehavior(Item item, out TItemBehavior itemBehavior, [CallerMemberName] string methodName = null!) => BehaviorSet.TryGetBehavior(item, methodName, out itemBehavior);
 

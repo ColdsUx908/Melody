@@ -35,6 +35,7 @@ global using Transoceanic.Core.Extensions;
 global using Transoceanic.Core.Utilities;
 global using Transoceanic.Data;
 global using Transoceanic.GlobalInstances;
+global using Transoceanic.Localization;
 global using Transoceanic.Maths;
 global using Transoceanic.RuntimeEditing;
 global using Transoceanic.Visual;

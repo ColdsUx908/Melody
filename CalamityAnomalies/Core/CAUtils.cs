@@ -5,14 +5,14 @@ namespace CalamityAnomalies.Core;
 
 public static class CAUtils
 {
-    public static bool IsDefeatingLeviathan(NPC npc) => npc.LeviathanBoss && !TOIteratorFactory.NewActiveNPCIterator(k => k.LeviathanBoss, npc).Any();
+    public static bool IsDefeatingLeviathan(NPC npc) => npc.LeviathanBoss && !TOIteratorFactory.NewActiveNPCIterator(n => n.LeviathanBoss, npc).Any();
 
-    public static bool IsDefeatingProfanedGuardians(NPC npc) => npc.ProfanedGuardianBoss && !TOIteratorFactory.NewActiveNPCIterator(k => k.ProfanedGuardianBoss, npc).Any();
+    public static bool IsDefeatingProfanedGuardians(NPC npc) => npc.ProfanedGuardianBoss && !TOIteratorFactory.NewActiveNPCIterator(n => n.ProfanedGuardianBoss, npc).Any();
 
     public static bool IsDefeatingExoMechs(NPC npc) =>
-        npc.Ares && !NPC.ActiveNPCs.Any(k => !k.ExoTwins && !k.Thanatos)
-        || npc.ExoTwins && !NPC.ActiveNPCs.Any(k => !k.Ares && !k.Thanatos)
-        || npc.ThanatosHead && !NPC.ActiveNPCs.Any(k => !k.ExoTwins && !k.Ares);
+        npc.Ares && !NPC.ActiveNPCs.Any(n => !n.ExoTwins && !n.Thanatos)
+        || npc.ExoTwins && !NPC.ActiveNPCs.Any(n => !n.Ares && !n.Thanatos)
+        || npc.ThanatosHead && !NPC.ActiveNPCs.Any(n => !n.ExoTwins && !n.Ares);
 
     public static bool DownedEvilBossT2 => DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator;
 

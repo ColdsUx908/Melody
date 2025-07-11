@@ -50,33 +50,9 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 
         public new long CombinedNPCMaxLife { get; private set; } = 0L;
 
-        public new bool NPCIsEnraged
-        {
-            get
-            {
-                if (!Valid || !NPC.active)
-                    return false;
+        public new bool NPCIsEnraged => Valid && NPC.active && (CalamityNPC.CurrentlyEnraged || (HasOneToMany && CustomOneToMany.Values.AsValueEnumerable().Any(n => n.Calamity().CurrentlyEnraged)));
 
-                if (CalamityNPC.CurrentlyEnraged)
-                    return true;
-
-                return HasOneToMany && CustomOneToMany.Values.AsValueEnumerable().Any(k => k.Calamity().CurrentlyEnraged);
-            }
-        }
-
-        public new bool NPCIsIncreasingDefenseOrDR
-        {
-            get
-            {
-                if (!Valid || !NPC.active)
-                    return false;
-
-                if (CalamityNPC.CurrentlyIncreasingDefenseOrDR)
-                    return true;
-
-                return HasOneToMany && CustomOneToMany.Values.AsValueEnumerable().Any(k => k.Calamity().CurrentlyIncreasingDefenseOrDR);
-            }
-        }
+        public new bool NPCIsIncreasingDefenseOrDR => Valid && NPC.active && (CalamityNPC.CurrentlyIncreasingDefenseOrDR || (HasOneToMany && CustomOneToMany.Values.AsValueEnumerable().Any(n => n.Calamity().CurrentlyIncreasingDefenseOrDR)));
 
         public int Height { get; private set; } = 70;
 
@@ -129,7 +105,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
                 CustomOneToMany.Clear();
                 if (HasOneToMany)
                 {
-                    foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(k => CustomOneToManyIndexes.Contains(k.type)))
+                    foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(n => CustomOneToManyIndexes.Contains(n.type)))
                         CustomOneToMany.TryAdd(npc.Ocean().Identifier, npc);
                 }
 
@@ -206,7 +182,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 
         private bool PreUpdate()
         {
-            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, "PreUpdateCalBossBar"))
+            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, nameof(CANPCBehavior.PreUpdateCalBossBar)))
             {
                 if (!npcBehavior.PreUpdateCalBossBar(this))
                     return false;
@@ -217,7 +193,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 
         private void ModifyCalBossBarHeight()
         {
-            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, "CustomCalBossBarHeight"))
+            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, nameof(CANPCBehavior.ModifyCalBossBarHeight)))
             {
                 int height = 70;
                 npcBehavior.ModifyCalBossBarHeight(this, ref height);
@@ -227,7 +203,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 
         private void PostUpdate()
         {
-            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, "PostUpdateCalBossBar"))
+            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, nameof(CANPCBehavior.PostUpdateCalBossBar)))
                 npcBehavior.PostUpdateCalBossBar(this);
         }
 
@@ -275,7 +251,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 
         private bool PreDraw(SpriteBatch spriteBatch, int x, int y)
         {
-            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, "PreDrawCalBossBar"))
+            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, nameof(CANPCBehavior.PreDrawCalBossBar)))
             {
                 if (!npcBehavior.PreDrawCalBossBar(this, spriteBatch, x, y))
                     return false;
@@ -286,7 +262,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 
         private void PostDraw(SpriteBatch spriteBatch, int x, int y)
         {
-            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, "PostDrawCalBossBar"))
+            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, nameof(CANPCBehavior.PostDrawCalBossBar)))
                 npcBehavior.PostDrawCalBossBar(this, spriteBatch, x, y);
         }
 
@@ -365,8 +341,6 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
     private const int MaxBars = 6;
     private const int MaxActiveBars = 4;
 
-    public override bool AutoApplyStaticDetours => false;
-
     public override void Detour_Draw(Orig_Draw orig, BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info)
     {
         int x = Main.screenWidth
@@ -392,21 +366,19 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 
     public override void Detour_Update(Orig_Update orig, BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info)
     {
-        List<long> validIdentifiers = [];
+        HashSet<long> validIdentifiers = [];
 
-        foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(k => !BossExclusionList.Contains(k.type)))
+        foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(n => !BossExclusionList.Contains(n.type)))
         {
             long fromNPC = npc.Ocean().Identifier;
             string overridingName = null;
             if (npc.ModNPC is Apollo apollo)
                 overridingName = CalamityUtils.GetTextValue("UI.ExoTwinsName" + (apollo.exoMechdusa ? "Hekate" : "Normal"));
 
-            if (_trackingBars.ContainsKey(fromNPC) && npc.active)
+            if (_trackingBars.ContainsKey(fromNPC))
                 validIdentifiers.Add(fromNPC);
-            else if (_trackingBars.Values.Count < MaxBars
-                && npc.IsABoss()
-                && !(npc.type is NPCID.EaterofWorldsBody or NPCID.EaterofWorldsTail || npc.ModNPC is Artemis)
-                || MinibossHPBarList.Contains(npc.type) || npc.Calamity().CanHaveBossHealthBar)
+            else if (_trackingBars.Values.Count < MaxBars && (
+                (npc.IsABoss() && !(npc.type is NPCID.EaterofWorldsBody or NPCID.EaterofWorldsTail || npc.ModNPC is Artemis)) || MinibossHPBarList.Contains(npc.type) || npc.Calamity().CanHaveBossHealthBar))
             {
                 _trackingBars.Add(fromNPC, new(npc.whoAmI, overridingName));
             }
@@ -466,7 +438,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
     public override void ApplyDetour()
     {
         base.ApplyDetour();
-        TryApplyDetour(Detour_Load__Mod, true);
+        TryApplyDetour(Detour_Load__Mod, false);
     }
 
     void IResourceLoader.OnWorldLoad() => _trackingBars.Clear();

@@ -2,7 +2,8 @@
 	Header: Post Yharon
 
 	YharimsGift: {
-		BuffChange: Current buff accessory changed to: {0}
-		CATooltip0: Current buff accessory: {0}
+		BlessingChange: Current blessing accessory changed to: {0}
+		BlessingTooltip: Blessed by Yharim's Gift
+		CATooltip0: Current blessing accessory: {0}
 	}
 }

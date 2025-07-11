@@ -118,7 +118,7 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
     public int TotalTicks
     {
         readonly get;
-        set
+        private set
         {
             if (value < 0)
                 throw new ArgumentOutOfRangeException(nameof(value), "Total ticks must be non-negative.");

@@ -4,55 +4,43 @@ using Terraria.GameInput;
 
 namespace CalamityAnomalies.Tweaks._5_2_PostYharon;
 
-public class YharimsGift_Tweak : CAItemTweak<YharimsGift>
+public enum YharimsGift_CurrentBlessing
 {
-    private const string localizationPrefix = CAMain.TweakLocalizationPrefix + "5.2.YharimsGift.";
+    None = -1,
+    AscendantInsignia = 0,
+}
 
-    private const string localizationPrefix2 = CAMain.CalamityModLocalizationPrefix + "Items.Accessories.";
+public static class YharimsGift_Handler
+{
+    internal static readonly ChargingEnergyParticleSet _enchantmentEnergyParticles = new(-1, 5, Color.Orange, Color.White, 0.04f, 32f);
 
-    public override void UpdateAccessory(Player player, bool hideVisual)
-    {
-        CAPlayer anomalyPlayer = player.Anomaly();
-        if (anomalyPlayer.YharimsGift < 2)
-            anomalyPlayer.YharimsGift++;
-        _enchantmentEnergyParticles.Update();
-    }
+    public const string LocalizationPrefix = CAMain.TweakLocalizationPrefix + "5.2.YharimsGift.";
 
-    public override void ModifyTooltips(List<TooltipLine> tooltips)
-    {
-        CreateTooltipModifier(tooltips)
-            .ClearAllCATooltips()
-            .AddCATooltip(k =>
-            {
-                k.Text = Language.GetTextFormat(localizationPrefix + "CATooltip0", BuffName);
-                k.OverrideColor = Color.Gold;
-            }, false);
-    }
+    public const string LocalizationPrefix2 = CAMain.CalamityModLocalizationPrefix + "Items.Accessories.";
 
-    #region 礼物
-    public enum CurrentBuff
-    {
-        None = -1,
-        AscendantInsignia = 0,
-    }
-
-    public static int CurrentBuffNum
+    public static int CurrentBlessingNum
     {
         get => (int)Main.LocalPlayer.Anomaly().YharimsGiftBuff;
-        set => Main.LocalPlayer.Anomaly().YharimsGiftBuff = (CurrentBuff)(value % (Enum.GetValues<CurrentBuff>().Length - 1));
+        set => Main.LocalPlayer.Anomaly().YharimsGiftBuff = (YharimsGift_CurrentBlessing)(value % (Enum.GetValues<YharimsGift_CurrentBlessing>().Length - 1));
     }
 
-    public static CurrentBuff CurrentBuffType => Main.LocalPlayer.Anomaly().YharimsGiftBuff;
+    public static YharimsGift_CurrentBlessing CurrentBuffType => Main.LocalPlayer.Anomaly().YharimsGiftBuff;
 
-    public static string BuffName => CurrentBuffType switch
+    public static string BlessingName => CurrentBuffType switch
     {
-        CurrentBuff.AscendantInsignia => Language.GetTextValue(localizationPrefix2 + "AscendantInsignia.DisplayName"),
+        YharimsGift_CurrentBlessing.AscendantInsignia => Language.GetTextValue(LocalizationPrefix2 + "AscendantInsignia.DisplayName"),
         _ => "None"
     };
 
-    public static Color GiftColor => Color.Lerp(Color.Orange, Color.Gold, TOMathHelper.GetTimeSin(0.2f, 0.4f, TOMathHelper.PiOver3, true));
-    
-    private static readonly ChargingEnergyParticleSet _enchantmentEnergyParticles = new(-1, 3, Color.Orange, Color.White, 0.04f, 32f);
+    public static Color GiftColor => Color.Lerp(Color.Orange, Color.Gold, TOMathHelper.GetTimeSin(0.4f, 0.7f, TOMathHelper.PiOver3, true));
+
+    public static Color GiftColor2 => Color.Lerp(Color.OrangeRed, GiftColor, 0.5f);
+
+    public static void AddBlessingTooltip(Item item) => item.Anomaly().TooltipModifier.AddCATooltip(l =>
+    {
+        l.Text = Language.GetTextValue(LocalizationPrefix + "BlessingTooltip");
+        l.OverrideColor = GiftColor;
+    }, false);
 
     public static void DrawEnergyAndBorderBehindItem(Item item, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Vector2 origin, float scale)
     {
@@ -60,21 +48,43 @@ public class YharimsGift_Tweak : CAItemTweak<YharimsGift>
         _enchantmentEnergyParticles.CenterColor = Color.White;
         _enchantmentEnergyParticles.InterpolationSpeed = MathHelper.Lerp(0.065f, 0.1f, TOMathHelper.GetTimeSin(0.5f, 0.7f, TOMathHelper.PiOver3, true));
         _enchantmentEnergyParticles.DrawSet(position + Main.screenPosition);
-        item.DrawInventoryWithBorder(spriteBatch, position, frame, origin, scale, 12, TOMathHelper.GetTimeSin(0.25f, 0.7f, TOMathHelper.PiOver12, true) + 1f, GiftColor);
+        TOGlobalItem oceanItem = item.Ocean();
+        item.DrawInventoryWithBorder(spriteBatch, position, frame, origin, scale, 24, (TOMathHelper.GetTimeSin(0.5f, 0.7f, TOMathHelper.PiOver12, true) + 2.5f) * oceanItem.GetEquippedTimer(40) / 40f, GiftColor2);
     }
-    #endregion 礼物
 }
 
-public class YharimsGift_Player : CAPlayerBehavior
+public sealed class YharimsGift_Tweak : CAItemTweak<YharimsGift>, ILocalizationPrefix
 {
-    private const string localizationPrefix = CAMain.TweakLocalizationPrefix + "5.2.YharimsGift.";
+    public string LocalizationPrefix => CAMain.TweakLocalizationPrefix + "5.2.YharimsGift.";
+
+    public override void UpdateAccessory(Player player, bool hideVisual)
+    {
+        CAPlayer anomalyPlayer = player.Anomaly();
+        anomalyPlayer.YharimsGift += 2;
+        YharimsGift_Handler._enchantmentEnergyParticles.Update();
+    }
+
+    public override void ModifyTooltips(List<TooltipLine> tooltips)
+    {
+        AnomalyItem.TooltipModifier
+            .AddCATooltip(l =>
+            {
+                l.Text = this.GetTextFormatWithPrefix("CATooltip0", YharimsGift_Handler.BlessingName);
+                l.OverrideColor = YharimsGift_Handler.GiftColor;
+            }, false);
+    }
+}
+
+public sealed class YharimsGift_Player : CAPlayerBehavior, ILocalizationPrefix
+{
+    public string LocalizationPrefix => CAMain.TweakLocalizationPrefix + "5.2.YharimsGift.";
 
     public override void ProcessTriggers(TriggersSet triggersSet)
     {
         if (CAKeybinds.ChangeYharimsGiftBuff.JustPressed)
         {
-            YharimsGift_Tweak.CurrentBuffNum++;
-            TOLocalizationUtils.ChatLocalizedTextWith(localizationPrefix + "BuffChange", Main.LocalPlayer, Color.Gold, YharimsGift_Tweak.BuffName);
+            YharimsGift_Handler.CurrentBlessingNum++;
+            TOLocalizationUtils.ChatLocalizedTextFormat(LocalizationPrefix + "BlessingChange", Main.LocalPlayer, Color.Gold, YharimsGift_Handler.BlessingName);
         }
     }
 }

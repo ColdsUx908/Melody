@@ -11,7 +11,7 @@ using static CalamityMod.Projectiles.Boss.SCalRitualDrama;
 
 namespace CalamityAnomalies.DeveloperContents;
 
-public class Permafrost : CANPCBehavior<SupremeCalamitas>
+public class Permafrost : CANPCBehavior<SupremeCalamitas>, ILocalizationPrefix
 {
     #region 枚举、数值、属性、AI状态
     public enum AttackType
@@ -75,7 +75,7 @@ public class Permafrost : CANPCBehavior<SupremeCalamitas>
 
     #endregion 枚举、数值、属性、AI状态
 
-    private const string localizationPrefix = CAMain.ModLocalizationPrefix + "DeveloperContents.Permafrost.";
+    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "DeveloperContents.Permafrost.";
 
     public override decimal Priority => 935m; //ICE
 
@@ -313,15 +313,15 @@ public class Permafrost : CANPCBehavior<SupremeCalamitas>
         {
             case 180:
                 if (TOMain.GeneralClient)
-                    TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "Welcome1", Color.LightCyan);
+                    TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "Welcome1", Color.LightCyan);
                 break;
             case 300:
                 if (TOMain.GeneralClient)
-                    TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "Welcome2", Color.LightCyan);
+                    TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "Welcome2", Color.LightCyan);
                 break;
             case 480:
                 if (TOMain.GeneralClient)
-                    TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "Beginning", Color.LightCyan);
+                    TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "Beginning", Color.LightCyan);
 
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(NPC.Center, Vector2.Zero, Color.Cyan, new Vector2(1f), 0, 0.1f, 7f, 30));
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(NPC.Center, Vector2.Zero, CAMain.AnomalyUltramundaneColor * 0.8f, new Vector2(2f), 0, 0.05f, 6f, 36));

@@ -1,4 +1,5 @@
-﻿using CalamityMod.Items.Weapons.Melee;
+﻿using CalamityAnomalies.Publicizer.CalamityMod.NPCs;
+using CalamityMod.Items.Weapons.Melee;
 using CalamityMod.NPCs.AstrumAureus;
 using CalamityMod.NPCs.BrimstoneElemental;
 using CalamityMod.NPCs.Bumblebirb;
@@ -102,7 +103,7 @@ namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
  *   灾难，灾祸 - 130%伤害
  */
 
-public class Murasama_Tweak : CAItemTweak<Murasama>
+public sealed class Murasama_Tweak : CAItemTweak<Murasama>
 {
     public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
     {
@@ -184,7 +185,7 @@ public class Murasama_Tweak : CAItemTweak<Murasama>
     }
 }
 
-public class Murasama_Detour : ModItemDetour<Murasama>
+public sealed class Murasama_Detour : ModItemDetour<Murasama>
 {
     public override bool Detour_PreDrawInInventory(Orig_PreDrawInInventory orig, Murasama self, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
     {
@@ -232,7 +233,7 @@ public class Murasama_Detour : ModItemDetour<Murasama>
     public override bool Detour_CanUseItem(Orig_CanUseItem orig, Murasama self, Player player) => player.ownedProjectileCounts[self.Item.shoot] < 1 && Murasama_Utils.Unlocked(player);
 }
 
-public class MurasamaSlash_Tweak : CAProjectileTweak<MurasamaSlash>
+public sealed class MurasamaSlash_Tweak : CAProjectileTweak<MurasamaSlash>
 {
     public int OriginalDamage
     {
@@ -414,7 +415,7 @@ public class MurasamaSlash_Tweak : CAProjectileTweak<MurasamaSlash>
             case CryogenShield:
             case AnahitasIceShield:
             case AureusSpawn:
-            case Bumblefuck when CAUtils.PermaFrostActive || (NPC.AnyNPCs(out _, out Yharon yharon) && Yharon_Publicizer.Instance.SetYharon(yharon).startSecondAI):
+            case Bumblefuck when CAUtils.PermaFrostActive || (NPC.AnyNPCs(out _, out Yharon yharon) && new Yharon_Publicizer(yharon).startSecondAI):
             case Bumblefuck2:
             case CeaselessVoid when target.Ocean().LifeRatio < 0.2f:
             case PhantomFuckYou:

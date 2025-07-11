@@ -1,8 +1,8 @@
 ﻿using Terraria.Chat;
 
-namespace Transoceanic.Core.Utilities;
+namespace Transoceanic.Localization;
 
-public static partial class TOLocalizationUtils
+public static class TOLocalizationUtils
 {
     public static void ChatLiteralText(string text, Color? textColor = null)
     {
@@ -42,7 +42,7 @@ public static partial class TOLocalizationUtils
         }
     }
 
-    public static void ChatLocalizedTextWith(string key, Color? textColor = null, params object[] args)
+    public static void ChatLocalizedTextFormat(string key, Color? textColor = null, params object[] args)
     {
         if (Main.netMode == NetmodeID.SinglePlayer)
             Main.NewText(Language.GetTextFormat(key, args), textColor ?? Color.White);
@@ -50,7 +50,7 @@ public static partial class TOLocalizationUtils
             ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(Language.GetTextFormat(key, args)), textColor ?? Color.White);
     }
 
-    public static void ChatLocalizedTextWith(string key, Player receiver, Color? textColor = null, params object[] args)
+    public static void ChatLocalizedTextFormat(string key, Player receiver, Color? textColor = null, params object[] args)
     {
         if (Main.netMode == NetmodeID.SinglePlayer)
             Main.NewText(Language.GetTextFormat(key, args), textColor ?? Color.White);
@@ -58,7 +58,7 @@ public static partial class TOLocalizationUtils
             ChatHelper.SendChatMessageToClient(NetworkText.FromLiteral(Language.GetTextFormat(key, args)), textColor ?? Color.White, receiver.whoAmI);
     }
 
-    public static void ChatLocalizedTextWith(string key, Player[] receivers, Color? textColor = null, params object[] args)
+    public static void ChatLocalizedTextFormat(string key, Player[] receivers, Color? textColor = null, params object[] args)
     {
         if (Main.netMode == NetmodeID.SinglePlayer)
             Main.NewText(Language.GetTextFormat(key, args), textColor ?? Color.White);
@@ -102,14 +102,14 @@ public static partial class TOLocalizationUtils
     public static void ChatDebugErrorMessage(string key, Player receiver, params object[] args)
     {
         ChatLiteralText("[Transoceanic ERROR]", TOMain.TODebugErrorColor, receiver);
-        ChatLocalizedTextWith(TOMain.DebugPrefix + key, receiver, TOMain.TODebugErrorColor, args);
+        ChatLocalizedTextFormat(TOMain.DebugPrefix + key, receiver, TOMain.TODebugErrorColor, args);
         ChatLocalizedText(TOMain.DebugErrorMessageKey, TOMain.TODebugErrorColor, receiver);
     }
 
     public static void ChatDebugErrorMessage(string key, Player[] receivers, params object[] args)
     {
         ChatLiteralText("[Transoceanic ERROR]", TOMain.TODebugErrorColor, receivers);
-        ChatLocalizedTextWith(TOMain.DebugPrefix + key, receivers, TOMain.TODebugErrorColor, args);
+        ChatLocalizedTextFormat(TOMain.DebugPrefix + key, receivers, TOMain.TODebugErrorColor, args);
         ChatLocalizedText(TOMain.DebugErrorMessageKey, TOMain.TODebugErrorColor, receivers);
     }
 

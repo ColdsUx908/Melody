@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.Core.Utilities;
+﻿namespace Transoceanic.RuntimeEditing;
 
 public static class TOReflectionUtils
 {
@@ -161,4 +161,8 @@ public static class TOReflectionUtils
         let attribute = method.GetAttribute<T>()
         where attribute is not null
         select (method, attribute);
+
+    public static Type GetTerrariaType(string typeName) =>
+        TOMain.TerrariaTypes.FirstOrDefault(t => t.Name == typeName) ??
+        throw new ArgumentException($"Type '{typeName}' not found in Terraria types.", nameof(typeName));
 }

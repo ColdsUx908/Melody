@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Core;
+﻿using Transoceanic.RuntimeEditing;
+
+namespace Transoceanic.Core;
 
 public enum LoaderMethodType
 {

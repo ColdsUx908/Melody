@@ -284,7 +284,7 @@ public static partial class TOExtensions
         }
 
         public void ModifyVanillaTooltipByName(string name, Action<TooltipLine> action) =>
-            tooltips.ModifyTooltip(k => k.Mod == "Terraria" && k.Name == name, action);
+            tooltips.ModifyTooltip(l => l.Mod == "Terraria" && l.Name == name, action);
 
         public void ModifyTooltipByNum(int num, Action<TooltipLine> action) =>
             tooltips.ModifyVanillaTooltipByName($"Tooltip{num}", action);
@@ -437,11 +437,11 @@ public static partial class TOExtensions
 
         public static TOIterator<NPC> ActiveNPCs => TOIteratorFactory.NewActiveNPCIterator();
 
-        public static TOIterator<NPC> Enemies => TOIteratorFactory.NewActiveNPCIterator(k => k.Enemy);
+        public static TOIterator<NPC> Enemies => TOIteratorFactory.NewActiveNPCIterator(n => n.Enemy);
 
-        public static TOIterator<NPC> Bosses => TOIteratorFactory.NewActiveNPCIterator(k => k.TOBoss);
+        public static TOIterator<NPC> Bosses => TOIteratorFactory.NewActiveNPCIterator(n => n.TOBoss);
 
-        public void SpawnOnPlayer<T>(int plr) where T : ModNPC => NPC.SpawnOnPlayer(plr, ModContent.NPCType<T>());
+        public static void SpawnOnPlayer<T>(int plr) where T : ModNPC => NPC.SpawnOnPlayer(plr, ModContent.NPCType<T>());
 
         /// <summary>
         /// 生成一个新的NPC，并在生成后执行一个Action。
@@ -530,7 +530,9 @@ public static partial class TOExtensions
 
         public bool IsTeammateOf(Player other) => player.Alive && player.team != 0 && player.team == other.team;
 
-        public TOExclusiveIterator<Player> Teammates => TOIteratorFactory.NewActivePlayerIterator(k => k.IsTeammateOf(player), Main.player);
+        public TOExclusiveIterator<Player> OtherAlivePlayers => TOIteratorFactory.NewPlayerIterator(p => p.Alive, player);
+
+        public TOExclusiveIterator<Player> Teammates => TOIteratorFactory.NewPlayerIterator(p => p.IsTeammateOf(player), player);
 
         /// <summary>
         /// 获取玩家的手持物品。
@@ -543,7 +545,7 @@ public static partial class TOExtensions
     {
         public static TOIterator<Player> ActivePlayers => TOIteratorFactory.NewActivePlayerIterator();
 
-        public static TOIterator<Player> PVPPlayers => TOIteratorFactory.NewPlayerIterator(k => k.PvP);
+        public static TOIterator<Player> PVPPlayers => TOIteratorFactory.NewPlayerIterator(p => p.PvP);
 
         public static int ActivePlayerCount => Main.netMode == NetmodeID.SinglePlayer ? 1 : Main.CurrentFrameFlags.ActivePlayersCount;
     }

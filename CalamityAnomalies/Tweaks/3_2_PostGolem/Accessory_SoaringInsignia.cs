@@ -8,21 +8,21 @@
  * 加速度乘1.35（原版：1.75，原灾厄：1.1）。
  */
 
-public class SoaringInsignia_Tweak : CAItemTweak
+public sealed class SoaringInsignia_Tweak : CAItemTweak, ILocalizationPrefix
 {
-    private const string localizationPrefix = CAMain.TweakLocalizationPrefix + "3.2.SoaringInsignia.";
+    public string LocalizationPrefix => CAMain.TweakLocalizationPrefix + "3.2.SoaringInsignia.";
 
     public override int ApplyingType => ItemID.EmpressFlightBooster;
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
-        CreateTooltipModifier(tooltips)
-            .ModifyWithCATweakColor(0, k => k.Text = Language.GetTextValue(localizationPrefix + "Tooltip0"))
-            .ModifyWithCATweakColor(1, k => k.Text = Language.GetTextValue(localizationPrefix + "Tooltip1"));
+        AnomalyItem.TooltipModifier
+            .ModifyWithCATweakColor(0, l => l.Text = this.GetTextValueWithPrefix("Tooltip0"))
+            .ModifyWithCATweakColor(1, l => l.Text = this.GetTextValueWithPrefix("Tooltip1"));
     }
 }
 
-public class SoaringInsignia_Player : CAPlayerBehavior
+public sealed class SoaringInsignia_Player : CAPlayerBehavior
 {
     public override void PostUpdateMiscEffects()
     {
@@ -36,7 +36,7 @@ public class SoaringInsignia_Player : CAPlayerBehavior
     }
 }
 
-public class SoaringInsignia_CalamityPlayer : CalamityPlayerDetour
+public sealed class SoaringInsignia_CalamityPlayer : CalamityPlayerDetour
 {
     public override void Detour_OtherBuffEffects(Orig_OtherBuffEffects orig, CalamityPlayer self)
     {

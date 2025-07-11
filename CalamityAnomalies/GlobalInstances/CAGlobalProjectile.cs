@@ -2,7 +2,7 @@
 
 public sealed class CAGlobalProjectile : GlobalProjectileWithBehavior<CAProjectileBehavior>
 {
-    public override SingleEntityBehaviorSet<Projectile, CAProjectileBehavior> BehaviorSet => CABehaviorHelper.ProjectileBehaviors;
+    protected override SingleEntityBehaviorSet<Projectile, CAProjectileBehavior> BehaviorSet => CABehaviorHelper.ProjectileBehaviors;
 
     #region Data
     private const int AISlot = 33;
@@ -30,6 +30,19 @@ public sealed class CAGlobalProjectile : GlobalProjectileWithBehavior<CAProjecti
         Array.Copy(InternalAnomalyAI, clone.InternalAnomalyAI, AISlot2);
 
         return clone;
+    }
+
+    public bool NeverTrippy
+    {
+        get => InternalAnomalyAI[0].bits[0];
+        set
+        {
+            if (InternalAnomalyAI[0].bits[0] != value)
+            {
+                InternalAnomalyAI[0].bits[0] = value;
+                InternalAIChanged[0] = true;
+            }
+        }
     }
     #endregion Data
 
@@ -117,11 +130,11 @@ public sealed class CAGlobalProjectile : GlobalProjectileWithBehavior<CAProjecti
     public override void EmitEnchantmentVisualsAt(Projectile projectile, Vector2 boxPosition, int boxWidth, int boxHeight) => base.EmitEnchantmentVisualsAt(projectile, boxPosition, boxWidth, boxHeight);
     #endregion SpecialEffects
 
-    #region NotOverriden
+    #region NotSingle
     public override bool? CanUseGrapple(int type, Player player) => null;
 
     public override void UseGrapple(Player player, ref int type) { }
-    #endregion NotOverriden
+    #endregion NotSingle
 
     #region Net
     public override void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter)

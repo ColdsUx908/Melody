@@ -210,8 +210,6 @@ public abstract class CAItemBehavior : ItemBehavior
 
     public CalamityGlobalItem CalamityItem { get; private set; } = null;
 
-    public static CAItemTooltipModifier CreateTooltipModifier(List<TooltipLine> tooltips) => new(tooltips);
-
     public override void Connect(Item item)
     {
         base.Connect(item);

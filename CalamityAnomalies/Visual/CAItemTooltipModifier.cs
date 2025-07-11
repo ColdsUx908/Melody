@@ -9,10 +9,10 @@ public class CAItemTooltipModifier : ItemTooltipModifier
 
     public override CAItemTooltipModifier Modify(int num, Action<TooltipLine> action) => (CAItemTooltipModifier)base.Modify(num, action);
 
-    public CAItemTooltipModifier ModifyWithCATweakColor(int num, Action<TooltipLine> action) => Modify(num, k =>
+    public CAItemTooltipModifier ModifyWithCATweakColor(int num, Action<TooltipLine> action) => Modify(num, l =>
     {
-        k.OverrideColor = CAMain.GetGradientColor(0.25f);
-        action(k);
+        l.OverrideColor = CAMain.GetGradientColor(0.25f);
+        action(l);
     });
 
     public CAItemTooltipModifier ClearAllCATooltips()

@@ -16,15 +16,20 @@ public class CustomDetourTargetAttribute : Attribute
     [DisallowNull]
     public BindingFlags BindingAttr { get; }
 
-    public CustomDetourTargetAttribute(Type targetType, string name, BindingFlags bindingAttr)
+    [AllowNull]
+    public Type[] ParameterTypes { get; }
+
+    public CustomDetourTargetAttribute(Type targetType, string name, BindingFlags bindingAttr, Type[] parameterTypes = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         TargetType = targetType ?? throw new ArgumentNullException(nameof(targetType));
         Name = name;
         BindingAttr = bindingAttr;
+        ParameterTypes = parameterTypes;
     }
 
-    public MethodInfo TargetMethod => TargetType.GetMethod(Name, BindingAttr);
+    public MethodInfo TargetMethod =>
+        ParameterTypes is not null ? TargetType.GetMethod(Name, BindingAttr, ParameterTypes) : TargetType.GetMethod(Name, BindingAttr);
 }
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
@@ -61,7 +66,6 @@ public class CustomDetourConfigAttribute : Attribute
 
 /// <summary>
 /// 用于标记包含Detour方法的类。
-/// <br/>所有逻辑由反射实现。
 /// <br/>若目标类不是静态类，则建议使用 <see cref="DetourClassToAttribute{T}"/>。
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
@@ -75,7 +79,6 @@ public class DetourClassToAttribute : Attribute
 
 /// <summary>
 /// 用于标记包含Detour方法的类。
-/// <br/>所有逻辑由反射实现。
 /// </summary>
 /// <typeparam name="T"></typeparam>
 public class DetourClassToAttribute<T> : DetourClassToAttribute where T : class
@@ -85,7 +88,6 @@ public class DetourClassToAttribute<T> : DetourClassToAttribute where T : class
 
 /// <summary>
 /// 用于标记包含Detour方法的类。
-/// <br/>所有逻辑由反射实现。
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
 public class MultiDetourClassToAttribute : Attribute
@@ -100,7 +102,12 @@ public class MultiDetourClassToAttribute : Attribute
     }
 }
 
-[AttributeUsage(AttributeTargets.Method)]
+/// <summary>
+/// 用于标记不在Detour类中的方法是Detour方法。
+/// <br/>若目标类不是静态类，则建议使用 <see cref="DetourMethodToAttribute{T}"/>。
+/// <remarks>注意：在Detour类特性修饰的类中应用该特性会使Detour重复应用。</remarks>
+/// </summary>
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class DetourMethodToAttribute : Attribute
 {
     [DisallowNull]
@@ -109,14 +116,20 @@ public class DetourMethodToAttribute : Attribute
     public DetourMethodToAttribute(Type targetType) => TargetType = targetType ?? throw new ArgumentNullException(nameof(targetType));
 }
 
-[AttributeUsage(AttributeTargets.Method)]
-public class NotDetourMethodAttribute : Attribute { }
-
-[AttributeUsage(AttributeTargets.Method)]
+/// <summary>
+/// 用于标记不在Detour类中的方法是Detour方法。
+/// <remarks>注意：在Detour类特性修饰的类中应用该特性会使Detour重复应用。</remarks>
+/// </summary>
 public class DetourMethodToAttribute<T> : DetourMethodToAttribute
 {
     public DetourMethodToAttribute() : base(typeof(T)) { }
 }
+
+/// <summary>
+/// 用于标记由Detour类特性修饰的类中的某个方法，使自动应用逻辑不涉及该方法。
+/// </summary>
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+public class NotDetourMethodAttribute : Attribute { }
 
 /// <summary>
 /// 用于实现自定义的Detour逻辑。
@@ -138,7 +151,7 @@ public interface ITODetourProvider
 
 public sealed class TODetourHelper : IResourceLoader
 {
-    public class DetourSet : IEnumerable<Hook>
+    public sealed class DetourSet : IEnumerable<Hook>
     {
         private readonly Dictionary<Type, Dictionary<MethodBase, List<Hook>>> _data = [];
 
@@ -231,7 +244,7 @@ public sealed class TODetourHelper : IResourceLoader
         foreach ((MethodInfo detour, DetourMethodToAttribute attribute) in TOReflectionUtils.GetMethodsWithAttribute<DetourMethodToAttribute>())
             TODetourUtils.ApplyStaticMethodDetour(detour, attribute.TargetType);
 
-        foreach (ITODetourProvider detourProvider in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITODetourProvider>().OrderByDescending(k => k.LoadPriority))
+        foreach (ITODetourProvider detourProvider in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITODetourProvider>().OrderByDescending(d => d.LoadPriority))
             detourProvider.ApplyDetour();
     }
 
@@ -241,12 +254,23 @@ public sealed class TODetourHelper : IResourceLoader
 public static class TODetourUtils
 {
     private const string DefaultPrefix = "Detour_";
-    [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern = @"(?<methodName>[\s\S]*?)(?:__[\s\S]*)?$";
-    [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern2 = @"(?<typeName>[^_]+)_(?<methodName>[\s\S]*?)(?:__[\s\S]*)?$";
+    [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern = """^{0}(?<methodName>[\S]*?)(?:__[\S]*)?$""";
+    [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern2 = """^{0}(?<typeName>[\S]*?)__(?<methodName>[\S]*?)(?:__[\S]*)?$""";
 
-    public static bool EvaluateDetourName(string name, [NotNullWhen(true)] out string sourceName, string prefix = DefaultPrefix)
+    /// <summary>
+    /// 尝试解析提供的Detour方法名，获取其应用的源方法名。
+    /// <para/>逻辑：
+    /// <br/> 1. 尝试获取detour参数的 <see cref="CustomDetourPrefixAttribute"/> 特性，如果存在，使用其提供的前缀，否则使用 <see cref="DefaultPrefix"/> 作为前缀，命名为prefix。
+    /// <br/> 2. 尝试将方法名与 <c>{prefix}{methodName}[__{paramName}]</c> 进行匹配。
+    /// <br/> 3. 如果匹配成功，输出methodName。
+    /// </summary>
+    /// <param name="detour">Detour方法，必须是具名方法。</param>
+    /// <param name="sourceName">输出的源方法名。</param>
+    /// <returns>解析是否成功。</returns>
+    public static bool EvaluateDetourName(MethodInfo detour, [NotNullWhen(true)] out string sourceName)
     {
-        Match match = Regex.Match(name, "^" + prefix + Pattern);
+        string prefix = detour.GetAttribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
+        Match match = Regex.Match(detour.Name, string.Format(Pattern, prefix));
         if (match.Success)
         {
             sourceName = match.Groups["methodName"].Value;
@@ -256,6 +280,36 @@ public static class TODetourUtils
         return false;
     }
 
+    /// <summary>
+    /// 尝试解析提供的Detour方法名，获取其应用的源类型名和源方法名。
+    /// <para/>逻辑：
+    /// <br/> 1. 尝试获取detour参数的 <see cref="CustomDetourPrefixAttribute"/> 特性，如果存在，使用其提供的前缀，否则使用 <see cref="DefaultPrefix"/> 作为前缀，命名为prefix。
+    /// <br/> 2. 尝试将方法名与 <c>{prefix}{typeName}__{methodName}[__{paramName}]</c> 进行匹配。
+    /// <br/> 3. 如果匹配成功，输出typeName和methodName。
+    /// </summary>
+    /// <param name="detour">Detour方法，必须是具名方法。</param>
+    /// <param name="sourceTypeName">输出的源类型名</param>
+    /// <param name="sourceMethodName">输出的源方法名。</param>
+    /// <returns>解析是否成功。</returns>
+    public static bool EvaluateTypedDetourName(MethodInfo detour, [NotNullWhen(true)] out string sourceTypeName, [NotNullWhen(true)] out string sourceMethodName)
+    {
+        string prefix = detour.GetAttribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
+        Match match = Regex.Match(detour.Name, string.Format(Pattern2, prefix));
+        if (match.Success)
+        {
+            sourceTypeName = match.Groups["typeName"].Value;
+            sourceMethodName = match.Groups["methodName"].Value;
+            return true;
+        }
+        sourceTypeName = null;
+        sourceMethodName = null;
+        return false;
+    }
+
+    /// <summary>
+    /// 尝试将Detour应用到指定源方法上。
+    /// </summary>
+    /// <returns>创建的Hook对象。</returns>
     public static Hook Modify(MethodBase source, MethodInfo detour)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -266,6 +320,10 @@ public static class TODetourUtils
         return hook;
     }
 
+    /// <summary>
+    /// 尝试将Detour应用到指定源方法上。
+    /// </summary>
+    /// <returns>创建的Hook对象。</returns>
     public static Hook Modify<TDelegate>(MethodBase source, TDelegate detour) where TDelegate : Delegate
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -276,22 +334,96 @@ public static class TODetourUtils
         return hook;
     }
 
-    public static Hook Modify(Type sourceType, string methodName, MethodInfo detour) => Modify(sourceType.GetMethod(methodName, TOReflectionUtils.UniversalBindingFlags), detour);
+    /// <summary>
+    /// 尝试在指定类中获取对应名称方法，并将Detour应用到获取的方法上。
+    /// </summary>
+    /// <returns>创建的Hook对象。</returns>
+    public static Hook Modify(Type sourceType, string sourceMethodName, MethodInfo detour) => Modify(sourceType.GetMethod(sourceMethodName, TOReflectionUtils.UniversalBindingFlags), detour);
 
-    public static Hook Modify<TDelegate>(Type sourceType, string methodName, TDelegate detour) where TDelegate : Delegate => Modify(sourceType.GetMethod(methodName, TOReflectionUtils.UniversalBindingFlags), detour);
+    /// <summary>
+    /// 尝试在指定类中获取对应名称方法，并将Detour应用到获取的方法上。
+    /// </summary>
+    /// <returns>创建的Hook对象。</returns>
+    public static Hook Modify<TDelegate>(Type sourceType, string sourceMethodName, TDelegate detour) where TDelegate : Delegate => Modify(sourceType.GetMethod(sourceMethodName, TOReflectionUtils.UniversalBindingFlags), detour);
 
-    public static Hook Modify<T>(string sourceName, MethodInfo detour) => Modify(typeof(T), sourceName, detour);
+    /// <summary>
+    /// 尝试在指定类中获取对应名称方法，并将Detour应用到获取的方法上。
+    /// </summary>
+    /// <returns>创建的Hook对象。</returns>
+    public static Hook Modify<T>(string sourceMethodName, MethodInfo detour) => Modify(typeof(T), sourceMethodName, detour);
 
-    public static Hook Modify<T, TDelegate>(string sourceName, TDelegate detour) where TDelegate : Delegate => Modify(typeof(T), sourceName, detour);
+    /// <summary>
+    /// 尝试在指定类中获取对应名称方法，并将Detour应用到获取的方法上。
+    /// </summary>
+    /// <param name="paramOffset">Detour方法参数偏移量。
+    /// <br/>应设置为目标方法第一个参数在Detour方法中的索引。
+    /// <br/>例如，若Detour方法有 <c>orig</c> 和 <c>self</c> 参数，则应设置为 <c>2</c>；若都没有，则应设置为 <c>0</c>。
+    /// <br/>只应设置为 <c>0</c>、<c>1</c> 或 <c>2</c>。
+    /// </param>
+    /// <returns>创建的Hook对象。</returns>
+    public static Hook Modify(Type sourceType, string sourceMethodName, int paramOffset, MethodInfo detour) => Modify(sourceType.GetMethod(sourceMethodName, TOReflectionUtils.UniversalBindingFlags, detour.ParameterTypes[paramOffset..]), detour);
+
+    /// <summary>
+    /// 尝试在指定类中获取对应名称方法，并将Detour应用到获取的方法上。
+    /// </summary>
+    /// <param name="paramOffset">Detour方法参数偏移量。
+    /// <br/>应设置为目标方法第一个参数在Detour方法中的索引。
+    /// <br/>例如，若Detour方法有 <c>orig</c> 和 <c>self</c> 参数，则应设置为 <c>2</c>；若都没有，则应设置为 <c>0</c>。
+    /// <br/>只应设置为 <c>0</c>、<c>1</c> 或 <c>2</c>。
+    /// </param>
+    /// <returns>创建的Hook对象。</returns>
+    public static Hook Modify<TDelegate>(Type sourceType, string sourceMethodName, int paramOffset, TDelegate detour) where TDelegate : Delegate => Modify(sourceType.GetMethod(sourceMethodName, TOReflectionUtils.UniversalBindingFlags, detour.Method.ParameterTypes[paramOffset..]), detour);
+
+    /// <summary>
+    /// 尝试在指定类中获取对应名称方法，并将Detour应用到获取的方法上。
+    /// </summary>
+    /// <param name="paramOffset">Detour方法参数偏移量。
+    /// <br/>应设置为目标方法第一个参数在Detour方法中的索引。
+    /// <br/>例如，若Detour方法有 <c>orig</c> 和 <c>self</c> 参数，则应设置为 <c>2</c>；若都没有，则应设置为 <c>0</c>。
+    /// <br/>只应设置为 <c>0</c>、<c>1</c> 或 <c>2</c>。
+    /// </param>
+    /// <returns>创建的Hook对象。</returns>
+    public static Hook Modify<T>(string sourceMethodName, int paramOffset, MethodInfo detour) => Modify(typeof(T), sourceMethodName, paramOffset, detour);
+
+    /// <summary>
+    /// 尝试在指定类中获取对应名称方法，并将Detour应用到获取的方法上。
+    /// </summary>
+    /// <param name="hasThis">目标方法是否为实例方法（有 <see langword="this"/> 指针）。
+    /// <br/>会影响获取方法时的参数偏移量（<see langword="true"/> 为2，反之为1）和 <c>bindingAttr</c> 实参。
+    /// </param>
+    /// <returns>创建的Hook对象。</returns>
+    public static Hook Modify(Type sourceType, string sourceMethodName, bool hasThis, MethodInfo detour) =>
+        Modify(hasThis ? sourceType.GetMethod(sourceMethodName, TOReflectionUtils.InstanceBindingFlags, detour.ParameterTypes[2..])
+            : sourceType.GetMethod(sourceMethodName, TOReflectionUtils.StaticBindingFlags, detour.ParameterTypes[1..]), detour);
+
+    /// <summary>
+    /// 尝试在指定类中获取对应名称方法，并将Detour应用到获取的方法上。
+    /// </summary>
+    /// <param name="hasThis">目标方法是否为实例方法（有 <see langword="this"/> 指针）。
+    /// <br/>会影响获取方法时的参数偏移量（<see langword="true"/> 为2，反之为1）和 <c>bindingAttr</c> 实参。
+    /// </param>
+    /// <returns>创建的Hook对象。</returns>
+    public static Hook Modify<TDelegate>(Type sourceType, string sourceMethodName, bool hasThis, TDelegate detour) where TDelegate : Delegate =>
+        Modify(hasThis ? sourceType.GetMethod(sourceMethodName, TOReflectionUtils.InstanceBindingFlags, detour.Method.ParameterTypes[2..])
+            : sourceType.GetMethod(sourceMethodName, TOReflectionUtils.StaticBindingFlags, detour.Method.ParameterTypes[1..]), detour);
+
+    /// <summary>
+    /// 尝试在指定类中获取对应名称方法，并将Detour应用到获取的方法上。
+    /// </summary>
+    /// <param name="hasThis">目标方法是否为实例方法（有 <see langword="this"/> 指针）。
+    /// <br/>会影响获取方法时的参数偏移量（<see langword="true"/> 为2，反之为1）和 <c>bindingAttr</c> 实参。
+    /// </param>
+    /// <returns>创建的Hook对象。</returns>
+    public static Hook Modify<T>(string sourceMethodName, bool hasThis, MethodInfo detour) => Modify(typeof(T), sourceMethodName, hasThis, detour);
 
     public static Hook ApplyStaticMethodDetour(MethodInfo detour, Type targetType)
     {
         if (detour.HasAttribute<NotDetourMethodAttribute>())
             return null;
-        string prefix = detour.GetAttribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
-        Match match = Regex.Match(detour.Name, "^" + prefix + Pattern);
-        if (match.Success)
-            return Modify(detour.GetAttribute<CustomDetourTargetAttribute>()?.TargetMethod ?? targetType.GetMethod(match.Groups["methodName"].Value, TOReflectionUtils.UniversalBindingFlags), detour);
+        if (detour.TryGetAttribute(out CustomDetourTargetAttribute attribute))
+            return Modify(attribute.TargetMethod, detour);
+        if (EvaluateDetourName(detour, out string sourceName))
+            return Modify(targetType.GetMethod(sourceName, TOReflectionUtils.UniversalBindingFlags), detour);
         return null;
     }
 
@@ -299,13 +431,13 @@ public static class TODetourUtils
     {
         if (detour.HasAttribute<NotDetourMethodAttribute>())
             return null;
-        string prefix = detour.GetAttribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
-        Match match = Regex.Match(detour.Name, "^" + prefix + Pattern2);
-        if (match.Success)
+        if (detour.TryGetAttribute(out CustomDetourTargetAttribute attribute))
+            return Modify(attribute.TargetMethod, detour);
+        if (EvaluateTypedDetourName(detour, out string sourceTypeName, out string sourceMethodName))
         {
-            Type targetType = targetTypes.AsValueEnumerable().FirstOrDefault(k => k.Name == match.Groups["typeName"].Value);
+            Type targetType = targetTypes.AsValueEnumerable().FirstOrDefault(t => t.Name == sourceTypeName);
             if (targetType is not null)
-                return Modify(detour.GetAttribute<CustomDetourTargetAttribute>()?.TargetMethod ?? targetType.GetMethod(match.Groups["methodName"].Value, TOReflectionUtils.UniversalBindingFlags), detour);
+                return Modify(targetType.GetMethod(sourceMethodName, TOReflectionUtils.UniversalBindingFlags), detour);
         }
         return null;
     }

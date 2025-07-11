@@ -42,7 +42,7 @@ public static class CAExtensions
         }
 
         public void ModifyVanillaTooltipByName_CATweak(string name, Action<TooltipLine> action) =>
-            tooltips.ModifyTooltip_CATweak(k => k.Mod == "Terraria" && k.Name == name, action);
+            tooltips.ModifyTooltip_CATweak(l => l.Mod == "Terraria" && l.Name == name, action);
 
         public void ModifyTooltipByNum_CATweak(int num, Action<TooltipLine> action) =>
             tooltips.ModifyVanillaTooltipByName_CATweak($"Tooltip{num}", action);
@@ -57,7 +57,7 @@ public static class CAExtensions
 
                 if (line.Mod == "CalamityAnomalies")
                 {
-                    Match match = Regex.Match(line.Name, @"^Tooltip(\d+)$");
+                    Match match = Regex.Match(line.Name, """^Tooltip(\d+)$""");
                     if (!match.Success)
                         continue;
                     int lineNum = int.Parse(match.Groups[1].Value);

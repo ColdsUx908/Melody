@@ -29,12 +29,15 @@ global using Terraria.Utilities;
 global using Transoceanic.Commands;
 global using Transoceanic.Core;
 global using Transoceanic.Core.Extensions;
-global using Transoceanic.Core.Utilities;
 global using Transoceanic.Data;
 global using Transoceanic.GlobalInstances;
+global using Transoceanic.Localization;
 global using Transoceanic.Maths;
+global using Transoceanic.Visual;
 global using ZLinq;
 using Terraria.GameContent.Creative;
+using Transoceanic.Publicizer.Terraria;
+using Transoceanic.RuntimeEditing;
 
 namespace Transoceanic;
 
@@ -140,15 +143,9 @@ public sealed class TOMain : ITOLoader
 
     public static Assembly Assembly { get; } = Transoceanic.Instance.Code;
 
-    public static Type Type_Main { get; } = typeof(Main);
-
-    public static Assembly TerrariaAssembly { get; } = Type_Main.Assembly;
+    public static Assembly TerrariaAssembly { get; } = typeof(Main).Assembly;
 
     public static Type[] TerrariaTypes { get; } = TerrariaAssembly.GetTypes();
-
-    public static FieldInfo Main__currentGameModInfo { get; } = Type_Main.GetField("_currentGameModeInfo", TOReflectionUtils.UniversalBindingFlags);
-
-    public static GameModeData GameModeData => (GameModeData)Main__currentGameModInfo.GetValue(null);
 
     public static bool MasterMode => TrueMasterMode || JourneyMasterMode;
 
@@ -214,9 +211,9 @@ public sealed class TOMain : ITOLoader
             Time24Hour = (Main.dayTime ? 4.5 : 19.5) + Main.time / 3600.0;
             TerrariaTime = new(Time24Hour, Main.GetMoonPhase());
 
-            GameModeData gameModeData = GameModeData;
-            TrueMasterMode = gameModeData.IsMasterMode;
-            if (gameModeData.IsJourneyMode)
+            GameModeData gameModeInfo = Main_Publicizer._currentGameModeInfo;
+            TrueMasterMode = gameModeInfo.IsMasterMode;
+            if (gameModeInfo.IsJourneyMode)
             {
                 CreativePowers.DifficultySliderPower power = CreativePowerManager.Instance.GetPower<CreativePowers.DifficultySliderPower>();
                 bool currentJourneyMaster = power.StrengthMultiplierToGiveNPCs == 3f;

@@ -183,7 +183,7 @@ public sealed class CalamityGlobalNPCDetour : GlobalNPCDetour<CalamityGlobalNPC>
 
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalNPC self, NPC npc)
     {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior, "PreAI"))
+        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior, nameof(CANPCBehavior.PreAI)))
         {
             if (!npcBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.PreAI))
                 return true;
@@ -204,10 +204,20 @@ public sealed class CalamityGlobalNPCDetour : GlobalNPCDetour<CalamityGlobalNPC>
 
     public override Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalNPC self, NPC npc, Color drawColor)
     {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior, "GetAlpha"))
+        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior, nameof(CANPCBehavior.GetAlpha)))
         {
             if (!npcBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.GetAlpha))
                 return null;
+        }
+
+        if (npc.Anomaly().NeverTrippy)
+        {
+            CalamityPlayer calamityPlayer = Main.LocalPlayer.Calamity();
+            bool temp = calamityPlayer.trippy;
+            calamityPlayer.trippy = false;
+            Color? result = orig(self, npc, drawColor);
+            calamityPlayer.trippy = temp;
+            return result;
         }
 
         return orig(self, npc, drawColor);
@@ -215,7 +225,7 @@ public sealed class CalamityGlobalNPCDetour : GlobalNPCDetour<CalamityGlobalNPC>
 
     public override bool Detour_PreDraw(Orig_PreDraw orig, CalamityGlobalNPC self, NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
-        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior, "PreDraw"))
+        if (npc.TryGetBehavior(out CANPCBehavior npcBehavior, nameof(CANPCBehavior.PreDraw)))
         {
             if (npcBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.PreDraw))
                 return true;

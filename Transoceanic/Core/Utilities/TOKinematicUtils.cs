@@ -25,8 +25,8 @@ public static class TOKinematicUtils
                 {
                     foreach (NPC npc in
                         TOIteratorFactory.NewNPCIterator(
-                            ignoreTiles ? k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
-                            : k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                            ignoreTiles ? n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared
+                            : n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, n.Center, 1, 1)))
                     {
                         if (target is null)
                         {
@@ -51,8 +51,8 @@ public static class TOKinematicUtils
                 {
                     foreach (NPC npc in
                         TOIteratorFactory.NewNPCIterator(
-                            ignoreTiles ? k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
-                            : k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                            ignoreTiles ? n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared
+                            : n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, n.Center, 1, 1)))
                     {
                         if (target is null || npc.lifeMax < target.lifeMax)
                             target = npc;
@@ -64,8 +64,8 @@ public static class TOKinematicUtils
                 {
                     foreach (NPC npc in
                         TOIteratorFactory.NewNPCIterator(
-                            ignoreTiles ? k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
-                            : k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                            ignoreTiles ? n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared
+                            : n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, n.Center, 1, 1)))
                     {
                         if (target is null)
                         {
@@ -90,8 +90,8 @@ public static class TOKinematicUtils
                 {
                     foreach (NPC npc in
                         TOIteratorFactory.NewNPCIterator(
-                            ignoreTiles ? k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
-                            : k => k.CanBeChasedBy() && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                            ignoreTiles ? n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared
+                            : n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, n.Center, 1, 1)))
                     {
                         if (target is null || npc.life < target.life)
                             target = npc;
@@ -105,8 +105,8 @@ public static class TOKinematicUtils
                 {
                     foreach (NPC npc in
                         TOIteratorFactory.NewNPCIterator(
-                            ignoreTiles ? k => k.CanBeChasedBy() && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared
-                            : k => k.CanBeChasedBy() && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                            ignoreTiles ? n => n.CanBeChasedBy() && (distanceTemp1 = Vector2.DistanceSquared(origin, n.Center)) <= maxDistanceToCheckSquared
+                            : n => n.CanBeChasedBy() && (distanceTemp1 = Vector2.DistanceSquared(origin, n.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, n.Center, 1, 1)))
                     {
                         if (target is null)
                         {
@@ -134,8 +134,8 @@ public static class TOKinematicUtils
                 {
                     foreach (NPC npc in
                         TOIteratorFactory.NewNPCIterator(
-                            ignoreTiles ? k => k.CanBeChasedBy() && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared
-                            : k => k.CanBeChasedBy() && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                            ignoreTiles ? n => n.CanBeChasedBy() && (distanceTemp1 = Vector2.DistanceSquared(origin, n.Center)) <= maxDistanceToCheckSquared
+                            : n => n.CanBeChasedBy() && (distanceTemp1 = Vector2.DistanceSquared(origin, n.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, n.Center, 1, 1)))
                     {
                         if (target is null || distanceTemp1 < distanceTemp2)
                         {
@@ -171,8 +171,8 @@ public static class TOKinematicUtils
             case PriorityType.LifeMax:
                 foreach (Player player in
                     TOIteratorFactory.NewPlayerIterator(
-                        ignoreTiles ? k => k.Alive && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
-                        : k => k.Alive && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                        ignoreTiles ? p => p.Alive && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared
+                        : p => p.Alive && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1)))
                 {
                     if (target is null || player.statLifeMax2 > target.statLifeMax2)
                         target = player;
@@ -181,8 +181,8 @@ public static class TOKinematicUtils
             case PriorityType.Life:
                 foreach (Player player in
                     TOIteratorFactory.NewPlayerIterator(
-                        ignoreTiles ? k => k.Alive && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
-                        : k => k.Alive && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                        ignoreTiles ? p => p.Alive && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared
+                        : p => p.Alive && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1)))
                 {
                     if (target is null || player.statLife > target.statLife)
                         target = player;
@@ -193,8 +193,8 @@ public static class TOKinematicUtils
                 float distanceTemp2 = maxDistanceToCheckSquared;
                 foreach (Player player in
                     TOIteratorFactory.NewPlayerIterator(
-                        ignoreTiles ? k => k.Alive && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared
-                        : k => k.Alive && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1)))
+                        ignoreTiles ? p => p.Alive && (distanceTemp1 = Vector2.DistanceSquared(origin, p.Center)) <= maxDistanceToCheckSquared
+                        : p => p.Alive && (distanceTemp1 = Vector2.DistanceSquared(origin, p.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1)))
                 {
                     if (target is null || distanceTemp1 < distanceTemp2)
                     {
@@ -229,8 +229,8 @@ public static class TOKinematicUtils
             case PriorityType.LifeMax:
                 foreach (Player player in
                     TOIteratorFactory.NewPlayerIterator(
-                        ignoreTiles ? k => k.PvP && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
-                        : k => k.PvP && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1), owner))
+                        ignoreTiles ? p => p.PvP && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared
+                        : p => p.PvP && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1), owner))
                 {
                     if (target is null || player.statLifeMax2 > target.statLifeMax2)
                         target = player;
@@ -239,8 +239,8 @@ public static class TOKinematicUtils
             case PriorityType.Life:
                 foreach (Player player in
                     TOIteratorFactory.NewPlayerIterator(
-                        ignoreTiles ? k => k.PvP && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared
-                        : k => k.PvP && Vector2.DistanceSquared(origin, k.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1), owner))
+                        ignoreTiles ? p => p.PvP && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared
+                        : p => p.PvP && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1), owner))
                 {
                     if (target is null || player.statLife > target.statLife)
                         target = player;
@@ -251,8 +251,8 @@ public static class TOKinematicUtils
                 float distanceTemp2 = maxDistanceToCheckSquared;
                 foreach (Player player in
                     TOIteratorFactory.NewPlayerIterator(
-                        ignoreTiles ? k => k.PvP && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared
-                        : k => k.PvP && (distanceTemp1 = Vector2.DistanceSquared(origin, k.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, k.Center, 1, 1), owner))
+                        ignoreTiles ? p => p.PvP && (distanceTemp1 = Vector2.DistanceSquared(origin, p.Center)) <= maxDistanceToCheckSquared
+                        : p => p.PvP && (distanceTemp1 = Vector2.DistanceSquared(origin, p.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1), owner))
                 {
                     if (target is null || distanceTemp1 < distanceTemp2)
                     {

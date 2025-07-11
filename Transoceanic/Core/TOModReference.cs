@@ -17,17 +17,17 @@ public record TOModReferenceContainer
     /// <summary>
     /// Mod内部名。
     /// </summary>
-    public string Name { get; private set; } = "";
+    public string Name { get; } = "";
 
     /// <summary>
     /// Mod是否已加载。
     /// </summary>
-    public bool IsLoaded { get; private set; } = false;
+    public bool IsLoaded { get; } = false;
 
     /// <summary>
-    /// Mod实例。若 <see cref="IsLoaded"/> 为false，值为null。
+    /// Mod实例。若 <see cref="IsLoaded"/> 为 <see langword="false"/>，值为 <see langword="null"/>。
     /// </summary>
-    public Mod Mod { get; private set; } = null;
+    public Mod Mod { get; } = null;
 }
 
 public sealed class TOModReferences : IResourceLoader
@@ -37,6 +37,7 @@ public sealed class TOModReferences : IResourceLoader
     public static TOModReferenceContainer Calamity { get; private set; }
     public static TOModReferenceContainer CalDemutation { get; private set; }
     public static TOModReferenceContainer CALegacy { get; private set; }
+    public static TOModReferenceContainer CALegacy2 { get; private set; }
     public static TOModReferenceContainer CalFables { get; private set; }
     public static TOModReferenceContainer CalOverhaul { get; private set; }
     public static TOModReferenceContainer CalSpear { get; private set; }
@@ -76,6 +77,7 @@ public sealed class TOModReferences : IResourceLoader
         Calamity = new("CalamityMod");
         CalDemutation = new("CalamityDemutation");
         CALegacy = new("ACalTweak");
+        CALegacy2 = new("CAnomalies");
         CalFables = new("CalamityFables");
         CalOverhaul = new("CalamityOverhaul");
         CalSpear = new("CalamityThrowingSpear");
@@ -115,6 +117,7 @@ public sealed class TOModReferences : IResourceLoader
         Calamity = null;
         CalDemutation = null;
         CALegacy = null;
+        CALegacy2 = null;
         CalFables = null;
         CalOverhaul = null;
         CalSpear = null;

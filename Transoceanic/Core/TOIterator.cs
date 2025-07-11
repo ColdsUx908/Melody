@@ -4,7 +4,7 @@
 /// 对象迭代器。
 /// <para/>示例：
 /// <code>
-/// foreach (NPC n in TOIteratorFactory.NewNPCIterator(k => k.active)) //也可以使用预定义的NPC.ActiveNPCs_TO
+/// foreach (NPC kingSlime in TOIteratorFactory.NewActiveIterator(n => n.type = NPCID.KingSlime)) //也可以使用预定义的NPC.ActiveNPCs_TO
 /// {
 ///     //代码
 /// }
@@ -135,7 +135,7 @@ public readonly ref struct TOIterator<T> where T : class
 /// <code>
 /// public override void AI(NPC npc) //GlobalNPC类的重写方法
 /// {
-///     foreach (NPC n in TOIteratorFactory.NewNPCIterator(k => k.active), npc)
+///     foreach (NPC kingSlime in TOIteratorFactory.NewActiveNPCIterator(n => n.type == NPCID.KingSlime), npc)
 ///     {
 ///         //代码
 ///     }
@@ -155,7 +155,7 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
         _exclusions = exceptions;
     }
 
-    public TOExclusiveIterator(ReadOnlySpan<T> span, Predicate<T> predicate, params T[] exceptionIndexes)
+    public TOExclusiveIterator(ReadOnlySpan<T> span, Predicate<T> predicate, params ReadOnlySpan<T> exceptionIndexes)
     {
         _span = span;
         _predicate = predicate;
@@ -276,43 +276,43 @@ public static class TOIteratorFactory
 
     public static TOIterator<NPC> NewNPCIterator(Predicate<NPC> predicate) => new(NPCSpan, predicate);
 
-    public static TOExclusiveIterator<NPC> NewNPCIterator(Predicate<NPC> predicate, params NPC[] exclusions) => new(NPCSpan, predicate, exclusions);
+    public static TOExclusiveIterator<NPC> NewNPCIterator(Predicate<NPC> predicate, params ReadOnlySpan<NPC> exclusions) => new(NPCSpan, predicate, exclusions);
 
-    public static TOIterator<NPC> NewActiveNPCIterator() => new(NPCSpan, k => k.active);
+    public static TOIterator<NPC> NewActiveNPCIterator() => new(NPCSpan, n => n.active);
 
-    public static TOIterator<NPC> NewActiveNPCIterator(Predicate<NPC> predicate) => new(NPCSpan, k => k.active && predicate(k));
+    public static TOIterator<NPC> NewActiveNPCIterator(Predicate<NPC> predicate) => new(NPCSpan, n => n.active && predicate(n));
 
-    public static TOExclusiveIterator<NPC> NewActiveNPCIterator(Predicate<NPC> predicate, params NPC[] exclusions) => new(NPCSpan, k => k.active && predicate(k), exclusions);
+    public static TOExclusiveIterator<NPC> NewActiveNPCIterator(Predicate<NPC> predicate, params ReadOnlySpan<NPC> exclusions) => new(NPCSpan, n => n.active && predicate(n), exclusions);
 
     public static TOIterator<Projectile> NewProjectileIterator(Predicate<Projectile> predicate) => new(ProjectileSpan, predicate);
 
-    public static TOExclusiveIterator<Projectile> NewProjectileIterator(Predicate<Projectile> predicate, params Projectile[] exclusions) => new(ProjectileSpan, predicate, exclusions);
+    public static TOExclusiveIterator<Projectile> NewProjectileIterator(Predicate<Projectile> predicate, params ReadOnlySpan<Projectile> exclusions) => new(ProjectileSpan, predicate, exclusions);
 
-    public static TOIterator<Projectile> NewActiveProjectileIterator() => new(ProjectileSpan, k => k.active);
+    public static TOIterator<Projectile> NewActiveProjectileIterator() => new(ProjectileSpan, p => p.active);
 
-    public static TOIterator<Projectile> NewActiveProjectileIterator(Predicate<Projectile> predicate) => new(ProjectileSpan, k => k.active && predicate(k));
+    public static TOIterator<Projectile> NewActiveProjectileIterator(Predicate<Projectile> predicate) => new(ProjectileSpan, p => p.active && predicate(p));
 
-    public static TOExclusiveIterator<Projectile> NewActiveProjectileIterator(Predicate<Projectile> predicate, params Projectile[] exclusions) => new(ProjectileSpan, k => k.active && predicate(k), exclusions);
+    public static TOExclusiveIterator<Projectile> NewActiveProjectileIterator(Predicate<Projectile> predicate, params ReadOnlySpan<Projectile> exclusions) => new(ProjectileSpan, p => p.active && predicate(p), exclusions);
 
     public static TOIterator<Player> NewPlayerIterator(Predicate<Player> predicate) => new(PlayerSpan, predicate);
 
-    public static TOExclusiveIterator<Player> NewPlayerIterator(Predicate<Player> predicate, params Player[] exclusions) => new(PlayerSpan, predicate, exclusions);
+    public static TOExclusiveIterator<Player> NewPlayerIterator(Predicate<Player> predicate, params ReadOnlySpan<Player> exclusions) => new(PlayerSpan, predicate, exclusions);
 
-    public static TOIterator<Player> NewActivePlayerIterator() => new(PlayerSpan, k => k.active);
+    public static TOIterator<Player> NewActivePlayerIterator() => new(PlayerSpan, p => p.active);
 
-    public static TOIterator<Player> NewActivePlayerIterator(Predicate<Player> predicate) => new(PlayerSpan, k => k.active && predicate(k));
+    public static TOIterator<Player> NewActivePlayerIterator(Predicate<Player> predicate) => new(PlayerSpan, p => p.active && predicate(p));
 
-    public static TOExclusiveIterator<Player> NewActivePlayerIterator(Predicate<Player> predicate, params Player[] exclusions) => new(PlayerSpan, k => k.active && predicate(k), exclusions);
+    public static TOExclusiveIterator<Player> NewActivePlayerIterator(Predicate<Player> predicate, params ReadOnlySpan<Player> exclusions) => new(PlayerSpan, p => p.active && predicate(p), exclusions);
 
     public static TOIterator<Dust> NewDustIterator(Predicate<Dust> predicate) => new(DustSpan, predicate);
 
-    public static TOExclusiveIterator<Dust> NewDustIterator(Predicate<Dust> predicate, params Dust[] exclusions) => new(DustSpan, predicate, exclusions);
+    public static TOExclusiveIterator<Dust> NewDustIterator(Predicate<Dust> predicate, params ReadOnlySpan<Dust> exclusions) => new(DustSpan, predicate, exclusions);
 
     public static TOIterator<Item> NewItemIterator(Predicate<Item> predicate) => new(ItemSpan, predicate);
 
-    public static TOExclusiveIterator<Item> NewItemIterator(Predicate<Item> predicate, params Item[] exclusions) => new(ItemSpan, predicate, exclusions);
+    public static TOExclusiveIterator<Item> NewItemIterator(Predicate<Item> predicate, params ReadOnlySpan<Item> exclusions) => new(ItemSpan, predicate, exclusions);
 
-    public static TOIterator<Item> NewActiveItemIterator(Predicate<Item> predicate) => new(ItemSpan, k => k.active && predicate(k));
+    public static TOIterator<Item> NewActiveItemIterator(Predicate<Item> predicate) => new(ItemSpan, i => i.active && predicate(i));
 
-    public static TOExclusiveIterator<Item> NewActiveItemIterator(Predicate<Item> predicate, params Item[] exclusions) => new(ItemSpan, k => k.active && predicate(k), exclusions);
+    public static TOExclusiveIterator<Item> NewActiveItemIterator(Predicate<Item> predicate, params ReadOnlySpan<Item> exclusions) => new(ItemSpan, i => i.active && predicate(i), exclusions);
 }

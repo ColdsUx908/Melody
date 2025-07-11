@@ -1,11 +1,11 @@
-﻿using Transoceanic.Hooks.Terraria.ModLoader.UI;
+﻿using Transoceanic.Publicizer.Terraria.ModLoader.UI;
 
 namespace CalamityAnomalies.Core;
 
 //TODO: 非常酷的Mod绘制方法
 public sealed class CAModDraw : ITODetourProvider
 {
-    public static void Detour_Draw(On_UIModItem.Orig_Draw orig, object self, SpriteBatch spriteBatch)
+    public static void Detour_Draw(UIModItem_Publicizer.Orig_Draw orig, object self, SpriteBatch spriteBatch)
     {
         orig(self, spriteBatch);
     }

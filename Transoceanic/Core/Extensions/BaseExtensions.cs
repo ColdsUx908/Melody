@@ -1,9 +1,16 @@
-﻿namespace Transoceanic.Core.Extensions;
+﻿using Transoceanic.RuntimeEditing;
+
+namespace Transoceanic.Core.Extensions;
 
 public static partial class TOExtensions
 {
     extension(ArgumentException)
     {
+        /// <summary>
+        /// 当列表为 <see langword="null"/> 时抛出 <see cref="ArgumentNullException"/> 异常，不含任何元素时抛出 <see cref="ArgumentException"/> 异常。
+        /// </summary>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
         public static void ThrowIfNullOrEmpty<T>(IList<T> argument, [CallerArgumentExpression(nameof(argument))] string paramName = null!)
         {
             ArgumentNullException.ThrowIfNull(argument, paramName);
@@ -11,6 +18,11 @@ public static partial class TOExtensions
                 throw new ArgumentException($"Argument {paramName} cannot be empty.", paramName);
         }
 
+        /// <summary>
+        /// 当列表为 <see langword="null"/> 时抛出 <see cref="ArgumentNullException"/> 异常，不含任何元素或包含值为 <see langword="null"/> 的元素时抛出 <see cref="ArgumentException"/> 异常。
+        /// </summary>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
         public static void ThrowIfNullOrEmptyOrAnyNull<T>(IList<T> argument, [CallerArgumentExpression(nameof(argument))] string paramName = null!) where T : class
         {
             ArgumentException.ThrowIfNullOrEmpty(argument, paramName);
@@ -21,31 +33,43 @@ public static partial class TOExtensions
 
     extension(ArgumentOutOfRangeException)
     {
+        /// <summary>
+        /// 当传递的枚举值在枚举类型中未定义时抛出 <see cref="ArgumentOutOfRangeException"/>。
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
         public static void ThrowIfNotDefined<TEnum>(TEnum argument, [CallerArgumentExpression(nameof(argument))] string paramName = null!) where TEnum : Enum
         {
-            if (Enum.IsDefinedBetter(argument))
+            if (!Enum.IsDefinedBetter(argument))
                 throw new ArgumentOutOfRangeException(paramName, argument, $"Value {argument} is not defined in enum {typeof(TEnum).Name}.");
         }
     }
 
     extension(Enum)
     {
+        /// <summary>
+        /// 检查枚举值是否定义。
+        /// <br/>十分高效。
+        /// </summary>
+        /// <typeparam name="TEnum"></typeparam>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static bool IsDefinedBetter<TEnum>(TEnum value) where TEnum : Enum =>
             value.ToString()[0] is '+' or '-' or '0' or '1' or '2' or '3' or '4' or '5' or '6' or '7' or '8' or '9';
     }
 
     extension(IList<Color> colors)
     {
+        /// <summary>
+        /// 在多个颜色间提供插值。
+        /// </summary>
+        /// <param name="ratio">插值比率。范围为 [0, 1]。</param>
+        /// <returns></returns>
         public Color LerpMany(float ratio)
         {
-            ArgumentNullException.ThrowIfNull(colors, nameof(colors));
-
-            ratio = Math.Clamp(ratio, 0f, colors.Count - 1);
+            ArgumentException.ThrowIfNullOrEmpty(colors);
 
             switch (colors.Count)
             {
-                case 0:
-                    return Color.White;
                 case 1:
                     return colors[0];
                 case 2:
@@ -61,18 +85,34 @@ public static partial class TOExtensions
         }
     }
 
+    extension<T>(IList<T> values)
+    {
+        public bool TryGetValue(int index, out T value)
+        {
+            if (index >= 0 && index < values.Count)
+            {
+                value = values[index];
+                return true;
+            }
+            value = default;
+            return false;
+        }
+    }
+
     extension(MethodBase method)
     {
-        public bool HasAttribute<T>() where T : Attribute => method.GetAttribute<T>() is not null;
+        public bool TryGetAttribute<T>([NotNullWhen(true)] out T attribute) where T : Attribute => (attribute = method.GetAttribute<T>()) is not null;
+
+        public bool HasAttribute<T>() where T : Attribute => method.TryGetAttribute<T>(out _);
     }
 
     extension(MethodInfo method)
     {
         public string FullName => method.IsGenericMethod
-            ? method.Name + "<" + string.Join(",", method.GetGenericArguments().Select(k => k.Name)) + ">"
+            ? method.Name + "<" + string.Join(", ", method.GetGenericArguments().Select(a => a.Name)) + ">"
             : method.Name;
 
-        public Type[] ParameterTypes => [.. method.GetParameters().Select(k => k.ParameterType)];
+        public Type[] ParameterTypes => [.. method.GetParameters().Select(a => a.ParameterType)];
 
         public MethodAttributes AccessLevel => method.Attributes & MethodAttributes.MemberAccessMask;
 
@@ -117,13 +157,17 @@ public static partial class TOExtensions
         public bool IsPropertyAccessor => method.TryGetPropertyAccessor(out _);
 
         public bool TryGetEventAccessor(out EventInfo eventInfo) => (eventInfo =
-            method.IsSpecialName && (method.Name.StartsWith("add_") || method.Name.StartsWith("remove_"))
-            ? method.DeclaringType.GetEvent(method.Name[4..], TOReflectionUtils.UniversalBindingFlags)
-            : null) is not null;
+            method.IsSpecialName ? (
+                method.Name.StartsWith("add_") ? method.DeclaringType.GetEvent(method.Name[4..], TOReflectionUtils.UniversalBindingFlags)
+                : method.Name.StartsWith("remove_") ? method.DeclaringType.GetEvent(method.Name[7..], TOReflectionUtils.UniversalBindingFlags)
+                : null
+            ) : null) is not null;
+
+        public bool IsEventAccessor => method.TryGetEventAccessor(out _);
 
         /// <summary>
         /// 判定指定方法是否为真正的虚方法。
-        /// <br/>具体判定逻辑：必须为虚方法，且不是重写方法或最终方法（sealed元数据，用于判定逻辑上非虚的接口实现）。
+        /// <br/>具体判定逻辑：必须为虚方法，且不是重写方法或最终方法（sealed，用于判定逻辑上非虚的接口实现）。
         /// </summary>
         public bool IsRealVirtualOrAbstract => method.IsVirtual && !method.IsOverride && !method.IsFinal;
 
@@ -189,72 +233,72 @@ public static partial class TOExtensions
     extension(Type type)
     {
         public string RealName => type.IsGenericType
-            ? type.Name[..type.Name.IndexOf('`')] + "<" + string.Join(", ", type.GetGenericArguments().Select(k => k.Name)) + ">"
+            ? type.Name[..type.Name.IndexOf('`')] + "<" + string.Join(", ", type.GetGenericArguments().Select(a => a.Name)) + ">"
             : type.Name;
 
         /// <summary>
         /// 检查指定类型中是否存在对应方法。
         /// </summary>
         /// <param name="methodName"></param>
-        /// <param name="flags"></param>
+        /// <param name="bindingAttr"></param>
         /// <param name="methodInfo"></param>
         /// <returns></returns>
-        public bool HasMethod(string methodName, BindingFlags flags, out MethodInfo methodInfo) =>
-            (methodInfo = type.GetMethod(methodName, flags)) is not null;
+        public bool HasMethod(string methodName, BindingFlags bindingAttr, out MethodInfo methodInfo) =>
+            (methodInfo = type.GetMethod(methodName, bindingAttr)) is not null;
 
         /// <summary>
         /// 获取指定类型中所有由该类型声明的方法。
         /// </summary>
-        /// <param name="flags"></param>
+        /// <param name="bindingAttr"></param>
         /// <returns></returns>
-        public MethodInfo[] GetRealMethods(BindingFlags flags) => type.GetMethods(flags | BindingFlags.DeclaredOnly);
+        public MethodInfo[] GetRealMethods(BindingFlags bindingAttr) => type.GetMethods(bindingAttr | BindingFlags.DeclaredOnly);
 
         /// <summary>
         /// 检查指定类型是否声明了对应方法。
         /// </summary>
         /// <param name="methodName"></param>
-        /// <param name="flags"></param>
+        /// <param name="bindingAttr"></param>
         /// <param name="methodInfo"></param>
         /// <returns></returns>
-        public bool HasRealMethod(string methodName, BindingFlags flags, out MethodInfo methodInfo) =>
-            type.HasMethod(methodName, flags | BindingFlags.DeclaredOnly, out methodInfo);
+        public bool HasRealMethod(string methodName, BindingFlags bindingAttr, out MethodInfo methodInfo) =>
+            type.HasMethod(methodName, bindingAttr | BindingFlags.DeclaredOnly, out methodInfo);
 
         /// <summary>
         /// 检查指定类型是否声明了对应方法。
         /// </summary>
         /// <param name="methodName"></param>
-        /// <param name="flags"></param>
+        /// <param name="bindingAttr"></param>
         /// <returns></returns>
-        public bool HasRealMethod(string methodName, BindingFlags flags) =>
-            type.HasRealMethod(methodName, flags, out _);
+        public bool HasRealMethod(string methodName, BindingFlags bindingAttr) =>
+            type.HasRealMethod(methodName, bindingAttr, out _);
 
         /// <summary>
         /// 适用于 <paramref name="mainMethod"/> 依赖于 <paramref name="requiredMethod"/> 的情况，判定是否有正确的方法关系。
         /// </summary>
         /// <returns>仅在 <paramref name="mainMethod"/> 存在而 <paramref name="requiredMethod"/> 不存在时返回 <see langword="false"/>。</returns>
-        public bool MustHaveRealMethodWith(string mainMethodName, string requiredMethodName, BindingFlags flags, out MethodInfo mainMethod, out MethodInfo requiredMethod) =>
-            (type.HasRealMethod(mainMethodName, flags, out mainMethod), type.HasRealMethod(requiredMethodName, flags, out requiredMethod)) is not (true, false);
+        public bool MustHaveRealMethodWith(string mainMethodName, string requiredMethodName, BindingFlags bindingAttr, out MethodInfo mainMethod, out MethodInfo requiredMethod) =>
+            (type.HasRealMethod(mainMethodName, bindingAttr, out mainMethod), type.HasRealMethod(requiredMethodName, bindingAttr, out requiredMethod)) is not (true, false);
 
         /// <summary>
         /// 适用于 <paramref name="mainMethodName"/> 依赖于 <paramref name="requiredMethodName"/> 的情况，判定是否有正确的方法关系。
         /// </summary>
         /// <returns>仅在 <paramref name="mainMethodName"/> 存在而 <paramref name="requiredMethodName"/> 不存在时返回 <see langword="false"/>。</returns>
-        public bool MustHaveRealMethodWith(string mainMethodName, string requiredMethodName, BindingFlags flags) =>
-            type.MustHaveRealMethodWith(mainMethodName, requiredMethodName, flags, out _, out _);
+        public bool MustHaveRealMethodWith(string mainMethodName, string requiredMethodName, BindingFlags bindingAttr) =>
+            type.MustHaveRealMethodWith(mainMethodName, requiredMethodName, bindingAttr, out _, out _);
 
         /// <summary>
         /// 获取指定类型中所有重写方法。
         /// </summary>
-        /// <param name="flags"></param>
+        /// <param name="bindingAttr"></param>
         /// <returns></returns>
-        public IEnumerable<MethodInfo> GetOverrideMethods(BindingFlags flags) => type.GetRealMethods(flags).Where(k => k.IsOverride);
+        public IEnumerable<MethodInfo> GetOverrideMethods(BindingFlags bindingAttr) => type.GetRealMethods(bindingAttr).Where(m => m.IsOverride);
 
         /// <summary>
         /// 获取指定类型中所有重写方法的名称。
         /// </summary>
-        /// <param name="flags"></param>
+        /// <param name="bindingAttr"></param>
         /// <returns></returns>
-        public IEnumerable<string> GetOverrideMethodNames(BindingFlags flags) => type.GetOverrideMethods(flags).Select(k => k.Name);
+        public IEnumerable<string> GetOverrideMethodNames(BindingFlags bindingAttr) => type.GetOverrideMethods(bindingAttr).Select(m => m.Name);
     }
 
     extension(Vector2 vector)

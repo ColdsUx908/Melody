@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.Core.Utilities;
+﻿namespace Transoceanic.Visual;
 
 public static class TODrawUtils
 {
@@ -24,23 +24,28 @@ public static class TODrawUtils
         Texture2D texture, float wantedScale = 1f, Vector2 drawOffset = default)
         => spriteBatch.Draw(texture, position + drawOffset * wantedScale, frame, drawColor, 0f, origin, wantedScale, SpriteEffects.None, 0);
 
-    //TODO: 覆盖颜色着色器
     public static void DrawBorderTexture(SpriteBatch spriteBatch, Texture2D texture, Vector2 baseDrawPosition, Rectangle? sourceRectangle, Color color, float rotation = 0f, Vector2 origin = default, float scale = 1f, SpriteEffects spriteEffects = SpriteEffects.None, float layerDepth = 0f,
         int way = 8, float borderWidth = 1f)
     {
-        //for (int i = 0; i < way; i++)
-        //{
-        //    Vector2 offset = new PolarVector2(borderWidth, MathHelper.TwoPi / way * i);
-        //    spriteBatch.Draw(texture, baseDrawPosition + offset, sourceRectangle, Color.White, rotation, origin, scale, spriteEffects, layerDepth);
-        //}
+        if (borderWidth > 0f)
+        {
+            for (int i = 0; i < way; i++)
+            {
+                Vector2 offset = new PolarVector2(borderWidth, MathHelper.TwoPi / way * i);
+                spriteBatch.Draw(texture, baseDrawPosition + offset, sourceRectangle, color with { A = 0 }, rotation, origin, scale, spriteEffects, layerDepth);
+            }
+        }
     }
 
     public static void DrawBorderString(SpriteBatch spriteBatch, DynamicSpriteFont font, string text, Vector2 baseDrawPosition, Color mainColor, Color borderColor, int way = 8, float borderWidth = 1f, float scale = 1f, float rotation = 0f)
     {
-        for (int i = 0; i < way; i++)
+        if (borderWidth > 0f)
         {
-            Vector2 offset = new PolarVector2(borderWidth, MathHelper.TwoPi / way * i);
-            spriteBatch.DrawString(font, text, baseDrawPosition + offset, borderColor, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            for (int i = 0; i < way; i++)
+            {
+                Vector2 offset = new PolarVector2(borderWidth, MathHelper.TwoPi / way * i);
+                spriteBatch.DrawString(font, text, baseDrawPosition + offset, borderColor, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            }
         }
         spriteBatch.DrawString(font, text, baseDrawPosition, mainColor, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
     }

@@ -4,7 +4,10 @@ namespace CalamityAnomalies.GlobalInstances;
 
 public sealed class CAGlobalItem : GlobalItemWithBehavior<CAItemBehavior>
 {
-    public override SingleEntityBehaviorSet<Item, CAItemBehavior> BehaviorSet => CABehaviorHelper.ItemBehaviors;
+    protected override SingleEntityBehaviorSet<Item, CAItemBehavior> BehaviorSet => CABehaviorHelper.ItemBehaviors;
+
+    #region Data
+    public CAItemTooltipModifier TooltipModifier { get; private set; } = null;
 
     private const int dataSlot = 33;
     private const int dataSlot2 = 17;
@@ -21,6 +24,7 @@ public sealed class CAGlobalItem : GlobalItemWithBehavior<CAItemBehavior>
 
         return clone;
     }
+    #endregion Data
 
     #region Defaults
     public override void SetStaticDefaults() => base.SetStaticDefaults();
@@ -207,13 +211,18 @@ public sealed class CAGlobalItem : GlobalItemWithBehavior<CAItemBehavior>
 
     public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
     {
+        TooltipModifier = new(tooltips);
         if (TryGetBehavior(item, out CAItemBehavior itemBehavior))
         {
             itemBehavior.ModifyTooltips(tooltips);
-            tooltips.Add(new(CalamityAnomalies.Instance, "OverrideIdentifier", Language.GetTextValue(CAMain.ModLocalizationPrefix + "Tooltips.OverrideIdentifier")));
+            TooltipModifier.AddCATooltip(l =>
+            {
+                l.Text = Language.GetTextValue(CAMain.ModLocalizationPrefix + "Tooltips.TweakIdentifier");
+                l.OverrideColor = TOMain.CelestialColor;
+            }, false);
         }
 
-        TooltipLine nameLine = tooltips.AsValueEnumerable().FirstOrDefault(k => k.Name == "ItemName" && k.Mod == "Terraria");
+        TooltipLine nameLine = tooltips.AsValueEnumerable().FirstOrDefault(l => l.Name == "ItemName" && l.Mod == "Terraria");
         if (nameLine is not null && item.rare == ModContent.RarityType<Celestial>())
         {
         }
@@ -232,7 +241,7 @@ public sealed class CAGlobalItem : GlobalItemWithBehavior<CAItemBehavior>
     public override void NetReceive(Item item, BinaryReader reader) => base.NetReceive(item, reader);
     #endregion Net
 
-    #region NotOverriden
+    #region NotSingle
     public override bool? CanConsumeBait(Player player, Item bait) => null;
 
     public override void PickAmmo(Item weapon, Item ammo, Player player, ref int type, ref float speed, ref StatModifier damage, ref float knockback) { }
@@ -292,5 +301,5 @@ public sealed class CAGlobalItem : GlobalItemWithBehavior<CAItemBehavior>
     public override bool IsAnglerQuestAvailable(int type) => true;
 
     public override void AnglerChat(int type, ref string chat, ref string catchLocation) { }
-    #endregion NotOverriden
+    #endregion NotSingle
 }

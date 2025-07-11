@@ -9,7 +9,7 @@ namespace CalamityAnomalies.GlobalInstances;
 
 public sealed class CAGlobalNPC : GlobalNPCWithBehavior<CANPCBehavior>, IResourceLoader
 {
-    public override SingleEntityBehaviorSet<NPC, CANPCBehavior> BehaviorSet => CABehaviorHelper.NPCBehaviors;
+    protected override SingleEntityBehaviorSet<NPC, CANPCBehavior> BehaviorSet => CABehaviorHelper.NPCBehaviors;
 
     #region Data
     private const int AISlot = 33;
@@ -38,9 +38,7 @@ public sealed class CAGlobalNPC : GlobalNPCWithBehavior<CANPCBehavior>, IResourc
 
         return clone;
     }
-    #endregion Data
 
-    #region 额外数据
     public bool NeverTrippy
     {
         get => InternalAnomalyAI[0].bits[0];
@@ -133,7 +131,7 @@ public sealed class CAGlobalNPC : GlobalNPCWithBehavior<CANPCBehavior>, IResourc
             }
         }
     }
-    #endregion 额外数据
+    #endregion Data
 
     #region Defaults
     public override void SetStaticDefaults() => base.SetStaticDefaults();
@@ -288,7 +286,7 @@ public sealed class CAGlobalNPC : GlobalNPCWithBehavior<CANPCBehavior>, IResourc
         StatModifier baseDRModifier = new();
         StatModifier standardDRModifier = new();
         StatModifier timedDRModifier = new();
-        if (item.TryGetBehavior(out CAItemBehavior itemBehavior, "ModifyHitNPC_DR"))
+        if (item.TryGetBehavior(out CAItemBehavior itemBehavior, nameof(CAItemBehavior.ModifyHitNPC_DR)))
             itemBehavior.ModifyHitNPC_DR(npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         baseDR = baseDRModifier.ApplyTo(baseDR);
         float standardDR = standardDRModifier.ApplyTo(baseDR);
@@ -308,7 +306,7 @@ public sealed class CAGlobalNPC : GlobalNPCWithBehavior<CANPCBehavior>, IResourc
         StatModifier baseDRModifier = new();
         StatModifier standardDRModifier = new();
         StatModifier timedDRModifier = new();
-        if (projectile.TryGetBehavior(out CAProjectileBehavior projectileBehavior, "ModifyHitNPC_DR"))
+        if (projectile.TryGetBehavior(out CAProjectileBehavior projectileBehavior, nameof(CAProjectileBehavior.ModifyHitNPC_DR)))
             projectileBehavior.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         baseDR = baseDRModifier.ApplyTo(baseDR);
         float standardDR = standardDRModifier.ApplyTo(baseDR);
@@ -433,7 +431,7 @@ public sealed class CAGlobalNPC : GlobalNPCWithBehavior<CANPCBehavior>, IResourc
     public override void LoadData(NPC npc, TagCompound tag) => base.LoadData(npc, tag);
     #endregion WorldSaving
 
-    #region NotOverriden
+    #region NotSingle
     public override void ModifyGlobalLoot(GlobalLoot globalLoot) { }
 
     public override void EditSpawnRate(Player player, ref int spawnRate, ref int maxSpawns) { }
@@ -449,7 +447,7 @@ public sealed class CAGlobalNPC : GlobalNPCWithBehavior<CANPCBehavior>, IResourc
     public override void SetupTravelShop(int[] shop, ref int nextSlot) { }
 
     public override void BuffTownNPC(ref float damageMult, ref int defense) { }
-    #endregion NotOverriden
+    #endregion NotSingle
 
     #region Net
     public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)

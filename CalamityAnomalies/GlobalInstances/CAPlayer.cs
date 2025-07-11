@@ -32,9 +32,10 @@ namespace CalamityAnomalies.GlobalInstances;
 
 public sealed class CAPlayer : ModPlayerWithBehavior<CAPlayerBehavior>
 {
-    public override GlobalEntityBehaviorSet<Player, CAPlayerBehavior> BehaviorSet => CABehaviorHelper.PlayerBehaviors;
+    protected override GlobalEntityBehaviorSet<Player, CAPlayerBehavior> BehaviorSet => CABehaviorHelper.PlayerBehaviors;
 
-    public bool AntiEPBPlayer { get; set; } = false;
+    #region Data
+    //变量按字母顺序排列
 
     public PlayerDownedBossCalamity DownedBossCalamity { get; private set; } = new();
     public PlayerDownedBossCalamity DownedBossAnomaly { get; private set; } = new();
@@ -45,17 +46,22 @@ public sealed class CAPlayer : ModPlayerWithBehavior<CAPlayerBehavior>
     /// </summary>
     public AddableFloat[] WingTimeMaxMultipliers { get; } = new AddableFloat[3];
 
-    public int YharimsGift { get; set; } = 0;
+    public int YharimsGift
+    {
+        get;
+        internal set => field = Math.Clamp(value, 0, 2);
+    } = 0;
 
+    public YharimsGift_CurrentBlessing YharimsGiftBuff { get; set; } = YharimsGift_CurrentBlessing.None;
+
+    #region 计算属性
     public bool HasYharimsGift => YharimsGift > 0;
-
-    public YharimsGift_Tweak.CurrentBuff YharimsGiftBuff { get; set; } = YharimsGift_Tweak.CurrentBuff.None;
+    #endregion 计算属性
 
     public override ModPlayer Clone(Player newEntity)
     {
         CAPlayer clone = (CAPlayer)base.Clone(newEntity);
 
-        clone.AntiEPBPlayer = AntiEPBPlayer;
         clone.DownedBossCalamity = DownedBossCalamity;
         clone.DownedBossAnomaly = DownedBossAnomaly;
         Array.Copy(WingTimeMaxMultipliers, clone.WingTimeMaxMultipliers, WingTimeMaxMultipliers.Length);
@@ -64,6 +70,7 @@ public sealed class CAPlayer : ModPlayerWithBehavior<CAPlayerBehavior>
 
         return clone;
     }
+    #endregion Data
 
     public override void SetStaticDefaults() => base.SetStaticDefaults();
 
@@ -71,11 +78,9 @@ public sealed class CAPlayer : ModPlayerWithBehavior<CAPlayerBehavior>
 
     public override void ResetEffects()
     {
-        AntiEPBPlayer = false;
         for (int i = 0; i < WingTimeMaxMultipliers.Length; i++)
             WingTimeMaxMultipliers[i] = AddableFloat.Zero;
-        if (YharimsGift > 0)
-            YharimsGift--;
+        YharimsGift--;
 
         base.ResetEffects();
     }
@@ -103,7 +108,7 @@ public sealed class CAPlayer : ModPlayerWithBehavior<CAPlayerBehavior>
     {
         DownedBossCalamity.LoadData(tag, "PlayerDownedBossCalamity");
         DownedBossAnomaly.LoadData(tag, "PlayerDownedBossAnomaly");
-        YharimsGiftBuff = tag.TryGet("YharimsGiftBuff", out int yharimsGiftBuff) ? (YharimsGift_Tweak.CurrentBuff)yharimsGiftBuff : YharimsGift_Tweak.CurrentBuff.None;
+        YharimsGiftBuff = tag.TryGet("YharimsGiftBuff", out int yharimsGiftBuff) ? (YharimsGift_CurrentBlessing)yharimsGiftBuff : YharimsGift_CurrentBlessing.None;
 
         base.LoadData(tag);
     }

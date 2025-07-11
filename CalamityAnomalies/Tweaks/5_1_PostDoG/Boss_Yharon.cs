@@ -1,4 +1,5 @@
-﻿using CalamityMod.Events;
+﻿using CalamityAnomalies.Publicizer.CalamityMod.NPCs;
+using CalamityMod.Events;
 using CalamityMod.NPCs.Bumblebirb;
 using CalamityMod.NPCs.Yharon;
 using CalamityMod.Particles;
@@ -10,110 +11,13 @@ using static CalamityMod.NPCs.Yharon.Yharon;
 namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
 
 /* 犽戎
- * 沟槽的私有字段还在追我。
  * 改动
  * 1. “巨龙重生”。
  * 2. 在进入二阶段时获得15秒无敌。
  * 3. 在转换阶段时获得97%无法削减的伤害减免（BossRush时为99%）。
  */
 
-public sealed record Yharon_Publicizer
-{
-    public static Yharon_Publicizer Instance { get; } = new();
-
-    private static readonly Type type = typeof(Yharon);
-    private static readonly FieldInfo self_safeBox = type.GetField("safeBox", TOReflectionUtils.UniversalBindingFlags);
-    private static readonly FieldInfo self_enraged = type.GetField("enraged", TOReflectionUtils.UniversalBindingFlags);
-    private static readonly FieldInfo self_protectionBoost = type.GetField("protectionBoost", TOReflectionUtils.UniversalBindingFlags);
-    private static readonly FieldInfo self_moveCloser = type.GetField("moveCloser", TOReflectionUtils.UniversalBindingFlags);
-    private static readonly FieldInfo self_useTornado = type.GetField("useTornado", TOReflectionUtils.UniversalBindingFlags);
-    private static readonly FieldInfo self_secondPhasePhase = type.GetField("secondPhasePhase", TOReflectionUtils.UniversalBindingFlags);
-    private static readonly FieldInfo self_teleportLocation = type.GetField("teleportLocation", TOReflectionUtils.UniversalBindingFlags);
-    private static readonly FieldInfo self_startSecondAI = type.GetField("startSecondAI", TOReflectionUtils.UniversalBindingFlags);
-    private static readonly FieldInfo self_spawnArena = type.GetField("spawnArena", TOReflectionUtils.UniversalBindingFlags);
-    private static readonly FieldInfo self_invincibilityCounter = type.GetField("invincibilityCounter", TOReflectionUtils.UniversalBindingFlags);
-    private static readonly FieldInfo self_fastChargeTelegraphTime = type.GetField("fastChargeTelegraphTime", TOReflectionUtils.UniversalBindingFlags);
-
-    public Yharon Yharon { get; set; } = null;
-
-    public Yharon_Publicizer SetYharon(Yharon yharon)
-    {
-        Yharon = yharon;
-        return this;
-    }
-
-    private Yharon_Publicizer() { }
-
-#pragma warning disable IDE1006
-    public Rectangle safeBox
-    {
-        get => (Rectangle)self_safeBox.GetValue(Yharon);
-        set => self_safeBox.SetValue(Yharon, value);
-    }
-
-    public bool enraged
-    {
-        get => (bool)self_enraged.GetValue(Yharon);
-        set => self_enraged.SetValue(Yharon, value);
-    }
-
-    public bool protectionBoost
-    {
-        get => (bool)self_protectionBoost.GetValue(Yharon);
-        set => self_protectionBoost.SetValue(Yharon, value);
-    }
-
-    public bool moveCloser
-    {
-        get => (bool)self_moveCloser.GetValue(Yharon);
-        set => self_moveCloser.SetValue(Yharon, value);
-    }
-
-    public bool useTornado
-    {
-        get => (bool)self_useTornado.GetValue(Yharon);
-        set => self_useTornado.SetValue(Yharon, value);
-    }
-
-    public int secondPhasePhase
-    {
-        get => (int)self_secondPhasePhase.GetValue(Yharon);
-        set => self_secondPhasePhase.SetValue(Yharon, value);
-    }
-
-    public int teleportLocation
-    {
-        get => (int)self_teleportLocation.GetValue(Yharon);
-        set => self_teleportLocation.SetValue(Yharon, value);
-    }
-
-    public bool startSecondAI
-    {
-        get => (bool)self_startSecondAI.GetValue(Yharon);
-        set => self_startSecondAI.SetValue(Yharon, value);
-    }
-
-    public bool spawnArena
-    {
-        get => (bool)self_spawnArena.GetValue(Yharon);
-        set => self_spawnArena.SetValue(Yharon, value);
-    }
-
-    public int invincibilityCounter
-    {
-        get => (int)self_invincibilityCounter.GetValue(Yharon);
-        set => self_invincibilityCounter.SetValue(Yharon, value);
-    }
-
-    public int fastChargeTelegraphTime
-    {
-        get => (int)self_fastChargeTelegraphTime.GetValue(Yharon);
-        set => self_fastChargeTelegraphTime.SetValue(Yharon, value);
-    }
-#pragma warning restore IDE1006
-}
-
-public class Yharon_Tweak : CANPCTweak<Yharon>
+public sealed class Yharon_Tweak : CANPCTweak<Yharon>
 {
     #region 数据、属性
     public static class Data
@@ -123,7 +27,7 @@ public class Yharon_Tweak : CANPCTweak<Yharon>
         public const int Phase2InvincibilityTime = 900;
     }
 
-    public Yharon_Publicizer YharonPublicizer => Yharon_Publicizer.Instance;
+    public Yharon_Publicizer YharonPublicizer { get; private set; }
 
 #pragma warning disable IDE1006
     public Rectangle safeBox
@@ -219,7 +123,7 @@ public class Yharon_Tweak : CANPCTweak<Yharon>
     public override void Connect(NPC npc)
     {
         base.Connect(npc);
-        Yharon_Publicizer.Instance.Yharon = ModNPC;
+        YharonPublicizer = new(ModNPC);
     }
 
     #region Active
@@ -2751,7 +2655,7 @@ public class Yharon_Tweak : CANPCTweak<Yharon>
     #endregion AI
 }
 
-public class Yharon_Detour : ModNPCDetour<Yharon>
+public sealed class Yharon_Detour : ModNPCDetour<Yharon>
 {
     public override void Detour_SetDefaults(Orig_SetDefaults orig, Yharon self)
     {
@@ -2776,7 +2680,7 @@ public class Yharon_Detour : ModNPCDetour<Yharon>
         for (int k = 0; k < 5; k++)
             Dust.NewDustAction(npc.Center, npc.width, npc.height, DustID.Blood, d => d.velocity = new Vector2(hit.HitDirection, -1f));
 
-        Yharon_Publicizer yharonPublicizer = Yharon_Publicizer.Instance;
+        Yharon_Publicizer yharonPublicizer = new(self);
         bool shouldNotDie = !yharonPublicizer.startSecondAI || yharonPublicizer.invincibilityCounter < Yharon_Tweak.Data.Phase2InvincibilityTime;
 
         if (npc.life <= 0)
@@ -2846,7 +2750,7 @@ public class Yharon_Detour : ModNPCDetour<Yharon>
     }
 }
 
-public class ResplendentExplosion : BaseMassiveExplosionProjectile
+public sealed class ResplendentExplosion : BaseMassiveExplosionProjectile
 {
     public override int Lifetime => 120;
 

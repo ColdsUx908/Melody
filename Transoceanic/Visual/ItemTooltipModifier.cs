@@ -26,7 +26,7 @@ public class ItemTooltipModifier
             TooltipLine line = tooltips[i];
             if (line.Mod == "Terraria")
             {
-                Match match = Regex.Match(line.Name, @"^Tooltip(?<num>\d+)$");
+                Match match = Regex.Match(line.Name, """^Tooltip(?<num>\d+)$""");
                 if (match.Success)
                 {
                     _tooltipLast = i;
