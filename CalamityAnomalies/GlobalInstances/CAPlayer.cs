@@ -40,13 +40,15 @@ public sealed class CAPlayer : ModPlayerWithBehavior<CAPlayerBehavior>
     public PlayerDownedBossCalamity DownedBossCalamity { get; private set; } = new();
     public PlayerDownedBossCalamity DownedBossAnomaly { get; private set; } = new();
 
+    public Item LastYharimsGift { get; set; } = null;
+
     /// <summary>
     /// 提升玩家翅膀飞行时间的乘区。
     /// <br/>每个索引独立计算。
     /// </summary>
     public AddableFloat[] WingTimeMaxMultipliers { get; } = new AddableFloat[3];
 
-    public int YharimsGift
+    public int YharimsGiftTimer
     {
         get;
         internal set => field = Math.Clamp(value, 0, 2);
@@ -55,7 +57,7 @@ public sealed class CAPlayer : ModPlayerWithBehavior<CAPlayerBehavior>
     public YharimsGift_CurrentBlessing YharimsGiftBuff { get; set; } = YharimsGift_CurrentBlessing.None;
 
     #region 计算属性
-    public bool HasYharimsGift => YharimsGift > 0;
+    public bool HasYharimsGift => YharimsGiftTimer > 0;
     #endregion 计算属性
 
     public override ModPlayer Clone(Player newEntity)
@@ -65,7 +67,8 @@ public sealed class CAPlayer : ModPlayerWithBehavior<CAPlayerBehavior>
         clone.DownedBossCalamity = DownedBossCalamity;
         clone.DownedBossAnomaly = DownedBossAnomaly;
         Array.Copy(WingTimeMaxMultipliers, clone.WingTimeMaxMultipliers, WingTimeMaxMultipliers.Length);
-        clone.YharimsGift = YharimsGift;
+        clone.LastYharimsGift = LastYharimsGift;
+        clone.YharimsGiftTimer = YharimsGiftTimer;
         clone.YharimsGiftBuff = YharimsGiftBuff;
 
         return clone;
@@ -80,7 +83,7 @@ public sealed class CAPlayer : ModPlayerWithBehavior<CAPlayerBehavior>
     {
         for (int i = 0; i < WingTimeMaxMultipliers.Length; i++)
             WingTimeMaxMultipliers[i] = AddableFloat.Zero;
-        YharimsGift--;
+        YharimsGiftTimer--;
 
         base.ResetEffects();
     }
@@ -157,7 +160,7 @@ public sealed class CAPlayer : ModPlayerWithBehavior<CAPlayerBehavior>
 
     public override void PostUpdateMiscEffects()
     {
-        base.PostUpdateEquips();
+        base.PostUpdateMiscEffects();
 
         if (Player.wingTimeMax > 0)
         {

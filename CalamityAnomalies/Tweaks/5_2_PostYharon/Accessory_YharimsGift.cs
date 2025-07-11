@@ -16,7 +16,11 @@ public static class YharimsGift_Handler
 
     public const string LocalizationPrefix = CAMain.TweakLocalizationPrefix + "5.2.YharimsGift.";
 
-    public const string LocalizationPrefix2 = CAMain.CalamityModLocalizationPrefix + "Items.Accessories.";
+    public static int CurrentBlessingType => CurrentBlessingEnum switch
+    {
+        YharimsGift_CurrentBlessing.AscendantInsignia => ModContent.ItemType<AscendantInsignia>(),
+        _ => throw new InvalidOperationException("Unknown blessing type.")
+    };
 
     public static int CurrentBlessingNum
     {
@@ -24,13 +28,9 @@ public static class YharimsGift_Handler
         set => Main.LocalPlayer.Anomaly().YharimsGiftBuff = (YharimsGift_CurrentBlessing)(value % (Enum.GetValues<YharimsGift_CurrentBlessing>().Length - 1));
     }
 
-    public static YharimsGift_CurrentBlessing CurrentBuffType => Main.LocalPlayer.Anomaly().YharimsGiftBuff;
+    public static YharimsGift_CurrentBlessing CurrentBlessingEnum => Main.LocalPlayer.Anomaly().YharimsGiftBuff;
 
-    public static string BlessingName => CurrentBuffType switch
-    {
-        YharimsGift_CurrentBlessing.AscendantInsignia => Language.GetTextValue(LocalizationPrefix2 + "AscendantInsignia.DisplayName"),
-        _ => "None"
-    };
+    public static string BlessingName => ModContent.GetModItem(CurrentBlessingType).DisplayName.Value;
 
     public static Color GiftColor => Color.Lerp(Color.Orange, Color.Gold, TOMathHelper.GetTimeSin(0.4f, 0.7f, TOMathHelper.PiOver3, true));
 
@@ -42,14 +42,31 @@ public static class YharimsGift_Handler
         l.OverrideColor = GiftColor;
     }, false);
 
+    public static void AddGoldTooltip(Item item, Action<TooltipLine> action) => item.Anomaly().TooltipModifier.AddCATooltip(l =>
+    {
+        l.OverrideColor = Color.Gold;
+        action(l);
+    }, false);
+
     public static void DrawEnergyAndBorderBehindItem(Item item, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Vector2 origin, float scale)
     {
-        _enchantmentEnergyParticles.EdgeColor = GiftColor;
-        _enchantmentEnergyParticles.CenterColor = Color.White;
-        _enchantmentEnergyParticles.InterpolationSpeed = MathHelper.Lerp(0.065f, 0.1f, TOMathHelper.GetTimeSin(0.5f, 0.7f, TOMathHelper.PiOver3, true));
-        _enchantmentEnergyParticles.DrawSet(position + Main.screenPosition);
-        TOGlobalItem oceanItem = item.Ocean();
-        item.DrawInventoryWithBorder(spriteBatch, position, frame, origin, scale, 24, (TOMathHelper.GetTimeSin(0.5f, 0.7f, TOMathHelper.PiOver12, true) + 2.5f) * oceanItem.GetEquippedTimer(40) / 40f, GiftColor2);
+        CAPlayer anomalyPlayer = Main.LocalPlayer.Anomaly();
+        if (CurrentBlessingType == item.type)
+        {
+            if (anomalyPlayer.HasYharimsGift)
+            {
+                _enchantmentEnergyParticles.EdgeColor = GiftColor;
+                _enchantmentEnergyParticles.CenterColor = Color.White;
+                _enchantmentEnergyParticles.InterpolationSpeed = MathHelper.Lerp(0.065f, 0.1f, TOMathHelper.GetTimeSin(0.5f, 0.7f, TOMathHelper.PiOver3, true));
+                _enchantmentEnergyParticles.DrawSet(position + Main.screenPosition);
+            }
+            if (anomalyPlayer.LastYharimsGift is not null)
+            {
+                TOGlobalItem blessingOcean = item.Ocean();
+                TOGlobalItem giftOcean = anomalyPlayer.LastYharimsGift.Ocean();
+                item.DrawInventoryWithBorder(spriteBatch, position, frame, origin, scale, 24, (TOMathHelper.GetTimeSin(0.5f, 0.7f, TOMathHelper.PiOver12, true) + 2.5f) * Math.Min(blessingOcean.GetEquippedTimer(40), giftOcean.GetEquippedTimer(40)) / 40f, GiftColor2);
+            }
+        }
     }
 }
 
@@ -60,7 +77,8 @@ public sealed class YharimsGift_Tweak : CAItemTweak<YharimsGift>, ILocalizationP
     public override void UpdateAccessory(Player player, bool hideVisual)
     {
         CAPlayer anomalyPlayer = player.Anomaly();
-        anomalyPlayer.YharimsGift += 2;
+        anomalyPlayer.LastYharimsGift = Item;
+        anomalyPlayer.YharimsGiftTimer += 2;
         YharimsGift_Handler._enchantmentEnergyParticles.Update();
     }
 

@@ -109,10 +109,12 @@ public static partial class TOExtensions
     extension(MethodInfo method)
     {
         public string FullName => method.IsGenericMethod
-            ? method.Name + "<" + string.Join(", ", method.GetGenericArguments().Select(a => a.Name)) + ">"
+            ? method.Name + "<" + string.Join(", ", method.GetGenericArguments().Select(t => t.Name)) + ">"
             : method.Name;
 
-        public Type[] ParameterTypes => [.. method.GetParameters().Select(a => a.ParameterType)];
+        public string FullNameWithParameter => method.FullName + "(" + string.Join(", ", method.ParameterTypes.Select(t => t.Name)) + ")";
+
+        public Type[] ParameterTypes => [.. method.GetParameters().Select(p => p.ParameterType)];
 
         public MethodAttributes AccessLevel => method.Attributes & MethodAttributes.MemberAccessMask;
 

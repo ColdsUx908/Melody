@@ -84,7 +84,7 @@ public class CalamityILChangesDetour : ICALoader
             LogFailure("Run Acceleration Nerfs", "Could not locate the Soaring Insignia run acceleration multiplier.");
             return;
         }
-        cursor.Next.Operand = 1.35f; //原灾厄：BalancingConstants.SoaringInsigniaRunAccelerationMultiplier (1.1f)
+        cursor.Next.Operand = 1.3f; //原灾厄：BalancingConstants.SoaringInsigniaRunAccelerationMultiplier (1.1f)
 
         // Second: Magiluminescence. Find the check for whether it's equipped for run speeds.
         if (!cursor.TryGotoNext(MoveType.After, i => i.MatchLdfld<Player>("hasMagiluminescence")))

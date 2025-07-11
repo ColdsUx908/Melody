@@ -3,7 +3,10 @@
 
 	AscendantInsignia: {
 		Tooltip0: Increases wing flight time by 1.5x
-		Tooltip1: Increases movement speed by 1.25x, jump speed by 60% and acceleration by 1.35x
+		Tooltip1: Increases movement speed by 1.2x, jump speed by 60% and acceleration by 1.3x
 		Tooltip3: Ascension has a 25 second cooldown
+		CATooltip1: Infinite Flight
+		CATooltip2: Extreme speed during ascension, but loss due to fatigue within half a second after
+		CATooltip3: '''"Into the Sky"'''
 	}
 }

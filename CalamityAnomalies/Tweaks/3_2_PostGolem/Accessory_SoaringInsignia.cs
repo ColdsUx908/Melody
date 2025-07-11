@@ -3,9 +3,9 @@
 /* 翱翔徽章
  * 改动
  * 翅膀飞行时间乘1.3（原版：无限飞行，原灾厄：提升25%）。
- * 移动速度乘1.15（原版：提升10%）。
+ * 移动速度乘1.1（原版：提升10%）。
  * 跳跃速度提升36%（与原版相同，原灾厄：10%）。
- * 加速度乘1.35（原版：1.75，原灾厄：1.1）。
+ * 加速度乘1.3（原版：1.75，原灾厄：1.1）。
  */
 
 public sealed class SoaringInsignia_Tweak : CAItemTweak, ILocalizationPrefix
@@ -30,7 +30,7 @@ public sealed class SoaringInsignia_Player : CAPlayerBehavior
         {
             Player.moveSpeed -= 0.1f;
             if (!CalamityPlayer.ascendantInsignia)
-                Player.moveSpeed *= 1.15f;
+                Player.moveSpeed *= 1.1f;
             AnomalyPlayer.WingTimeMaxMultipliers[1] += 0.3f;
         }
     }

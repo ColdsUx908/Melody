@@ -1,4 +1,5 @@
 ﻿using CalamityAnomalies.Tweaks._5_2_PostYharon;
+using CalamityMod.Cooldowns;
 using CalamityMod.Items.Accessories;
 using Terraria.GameInput;
 
@@ -7,11 +8,17 @@ namespace CalamityAnomalies.Tweaks._4_3_PostPolterghast;
 /* 进升证章
  * 改动
  * 翅膀飞行时间乘1.5（原灾厄：提升30%）。
- * 移动速度乘1.25（原灾厄：提升10%）。
+ * 移动速度乘1.2（原灾厄：提升10%）。
  * 跳跃速度提升60%（原灾厄：10%）。
  * 继承翱翔徽章的加速度提升效果。
  * 技能冷却时间减为1500（25秒）。
  * 所有效果不与翱翔徽章叠加。
+ * 
+ * 寻神者之礼祝福
+ * 无限飞行。
+ * 飞升状态时：
+ *   移动速度乘数增加至1.4。
+ *   跳跃速度再增加120%。
  */
 
 public sealed class AscendantInsignia_Tweak : CAItemTweak<AscendantInsignia>, ILocalizationPrefix
@@ -29,8 +36,7 @@ public sealed class AscendantInsignia_Tweak : CAItemTweak<AscendantInsignia>, IL
 
     public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
     {
-        if (HasYharimsGiftBuff)
-            YharimsGift_Handler.DrawEnergyAndBorderBehindItem(Item, spriteBatch, position, frame, origin, scale);
+        YharimsGift_Handler.DrawEnergyAndBorderBehindItem(Item, spriteBatch, position, frame, origin, scale);
         return true;
     }
 
@@ -43,6 +49,9 @@ public sealed class AscendantInsignia_Tweak : CAItemTweak<AscendantInsignia>, IL
         if (HasYharimsGiftBuff)
         {
             YharimsGift_Handler.AddBlessingTooltip(Item);
+            YharimsGift_Handler.AddGoldTooltip(Item, l => l.Text = this.GetTextFormatWithPrefix("CATooltip1"));
+            YharimsGift_Handler.AddGoldTooltip(Item, l => l.Text = this.GetTextFormatWithPrefix("CATooltip2"));
+            YharimsGift_Handler.AddGoldTooltip(Item, l => l.Text = this.GetTextFormatWithPrefix("CATooltip3"));
         }
     }
 }
@@ -53,9 +62,20 @@ public sealed class AscendantInsignia_Player : CAPlayerBehavior
     {
         if (CalamityPlayer.ascendantInsignia)
         {
-            Player.moveSpeed *= 1.25f;
+            Player.moveSpeed *= 1.2f;
             Player.jumpSpeedBoost += 1.2f;
             AnomalyPlayer.WingTimeMaxMultipliers[1] += 0.2f;
+            if (AscendantInsignia_Tweak.HasYharimsGiftBuff)
+            {
+                CalamityPlayer.infiniteFlight = true;
+                if (CalamityPlayer.ascendantInsigniaBuffTime > 0)
+                {
+                    Player.moveSpeed *= 7f / 6f;
+                    Player.jumpSpeedBoost += 2.4f;
+                }
+            }
+            if (CalamityPlayer.ascendantInsigniaCooldown is >= 1470 and < 1500)
+                Player.moveSpeed *= 0.99f;
         }
     }
 }
@@ -72,11 +92,29 @@ public sealed class AscendantInsignia_CalamityPlayer : CalamityPlayerDetour
         }
     }
 
+    public override void Detour_MiscEffects(Orig_MiscEffects orig, CalamityPlayer self)
+    {
+        if (!self.ascendantInsignia && self.ascendantInsigniaBuffTime > 0)
+        {
+            self.ascendantInsigniaBuffTime = 0;
+            self.ascendantInsigniaCooldown = 1500;
+            self.Player.AddCooldown(AscendEffect.ID, 1500);
+        }
+    }
+
     public override void Detour_OtherBuffEffects(Orig_OtherBuffEffects orig, CalamityPlayer self)
     {
         bool temp = self.ascendantInsignia;
         self.ascendantInsignia = false;
         orig(self);
         self.ascendantInsignia = temp;
+        if (self.ascendantInsignia && self.ascendantInsigniaBuffTime > 0)
+        {
+            self.ascendantTrail = true;
+            self.infiniteFlight = true;
+            if (self.ascendantInsigniaBuffTime == 1)
+                self.Player.AddCooldown(AscendEffect.ID, 1500);
+            self.ascendantInsigniaBuffTime--;
+        }
     }
 }
