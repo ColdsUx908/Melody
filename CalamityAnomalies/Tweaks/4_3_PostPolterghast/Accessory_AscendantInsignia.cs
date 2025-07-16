@@ -64,7 +64,7 @@ public sealed class AscendantInsignia_Player : CAPlayerBehavior
         {
             Player.moveSpeed *= 1.2f;
             Player.jumpSpeedBoost += 1.2f;
-            AnomalyPlayer.WingTimeMaxMultipliers[1] += 0.2f;
+            OceanPlayer.WingTimeMaxMultipliers[2] += 0.2f;
             if (AscendantInsignia_Tweak.HasYharimsGiftBuff)
             {
                 CalamityPlayer.infiniteFlight = true;
@@ -85,11 +85,8 @@ public sealed class AscendantInsignia_CalamityPlayer : CalamityPlayerDetour
     public override void Detour_ProcessTriggers(Orig_ProcessTriggers orig, CalamityPlayer self, TriggersSet triggersSet)
     {
         orig(self, triggersSet);
-        if (CalamityKeybinds.AscendantInsigniaHotKey.JustPressed)
-        {
-            if (self.ascendantInsigniaCooldown == 2400)
-                self.ascendantInsigniaCooldown = 1500;
-        }
+        if (CalamityKeybinds.AscendantInsigniaHotKey.JustPressed && self.ascendantInsigniaCooldown == 2400)
+            self.ascendantInsigniaCooldown = 1500;
     }
 
     public override void Detour_MiscEffects(Orig_MiscEffects orig, CalamityPlayer self)
@@ -100,6 +97,7 @@ public sealed class AscendantInsignia_CalamityPlayer : CalamityPlayerDetour
             self.ascendantInsigniaCooldown = 1500;
             self.Player.AddCooldown(AscendEffect.ID, 1500);
         }
+        orig(self);
     }
 
     public override void Detour_OtherBuffEffects(Orig_OtherBuffEffects orig, CalamityPlayer self)

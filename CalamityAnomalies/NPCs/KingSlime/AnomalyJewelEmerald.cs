@@ -24,27 +24,27 @@ public class AnomalyJewelEmerald : AnomalyNPCBehavior<KingSlimeJewelEmerald>
 
     public AttackType CurrentAttack
     {
-        get => (AttackType)AnomalyNPC.AnomalyAI[0].i;
+        get => (AttackType)AnomalyNPC.AnomalyAI32[0].i;
         set
         {
             int temp = (int)value;
-            if (AnomalyNPC.AnomalyAI[0].i != temp)
+            if (AnomalyNPC.AnomalyAI32[0].i != temp)
             {
-                AnomalyNPC.AnomalyAI[0].i = temp;
-                AnomalyNPC.AIChanged[0] = true;
+                AnomalyNPC.AnomalyAI32[0].i = temp;
+                AnomalyNPC.AIChanged32[0] = true;
             }
         }
     }
 
     public int CurrentAttackPhase
     {
-        get => AnomalyNPC.AnomalyAI[1].i;
+        get => AnomalyNPC.AnomalyAI32[1].i;
         set
         {
-            if (AnomalyNPC.AnomalyAI[1].i != value)
+            if (AnomalyNPC.AnomalyAI32[1].i != value)
             {
-                AnomalyNPC.AnomalyAI[1].i = value;
-                AnomalyNPC.AIChanged[0] = true;
+                AnomalyNPC.AnomalyAI32[1].i = value;
+                AnomalyNPC.AIChanged32[0] = true;
             }
         }
     }
@@ -90,9 +90,9 @@ public class AnomalyJewelEmerald : AnomalyNPCBehavior<KingSlimeJewelEmerald>
     {
         for (int i = 0; i < amount; i++)
         {
-            Dust.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.GemEmerald, d =>
+            Vector2 velocity = NPC.SafeDirectionTo(Target.Center + Target.velocity * 20f, -Vector2.UnitY) * Main.rand.NextFloat(-4f, -1f) * Main.rand.NextFloat(1f, 2f);
+            Dust.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.GemEmerald, velocity, d =>
             {
-                d.velocity = NPC.SafeDirectionTo(Target.Center + Target.velocity * 20f, -Vector2.UnitY) * Main.rand.NextFloat(-4f, -1f) * Main.rand.NextFloat(1f, 2f);
                 d.noGravity = true;
                 if (Main.rand.NextBool())
                 {

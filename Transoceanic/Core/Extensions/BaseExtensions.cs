@@ -11,7 +11,7 @@ public static partial class TOExtensions
         /// </summary>
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
-        public static void ThrowIfNullOrEmpty<T>(IList<T> argument, [CallerArgumentExpression(nameof(argument))] string paramName = null!)
+        public static void ThrowIfNullOrEmpty<T>([NotNull] IList<T> argument, [CallerArgumentExpression(nameof(argument))] string paramName = null!)
         {
             ArgumentNullException.ThrowIfNull(argument, paramName);
             if (argument.Count == 0)
@@ -23,7 +23,7 @@ public static partial class TOExtensions
         /// </summary>
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
-        public static void ThrowIfNullOrEmptyOrAnyNull<T>(IList<T> argument, [CallerArgumentExpression(nameof(argument))] string paramName = null!) where T : class
+        public static void ThrowIfNullOrEmptyOrAnyNull<T>([NotNull] IList<T> argument, [CallerArgumentExpression(nameof(argument))] string paramName = null!) where T : class
         {
             ArgumentException.ThrowIfNullOrEmpty(argument, paramName);
             for (int i = 0; i < argument.Count; i++)
@@ -101,9 +101,11 @@ public static partial class TOExtensions
 
     extension(MethodBase method)
     {
-        public bool TryGetAttribute<T>([NotNullWhen(true)] out T attribute) where T : Attribute => (attribute = method.GetAttribute<T>()) is not null;
+        public T Attribute<T>(bool inherit = true) where T : Attribute => method.GetCustomAttributes(typeof(T), inherit).OfType<T>().FirstOrDefault();
 
-        public bool HasAttribute<T>() where T : Attribute => method.TryGetAttribute<T>(out _);
+        public bool HasAttribute<T>(bool inherit = true) where T : Attribute => method.Attribute<T>(inherit) is not null;
+
+        public bool TryGetAttribute<T>([NotNullWhen(true)] out T attribute, bool inherit = true) where T : Attribute => (attribute = method.Attribute<T>(inherit)) is not null;
     }
 
     extension(MethodInfo method)
@@ -238,6 +240,18 @@ public static partial class TOExtensions
             ? type.Name[..type.Name.IndexOf('`')] + "<" + string.Join(", ", type.GetGenericArguments().Select(a => a.Name)) + ">"
             : type.Name;
 
+        public IEnumerable<string> GetMethodNames(BindingFlags bindingAttr) => type.GetMethods(bindingAttr).Select(m => m.Name);
+
+        public IEnumerable<string> GetMethodNamesExceptObject(BindingFlags bindingAttr)
+        {
+            foreach (MethodInfo method in type.GetMethods(bindingAttr))
+            {
+                string name = method.Name;
+                if (!TOReflectionUtils.ObjectMethods.Contains(name))
+                    yield return name;
+            }
+        }
+
         /// <summary>
         /// 检查指定类型中是否存在对应方法。
         /// </summary>
@@ -301,6 +315,12 @@ public static partial class TOExtensions
         /// <param name="bindingAttr"></param>
         /// <returns></returns>
         public IEnumerable<string> GetOverrideMethodNames(BindingFlags bindingAttr) => type.GetOverrideMethods(bindingAttr).Select(m => m.Name);
+
+        public T Attribute<T>(bool inherit = true) where T : Attribute => type.GetCustomAttributes(typeof(T), inherit).OfType<T>().FirstOrDefault();
+
+        public bool HasAttribute<T>(bool inherit = true) where T : Attribute => type.Attribute<T>(inherit) is not null;
+
+        public bool TryGetAttribute<T>([NotNullWhen(true)] out T attribute, bool inherit = true) where T : Attribute => (attribute = type.Attribute<T>(inherit)) is not null;
     }
 
     extension(Vector2 vector)

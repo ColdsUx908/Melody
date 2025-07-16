@@ -11,7 +11,7 @@ using static CalamityMod.Projectiles.Boss.SCalRitualDrama;
 
 namespace CalamityAnomalies.DeveloperContents;
 
-public class Permafrost : CANPCBehavior<SupremeCalamitas>, ILocalizationPrefix
+public class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocalizationPrefix
 {
     #region 枚举、数值、属性、AI状态
     public enum AttackType
@@ -42,13 +42,13 @@ public class Permafrost : CANPCBehavior<SupremeCalamitas>, ILocalizationPrefix
 
     public Point Arena_TopLeft
     {
-        get => AnomalyNPC.AnomalyAI2[0].p;
+        get => AnomalyNPC.AnomalyAI64[0].p;
         set
         {
-            if (AnomalyNPC.AnomalyAI2[0].p != value)
+            if (AnomalyNPC.AnomalyAI64[0].p != value)
             {
-                AnomalyNPC.AnomalyAI2[0].p = value;
-                AnomalyNPC.AIChanged2[0] = true;
+                AnomalyNPC.AnomalyAI64[0].p = value;
+                AnomalyNPC.AIChanged64[0] = true;
             }
         }
     }
@@ -61,14 +61,14 @@ public class Permafrost : CANPCBehavior<SupremeCalamitas>, ILocalizationPrefix
 
     public AttackType CurrentAttack
     {
-        get => (AttackType)AnomalyNPC.AnomalyAI[0].i;
+        get => (AttackType)AnomalyNPC.AnomalyAI32[0].i;
         set
         {
             int temp = (int)value;
-            if (AnomalyNPC.AnomalyAI[0].i != temp)
+            if (AnomalyNPC.AnomalyAI32[0].i != temp)
             {
-                AnomalyNPC.AnomalyAI[0].i = temp;
-                AnomalyNPC.AIChanged[0] = true;
+                AnomalyNPC.AnomalyAI32[0].i = temp;
+                AnomalyNPC.AIChanged32[0] = true;
             }
         }
     }
@@ -312,15 +312,15 @@ public class Permafrost : CANPCBehavior<SupremeCalamitas>, ILocalizationPrefix
         switch (Timer1++)
         {
             case 180:
-                if (TOMain.GeneralClient)
+                if (TOWorld.GeneralClient)
                     TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "Welcome1", Color.LightCyan);
                 break;
             case 300:
-                if (TOMain.GeneralClient)
+                if (TOWorld.GeneralClient)
                     TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "Welcome2", Color.LightCyan);
                 break;
             case 480:
-                if (TOMain.GeneralClient)
+                if (TOWorld.GeneralClient)
                     TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "Beginning", Color.LightCyan);
 
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(NPC.Center, Vector2.Zero, Color.Cyan, new Vector2(1f), 0, 0.1f, 7f, 30));
@@ -426,7 +426,7 @@ public class Permafrost : CANPCBehavior<SupremeCalamitas>, ILocalizationPrefix
     #endregion Draw
 }
 
-public class PermafrostRitualDrama : CAProjectileBehavior<SCalRitualDrama>
+public class PermafrostRitualDrama : CASingleProjectileBehavior<SCalRitualDrama>
 {
     private const string localizationPrefix = CAMain.ModLocalizationPrefix + "DeveloperContents.Permafrost.";
 
@@ -464,7 +464,7 @@ public class PermafrostRitualDrama : CAProjectileBehavior<SCalRitualDrama>
         {
             // Summon Permafrost.
             // All the other acoustic and visual effects can happen client-side.
-            if (TOMain.GeneralClient)
+            if (TOWorld.GeneralClient)
             {
                 Vector2 spawnPosition = Projectile.Center - new Vector2(53f, 39f);
                 NPC.NewNPCAction<SupremeCalamitas>(NPC.GetBossSpawnSource(Player.FindClosest(spawnPosition, 1, 1)), spawnPosition, action: n =>

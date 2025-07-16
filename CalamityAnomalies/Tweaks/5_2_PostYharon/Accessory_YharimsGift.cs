@@ -14,6 +14,8 @@ public static class YharimsGift_Handler
 {
     internal static readonly ChargingEnergyParticleSet _enchantmentEnergyParticles = new(-1, 5, Color.Orange, Color.White, 0.04f, 32f);
 
+    internal static readonly int _totalBlessings = Enum.GetValues<YharimsGift_CurrentBlessing>().Length - 1;
+
     public const string LocalizationPrefix = CAMain.TweakLocalizationPrefix + "5.2.YharimsGift.";
 
     public static int CurrentBlessingType => CurrentBlessingEnum switch
@@ -22,13 +24,11 @@ public static class YharimsGift_Handler
         _ => throw new InvalidOperationException("Unknown blessing type.")
     };
 
-    public static int CurrentBlessingNum
+    public static YharimsGift_CurrentBlessing CurrentBlessingEnum
     {
-        get => (int)Main.LocalPlayer.Anomaly().YharimsGiftBuff;
-        set => Main.LocalPlayer.Anomaly().YharimsGiftBuff = (YharimsGift_CurrentBlessing)(value % (Enum.GetValues<YharimsGift_CurrentBlessing>().Length - 1));
+        get => Main.LocalPlayer.Anomaly().YharimsGiftBuff;
+        set => Main.LocalPlayer.Anomaly().YharimsGiftBuff = (YharimsGift_CurrentBlessing)((int)value % _totalBlessings);
     }
-
-    public static YharimsGift_CurrentBlessing CurrentBlessingEnum => Main.LocalPlayer.Anomaly().YharimsGiftBuff;
 
     public static string BlessingName => ModContent.GetModItem(CurrentBlessingType).DisplayName.Value;
 
@@ -64,9 +64,7 @@ public static class YharimsGift_Handler
             {
                 TOGlobalItem blessingOcean = item.Ocean();
                 TOGlobalItem giftOcean = anomalyPlayer.LastYharimsGift.Ocean();
-                int val1 = blessingOcean.GetEquippedTimer(40);
-                int val2 = giftOcean.GetEquippedTimer(40);
-                item.DrawInventoryWithBorder(spriteBatch, position, frame, origin, scale, 24, (TOMathHelper.GetTimeSin(0.5f, 0.7f, TOMathHelper.PiOver12, true) + 2.5f) * Math.Min(val1, val2) / 40f, GiftColor2);
+                item.DrawInventoryWithBorder(spriteBatch, position, frame, origin, scale, 24, (TOMathHelper.GetTimeSin(0.5f, 0.7f, TOMathHelper.PiOver12, true) + 2.5f) * Math.Min(blessingOcean.GetEquippedTimer(40), giftOcean.GetEquippedTimer(40)) / 40f, GiftColor2);
             }
         }
     }
@@ -103,7 +101,7 @@ public sealed class YharimsGift_Player : CAPlayerBehavior, ILocalizationPrefix
     {
         if (CAKeybinds.ChangeYharimsGiftBuff.JustPressed)
         {
-            YharimsGift_Handler.CurrentBlessingNum++;
+            YharimsGift_Handler.CurrentBlessingEnum++;
             TOLocalizationUtils.ChatLocalizedTextFormat(LocalizationPrefix + "BlessingChange", Main.LocalPlayer, Color.Gold, YharimsGift_Handler.BlessingName);
         }
     }

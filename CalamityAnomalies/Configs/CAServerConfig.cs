@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using Terraria.ModLoader.Config;
+﻿using Terraria.ModLoader.Config;
 
 namespace CalamityAnomalies.Configs;
 
@@ -12,10 +11,4 @@ public sealed class CAServerConfig : ModConfig
     public override bool AcceptClientChanges(ModConfig pendingConfig, int whoAmI, ref NetworkText message) => false;
 
     public override void OnLoaded() => Instance = this;
-
-    [Header("Content")]
-
-    [ReloadRequired]
-    [DefaultValue(false)]
-    public bool BossRushDifficulty { get; set; }
 }

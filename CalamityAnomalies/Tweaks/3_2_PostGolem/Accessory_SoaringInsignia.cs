@@ -31,7 +31,7 @@ public sealed class SoaringInsignia_Player : CAPlayerBehavior
             Player.moveSpeed -= 0.1f;
             if (!CalamityPlayer.ascendantInsignia)
                 Player.moveSpeed *= 1.1f;
-            AnomalyPlayer.WingTimeMaxMultipliers[1] += 0.3f;
+            OceanPlayer.WingTimeMaxMultipliers[2] += 0.3f;
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Transoceanic.Visual;
 
-public class ItemTooltipModifier
+public partial class ItemTooltipModifier
 {
     protected readonly int _tooltip0;
     protected readonly int _tooltipLast;
@@ -9,6 +9,11 @@ public class ItemTooltipModifier
     protected bool TooltipCorrupted => _tooltipMax == _tooltipLast - _tooltip0;
 
     public List<TooltipLine> Tooltips { get; set; }
+
+    public static readonly Regex _tooltipRegex = GetTooltipRegex();
+
+    [GeneratedRegex("""^Tooltip(?<num>\d+)$""")]
+    private static partial Regex GetTooltipRegex();
 
     public ItemTooltipModifier(List<TooltipLine> tooltips)
     {
@@ -26,7 +31,7 @@ public class ItemTooltipModifier
             TooltipLine line = tooltips[i];
             if (line.Mod == "Terraria")
             {
-                Match match = Regex.Match(line.Name, """^Tooltip(?<num>\d+)$""");
+                Match match = _tooltipRegex.Match(line.Name);
                 if (match.Success)
                 {
                     _tooltipLast = i;
@@ -45,19 +50,28 @@ public class ItemTooltipModifier
         {
             TooltipLine line = Tooltips[index];
             if (line.Mod == "Terraria" && line.Name == $"Tooltip{num}")
+            {
                 action(line);
+                return this;
+            }
         }
         for (int i = _tooltip0; i < Tooltips.Count; i++)
         {
             TooltipLine line = Tooltips[i];
             if (line.Mod == "Terraria" && line.Name == $"Tooltip{num}")
+            {
                 action(line);
+                return this;
+            }
         }
         for (int i = _tooltip0 - 1; i >= 0; i--)
         {
             TooltipLine line = Tooltips[i];
             if (line.Mod == "Terraria" && line.Name == $"Tooltip{num}")
+            {
                 action(line);
+                return this;
+            }
         }
         return this;
     }

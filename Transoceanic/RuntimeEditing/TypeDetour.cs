@@ -5838,7 +5838,7 @@ public sealed class TypeDetourUpdateReminder : IResourceLoader
         if (hasWarn)
         {
             TOUpdateReminder.UpdateReminder += () => TOLocalizationUtils.ChatLiteralText("TypeDetour.cs", TOMain.TODebugWarnColor, Main.LocalPlayer);
-            Transoceanic.Instance.Logger.Warn(builder.ToString());
+            TOMain.Instance.Logger.Warn(builder.ToString());
         }
     }
 

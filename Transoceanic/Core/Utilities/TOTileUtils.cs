@@ -18,10 +18,7 @@ public static class TOTileUtils
 
     public static bool IsTree(int tileType) => tileType is 5 or 72 or 323 or 571 or >= 583 and <= 589 or 596 or 616 or 634;
 
-    public static IEnumerable<(Tile tile, int i, int j)> GetBorderTiles(Point corner1, Point corner2, int fluff = 0) =>
-        GetBorderTiles(Math.Min(corner1.X, corner2.X), Math.Max(corner1.X, corner2.X), Math.Min(corner1.Y, corner2.Y), Math.Max(corner1.Y, corner2.Y), fluff);
-
-    public static IEnumerable<(Tile tile, int i, int j)> GetBorderTiles(int minX, int maxX, int minY, int maxY, int fluff)
+    public static IEnumerable<(Tile tile, int i, int j)> GetBorderTiles(int minX, int maxX, int minY, int maxY, int fluff = 0)
     {
         switch (minX == maxX, minY == maxY)
         {
@@ -61,4 +58,7 @@ public static class TOTileUtils
                 break;
         }
     }
+
+    public static IEnumerable<(Tile tile, int i, int j)> GetBorderTiles(Point corner1, Point corner2, int fluff = 0) =>
+        GetBorderTiles(Math.Min(corner1.X, corner2.X), Math.Max(corner1.X, corner2.X), Math.Min(corner1.Y, corner2.Y), Math.Max(corner1.Y, corner2.Y), fluff);
 }

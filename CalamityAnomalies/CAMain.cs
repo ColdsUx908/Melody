@@ -1,6 +1,5 @@
 global using System;
 global using System.Collections.Generic;
-global using System.Collections.ObjectModel;
 global using System.IO;
 global using System.Linq;
 global using System.Reflection;
@@ -44,9 +43,9 @@ global using CalamityMod_ = CalamityMod.CalamityMod;
 
 namespace CalamityAnomalies;
 
-public sealed class CalamityAnomalies : Mod
+public sealed class CAMain : Mod, IResourceLoader
 {
-    internal static CalamityAnomalies Instance { get; private set; }
+    internal static CAMain Instance { get; private set; }
 
     internal static bool Loading { get; private set; } = false;
 
@@ -65,7 +64,7 @@ public sealed class CalamityAnomalies : Mod
 
             foreach (ICALoader loader in
                 from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(CAMain.Assembly).AsValueEnumerable()
-                orderby pair.type.GetMethod("Load", TOReflectionUtils.UniversalBindingFlags)?.GetAttribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+                orderby pair.type.GetMethod(nameof(ICALoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                 select pair.instance)
             {
                 loader.Load();
@@ -78,6 +77,11 @@ public sealed class CalamityAnomalies : Mod
         }
     }
 
+    public override void PostSetupContent()
+    {
+        //TOMain.SyncEnabled = true;
+    }
+
     public override void Unload()
     {
         Unloading = true;
@@ -86,8 +90,8 @@ public sealed class CalamityAnomalies : Mod
             if (Loaded)
             {
                 foreach (ICALoader loader in (
-                    from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(CAMain.Assembly).AsValueEnumerable()
-                    orderby pair.type.GetMethod("Load", TOReflectionUtils.UniversalBindingFlags)?.GetAttribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+                    from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(Assembly).AsValueEnumerable()
+                    orderby pair.type.GetMethod(nameof(ICALoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                     select pair.instance).Reverse())
                 {
                     loader.Unload();
@@ -101,13 +105,10 @@ public sealed class CalamityAnomalies : Mod
             Unloading = false;
         }
     }
-}
 
-public sealed class CAMain : IResourceLoader
-{
-    public static Assembly Assembly { get; } = CalamityAnomalies.Instance.Code;
+    public static Assembly Assembly => field ??= Instance.Code;
 
-    public static string ModName { get; } = CalamityAnomalies.Instance.Name;
+    public static string ModName => field ??= Instance.Name;
 
     public static Color MainColor { get; } = Color.HotPink;
 
@@ -125,20 +126,5 @@ public sealed class CAMain : IResourceLoader
 
     public const string CalamityModLocalizationPrefix = "Mods.CalamityMod.";
 
-    public static Type Type_CalamityMod { get; } = typeof(CalamityMod_);
-
-    public static CalamityMod_ CalamityModInstance { get; internal set; } = null;
-
     public static Color AnomalyUltramundaneColor { get; } = new(0xE8, 0x97, 0xFF);
-
-    void IResourceLoader.PostSetupContent()
-    {
-        CalamityModInstance = (CalamityMod_)Type_CalamityMod.GetField("Instance", TOReflectionUtils.StaticBindingFlags).GetValue(null);
-        TOMain.SyncEnabled = true;
-    }
-
-    void IResourceLoader.OnModUnload()
-    {
-        CalamityModInstance = null;
-    }
 }

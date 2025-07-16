@@ -38,105 +38,105 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
     /// </summary>
     public int CurrentPhase
     {
-        get => AnomalyNPC.AnomalyAI[0].i;
+        get => AnomalyNPC.AnomalyAI32[0].i;
         set
         {
-            if (AnomalyNPC.AnomalyAI[0].i != value)
+            if (AnomalyNPC.AnomalyAI32[0].i != value)
             {
-                AnomalyNPC.AnomalyAI[0].i = value;
-                AnomalyNPC.AIChanged[0] = true;
+                AnomalyNPC.AnomalyAI32[0].i = value;
+                AnomalyNPC.AIChanged32[0] = true;
             }
         }
     }
 
     public AttackType CurrentAttack
     {
-        get => (AttackType)AnomalyNPC.AnomalyAI[1].i;
+        get => (AttackType)AnomalyNPC.AnomalyAI32[1].i;
         set
         {
             int temp = (int)value;
-            if (AnomalyNPC.AnomalyAI[1].i != temp)
+            if (AnomalyNPC.AnomalyAI32[1].i != temp)
             {
-                AnomalyNPC.AnomalyAI[1].i = temp;
-                AnomalyNPC.AIChanged[1] = true;
+                AnomalyNPC.AnomalyAI32[1].i = temp;
+                AnomalyNPC.AIChanged32[1] = true;
             }
         }
     }
 
     public int CurrentAttackPhase
     {
-        get => AnomalyNPC.AnomalyAI[2].i;
+        get => AnomalyNPC.AnomalyAI32[2].i;
         set
         {
-            if (AnomalyNPC.AnomalyAI[2].i != value)
+            if (AnomalyNPC.AnomalyAI32[2].i != value)
             {
-                AnomalyNPC.AnomalyAI[2].i = value;
-                AnomalyNPC.AIChanged[2] = true;
+                AnomalyNPC.AnomalyAI32[2].i = value;
+                AnomalyNPC.AIChanged32[2] = true;
             }
         }
     }
 
     public bool JewelEmeraldSpawned
     {
-        get => AnomalyNPC.AnomalyAI[3].bits[0];
+        get => AnomalyNPC.AnomalyAI32[3].bits[0];
         set
         {
-            if (AnomalyNPC.AnomalyAI[3].bits[0] != value)
+            if (AnomalyNPC.AnomalyAI32[3].bits[0] != value)
             {
-                AnomalyNPC.AnomalyAI[3].bits[0] = value;
-                AnomalyNPC.AIChanged[3] = true;
+                AnomalyNPC.AnomalyAI32[3].bits[0] = value;
+                AnomalyNPC.AIChanged32[3] = true;
             }
         }
     }
 
     public bool JewelRubySpawned
     {
-        get => AnomalyNPC.AnomalyAI[3].bits[1];
+        get => AnomalyNPC.AnomalyAI32[3].bits[1];
         set
         {
-            if (AnomalyNPC.AnomalyAI[3].bits[1] != value)
+            if (AnomalyNPC.AnomalyAI32[3].bits[1] != value)
             {
-                AnomalyNPC.AnomalyAI[3].bits[1] = value;
-                AnomalyNPC.AIChanged[3] = true;
+                AnomalyNPC.AnomalyAI32[3].bits[1] = value;
+                AnomalyNPC.AIChanged32[3] = true;
             }
         }
     }
 
     public bool JewelSapphireSpawned
     {
-        get => AnomalyNPC.AnomalyAI[3].bits[2];
+        get => AnomalyNPC.AnomalyAI32[3].bits[2];
         set
         {
-            if (AnomalyNPC.AnomalyAI[3].bits[2] != value)
+            if (AnomalyNPC.AnomalyAI32[3].bits[2] != value)
             {
-                AnomalyNPC.AnomalyAI[3].bits[2] = value;
-                AnomalyNPC.AIChanged[3] = true;
+                AnomalyNPC.AnomalyAI32[3].bits[2] = value;
+                AnomalyNPC.AIChanged32[3] = true;
             }
         }
     }
 
     public int LastSpawnSlimeLife
     {
-        get => AnomalyNPC.AnomalyAI[4].i;
+        get => AnomalyNPC.AnomalyAI32[4].i;
         set
         {
-            if (AnomalyNPC.AnomalyAI[4].i != value)
+            if (AnomalyNPC.AnomalyAI32[4].i != value)
             {
-                AnomalyNPC.AnomalyAI[4].i = value;
-                AnomalyNPC.AIChanged[4] = true;
+                AnomalyNPC.AnomalyAI32[4].i = value;
+                AnomalyNPC.AIChanged32[4] = true;
             }
         }
     }
 
     public float TeleportTimer
     {
-        get => AnomalyNPC.AnomalyAI[5].f;
+        get => AnomalyNPC.AnomalyAI32[5].f;
         set
         {
-            if (AnomalyNPC.AnomalyAI[5].f != value)
+            if (AnomalyNPC.AnomalyAI32[5].f != value)
             {
-                AnomalyNPC.AnomalyAI[5].f = value;
-                AnomalyNPC.AIChanged[5] = true;
+                AnomalyNPC.AnomalyAI32[5].f = value;
+                AnomalyNPC.AIChanged32[5] = true;
             }
         }
     }
@@ -147,14 +147,14 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
     /// </summary>
     public NPC JewelEmerald
     {
-        get => Main.npc[AnomalyNPC.AnomalyAI[6].i];
+        get => Main.npc[AnomalyNPC.AnomalyAI32[6].i];
         set
         {
             int temp = value.whoAmI;
-            if (AnomalyNPC.AnomalyAI[6].i != temp)
+            if (AnomalyNPC.AnomalyAI32[6].i != temp)
             {
-                AnomalyNPC.AnomalyAI[6].i = temp;
-                AnomalyNPC.AIChanged[6] = true;
+                AnomalyNPC.AnomalyAI32[6].i = temp;
+                AnomalyNPC.AIChanged32[6] = true;
             }
         }
     }
@@ -167,14 +167,14 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
     /// </summary>
     public NPC JewelRuby
     {
-        get => Main.npc[AnomalyNPC.AnomalyAI[7].i];
+        get => Main.npc[AnomalyNPC.AnomalyAI32[7].i];
         set
         {
             int temp = value.whoAmI;
-            if (AnomalyNPC.AnomalyAI[7].i != temp)
+            if (AnomalyNPC.AnomalyAI32[7].i != temp)
             {
-                AnomalyNPC.AnomalyAI[7].i = temp;
-                AnomalyNPC.AIChanged[7] = true;
+                AnomalyNPC.AnomalyAI32[7].i = temp;
+                AnomalyNPC.AIChanged32[7] = true;
             }
         }
     }
@@ -187,14 +187,14 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
     /// </summary>
     public NPC JewelSapphire
     {
-        get => Main.npc[AnomalyNPC.AnomalyAI[8].i];
+        get => Main.npc[AnomalyNPC.AnomalyAI32[8].i];
         set
         {
             int temp = value.whoAmI;
-            if (AnomalyNPC.AnomalyAI[8].i != temp)
+            if (AnomalyNPC.AnomalyAI32[8].i != temp)
             {
-                AnomalyNPC.AnomalyAI[8].i = temp;
-                AnomalyNPC.AIChanged[8] = true;
+                AnomalyNPC.AnomalyAI32[8].i = temp;
+                AnomalyNPC.AIChanged32[8] = true;
             }
         }
     }
@@ -203,65 +203,67 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
 
     public int SmallJumpCounter
     {
-        get => AnomalyNPC.AnomalyAI[9].i;
+        get => AnomalyNPC.AnomalyAI32[9].i;
         set
         {
-            if (AnomalyNPC.AnomalyAI[9].i != value)
+            if (AnomalyNPC.AnomalyAI32[9].i != value)
             {
-                AnomalyNPC.AnomalyAI[9].i = value;
-                AnomalyNPC.AIChanged[9] = true;
+                AnomalyNPC.AnomalyAI32[9].i = value;
+                AnomalyNPC.AIChanged32[9] = true;
             }
         }
     }
 
     public int ChangedVelocityDirectionDuringJump
     {
-        get => AnomalyNPC.AnomalyAI[10].i;
+        get => AnomalyNPC.AnomalyAI32[10].i;
         set
         {
-            if (AnomalyNPC.AnomalyAI[10].i != value)
+            if (AnomalyNPC.AnomalyAI32[10].i != value)
             {
-                AnomalyNPC.AnomalyAI[10].i = value;
-                AnomalyNPC.AIChanged[10] = true;
+                AnomalyNPC.AnomalyAI32[10].i = value;
+                AnomalyNPC.AIChanged32[10] = true;
             }
         }
     }
 
     public float TeleportScaleMultiplier
     {
-        get => AnomalyNPC.AnomalyAI[11].f;
+        get => AnomalyNPC.AnomalyAI32[11].f;
         set
         {
-            if (AnomalyNPC.AnomalyAI[11].f != value)
+            float temp = Math.Clamp(value, 0.2f, 1f);
+            if (AnomalyNPC.AnomalyAI32[11].f != temp)
             {
-                AnomalyNPC.AnomalyAI[11].f = value;
-                AnomalyNPC.AIChanged[11] = true;
+                AnomalyNPC.AnomalyAI32[11].f = temp;
+                AnomalyNPC.AIChanged32[11] = true;
             }
         }
     }
 
     public float DespawnScaleMultiplier
     {
-        get => AnomalyNPC.AnomalyAI[12].f;
+        get => AnomalyNPC.AnomalyAI32[12].f;
         set
         {
-            if (AnomalyNPC.AnomalyAI[12].f != value)
+            float temp = Math.Clamp(value, 0f, 1f);
+            if (AnomalyNPC.AnomalyAI32[12].f != temp)
             {
-                AnomalyNPC.AnomalyAI[12].f = value;
-                AnomalyNPC.AIChanged[12] = true;
+                AnomalyNPC.AnomalyAI32[12].f = temp;
+                AnomalyNPC.AIChanged32[12] = true;
             }
         }
     }
 
     public Vector2 TeleportDestination
     {
-        get => AnomalyNPC.AnomalyAI2[0].v;
+        get => AnomalyNPC.AnomalyAI64[0].v;
         set
         {
-            if (AnomalyNPC.AnomalyAI2[0].v != value)
+            if (AnomalyNPC.AnomalyAI64[0].v != value)
             {
-                AnomalyNPC.AnomalyAI2[0].v = value;
-                AnomalyNPC.AIChanged2[0] = true;
+                AnomalyNPC.AnomalyAI64[0].v = value;
+                AnomalyNPC.AIChanged64[0] = true;
             }
         }
     }
@@ -290,9 +292,9 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         TeleportScaleMultiplier = 1f;
         DespawnScaleMultiplier = 1f;
 
-        JewelEmerald = TOMain.DummyNPC;
-        JewelRuby = TOMain.DummyNPC;
-        JewelSapphire = TOMain.DummyNPC;
+        JewelEmerald = NPC.DummyNPC;
+        JewelRuby = NPC.DummyNPC;
+        JewelSapphire = NPC.DummyNPC;
     }
     #endregion Defaults
 
@@ -373,12 +375,19 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         }
         else
         {
-            CurrentAttack = SmallJumpCounter switch
+            switch (SmallJumpCounter)
             {
-                3 => AttackType.HighJump_Phase1,
-                1 or 2 when OceanNPC.LifeRatio < 0.3f => AttackType.RapidJump_Phase1,
-                _ => AttackType.NormalJump_Phase1
-            };
+                case 3:
+                    CurrentAttack = AttackType.HighJump_Phase1;
+                    SmallJumpCounter = 0;
+                    break;
+                case 1 or 2 when OceanNPC.LifeRatio < 0.3f:
+                    CurrentAttack = AttackType.RapidJump_Phase1;
+                    break;
+                default:
+                    CurrentAttack = AttackType.NormalJump_Phase1;
+                    break;
+            }
         }
         CurrentAttackPhase = 0;
         Timer1 = initialAITimer1;
@@ -404,7 +413,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         for (int i = 0; i < amount; i++)
         {
             Dust.NewDustAction(NPC.Center, NPC.width + 25, NPC.height,
-                JewelSapphireAlive ? DustID.GemSapphire : DustID.TintableDust, d =>
+                JewelSapphireAlive ? DustID.GemSapphire : DustID.TintableDust, default, d =>
                 {
                     d.alpha = 150;
                     d.color = new(78, 136, 255, 80);
@@ -444,7 +453,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
 
         for (int i = 0; i < amount; i++)
         {
-            Dust.NewDustAction(jewel.Center, jewel.width * 3, jewel.height * 3, type, d =>
+            Dust.NewDustAction(jewel.Center, jewel.width * 3, jewel.height * 3, type, Vector2.Zero, d =>
             {
                 d.alpha = 100;
                 d.noGravity = true;
@@ -467,7 +476,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
 
     private void TrySpawnMinions()
     {
-        if (!TOMain.GeneralClient)
+        if (!TOWorld.GeneralClient)
             return;
 
         Vector2 spawnPosition = NPC.Top - new Vector2(0, NPC.height);
@@ -727,11 +736,10 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
             case 1: //停止水平移动并缩小体型，满足条件时传送
                 MakeSlimeDust((int)TOMathHelper.ClampMap(Data.MinScale, Data.MaxScale, 5f, 12.5f, NPC.scale));
                 TeleportScaleMultiplier -= MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 0.016f : 0.013f, CAWorld.AnomalyUltramundane ? 0.02f : 0.015f, OceanNPC.LifeRatioReverse);
-                if (StopHorizontalMovement() && TeleportScaleMultiplier < 0.2f)
+                if (StopHorizontalMovement() && TeleportScaleMultiplier <= 0.2f)
                 {
-                    TeleportScaleMultiplier = 0.2f;
+                    Gore.NewGoreAction(NPC.GetSource_FromAI(), NPC.Center + new Vector2(-40f, -NPC.height / 2f), NPC.velocity, GoreID.KingSlimeCrown, g => g.timeLeft += 180);
                     NPC.Bottom = TeleportDestination;
-                    Gore.NewGore(NPC.GetSource_FromAI(), NPC.Center + new Vector2(-40f, -(float)NPC.height / 2), NPC.velocity, GoreID.KingSlimeCrown);
                     if (JewelSapphireAlive) //移动蓝宝石
                     {
                         JewelSapphire.Center = NPC.Center - new Vector2(0f, 200f);
@@ -742,7 +750,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
                 break;
             case 2: //恢复体型，恢复完成后开始下一次攻击
                 TeleportScaleMultiplier += MathHelper.Lerp(0.03f, 0.05f, OceanNPC.LifeRatioReverse);
-                if (TeleportScaleMultiplier == 1f)
+                if (TeleportScaleMultiplier >= 1f)
                     SelectNextAttack((int)MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 10 : 20, CAWorld.AnomalyUltramundane ? 5 : 12.5f, OceanNPC.LifeRatioReverse));
                 break;
         }

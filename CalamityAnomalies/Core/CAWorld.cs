@@ -11,20 +11,11 @@ public sealed class CAWorld : ModSystem
     /// 异象模式。
     /// </summary>
     public static bool Anomaly { get; set; } = false;
+
     /// <summary>
     /// 异象超凡。
     /// </summary>
     public static bool AnomalyUltramundane { get; set; } = false;
-
-    /// <summary>
-    /// BossRush模式。
-    /// </summary>
-    public static bool BossRush { get; set; } = false;
-
-    /// <summary>
-    /// 在BossRush模式下，是否处于真实的BossRush事件中。
-    /// </summary>
-    public static bool RealBossRushEventActive { get; internal set; } = false;
 
     /// <summary>
     /// 传奇复仇。
@@ -59,12 +50,10 @@ public sealed class CAWorld : ModSystem
     public override void SaveWorldData(TagCompound tag)
     {
         tag["Anomaly"] = Anomaly;
-        tag["BossRush"] = BossRush;
     }
 
     public override void LoadWorldData(TagCompound tag)
     {
         Anomaly = tag.GetBool("Anomaly");
-        BossRush = tag.GetBool("BossRush");
     }
 }

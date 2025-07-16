@@ -1,6 +1,6 @@
-﻿namespace CalamityAnomalies.Items.ItemRarities;
+﻿namespace CalamityAnomalies.Items;
 
-public class Celestial : ModRarity
+public sealed class Celestial : ModRarity
 {
     public override Color RarityColor => TOMain.CelestialColor;
 

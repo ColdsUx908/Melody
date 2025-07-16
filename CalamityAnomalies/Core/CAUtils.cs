@@ -29,35 +29,14 @@ public static class CAUtils
         }
     }
 
-    public static void LogILFailure(string name, string reason) => CalamityAnomalies.Instance.Logger.Warn($"IL edit \"{name}\" failed! {reason}");
+    public static void LogILFailure(string name, string reason) => CAMain.Instance.Logger.Warn($"IL edit \"{name}\" failed! {reason}");
 
     public static TooltipLine CreateNewTooltipLine(int num, Action<TooltipLine> action, bool tweak)
     {
-        TooltipLine newLine = new(CalamityAnomalies.Instance, $"Tooltip{num}", "");
+        TooltipLine newLine = new(CAMain.Instance, $"Tooltip{num}", "");
         if (tweak)
             newLine.OverrideColor = CAMain.GetGradientColor(0.25f);
         action(newLine);
         return newLine;
     }
-}
-
-[DetourClassTo(typeof(CalamityUtils))]
-public class CalamityUtilsDetour
-{
-    public delegate void Orig_KillAllHostileProjectiles();
-
-    public static void Detour_KillAllHostileProjectiles(Orig_KillAllHostileProjectiles orig)
-    {
-        if (CAWorld.BossRush && !CAWorld.RealBossRushEventActive)
-            return;
-
-        orig();
-    }
-
-    public delegate void Orig_LifeMaxNERB(NPC npc, int normal, int? revengeance = null, int? bossRush = null);
-
-    public static void Detour_LifeMaxNERB(Orig_LifeMaxNERB orig, NPC npc, int normal, int? revengeance = null, int? bossRush = null) => npc.lifeMax =
-        CAWorld.RealBossRushEventActive ? bossRush ?? normal
-        : CalamityWorld.revenge ? revengeance ?? normal
-        : normal;
 }

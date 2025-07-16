@@ -7,7 +7,7 @@ public record UIModItem_Publicizer
 {
     public static readonly Type c_type = TOReflectionUtils.GetTerrariaType("UIModItem");
 
-    public static readonly MethodInfo i_m_Draw = c_type.GetMethod("Draw", TOReflectionUtils.UniversalBindingFlags);
+    public static readonly MethodInfo i_m_Draw = c_type.GetMethod("Draw", TOReflectionUtils.InstanceBindingFlags);
 
     public delegate void Orig_Draw(object self, SpriteBatch spriteBatch);
 

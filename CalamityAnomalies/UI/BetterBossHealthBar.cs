@@ -182,29 +182,39 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 
         private bool PreUpdate()
         {
-            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, nameof(CANPCBehavior.PreUpdateCalBossBar)))
+            bool result = true;
+            bool hasSingle = false;
+            if (NPC.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreUpdateCalBossBar)))
             {
-                if (!npcBehavior.PreUpdateCalBossBar(this))
-                    return false;
+                result &= npcBehavior.PreUpdateCalBossBar(this);
+                hasSingle = true;
             }
-
-            return true;
+            foreach (CAGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.GetBehaviors<CAGlobalNPCBehavior>(nameof(CAGlobalNPCBehavior.PreUpdateCalBossBar)))
+                result &= anomalyGNPCBehavior.PreUpdateCalBossBar(NPC, this, hasSingle);
+            return result;
         }
 
         private void ModifyCalBossBarHeight()
         {
-            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, nameof(CANPCBehavior.ModifyCalBossBarHeight)))
+            int height = 70;
+            bool hasSingle = false;
+            if (NPC.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.ModifyCalBossBarHeight)))
             {
-                int height = 70;
                 npcBehavior.ModifyCalBossBarHeight(this, ref height);
-                Height = height;
+                hasSingle = true;
             }
+            foreach (CAGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.GetBehaviors<CAGlobalNPCBehavior>(nameof(CAGlobalNPCBehavior.ModifyCalBossBarHeight)))
+                anomalyGNPCBehavior.ModifyCalBossBarHeight(NPC, this, ref height, hasSingle);
+            Height = height;
         }
 
         private void PostUpdate()
         {
-            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, nameof(CANPCBehavior.PostUpdateCalBossBar)))
+            bool hasSingle = false;
+            if (NPC.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PostUpdateCalBossBar)))
                 npcBehavior.PostUpdateCalBossBar(this);
+            foreach (CAGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.GetBehaviors<CAGlobalNPCBehavior>(nameof(CAGlobalNPCBehavior.PostUpdateCalBossBar)))
+                anomalyGNPCBehavior.PostUpdateCalBossBar(NPC, this, hasSingle);
         }
 
         public new void Draw(SpriteBatch spriteBatch, int x, int y)
@@ -218,7 +228,6 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
                 (float sin, float cos) = TOMathHelper.GetTimeSinCos(0.5f, 1f, 0f, true);
 
                 Color seperatorColor = (CAWorld.Anomaly ? Color.Lerp(BaseColor, Color.Lerp(CAMain.GetGradientColor(0.25f), CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin), Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f))
-                    : CAWorld.BossRush ? Color.Lerp(BaseColor, Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.4f), Math.Clamp(AnomalyNPC.BossRushAITimer / 80f, 0f, 1f))
                     : EnrageTimer > 0 ? Color.Lerp(BaseColor, Color.Red * 0.5f, Math.Clamp(EnrageTimer / 80f, 0f, 1f))
                     : IncreasingDefenseOrDRTimer > 0 ? Color.Lerp(BaseColor, Color.LightGray * 0.6f, Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 1f))
                     : BaseColor) * AnimationCompletionRatio;
@@ -226,16 +235,13 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 
                 //为了避免NPC名称过长遮挡大生命值数字，二者的绘制顺序在此处被调换了，即先绘制NPC名称，再绘制大生命值数字。
                 Color? mainColor = AnomalyNPC.IsRunningAnomalyAI ? Color.Lerp(CAMain.GetGradientColor(0.25f), CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * cos * 0.8f) * AnimationCompletionRatio2
-                    : CAWorld.BossRush ? Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.45f) * AnimationCompletionRatio2
                     : EnrageTimer > 0 ? Color.Red * 0.6f * AnimationCompletionRatio2
                     : IncreasingDefenseOrDRTimer > 0 ? Color.LightGray * 0.7f * AnimationCompletionRatio2
                     : null;
                 Color? borderColor = AnomalyNPC.IsRunningAnomalyAI ? Color.Lerp(CAMain.GetGradientColor(0.25f), CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin) * AnimationCompletionRatio2
-                    : CAWorld.BossRush ? Color.Lerp(BossRushMode.BossRushModeColor, Color.Red, AnimationCompletionRatio * 0.55f) * AnimationCompletionRatio2
                     : EnrageTimer > 0 || IncreasingDefenseOrDRTimer > 0 ? Color.Black * 0.2f * AnimationCompletionRatio2
                     : null;
                 float borderWidth = AnomalyNPC.IsRunningAnomalyAI ? (Math.Clamp(AnomalyNPC.AnomalyAITimer / 80f, 0f, 1.5f) + TOMathHelper.GetTimeSin(1f, 1f, 0f, true) * Math.Clamp(AnomalyNPC.AnomalyAITimer / 80f, 0f, 1f))
-                    : CAWorld.BossRush ? (Math.Clamp(AnomalyNPC.BossRushAITimer / 80f, 0f, 1.5f) + TOMathHelper.GetTimeSin(1f, 1f, 0f, true) * Math.Clamp(AnomalyNPC.BossRushAITimer / 80f, 0f, 1f))
                     : EnrageTimer > 0 ? (EnrageTimer / 80f + TOMathHelper.GetTimeSin(1f, 1f, 0f, true) * Math.Clamp(EnrageTimer / 80f, 0f, 1f))
                     : IncreasingDefenseOrDRTimer > 0 ? (IncreasingDefenseOrDRTimer / 80f + TOMathHelper.GetTimeSin(1f, 1f, 0f, true) * Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 1f))
                     : 0f;
@@ -251,19 +257,28 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 
         private bool PreDraw(SpriteBatch spriteBatch, int x, int y)
         {
-            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, nameof(CANPCBehavior.PreDrawCalBossBar)))
+            bool result = true;
+            bool hasSingle = false;
+            if (NPC.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreDrawCalBossBar)))
             {
-                if (!npcBehavior.PreDrawCalBossBar(this, spriteBatch, x, y))
-                    return false;
+                result &= npcBehavior.PreDrawCalBossBar(this, spriteBatch, x, y);
+                hasSingle = true;
             }
-
-            return true;
+            foreach (CAGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.GetBehaviors<CAGlobalNPCBehavior>(nameof(CAGlobalNPCBehavior.PreDrawCalBossBar)))
+                result &= anomalyGNPCBehavior.PreDrawCalBossBar(NPC, this, spriteBatch, x, y, hasSingle);
+            return result;
         }
 
         private void PostDraw(SpriteBatch spriteBatch, int x, int y)
         {
-            if (NPC.TryGetBehavior(out CANPCBehavior npcBehavior, nameof(CANPCBehavior.PostDrawCalBossBar)))
+            bool hasSingle = false;
+            if (NPC.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PostDrawCalBossBar)))
+            {
                 npcBehavior.PostDrawCalBossBar(this, spriteBatch, x, y);
+                hasSingle = true;
+            }
+            foreach (CAGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.GetBehaviors<CAGlobalNPCBehavior>(nameof(CAGlobalNPCBehavior.PostDrawCalBossBar)))
+                anomalyGNPCBehavior.PostDrawCalBossBar(NPC, this, spriteBatch, x, y, hasSingle);
         }
 
         #region 公共绘制方法
@@ -377,7 +392,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 
             if (_trackingBars.ContainsKey(fromNPC))
                 validIdentifiers.Add(fromNPC);
-            else if (_trackingBars.Values.Count < MaxBars && (
+            else if (_trackingBars.Count < MaxBars && (
                 (npc.IsABoss() && !(npc.type is NPCID.EaterofWorldsBody or NPCID.EaterofWorldsTail || npc.ModNPC is Artemis)) || MinibossHPBarList.Contains(npc.type) || npc.Calamity().CanHaveBossHealthBar))
             {
                 _trackingBars.Add(fromNPC, new(npc.whoAmI, overridingName));
@@ -404,8 +419,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
         CalamityUtils.DrawBorderStringEightWay(spriteBatch, font, text, baseDrawPosition, mainColor2, borderColor2, scale);
     }
 
-    //灾厄还没有重写这个静态方法，所以要手动绑定
-
+    //灾厄还没有重写这个静态方法，所以要手动添加Detour
     public delegate void Orig_Load__Mod(Mod mod);
 
     public static void Detour_Load__Mod(Orig_Load__Mod orig, Mod mod)

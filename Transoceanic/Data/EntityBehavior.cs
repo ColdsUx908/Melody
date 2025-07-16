@@ -7,8 +7,11 @@ using Transoceanic.RuntimeEditing;
 
 namespace Transoceanic.Data;
 
-#region Core
-public abstract class EntityBehaviorBase<TEntity> where TEntity : Entity
+#region Base
+[AttributeUsage(AttributeTargets.Class, Inherited = true)]
+public sealed class CriticalBehaviorAttribute : Attribute { }
+
+public abstract class EntityBehavior<TEntity> where TEntity : Entity
 {
     public abstract Mod Mod { get; }
 
@@ -17,53 +20,98 @@ public abstract class EntityBehaviorBase<TEntity> where TEntity : Entity
     /// </summary>
     public virtual decimal Priority { get; } = 0m;
 
-    public abstract void Connect(TEntity entity);
+    /// <summary>
+    /// 将指定实体连接到Behavior实例。
+    /// </summary>
+    public virtual void Connect(TEntity entity) { }
 
+    /// <summary>
+    /// Allows you to modify the properties after initial loading has completed.
+    /// </summary>
     public virtual void SetStaticDefaults() { }
 }
 
-public abstract class GlobalEntityBehavior<TEntity> : EntityBehaviorBase<TEntity> where TEntity : Entity { }
+public abstract class GeneralEntityBehavior<TEntity> : EntityBehavior<TEntity> where TEntity : Entity { }
 
-public abstract class SingleEntityBehavior<TEntity> : EntityBehaviorBase<TEntity> where TEntity : Entity
+public abstract class GlobalEntityBehavior<TEntity> : GeneralEntityBehavior<TEntity> where TEntity : Entity
+{
+    /// <summary>
+    /// <inheritdoc/><para/>
+    /// 此方法不应被调用，调用时抛出异常。
+    /// </summary>
+    /// <exception cref="NotSupportedException"></exception>
+    public sealed override void Connect(TEntity entity) => throw new NotSupportedException();
+}
+
+public abstract class SingleEntityBehavior<TEntity> : EntityBehavior<TEntity> where TEntity : Entity
 {
     public abstract int ApplyingType { get; }
 
     public virtual bool ShouldProcess => true;
 }
 
-public abstract class EntityBehaviorSetBase<TEntity, TBehavior> : IEnumerable<TBehavior>
+public class GeneralEntityBehaviorSet<TEntity, TBehavior>
     where TEntity : Entity
-    where TBehavior : EntityBehaviorBase<TEntity>
+    where TBehavior : GeneralEntityBehavior<TEntity>
 {
-    public abstract void FillSet(Assembly assemblyToSearch);
+    private bool _initialized = false;
+    private readonly Dictionary<string, List<TBehavior>> _data = [];
 
-    public abstract IEnumerator<TBehavior> GetEnumerator();
+    public void FillSet() => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>());
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    public void FillSet<T>() where T : Mod => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>().Where(b => b.Mod is T));
 
-    public abstract void Clear();
-}
+    public void FillSet(Assembly assemblyToSearch) => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>(assemblyToSearch));
 
-public class GlobalEntityBehaviorSet<TEntity, TBehavior> : EntityBehaviorSetBase<TEntity, TBehavior>
-    where TEntity : Entity
-    where TBehavior : GlobalEntityBehavior<TEntity>
-{
-    private readonly List<TBehavior> _data = [];
-
-    public override void FillSet(Assembly assemblyToSearch) => _data.AddRange(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>(assemblyToSearch).OrderByDescending(b => b.Priority));
-
-    public override IEnumerator<TBehavior> GetEnumerator() => _data.GetEnumerator();
-
-    /// <summary>
-    /// 通过指定实体获取Behavior集合。
-    /// </summary>
-    /// <remarks>每个Behavior示例返回前均与指定实体相连接。</remarks>
-    /// <param name="entity">待连接实体。</param>
-    public IEnumerable<TBehavior> this[TEntity entity]
+    private void Initialize(IEnumerable<TBehavior> behaviors)
     {
-        get
+        foreach ((TBehavior behavior, HashSet<string> behaviorMethods) in
+            behaviors.OrderByDescending(b => b.Priority).Select(b =>
+            {
+                Type type = b.GetType();
+                return (b, (type.HasAttribute<CriticalBehaviorAttribute>() ? type.GetMethodNamesExceptObject(TOReflectionUtils.UniversalBindingFlags) : type.GetOverrideMethodNames(TOReflectionUtils.UniversalBindingFlags)).ToHashSet());
+            }))
         {
-            foreach (TBehavior behavior in this)
+            foreach (string method in behaviorMethods)
+            {
+                if (_data.TryGetValue(method, out List<TBehavior> behaviorList))
+                    _data[method].Add(behavior);
+                else
+                    _data[method] = [behavior];
+            }
+        }
+        if (_initialized)
+        {
+            foreach (string methodName in _data.Keys)
+                _data[methodName] = [.. _data[methodName].Distinct().OrderByDescending(b => b.Priority)];
+        }
+        _initialized = true;
+    }
+
+    public List<TBehavior> GetBehaviors([CallerMemberName] string methodName = null!)
+    {
+        if (_data.TryGetValue(methodName, out List<TBehavior> behaviors))
+            return behaviors;
+        return [];
+    }
+
+    public IEnumerable<T> GetBehaviors<T>([CallerMemberName] string methodName = null!) where T : TBehavior
+    {
+        if (_data.TryGetValue(methodName, out List<TBehavior> behaviors))
+        {
+            foreach (TBehavior behavior in behaviors)
+            {
+                if (behavior is T typedBehavior)
+                    yield return typedBehavior;
+            }
+        }
+    }
+
+    public IEnumerable<TBehavior> GetBehaviors(TEntity entity, [CallerMemberName] string methodName = null!)
+    {
+        if (_data.TryGetValue(methodName, out List<TBehavior> behaviors))
+        {
+            foreach (TBehavior behavior in behaviors)
             {
                 behavior.Connect(entity);
                 yield return behavior;
@@ -71,35 +119,58 @@ public class GlobalEntityBehaviorSet<TEntity, TBehavior> : EntityBehaviorSetBase
         }
     }
 
-    public override void Clear() => _data.Clear();
-}
-
-public class SingleEntityBehaviorSet<TEntity, TBehavior> : EntityBehaviorSetBase<TEntity, TBehavior>
-    where TEntity : Entity
-    where TBehavior : SingleEntityBehavior<TEntity>
-{
-    private readonly Dictionary<int, List<(TBehavior behaviorInstance, HashSet<string> behaviorMethods)>> _data = [];
-
-    public override IEnumerator<TBehavior> GetEnumerator()
+    public IEnumerable<T> GetBehaviors<T>(TEntity entity, [CallerMemberName] string methodName = null!) where T : TBehavior
     {
-        foreach (List<(TBehavior behaviorInstance, HashSet<string> behaviorMethods)> behaviors in _data.Values)
+        if (_data.TryGetValue(methodName, out List<TBehavior> behaviors))
         {
-            foreach ((TBehavior behaviorInstance, HashSet<string> _) in behaviors)
-                yield return behaviorInstance;
+            foreach (TBehavior behavior in behaviors)
+            {
+                if (behavior is T typedBehavior)
+                {
+                    typedBehavior.Connect(entity);
+                    yield return typedBehavior;
+                }
+            }
         }
     }
 
+    public void Clear() => _data.Clear();
+}
+
+public class GlobalEntityBehaviorSet<TEntity, TBehavior> : GeneralEntityBehaviorSet<TEntity, TBehavior>
+    where TEntity : Entity
+    where TBehavior : GeneralEntityBehavior<TEntity>
+{ }
+
+public class SingleEntityBehaviorSet<TEntity, TBehavior> : IEnumerable<TBehavior>
+    where TEntity : Entity
+    where TBehavior : SingleEntityBehavior<TEntity>
+{
+    private bool _initialized = false;
+    private readonly Dictionary<int, List<(TBehavior behavior, HashSet<string> behaviorMethods)>> _data = [];
+
+    public IEnumerator<TBehavior> GetEnumerator()
+    {
+        foreach (List<(TBehavior behavior, HashSet<string> behaviorMethods)> behaviors in _data.Values)
+        {
+            foreach ((TBehavior behavior, HashSet<string> _) in behaviors)
+                yield return behavior;
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
     /// <summary>
     /// 尝试获取指定实体的行为实例。
-    /// <br/>按照 <see cref="EntityBehaviorBase{TEntity}.Priority"/> 降序寻找通过 <see cref="SingleEntityBehavior{TEntity}.ShouldProcess"/> 检测的实现了指定方法的Override实例。
+    /// <br/>按照 <see cref="EntityBehavior{TEntity}.Priority"/> 降序寻找通过 <see cref="SingleEntityBehavior{TEntity}.ShouldProcess"/> 检测的实现了指定方法的Override实例。
     /// </summary>
     /// <param name="entity"></param>
     /// <param name="methodName"></param>
-    /// <param name="behaviorInstance"></param>
+    /// <param name="behavior"></param>
     /// <returns></returns>
-    public bool TryGetBehavior(TEntity entity, string methodName, [NotNullWhen(true)] out TBehavior behaviorInstance)
+    public bool TryGetBehavior(TEntity entity, string methodName, [NotNullWhen(true)] out TBehavior behavior)
     {
-        if (_data.TryGetValue(entity.EntityType, out List<(TBehavior behaviorInstance, HashSet<string> behaviorMethods)> behaviorList))
+        if (_data.TryGetValue(entity.EntityType, out List<(TBehavior behavior, HashSet<string> behaviorMethods)> behaviorList))
         {
             foreach ((TBehavior temp, HashSet<string> behaviorMethods) in behaviorList)
             {
@@ -109,25 +180,38 @@ public class SingleEntityBehaviorSet<TEntity, TBehavior> : EntityBehaviorSetBase
                 temp.Connect(entity);
                 if (temp.ShouldProcess)
                 {
-                    behaviorInstance = temp;
+                    behavior = temp;
                     return true;
                 }
             }
         }
-        behaviorInstance = null;
+        behavior = null;
         return false;
     }
 
-    public override void FillSet(Assembly assemblyToSearch) =>
-        _data.AddRange(
-            TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>(assemblyToSearch).GroupBy(b => b.ApplyingType)
-            .ToDictionary(g => g.Key, g => (
-                from behaviorInstance in g.AsValueEnumerable()
-                orderby behaviorInstance.Priority descending
-                select (behaviorInstance, behaviorInstance.GetType().GetOverrideMethodNames(TOReflectionUtils.UniversalBindingFlags).ToHashSet())
-                ).ToList()));
+    public void FillSet() => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>());
 
-    public override void Clear()
+    public void FillSet<T>() where T : Mod => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>().Where(b => b.Mod is T));
+
+    public void FillSet(Assembly assemblyToSearch) => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>(assemblyToSearch));
+
+    private void Initialize(IEnumerable<TBehavior> behaviors)
+    {
+        _data.AddRange(behaviors.GroupBy(b => b.ApplyingType).ToDictionary(g => g.Key, g =>
+            g.OrderByDescending(b => b.Priority).Select(b =>
+            {
+                Type type = b.GetType();
+                return (b, (type.HasAttribute<CriticalBehaviorAttribute>() ? type.GetMethodNamesExceptObject(TOReflectionUtils.UniversalBindingFlags) : type.GetOverrideMethodNames(TOReflectionUtils.UniversalBindingFlags)).ToHashSet());
+            }).ToList()));
+        if (_initialized)
+        {
+            foreach (int entityType in _data.Keys)
+                _data[entityType] = [.. _data[entityType].Distinct().OrderByDescending(b => b.behavior.Priority)];
+        }
+        _initialized = true;
+    }
+
+    public void Clear()
     {
         foreach ((_, List<(TBehavior behaviorInstance, HashSet<string> behaviorMethods)> behaviorList) in _data)
         {
@@ -138,12 +222,11 @@ public class SingleEntityBehaviorSet<TEntity, TBehavior> : EntityBehaviorSetBase
         _data.Clear();
     }
 }
-#endregion Core
+#endregion Base
 
-#region Behavior
-public abstract class PlayerBehavior : GlobalEntityBehavior<Player>
+#region General Behavior
+public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
 {
-    #region 实成员
     public Player Player { get; private set; } = null;
 
     public TOPlayer OceanPlayer { get; private set; } = null;
@@ -153,10 +236,8 @@ public abstract class PlayerBehavior : GlobalEntityBehavior<Player>
         Player = player;
         OceanPlayer = player.Ocean();
     }
-    #endregion 实成员
 
     #region 虚成员
-
     /// <summary>
     /// Called whenever the player is loaded (on the player selection screen). This can be used to initialize data structures, etc.
     /// </summary>
@@ -1226,9 +1307,2042 @@ public abstract class PlayerBehavior : GlobalEntityBehavior<Player>
     #endregion 虚成员
 }
 
-public abstract class NPCBehavior : SingleEntityBehavior<NPC>
+public abstract class GlobalNPCBehavior : GlobalEntityBehavior<NPC>
 {
-    #region 实成员
+    /// <summary>
+    /// Allows you to set the properties of any and every instance that gets created.
+    /// </summary>
+    public virtual void SetDefaults(NPC npc) { }
+
+    /// <summary>
+    /// Called after SetDefaults for NPCs with a negative <see cref="NPC.netID"/><br/>
+    /// This hook is required because <see cref="NPC.SetDefaultsFromNetId"/> only sets <see cref="NPC.netID"/> after SetDefaults<br/>
+    /// Remember that <see cref="NPC.type"/> does not support negative numbers and AppliesToEntity cannot distinguish between NPCs with the same type but different netID<br/>
+    /// </summary>
+    public virtual void SetDefaultsFromNetId(NPC npc) { }
+
+    /// <summary>
+    /// Gets called when any NPC spawns in world
+    /// <para/> Called in single player or on the server only.
+    /// </summary>
+    public virtual void OnSpawn(NPC npc, IEntitySource source) { }
+
+    /// <summary>
+    /// Allows you to customize this NPC's stats when the difficulty is expert or higher.<br/>
+    /// This runs after <see cref="NPC.value"/>,  <see cref="NPC.lifeMax"/>,  <see cref="NPC.damage"/>,  <see cref="NPC.knockBackResist"/> have been adjusted for the current difficulty, (expert/master/FTW)<br/>
+    /// It is common to multiply lifeMax by the balance factor, and sometimes adjust knockbackResist.<br/>
+    /// <br/>
+    /// Eg:<br/>
+    /// <code>lifeMax = (int)(lifeMax * balance * bossAdjustment)</code>
+    /// </summary>
+    /// <param name="npc">The newly spawned NPC</param>
+    /// <param name="numPlayers">The number of active players</param>
+    /// <param name="balance">Scaling factor that increases by a fraction for each player</param>
+    /// <param name="bossAdjustment">An extra reduction factor to be applied to boss life in high difficulty modes</param>
+    public virtual void ApplyDifficultyAndPlayerScaling(NPC npc, int numPlayers, float balance, float bossAdjustment) { }
+
+    /// <summary>
+    /// Allows you to set an NPC's information in the Bestiary.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="database"></param>
+    /// <param name="bestiaryEntry"></param>
+    public virtual void SetBestiary(NPC npc, BestiaryDatabase database, BestiaryEntry bestiaryEntry) { }
+
+    /// <summary>
+    /// Allows you to modify the type name of this NPC dynamically.
+    /// </summary>
+    public virtual void ModifyTypeName(NPC npc, ref string typeName) { }
+
+    /// <summary>
+    /// Allows you to modify the bounding box for hovering over the given NPC (affects things like whether or not its name is displayed).
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="npc">The NPC in question.</param>
+    /// <param name="boundingBox">The bounding box used for determining whether or not the NPC counts as being hovered over.</param>
+    public virtual void ModifyHoverBoundingBox(NPC npc, ref Rectangle boundingBox) { }
+
+    /// <summary>
+    /// Allows you to set the town NPC profile that a given NPC uses.
+    /// </summary>
+    /// <param name="npc">The NPC in question.</param>
+    /// <returns>The profile that you want the given NPC to use.<br></br>
+    /// This will only influence their choice of profile if you do not return null.<br></br>
+    /// By default, returns null, which causes no change.</returns>
+    public virtual ITownNPCProfile ModifyTownNPCProfile(NPC npc) => null;
+
+    /// <summary>
+    /// Allows you to modify the list of names available to the given town NPC.
+    /// </summary>
+    public virtual void ModifyNPCNameList(NPC npc, List<string> nameList) { }
+
+    /// <summary>
+    /// This is where you reset any fields you add to your subclass to their default states. This is necessary in order to reset your fields if they are conditionally set by a tick update but the condition is no longer satisfied.
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    public virtual void ResetEffects(NPC npc) { }
+
+    /// <summary>
+    /// Allows you to determine how any NPC behaves. Return false to stop the vanilla AI and the AI hook from being run. Returns true by default.
+    /// <para/> Called on the server and clients.
+    /// <include file = 'CommonDocs.xml' path='Common/AIMethodOrder' />
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <returns></returns>
+    public virtual bool PreAI(NPC npc) => true;
+
+    /// <summary>
+    /// Allows you to determine how any NPC behaves. This will only be called if PreAI returns true.
+    /// <para/> Called on the server and clients.
+    /// <include file = 'CommonDocs.xml' path='Common/AIMethodOrder' />
+    /// </summary>
+    /// <param name="npc"></param>
+    public virtual void AI(NPC npc) { }
+
+    /// <summary>
+    /// Allows you to determine how any NPC behaves. This will be called regardless of what PreAI returns.
+    /// <para/> Called on the server and clients.
+    /// <include file = 'CommonDocs.xml' path='Common/AIMethodOrder' />
+    /// </summary>
+    /// <param name="npc"></param>
+    public virtual void PostAI(NPC npc) { }
+
+    /// <summary>
+    /// Use this judiciously to avoid straining the network.
+    /// <para/> Checks and methods such as <see cref="GlobalType{TEntity, TGlobal}.AppliesToEntity"/> can reduce how much data must be sent for how many projectiles.
+    /// <para/> Called whenever <see cref="MessageID.SyncNPC"/> is successfully sent, for example on NPC creation, on player join, or whenever NPC.netUpdate is set to true in the update loop for that tick.
+    /// <para/> Can be called on the server.
+    /// </summary>
+    /// <param name="npc">The NPC.</param>
+    /// <param name="bitWriter">The compressible bit writer. Booleans written via this are compressed across all mods to improve multiplayer performance.</param>
+    /// <param name="binaryWriter">The writer.</param>
+    public virtual void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter) { }
+
+    /// <summary>
+    /// Use this to receive information that was sent in <see cref="SendExtraAI"/>.
+    /// <para/> Called whenever <see cref="MessageID.SyncNPC"/> is successfully received.
+    /// <para/> Can be called on multiplayer clients.
+    /// </summary>
+    /// <param name="npc">The NPC.</param>
+    /// <param name="bitReader">The compressible bit reader.</param>
+    /// <param name="binaryReader">The reader.</param>
+    public virtual void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader) { }
+
+    /// <summary>
+    /// Allows you to modify the frame from an NPC's texture that is drawn, which is necessary in order to animate NPCs.
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="frameHeight"></param>
+    public virtual void FindFrame(NPC npc, int frameHeight) { }
+
+    /// <summary>
+    /// Allows you to make things happen whenever an NPC is hit, such as creating dust or gores.
+    /// <para/> Called on local, server, and remote clients.
+    /// <para/> Usually when something happens when an npc dies such as item spawning, you use NPCLoot, but you can use HitEffect paired with a check for <c>if (npc.life &lt;= 0)</c> to do client-side death effects, such as spawning dust, gore, or death sounds. <br/>
+    /// </summary>
+    public virtual void HitEffect(NPC npc, NPC.HitInfo hit) { }
+
+    /// <summary>
+    /// Allows you to make the NPC either regenerate health or take damage over time by setting <see cref="NPC.lifeRegen"/>. This is useful for implementing damage over time debuffs such as <see cref="BuffID.Poisoned"/> or <see cref="BuffID.OnFire"/>. Regeneration or damage will occur at a rate of half of <see cref="NPC.lifeRegen"/> per second.
+    /// <para/> Essentially, modders implementing damage over time debuffs should subtract from <see cref="NPC.lifeRegen"/> a number that is twice as large as the intended damage per second. See <see href="https://github.com/tModLoader/tModLoader/blob/stable/ExampleMod/Common/GlobalNPCs/DamageOverTimeGlobalNPC.cs#L16">DamageOverTimeGlobalNPC.cs</see> for an example of this.
+    /// <para/> The damage parameter is the number that appears above the NPC's head if it takes damage over time.
+    /// <para/> Multiple debuffs work together by following some conventions: <see cref="NPC.lifeRegen"/> should not be assigned a number, rather it should be subtracted from. <paramref name="damage"/> should only be assigned if the intended popup text is larger then its current value.
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="damage"></param>
+    public virtual void UpdateLifeRegen(NPC npc, ref int damage) { }
+
+    /// <summary>
+    /// Whether or not to run the code for checking whether an NPC will remain active. Return false to stop the NPC from being despawned and to stop the NPC from counting towards the limit for how many NPCs can exist near a player. Returns true by default.
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <returns></returns>
+    public virtual bool CheckActive(NPC npc) => true;
+
+    /// <summary>
+    /// Whether or not an NPC should be killed when it reaches 0 health. You may program extra effects in this hook (for example, how Golem's head lifts up for the second phase of its fight). Return false to stop the NPC from being killed. Returns true by default.
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <returns></returns>
+    public virtual bool CheckDead(NPC npc) => true;
+
+    /// <summary>
+    /// Allows you to call OnKill on your own when the NPC dies, rather then letting vanilla call it on its own. Returns false by default.
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <returns>Return true to stop vanilla from calling OnKill on its own. Do this if you call OnKill yourself.</returns>
+    public virtual bool SpecialOnKill(NPC npc) => false;
+
+    /// <inheritdoc cref="ModNPC.PreKill"/>
+    public virtual bool PreKill(NPC npc) => true;
+
+    /// <summary>
+    /// Allows you to make things happen when an NPC dies (for example, setting ModSystem fields). For client-side effects, such as dust, gore, and sounds, see HitEffect.
+    /// <para/> Called in single player or on the server only.
+    /// <para/> Most item drops should be done via drop rules registered in <see cref="ModifyNPCLoot(NPC, NPCLoot)"/> or <see cref="ModifyGlobalLoot(GlobalLoot)"/>. Some dynamic NPC drops, such as additional hearts, are more suited for OnKill instead. <see href="https://github.com/tModLoader/tModLoader/blob/stable/ExampleMod/Content/NPCs/MinionBoss/MinionBossMinion.cs#L101">MinionBossMinion.cs</see> shows an example of an NPC that drops additional hearts. See <see cref="NPC.lastInteraction"/> and <see href="https://github.com/tModLoader/tModLoader/wiki/Basic-NPC-Drops-and-Loot-1.4#player-who-killed-npc">Player who killed NPC wiki section</see> as well for determining which players attacked or killed this NPC.
+    /// </summary>
+    /// <param name="npc"></param>
+    public virtual void OnKill(NPC npc) { }
+
+    /// <summary>
+    /// Allows you to determine how and when an NPC can fall through platforms and similar tiles.
+    /// <para/> Return true to allow an NPC to fall through platforms, false to prevent it. Returns null by default, applying vanilla behaviors (based on aiStyle and type).
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    public virtual bool? CanFallThroughPlatforms(NPC npc) => null;
+
+    /// <summary>
+    /// Allows you to determine whether the given item can catch the given NPC.<br></br>
+    /// Return true or false to say the given NPC can or cannot be caught, respectively, regardless of vanilla rules.
+    /// <para/> Returns null by default, which allows vanilla's NPC catching rules to decide the target's fate.
+    /// <para/> If this returns false, <see cref="CombinedHooks.OnCatchNPC"/> is never called.
+    /// <para/> NOTE: this does not classify the given item as an NPC-catching tool, which is necessary for catching NPCs in the first place. To do that, you will need to use the "CatchingTool" set in ItemID.Sets.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="npc">The NPC that can potentially be caught.</param>
+    /// <param name="item">The item with which the player is trying to catch the given NPC.</param>
+    /// <param name="player">The player attempting to catch the given NPC.</param>
+    /// <returns></returns>
+    public virtual bool? CanBeCaughtBy(NPC npc, Item item, Player player) => null;
+
+    /// <summary>
+    /// Allows you to make things happen when the given item attempts to catch the given NPC.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="npc">The NPC which the player attempted to catch.</param>
+    /// <param name="player">The player attempting to catch the given NPC.</param>
+    /// <param name="item">The item used to catch the given NPC.</param>
+    /// <param name="failed">Whether or not the given NPC has been successfully caught.</param>
+    public virtual void OnCaughtBy(NPC npc, Player player, Item item, bool failed) { }
+
+    /// <summary>
+    /// Allows you to add and modify NPC loot tables to drop on death and to appear in the Bestiary.<br/>
+    /// The <see href="https://github.com/tModLoader/tModLoader/wiki/Basic-NPC-Drops-and-Loot-1.4">Basic NPC Drops and Loot 1.4 Guide</see> explains how to use this hook to modify npc loot.
+    /// <br/> This hook only runs once per npc type during mod loading, any dynamic behavior must be contained in the rules themselves.
+    /// </summary>
+    /// <param name="npc">A default npc of the type being opened, not the actual npc instance.</param>
+    /// <param name="npcLoot">A reference to the item drop database for this npc type.</param>
+    public virtual void ModifyNPCLoot(NPC npc, NPCLoot npcLoot) { }
+
+    /// <summary>
+    /// Allows you to add and modify global loot rules that are conditional, i.e. vanilla's biome keys and souls.<br/>
+    /// The <see href="https://github.com/tModLoader/tModLoader/wiki/Basic-NPC-Drops-and-Loot-1.4">Basic NPC Drops and Loot 1.4 Guide</see> explains how to use this hook to modify npc loot.
+    /// </summary>
+    /// <param name="globalLoot"></param>
+    public virtual void ModifyGlobalLoot(GlobalLoot globalLoot) { }
+
+    /// <summary>
+    /// Allows you to determine whether an NPC can hit the given player. Return false to block the NPC from hitting the target. Returns true by default. CooldownSlot determines which of the player's cooldown counters (<see cref="ImmunityCooldownID"/>) to use, and defaults to -1 (<see cref="ImmunityCooldownID.General"/>).
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="target"></param>
+    /// <param name="cooldownSlot"></param>
+    /// <returns></returns>
+    public virtual bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot) => true;
+
+    /// <summary>
+    /// Allows you to modify the damage, etc., that an NPC does to a player.
+    /// <para/> This hook should be used ONLY to modify properties of the HitModifiers. Any extra side effects should occur in OnHit hooks instead.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="target"></param>
+    /// <param name="modifiers"></param>
+    public virtual void ModifyHitPlayer(NPC npc, Player target, ref Player.HurtModifiers modifiers) { }
+
+    /// <summary>
+    /// Allows you to create special effects when an NPC hits a player (for example, inflicting debuffs).
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="target"></param>
+    /// <param name="hurtInfo"></param>
+    public virtual void OnHitPlayer(NPC npc, Player target, Player.HurtInfo hurtInfo) { }
+
+    /// <summary>
+    /// Allows you to determine whether an NPC can hit the given friendly NPC. Return false to block the NPC from hitting the target, and return true to use the vanilla code for whether the target can be hit. Returns true by default.
+    /// <para/> Called in single player or on the server only.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="target"></param>
+    /// <returns></returns>
+    public virtual bool CanHitNPC(NPC npc, NPC target) => true;
+
+    /// <summary>
+    /// Allows you to determine whether a friendly NPC can be hit by an NPC. Return false to block the attacker from hitting the NPC, and return true to use the vanilla code for whether the target can be hit. Returns true by default.
+    /// <para/> Called in single player or on the server only.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="attacker"></param>
+    /// <returns></returns>
+    public virtual bool CanBeHitByNPC(NPC npc, NPC attacker) => true;
+
+    /// <summary>
+    /// Allows you to modify the damage, knockback, etc., that an NPC does to a friendly NPC.
+    /// <para/> This hook should be used ONLY to modify properties of the HitModifiers. Any extra side effects should occur in OnHit hooks instead.
+    /// <para/> Called in single player or on the server only.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="target"></param>
+    /// <param name="modifiers"></param>
+    public virtual void ModifyHitNPC(NPC npc, NPC target, ref NPC.HitModifiers modifiers) { }
+
+    /// <summary>
+    /// Allows you to create special effects when an NPC hits a friendly NPC.
+    /// <para/> Called in single player or on the server only.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="target"></param>
+    /// <param name="hit"></param>
+    public virtual void OnHitNPC(NPC npc, NPC target, NPC.HitInfo hit) { }
+
+    /// <summary>
+    /// Allows you to determine whether an NPC can be hit by the given melee weapon when swung. Return true to allow hitting the NPC, return false to block hitting the NPC, and return null to use the vanilla code for whether the NPC can be hit. Returns null by default.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="player"></param>
+    /// <param name="item"></param>
+    /// <returns></returns>
+    public virtual bool? CanBeHitByItem(NPC npc, Player player, Item item) => null;
+
+    /// <summary>
+    /// Allows you to determine whether an NPC can be collided with the player melee weapon when swung.
+    /// <para/> Use <see cref="CanBeHitByItem(NPC, Player, Item)"/> instead for Guide Voodoo Doll-type effects.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="npc">The NPC being collided with</param>
+    /// <param name="player">The player wielding this item.</param>
+    /// <param name="item">The weapon item the player is holding.</param>
+    /// <param name="meleeAttackHitbox">Hitbox of melee attack.</param>
+    /// <returns>
+    /// Return true to allow colliding with the melee attack, return false to block the weapon from colliding with the NPC, and return null to use the vanilla code for whether the attack can be colliding. Returns null by default.
+    /// </returns>
+    public virtual bool? CanCollideWithPlayerMeleeAttack(NPC npc, Player player, Item item, Rectangle meleeAttackHitbox) => null;
+
+    /// <summary>
+    /// Allows you to modify the damage, knockback, etc., that an NPC takes from a melee weapon.
+    /// <para/> This hook should be used ONLY to modify properties of the HitModifiers. Any extra side effects should occur in OnHit hooks instead.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="player"></param>
+    /// <param name="item"></param>
+    /// <param name="modifiers"></param>
+    public virtual void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) { }
+
+    /// <summary>
+    /// Allows you to create special effects when an NPC is hit by a melee weapon.
+    /// <para/> Called on the client doing the damage.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="player"></param>
+    /// <param name="item"></param>
+    /// <param name="hit"></param>
+    /// <param name="damageDone"></param>
+    public virtual void OnHitByItem(NPC npc, Player player, Item item, NPC.HitInfo hit, int damageDone) { }
+
+    /// <summary>
+    /// Allows you to determine whether an NPC can be hit by the given projectile. Return true to allow hitting the NPC, return false to block hitting the NPC, and return null to use the vanilla code for whether the NPC can be hit. Returns null by default.
+    /// <para/> Can be called on the local client or server, depending on who owns the projectile.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="projectile"></param>
+    /// <returns></returns>
+    public virtual bool? CanBeHitByProjectile(NPC npc, Projectile projectile) => null;
+
+    /// <summary>
+    /// Allows you to modify the damage, knockback, etc., that an NPC takes from a projectile.
+    /// <para/> This hook should be used ONLY to modify properties of the HitModifiers. Any extra side effects should occur in OnHit hooks instead.
+    /// <para/> Can be called on the local client or server, depending on who owns the projectile.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="projectile"></param>
+    /// <param name="modifiers"></param>
+    public virtual void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) { }
+
+    /// <summary>
+    /// Allows you to create special effects when an NPC is hit by a projectile.
+    /// <para/> Can be called on the local client or server, depending on who owns the projectile.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="projectile"></param>
+    /// <param name="hit"></param>
+    /// <param name="damageDone"></param>
+    public virtual void OnHitByProjectile(NPC npc, Projectile projectile, NPC.HitInfo hit, int damageDone) { }
+
+    /// <summary>
+    /// Allows you to use a custom damage formula for when an NPC takes damage from any source. For example, you can change the way defense works or use a different crit multiplier.
+    /// <para/> This hook should be used ONLY to modify properties of the HitModifiers. Any extra side effects should occur in OnHit hooks instead.
+    /// <para/> Can be called on the local client or server, depending on who is dealing damage.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="modifiers"></param>
+    public virtual void ModifyIncomingHit(NPC npc, ref NPC.HitModifiers modifiers) { }
+
+    /// <summary>
+    /// Allows you to customize the boss head texture used by an NPC based on its state. Set index to -1 to stop the texture from being displayed.
+    /// <para/> Called on all clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="index">The index for NPCID.Sets.BossHeadTextures</param>
+    public virtual void BossHeadSlot(NPC npc, ref int index) { }
+
+    /// <summary>
+    /// Allows you to customize the rotation of an NPC's boss head icon on the map.
+    /// <para/> Called on all clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="rotation"></param>
+    public virtual void BossHeadRotation(NPC npc, ref float rotation) { }
+
+    /// <summary>
+    /// Allows you to flip an NPC's boss head icon on the map.
+    /// <para/> Called on all clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="spriteEffects"></param>
+    public virtual void BossHeadSpriteEffects(NPC npc, ref SpriteEffects spriteEffects) { }
+
+    /// <summary>
+    /// Allows you to determine the color and transparency in which an NPC is drawn. Return null to use the default color (normally light and buff color). Returns null by default.
+    /// <para/> Called on all clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="drawColor"></param>
+    /// <returns></returns>
+    public virtual Color? GetAlpha(NPC npc, Color drawColor) => null;
+
+    /// <summary>
+    /// Allows you to add special visual effects to an NPC (such as creating dust), and modify the color in which the NPC is drawn.
+    /// <para/> Called on all clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="drawColor"></param>
+    public virtual void DrawEffects(NPC npc, ref Color drawColor) { }
+
+    /// <summary>
+    /// Allows you to draw things behind an NPC, or to modify the way the NPC is drawn. Substract screenPos from the draw position before drawing. Return false to stop the game from drawing the NPC (useful if you're manually drawing the NPC). Returns true by default.
+    /// <para/> Called on all clients.
+    /// </summary>
+    /// <param name="npc">The NPC that is being drawn</param>
+    /// <param name="spriteBatch">The spritebatch to draw on</param>
+    /// <param name="screenPos">The screen position used to translate world position into screen position</param>
+    /// <param name="drawColor">The color the NPC is drawn in</param>
+    /// <returns></returns>
+    public virtual bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) => true;
+
+    /// <summary>
+    /// Allows you to draw things in front of this NPC. Substract screenPos from the draw position before drawing. This method is called even if PreDraw returns false.
+    /// <para/> Called on all clients.
+    /// </summary>
+    /// <param name="npc">The NPC that is being drawn</param>
+    /// <param name="spriteBatch">The spritebatch to draw on</param>
+    /// <param name="screenPos">The screen position used to translate world position into screen position</param>
+    /// <param name="drawColor">The color the NPC is drawn in</param>
+    public virtual void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) { }
+
+    /// <summary>
+    /// When used in conjunction with "npc.hide = true", allows you to specify that this npc should be drawn behind certain elements. Add the index to one of Main.DrawCacheNPCsMoonMoon, DrawCacheNPCsOverPlayers, DrawCacheNPCProjectiles, or DrawCacheNPCsBehindNonSolidTiles.
+    /// <para/> Called on all clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="index"></param>
+    public virtual void DrawBehind(NPC npc, int index) { }
+
+    /// <summary>
+    /// Allows you to control how the health bar for the given NPC is drawn. The hbPosition parameter is the same as Main.hbPosition; it determines whether the health bar gets drawn above or below the NPC by default. The scale parameter is the health bar's size. By default, it will be the normal 1f; most bosses set this to 1.5f. Return null to let the normal vanilla health-bar-drawing code to run. Return false to stop the health bar from being drawn. Return true to draw the health bar in the position specified by the position parameter (note that this is the world position, not screen position).
+    /// <para/> Called on all clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="hbPosition"></param>
+    /// <param name="scale"></param>
+    /// <param name="position"></param>
+    /// <returns></returns>
+    public virtual bool? DrawHealthBar(NPC npc, byte hbPosition, ref float scale, ref Vector2 position) => null;
+
+    /// <summary>
+    /// Allows you to modify the chance of NPCs spawning around the given player and the maximum number of NPCs that can spawn around the player. Lower spawnRates mean a higher chance for NPCs to spawn.
+    /// <para/> Called in single player or on the server only.
+    /// </summary>
+    /// <param name="player"></param>
+    /// <param name="spawnRate"></param>
+    /// <param name="maxSpawns"></param>
+    public virtual void EditSpawnRate(Player player, ref int spawnRate, ref int maxSpawns) { }
+
+    /// <summary>
+    /// Allows you to modify the range at which NPCs can spawn around the given player. The spawnRanges determine that maximum distance NPCs can spawn from the player, and the safeRanges determine the minimum distance.
+    /// <para/> Called in single player or on the server only.
+    /// </summary>
+    /// <param name="player"></param>
+    /// <param name="spawnRangeX"></param>
+    /// <param name="spawnRangeY"></param>
+    /// <param name="safeRangeX"></param>
+    /// <param name="safeRangeY"></param>
+    public virtual void EditSpawnRange(Player player, ref int spawnRangeX, ref int spawnRangeY, ref int safeRangeX, ref int safeRangeY) { }
+
+    /// <summary>
+    /// Allows you to control which NPCs can spawn and how likely each one is to spawn. The pool parameter maps NPC types to their spawning weights (likelihood to spawn compared to other NPCs). A type of 0 in the pool represents the default vanilla NPC spawning.
+    /// <para/> Called in single player or on the server only.
+    /// </summary>
+    /// <param name="pool"></param>
+    /// <param name="spawnInfo"></param>
+    public virtual void EditSpawnPool(IDictionary<int, float> pool, NPCSpawnInfo spawnInfo) { }
+
+    /// <summary>
+    /// Allows you to customize an NPC (for example, its position or ai array) after it naturally spawns and before it is synced between servers and clients. As of right now, this only works for modded NPCs.
+    /// <para/> Called in single player or on the server only.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="tileX"></param>
+    /// <param name="tileY"></param>
+    public virtual void SpawnNPC(int npc, int tileX, int tileY) { }
+
+    /// <summary>
+    /// Allows you to determine whether this NPC can talk with the player. Return true to allow talking with the player, return false to block this NPC from talking with the player, and return null to use the vanilla code for whether the NPC can talk. Returns null by default.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <returns></returns>
+    public virtual bool? CanChat(NPC npc) => null;
+
+    /// <summary>
+    /// Allows you to modify the chat message of any NPC that the player can talk to.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="chat"></param>
+    public virtual void GetChat(NPC npc, ref string chat) { }
+
+    /// <summary>
+    /// Allows you to determine if something can happen whenever a button is clicked on this NPC's chat window. The firstButton parameter tells whether the first button or second button (button and button2 from SetChatButtons) was clicked. Return false to prevent the normal code for this button from running. Returns true by default.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="firstButton"></param>
+    /// <returns></returns>
+    public virtual bool PreChatButtonClicked(NPC npc, bool firstButton) => true;
+
+    /// <summary>
+    /// Allows you to make something happen whenever a button is clicked on this NPC's chat window. The firstButton parameter tells whether the first button or second button (button and button2 from SetChatButtons) was clicked.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="firstButton"></param>
+    public virtual void OnChatButtonClicked(NPC npc, bool firstButton) { }
+
+    /// <summary>
+    /// Allows you to modify existing shop. Be aware that this hook is called just one time during loading.
+    /// <para/> The traveling merchant shop is handled separately in <see cref="SetupTravelShop(int[], ref int)"/>.
+    /// </summary>
+    /// <param name="shop">A <seealso cref="NPCShop"/> instance.</param>
+    public virtual void ModifyShop(NPCShop shop) { }
+
+    /// <summary>
+    /// Allows you to modify the contents of a shop whenever player opens it. <br/>
+    /// If possible, use <see cref="ModifyShop(NPCShop)"/> instead, to reduce mod conflicts and improve compatibility.
+    /// Note that for special shops like travelling merchant, the <paramref name="shopName"/> may not correspond to a <see cref="NPCShop"/> in the <see cref="NPCShopDatabase"/>
+    /// <para/> Also note that unused slots in <paramref name="items"/> are null while <see cref="Item.IsAir"/> entries are entries that have a reserved slot (<see cref="NPCShop.Entry.SlotReserved"/>) but did not have their conditions met. These should not be overwritten.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="npc">An instance of <seealso cref="NPC"/> that currently player talks to.</param>
+    /// <param name="shopName">The full name of the shop being opened. See <see cref="NPCShopDatabase.GetShopName"/> for the format. </param>
+    /// <param name="items">Items in the shop including 'air' items in empty slots.</param>
+    public virtual void ModifyActiveShop(NPC npc, string shopName, Item[] items) { }
+
+    /// <summary>
+    /// Allows you to add items to the traveling merchant's shop. Add an item by setting shop[nextSlot] to the ID of the item you are adding then incrementing nextSlot. In the end, nextSlot must have a value of 1 greater than the highest index in shop that represents an item ID. If you want to remove an item, you will have to be familiar with programming.
+    /// <para/> Called in single player or on the server only.
+    /// </summary>
+    /// <param name="shop"></param>
+    /// <param name="nextSlot"></param>
+    public virtual void SetupTravelShop(int[] shop, ref int nextSlot) { }
+
+    /// <summary>
+    /// Whether this NPC can be teleported to a King or Queen statue. Return true to allow the NPC to teleport to the statue, return false to block this NPC from teleporting to the statue, and return null to use the vanilla code for whether the NPC can teleport to the statue. Returns null by default.
+    /// <para/> Called in single player or on the server only.
+    /// </summary>
+    /// <param name="npc">The NPC</param>
+    /// <param name="toKingStatue">Whether the NPC is being teleported to a King or Queen statue.</param>
+    public virtual bool? CanGoToStatue(NPC npc, bool toKingStatue) => null;
+
+    /// <summary>
+    /// Allows you to make things happen when this NPC teleports to a King or Queen statue.
+    /// <para/> Called in single player or on the server only.
+    /// </summary>
+    /// <param name="npc">The NPC</param>
+    /// <param name="toKingStatue">Whether the NPC was teleported to a King or Queen statue.</param>
+    public virtual void OnGoToStatue(NPC npc, bool toKingStatue) { }
+
+    /// <summary>
+    /// Allows you to modify the stats of town NPCs. Useful for buffing town NPCs when certain bosses are defeated, etc.
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="damageMult"></param>
+    /// <param name="defense"></param>
+    public virtual void BuffTownNPC(ref float damageMult, ref int defense) { }
+
+    /// <summary>
+    /// Allows you to modify the death message of a town NPC or boss. This also affects what the dropped tombstone will say in the case of a town NPC. The text color can also be modified.
+    /// <para/> When modifying the death message, use <see cref="NPC.GetFullNetName"/> to retrieve the NPC name to use in substitutions.
+    /// <para/> Return false to skip the vanilla code for sending the message. This is useful if the death message is handled by this method or if the message should be skipped for any other reason, such as if there are multiple bosses. Returns true by default.
+    /// </summary>
+    public virtual bool ModifyDeathMessage(NPC npc, ref NetworkText customText, ref Color color) => true;
+
+    /// <summary>
+    /// Allows you to determine the damage and knockback of a town NPC's attack before the damage is scaled. (More information on scaling in GlobalNPC.BuffTownNPCs.)
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="damage"></param>
+    /// <param name="knockback"></param>
+    public virtual void TownNPCAttackStrength(NPC npc, ref int damage, ref float knockback) { }
+
+    /// <summary>
+    /// Allows you to determine the cooldown between each of a town NPC's attack. The cooldown will be a number greater than or equal to the first parameter, and less then the sum of the two parameters.
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="cooldown"></param>
+    /// <param name="randExtraCooldown"></param>
+    public virtual void TownNPCAttackCooldown(NPC npc, ref int cooldown, ref int randExtraCooldown) { }
+
+    /// <summary>
+    /// Allows you to determine the projectile type of a town NPC's attack, and how long it takes for the projectile to actually appear. This hook is only used when the town NPC has an attack type of 0 (throwing), 1 (shooting), or 2 (magic).
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="projType"></param>
+    /// <param name="attackDelay"></param>
+    public virtual void TownNPCAttackProj(NPC npc, ref int projType, ref int attackDelay) { }
+
+    /// <summary>
+    /// Allows you to determine the speed at which a town NPC throws a projectile when it attacks. Multiplier is the speed of the projectile, gravityCorrection is how much extra the projectile gets thrown upwards, and randomOffset allows you to randomize the projectile's velocity in a square centered around the original velocity. This hook is only used when the town NPC has an attack type of 0 (throwing), 1 (shooting), or 2 (magic).
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="multiplier"></param>
+    /// <param name="gravityCorrection"></param>
+    /// <param name="randomOffset"></param>
+    public virtual void TownNPCAttackProjSpeed(NPC npc, ref float multiplier, ref float gravityCorrection, ref float randomOffset) { }
+
+    /// <summary>
+    /// Allows you to tell the game that a town NPC has already created a projectile and will still create more projectiles as part of a single attack so that the game can animate the NPC's attack properly. Only used when the town NPC has an attack type of 1 (shooting).
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="inBetweenShots"></param>
+    public virtual void TownNPCAttackShoot(NPC npc, ref bool inBetweenShots) { }
+
+    /// <summary>
+    /// Allows you to control the brightness of the light emitted by a town NPC's aura when it performs a magic attack. Only used when the town NPC has an attack type of 2 (magic)
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="auraLightMultiplier"></param>
+    public virtual void TownNPCAttackMagic(NPC npc, ref float auraLightMultiplier) { }
+
+    /// <summary>
+    /// Allows you to determine the width and height of the item a town NPC swings when it attacks, which controls the range of the NPC's swung weapon. Only used when the town NPC has an attack type of 3 (swinging).
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="itemWidth"></param>
+    /// <param name="itemHeight"></param>
+    public virtual void TownNPCAttackSwing(NPC npc, ref int itemWidth, ref int itemHeight) { }
+
+    /// <summary>
+    /// Allows you to customize how a town NPC's weapon is drawn when the NPC is shooting (the NPC must have an attack type of 1). <paramref name="scale"/> is a multiplier for the item's drawing size, <paramref name="item"/> is the Texture2D instance of the item to be drawn, <paramref name="itemFrame"/> is the section of the texture to draw, and <paramref name="horizontalHoldoutOffset"/> is how far away the item should be drawn from the NPC.
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="item"></param>
+    /// <param name="itemFrame"></param>
+    /// <param name="scale"></param>
+    /// <param name="horizontalHoldoutOffset"></param>
+    public virtual void DrawTownAttackGun(NPC npc, ref Texture2D item, ref Rectangle itemFrame, ref float scale, ref int horizontalHoldoutOffset) { }
+
+
+    /// <inheritdoc cref="ModNPC.DrawTownAttackSwing" />
+    public virtual void DrawTownAttackSwing(NPC npc, ref Texture2D item, ref Rectangle itemFrame, ref int itemSize, ref float scale, ref Vector2 offset) { }
+
+    /// <summary>
+    /// Allows you to modify the NPC's <seealso cref="ID.ImmunityCooldownID"/>, damage multiplier, and hitbox. Useful for implementing dynamic damage hitboxes that change in dimensions or deal extra damage. Returns false to prevent vanilla code from running. Returns true by default.
+    /// <para/> Called on the server and clients.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="victimHitbox"></param>
+    /// <param name="immunityCooldownSlot"></param>
+    /// <param name="damageMultiplier"></param>
+    /// <param name="npcHitbox"></param>
+    /// <returns></returns>
+    public virtual bool ModifyCollisionData(NPC npc, Rectangle victimHitbox, ref int immunityCooldownSlot, ref MultipliableFloat damageMultiplier, ref Rectangle npcHitbox) => true;
+
+    /// <summary>
+    /// Allows you to make a npc be saved even if it's not a townNPC and NPCID.Sets.SavesAndLoads[npc.type] is false.
+    /// <br/><b>NOTE:</b> A town NPC will always be saved (except the Travelling Merchant that never will).
+    /// <br/><b>NOTE:</b> A NPC that needs saving will not despawn naturally.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <returns></returns>
+    public virtual bool NeedSaving(NPC npc) => false;
+
+    /// <summary>
+    /// Allows you to save custom data for the given npc.
+    /// <br/>
+    /// <br/><b>NOTE:</b> The provided tag is always empty by default, and is provided as an argument only for the sake of convenience and optimization.
+    /// <br/><b>NOTE:</b> Try to only save data that isn't default values.
+    /// <br/><b>NOTE:</b> The npc may be saved even if NeedSaving returns false and npc is not a townNPC, if another mod returns true on NeedSaving.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="tag">The TagCompound to save data into. Note that this is always empty by default, and is provided as an argument</param>
+    public virtual void SaveData(NPC npc, TagCompound tag) { }
+
+    /// <summary>
+    /// Allows you to load custom data that you have saved for the given npc.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="tag"></param>
+    public virtual void LoadData(NPC npc, TagCompound tag) { }
+
+    /// <summary>
+    /// Allows you to change the emote that the NPC will pick
+    /// <para/> Called in single player or on the server only.
+    /// </summary>
+    /// <param name="npc"></param>
+    /// <param name="closestPlayer">The <see cref="Player"/> closest to the NPC. You can check the biome the player is in and let the NPC pick the emote that corresponds to the biome.</param>
+    /// <param name="emoteList">A list of emote IDs from which the NPC will randomly select one</param>
+    /// <param name="otherAnchor">A <see cref="WorldUIAnchor"/> instance that indicates the target of this emote conversation. Use this to get the instance of the <see cref="NPC"/> or <see cref="Player"/> this NPC is talking to.</param>
+    /// <returns>Return null to use vanilla mechanic (pick one from the list), otherwise pick the emote by the returned ID. Returning -1 will prevent the emote from being used. Returns null by default</returns>
+    public virtual int? PickEmote(NPC npc, Player closestPlayer, List<int> emoteList, WorldUIAnchor otherAnchor) => null;
+
+    /// <inheritdoc cref="ModNPC.ChatBubblePosition(ref Vector2, ref SpriteEffects)"/>
+    public virtual void ChatBubblePosition(NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects) { }
+
+    /// <inheritdoc cref="ModNPC.PartyHatPosition(ref Vector2, ref SpriteEffects)"/>
+    public virtual void PartyHatPosition(NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects) { }
+
+    /// <inheritdoc cref="ModNPC.EmoteBubblePosition(ref Vector2, ref SpriteEffects)"/>
+    public virtual void EmoteBubblePosition(NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects) { }
+}
+
+public abstract class GlobalProjectileBehavior : GlobalEntityBehavior<Projectile>
+{
+    /// <summary>
+    /// Allows you to set the properties of any and every instance that gets created.
+    /// </summary>
+    public virtual void SetDefaults(Projectile projectile) { }
+
+    /// <summary>
+    /// Gets called when any projectiles spawns in world
+    /// <para/> Called on the client or server spawning the projectile via Projectile.NewProjectile.
+    /// </summary>
+    public virtual void OnSpawn(Projectile projectile, IEntitySource source) { }
+
+    /// <summary>
+    /// Allows you to determine how any projectile behaves. Return false to stop the vanilla AI and the AI hook from being run. Returns true by default.
+    /// <include file = 'CommonDocs.xml' path='Common/AIMethodOrder' />
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <returns></returns>
+    public virtual bool PreAI(Projectile projectile) => true;
+
+    /// <summary>
+    /// Allows you to determine how any projectile behaves. This will only be called if PreAI returns true.
+    /// <include file = 'CommonDocs.xml' path='Common/AIMethodOrder' />
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="projectile"></param>
+    public virtual void AI(Projectile projectile) { }
+
+    /// <summary>
+    /// Allows you to determine how any projectile behaves. This will be called regardless of what PreAI returns.
+    /// <include file = 'CommonDocs.xml' path='Common/AIMethodOrder' />
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="projectile"></param>
+    public virtual void PostAI(Projectile projectile) { }
+
+    /// <summary>
+    /// Use this judiciously to avoid straining the network.
+    /// <para/> Checks and methods such as <see cref="GlobalType{TEntity, TGlobal}.AppliesToEntity"/> can reduce how much data must be sent for how many projectiles.
+    /// <para/> Called whenever <see cref="MessageID.SyncProjectile"/> is successfully sent, for example on projectile creation, or whenever Projectile.netUpdate is set to true in the update loop for that tick.
+    /// <para/> Can be called on the local client or server, depending on who owns the projectile.
+    /// </summary>
+    /// <param name="projectile">The projectile.</param>
+    /// <param name="bitWriter">The compressible bit writer. Booleans written via this are compressed across all mods to improve multiplayer performance.</param>
+    /// <param name="binaryWriter">The writer.</param>
+    public virtual void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter) { }
+
+    /// <summary>
+    /// Use this to receive information that was sent in <see cref="SendExtraAI"/>.
+    /// <para/> Called whenever <see cref="MessageID.SyncProjectile"/> is successfully received.
+    /// <para/> Can be called on the local client or server, depending on who owns the projectile.
+    /// </summary>
+    /// <param name="projectile">The projectile.</param>
+    /// <param name="bitReader">The compressible bit reader.</param>
+    /// <param name="binaryReader">The reader.</param>
+    public virtual void ReceiveExtraAI(Projectile projectile, BitReader bitReader, BinaryReader binaryReader) { }
+
+    /// <summary>
+    /// Whether or not the given projectile should update its position based on factors such as its velocity, whether it is in liquid, etc. Return false to make its velocity have no effect on its position. Returns true by default.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <returns></returns>
+    public virtual bool ShouldUpdatePosition(Projectile projectile) => true;
+
+    /// <summary>
+    /// Allows you to determine how a projectile interacts with tiles. Return false if you completely override or cancel a projectile's tile collision behavior. Returns true by default.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="projectile"> The projectile. </param>
+    /// <param name="width"> The width of the hitbox the projectile will use for tile collision. If vanilla or a mod don't modify it, defaults to projectile.width. </param>
+    /// <param name="height"> The height of the hitbox the projectile will use for tile collision. If vanilla or a mod don't modify it, defaults to projectile.height. </param>
+    /// <param name="fallThrough"> Whether or not the projectile falls through platforms and similar tiles. </param>
+    /// <param name="hitboxCenterFrac"> Determines by how much the tile collision hitbox's position (top left corner) will be offset from the projectile's real center. If vanilla or a mod don't modify it, defaults to half the hitbox size (new Vector2(0.5f, 0.5f)). </param>
+    /// <returns></returns>
+    public virtual bool TileCollideStyle(Projectile projectile, ref int width, ref int height, ref bool fallThrough, ref Vector2 hitboxCenterFrac) => true;
+
+    /// <summary>
+    /// Allows you to determine what happens when a projectile collides with a tile. OldVelocity is the velocity before tile collision. The velocity that takes tile collision into account can be found with projectile.velocity. Return true to allow the vanilla tile collision code to take place (which normally kills the projectile). Returns true by default.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <param name="oldVelocity"></param>
+    /// <returns></returns>
+    public virtual bool OnTileCollide(Projectile projectile, Vector2 oldVelocity) => true;
+
+    /// <summary>
+    /// Allows you to determine whether the vanilla code for Kill and the Kill hook will be called. Return false to stop them from being called. Returns true by default. Note that this does not stop the projectile from dying.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <param name="timeLeft"></param>
+    /// <returns></returns>
+    public virtual bool PreKill(Projectile projectile, int timeLeft) => true;
+
+    /// <summary>
+    /// Allows you to control what happens when a projectile is killed (for example, creating dust or making sounds).
+    /// <para/> Can be called on the local client or server, depending on who owns the projectile.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <param name="timeLeft"></param>
+    public virtual void OnKill(Projectile projectile, int timeLeft) { }
+
+    /// <summary>
+    /// Return true or false to specify if the projectile can cut tiles like vines, pots, and Queen Bee larva. Return null for vanilla decision.
+    /// <para/> Can be called on the local client or server, depending on who owns the projectile.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <returns></returns>
+    public virtual bool? CanCutTiles(Projectile projectile) => null;
+
+    /// <summary>
+    /// Code ran when the projectile cuts tiles. Only runs if CanCutTiles() returns true. Useful when programming lasers and such.
+    /// <para/> Can be called on the local client or server, depending on who owns the projectile.
+    /// </summary>
+    /// <param name="projectile"></param>
+    public virtual void CutTiles(Projectile projectile) { }
+
+    /// <summary>
+    /// Whether or not the given projectile is capable of killing tiles (such as grass) and damaging NPCs/players.
+    /// Return false to prevent it from doing any sort of damage.
+    /// Return true if you want the projectile to do damage regardless of the default blacklist.
+    /// Return null to let the projectile follow vanilla can-damage-anything rules. This is what happens by default.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <returns></returns>
+    public virtual bool? CanDamage(Projectile projectile) => null;
+
+    /// <summary>
+    /// Whether or not a minion can damage NPCs by touching them. Returns false by default. Note that this will only be used if the projectile is considered a pet.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <returns></returns>
+    public virtual bool MinionContactDamage(Projectile projectile) => false;
+
+    /// <summary>
+    /// Allows you to change the hitbox used by a projectile for damaging players and NPCs.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <param name="hitbox"></param>
+    public virtual void ModifyDamageHitbox(Projectile projectile, ref Rectangle hitbox) { }
+
+    /// <summary>
+    /// Allows you to determine whether a projectile can hit the given NPC. Return true to allow hitting the target, return false to block the projectile from hitting the target, and return null to use the vanilla code for whether the target can be hit. Returns null by default.
+    /// <para/> Can be called on the local client or server, depending on who owns the projectile.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <param name="target"></param>
+    /// <returns></returns>
+    public virtual bool? CanHitNPC(Projectile projectile, NPC target) => null;
+
+    /// <summary>
+    /// Allows you to modify the damage, knockback, etc., that a projectile does to an NPC.
+    /// <para/> Can be called on the local client or server, depending on who owns the projectile.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <param name="target"></param>
+    /// <param name="modifiers"></param>
+    public virtual void ModifyHitNPC(Projectile projectile, NPC target, ref NPC.HitModifiers modifiers) { }
+
+    /// <summary>
+    /// Allows you to create special effects when a projectile hits an NPC (for example, inflicting debuffs).
+    /// <para/> Can be called on the local client or server, depending on who owns the projectile.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <param name="target"></param>
+    /// <param name="hit"></param>
+    /// <param name="damageDone"></param>
+    public virtual void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damageDone) { }
+
+    /// <summary>
+    /// Allows you to determine whether a projectile can hit the given opponent player. Return false to block the projectile from hitting the target. Returns true by default.
+    /// <para/> Called on the client hitting the target.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <param name="target"></param>
+    /// <returns></returns>
+    public virtual bool CanHitPvp(Projectile projectile, Player target) => true;
+
+    /// <summary>
+    /// Allows you to determine whether a hostile projectile can hit the given player. Return false to block the projectile from hitting the target. Returns true by default.
+    /// <para/> Called on the server only.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <param name="target"></param>
+    /// <returns></returns>
+    public virtual bool CanHitPlayer(Projectile projectile, Player target) => true;
+
+    /// <summary>
+    /// Allows you to modify the damage, etc., that a hostile projectile does to a player.
+    /// <para/> Called on the client taking damage.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <param name="target"></param>
+    /// <param name="modifiers"></param>
+    public virtual void ModifyHitPlayer(Projectile projectile, Player target, ref Player.HurtModifiers modifiers) { }
+
+    /// <summary>
+    /// Allows you to create special effects when a hostile projectile hits a player. <br/>
+    /// <para/> Called on the client taking damage.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <param name="target"></param>
+    /// <param name="info"></param>
+    public virtual void OnHitPlayer(Projectile projectile, Player target, Player.HurtInfo info) { }
+
+    /// <summary>
+    /// Allows you to use custom collision detection between a projectile and a player or NPC that the projectile can damage. Useful for things like diagonal lasers, projectiles that leave a trail behind them, etc.
+    /// <para/> Can be called on the local client or server, depending on who owns the projectile.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <param name="projHitbox"></param>
+    /// <param name="targetHitbox"></param>
+    /// <returns></returns>
+    public virtual bool? Colliding(Projectile projectile, Rectangle projHitbox, Rectangle targetHitbox) => null;
+
+    /// <summary>
+    /// Allows you to determine the color and transparency in which a projectile is drawn. Return null to use the default color (normally light and buff color). Returns null by default.
+    /// <para/> Called on local and remote clients.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <param name="lightColor"></param>
+    /// <returns></returns>
+    public virtual Color? GetAlpha(Projectile projectile, Color lightColor) => null;
+
+    /// <summary>
+    /// Allows you to draw things behind a projectile. Use the <c>Main.EntitySpriteDraw</c> method for drawing. Returns false to stop the game from drawing extras textures related to the projectile (for example, the chains for grappling hooks), useful if you're manually drawing the extras. Returns true by default.
+    /// <para/> Called on local and remote clients.
+    /// </summary>
+    /// <param name="projectile"> The projectile. </param>
+    public virtual bool PreDrawExtras(Projectile projectile) => true;
+
+    /// <summary>
+    /// Allows you to draw things behind a projectile, or to modify the way the projectile is drawn. Use the <c>Main.EntitySpriteDraw</c> method for drawing. Return false to stop the vanilla projectile drawing code (useful if you're manually drawing the projectile). Returns true by default.
+    /// <para/> Called on local and remote clients.
+    /// </summary>
+    /// <param name="projectile"> The projectile. </param>
+    /// <param name="lightColor"> The color of the light at the projectile's center. </param>
+    public virtual bool PreDraw(Projectile projectile, ref Color lightColor) => true;
+
+    /// <summary>
+    /// Allows you to draw things in front of a projectile. Use the <c>Main.EntitySpriteDraw</c> method for drawing. This method is called even if PreDraw returns false.
+    /// <para/> Called on local and remote clients.
+    /// </summary>
+    /// <param name="projectile"> The projectile. </param>
+    /// <param name="lightColor"> The color of the light at the projectile's center, after being modified by vanilla and other mods. </param>
+    public virtual void PostDraw(Projectile projectile, Color lightColor) { }
+
+    /// <summary>
+    /// When used in conjunction with "projectile.hide = true", allows you to specify that this projectile should be drawn behind certain elements. Add the index to one and only one of the lists. For example, the Nebula Arcanum projectile draws behind NPCs and tiles.
+    /// <para/> Called on local and remote clients.
+    /// </summary>
+    /// <param name="projectile"></param>
+    /// <param name="index"></param>
+    /// <param name="behindNPCsAndTiles"></param>
+    /// <param name="behindNPCs"></param>
+    /// <param name="behindProjectiles"></param>
+    /// <param name="overPlayers"></param>
+    /// <param name="overWiresUI"></param>
+    public virtual void DrawBehind(Projectile projectile, int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI) { }
+
+    /// <summary>
+    /// Whether or not a grappling hook that shoots this type of projectile can be used by the given player. Return null to use the default code (whether or not the player is in the middle of firing the grappling hook). Returns null by default.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual bool? CanUseGrapple(int type, Player player) => null;
+
+    /// <summary>
+    /// This code is called whenever the player uses a grappling hook that shoots this type of projectile. Use it to change what kind of hook is fired (for example, the Dual Hook does this), to kill old hook projectiles, etc.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual void UseGrapple(Player player, ref int type) { }
+
+    /// <summary>
+    /// How many of this type of grappling hook the given player can latch onto blocks before the hooks start disappearing. Change the numHooks parameter to determine this; by default it will be 3.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual void NumGrappleHooks(Projectile projectile, Player player, ref int numHooks) { }
+
+    /// <summary>
+    /// The speed at which the grapple retreats back to the player after not hitting anything. Defaults to 11, but vanilla hooks go up to 24.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void GrappleRetreatSpeed(Projectile projectile, Player player, ref float speed) { }
+
+    /// <summary>
+    /// The speed at which the grapple pulls the player after hitting something. Defaults to 11, but the Bat Hook uses 16.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void GrapplePullSpeed(Projectile projectile, Player player, ref float speed) { }
+
+    /// <summary>
+    /// The location that the grappling hook pulls the player to. Defaults to the center of the hook projectile.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void GrappleTargetPoint(Projectile projectile, Player player, ref float grappleX, ref float grappleY) { }
+
+    /// <summary>
+    /// Whether or not the grappling hook can latch onto the given position in tile coordinates.
+    /// <para/> This position may be air or an actuated tile!
+    /// <para/> Return true to make it latch, false to prevent it, or null to apply vanilla conditions. Returns null by default.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual bool? GrappleCanLatchOnTo(Projectile projectile, Player player, int x, int y) => null;
+
+    /// <inheritdoc cref="ModProjectile.PrepareBombToBlow"/>
+    public virtual void PrepareBombToBlow(Projectile projectile) { }
+
+    /// <inheritdoc cref="ModProjectile.EmitEnchantmentVisualsAt"/>
+    public virtual void EmitEnchantmentVisualsAt(Projectile projectile, Vector2 boxPosition, int boxWidth, int boxHeight) { }
+}
+
+public abstract class GlobalItemBehavior : GlobalEntityBehavior<Item>
+{
+    /// <summary>
+    /// Allows you to set the properties of any and every instance that gets created.
+    /// </summary>
+    public virtual void SetDefaults(Item item) { }
+
+    /// <summary>
+    /// Called when the <paramref name="item"/> is created. The <paramref name="context"/> parameter indicates the context of the item creation and can be used in logic for the desired effect.
+    /// <para/> Called on the local client only.
+    /// <para/> Known <see cref="ItemCreationContext"/> include: <see cref="InitializationItemCreationContext"/>, <see cref="BuyItemCreationContext"/>, <see cref="JourneyDuplicationItemCreationContext"/>, and <see cref="RecipeItemCreationContext"/>. Some of these provide additional context such as how <see cref="RecipeItemCreationContext"/> includes the items consumed to craft the <paramref name="item"/>.
+    /// </summary>
+    public virtual void OnCreated(Item item, ItemCreationContext context) { }
+
+    /// <summary>
+    /// Gets called when any item spawns in world
+    /// <para/> Called on the local client or the server where Item.NewItem is called.
+    /// </summary>
+    public virtual void OnSpawn(Item item, IEntitySource source) { }
+
+    /// <summary>
+    /// Allows you to manually choose what prefix an item will get.
+    /// </summary>
+    /// <returns>The ID of the prefix to give the item, -1 to use default vanilla behavior</returns>
+    public virtual int ChoosePrefix(Item item, UnifiedRandom rand) => -1;
+
+    /// <summary>
+    /// To prevent putting the item in the tinkerer slot, return false when pre is -3.
+    /// To prevent rolling of a prefix on spawn, return false when pre is -1.
+    /// To force rolling of a prefix on spawn, return true when pre is -1.
+    ///
+    /// To reduce the probability of a prefix on spawn (pre == -1) to X%, return false 100-4X % of the time.
+    /// To increase the probability of a prefix on spawn (pre == -1) to X%, return true (4X-100)/3 % of the time.
+    ///
+    /// To delete a prefix from an item when the item is loaded, return false when pre is the prefix you want to delete.
+    /// Use AllowPrefix to prevent rolling of a certain prefix.
+    /// </summary>
+    /// <param name="item"></param>
+    /// <param name="pre">The prefix being applied to the item, or the roll mode. -1 is when the item is naturally generated in a chest, crafted, purchased from an NPC, looted from a grab bag (excluding presents), or dropped by a slain enemy (if it's spawned with prefixGiven: -1). -2 is when the item is rolled in the tinkerer. -3 determines if the item can be placed in the tinkerer slot.</param>
+    /// <param name="rand"></param>
+    /// <returns></returns>
+    public virtual bool? PrefixChance(Item item, int pre, UnifiedRandom rand) => null;
+
+    /// <summary>
+    /// Force a re-roll of a prefix by returning false.
+    /// </summary>
+    public virtual bool AllowPrefix(Item item, int pre) => true;
+
+    /// <summary>
+    /// Returns whether or not any item can be used. Returns true by default. The inability to use a specific item overrides this, so use this to stop an item from being used.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual bool CanUseItem(Item item, Player player) => true;
+
+    /// <summary>
+    /// Allows you to modify the autoswing (auto-reuse) behavior of any item without having to mess with Item.autoReuse.
+    /// <para/> Useful to create effects like the Feral Claws which makes melee weapons and whips auto-reusable.
+    /// <para/> Return true to enable autoswing (if not already enabled through autoReuse), return false to prevent autoswing. Returns null by default, which applies vanilla behavior.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="item"> The item. </param>
+    /// <param name="player"> The player. </param>
+    public virtual bool? CanAutoReuseItem(Item item, Player player) => null;
+
+    /// <summary>
+    /// Allows you to modify the location and rotation of any item in its use animation.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="item"> The item. </param>
+    /// <param name="player"> The player. </param>
+    /// <param name="heldItemFrame"> The source rectangle for the held item's texture. </param>
+    public virtual void UseStyle(Item item, Player player, Rectangle heldItemFrame) { }
+
+    /// <summary>
+    /// Allows you to modify the location and rotation of the item the player is currently holding.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="item"> The item. </param>
+    /// <param name="player"> The player. </param>
+    /// <param name="heldItemFrame"> The source rectangle for the held item's texture. </param>
+    public virtual void HoldStyle(Item item, Player player, Rectangle heldItemFrame) { }
+
+    /// <summary>
+    /// Allows you to make things happen when the player is holding an item (for example, torches make light and water candles increase spawn rate).
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void HoldItem(Item item, Player player) { }
+
+    /// <summary>
+    /// Allows you to change the effective useTime of an item.
+    /// <para/> Note that this hook may cause items' actions to run less or more times than they should per a single use.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <returns> The multiplier on the usage time. 1f by default. Values greater than 1 increase the item use's length. </returns>
+    public virtual float UseTimeMultiplier(Item item, Player player) => 1f;
+
+    /// <summary>
+    /// Allows you to change the effective useAnimation of an item.
+    /// <para/> Note that this hook may cause items' actions to run less or more times than they should per a single use.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <returns>The multiplier on the animation time. 1f by default. Values greater than 1 increase the item animation's length. </returns>
+    public virtual float UseAnimationMultiplier(Item item, Player player) => 1f;
+
+    /// <summary>
+    /// Allows you to safely change both useTime and useAnimation while keeping the values relative to each other.
+    /// <para/> Useful for status effects.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <returns> The multiplier on the use speed. 1f by default. Values greater than 1 increase the overall item speed. </returns>
+    public virtual float UseSpeedMultiplier(Item item, Player player) => 1f;
+
+    /// <summary>
+    /// Allows you to temporarily modify the amount of life a life healing item will heal for, based on player buffs, accessories, etc. This is only called for items with a <see cref="Item.healLife"/> value.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="item">The item being used.</param>
+    /// <param name="player">The player using the item.</param>
+    /// <param name="quickHeal">Whether the item is being used through quick heal or not.</param>
+    /// <param name="healValue">The amount of life being healed.</param>
+    public virtual void GetHealLife(Item item, Player player, bool quickHeal, ref int healValue) { }
+
+    /// <summary>
+    /// Allows you to temporarily modify the amount of mana a mana healing item will heal for, based on player buffs, accessories, etc. This is only called for items with a <see cref="Item.healMana"/> value.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="item">The item being used.</param>
+    /// <param name="player">The player using the item.</param>
+    /// <param name="quickHeal">Whether the item is being used through quick heal or not.</param>
+    /// <param name="healValue">The amount of mana being healed.</param>
+    public virtual void GetHealMana(Item item, Player player, bool quickHeal, ref int healValue) { }
+
+    /// <summary>
+    /// Allows you to temporarily modify the amount of mana an item will consume on use, based on player buffs, accessories, etc. This is only called for items with a mana value.
+    /// <para/> <b>Do not</b> modify <see cref="Item.mana"/>, modify the <paramref name="reduce"/> and <paramref name="mult"/> parameters.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="item">The item being used.</param>
+    /// <param name="player">The player using the item.</param>
+    /// <param name="reduce">Used for decreasingly stacking buffs (most common). Only ever use -= on this field.</param>
+    /// <param name="mult">Use to directly multiply the item's effective mana cost. Good for debuffs, or things which should stack separately (eg meteor armor set bonus).</param>
+    public virtual void ModifyManaCost(Item item, Player player, ref float reduce, ref float mult) { }
+
+    /// <summary>
+    /// Allows you to make stuff happen when a player doesn't have enough mana for an item they are trying to use.
+    /// If the player has high enough mana after this hook runs, mana consumption will happen normally.
+    /// Only runs once per item use.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="item">The item being used.</param>
+    /// <param name="player">The player using the item.</param>
+    /// <param name="neededMana">The mana needed to use the item.</param>
+    public virtual void OnMissingMana(Item item, Player player, int neededMana) { }
+
+    /// <summary>
+    /// Allows you to make stuff happen when a player consumes mana on use of an item.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="item">The item being used.</param>
+    /// <param name="player">The player using the item.</param>
+    /// <param name="manaConsumed">The mana consumed from the player.</param>
+    public virtual void OnConsumeMana(Item item, Player player, int manaConsumed) { }
+
+    /// <summary>
+    /// Allows you to dynamically modify a weapon's damage based on player and item conditions.
+    /// Can be utilized to modify damage beyond the tools that DamageClass has to offer.
+    /// <para/> <b>Do not</b> modify <see cref="Item.damage"/>, modify the <paramref name="damage"/> parameter.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="item">The item being used.</param>
+    /// <param name="player">The player using the item.</param>
+    /// <param name="damage">The StatModifier object representing the totality of the various modifiers to be applied to the item's base damage.</param>
+    public virtual void ModifyWeaponDamage(Item item, Player player, ref StatModifier damage) { }
+
+    /// <summary>
+    /// Allows you to set an item's sorting group in Journey Mode's duplication menu. This is useful for setting custom item types that group well together, or whenever the default vanilla sorting doesn't sort the way you want it.
+    /// <para/> Note that this affects the order of the item in the listing, not which filters the item satisfies.
+    /// </summary>
+    /// <param name="item">The item being used</param>
+    /// <param name="itemGroup">The item group this item is being assigned to</param>
+    public virtual void ModifyResearchSorting(Item item, ref ContentSamples.CreativeHelper.ItemGroup itemGroup) { }
+
+    /// <summary>
+    /// Allows you to choose if a given bait will be consumed by a given player
+    /// Not consuming will always take priority over forced consumption
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="bait">The bait being used</param>
+    /// <param name="player">The player using the item</param>
+    public virtual bool? CanConsumeBait(Player player, Item bait) => null;
+
+    /// <summary>
+    /// Allows you to prevent an item from being researched by returning false. True is the default behavior.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="item">The item being researched</param>
+    public virtual bool CanResearch(Item item) => true;
+
+    /// <summary>
+    /// Allows you to create custom behavior when an item is accepted by the Research function
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="item">The item being researched</param>
+    /// <param name="fullyResearched">True if the item was completely researched, and is ready to be duplicated, false if only partially researched.</param>
+    public virtual void OnResearched(Item item, bool fullyResearched) { }
+
+    /// <summary>
+    /// Allows you to dynamically modify a weapon's knockback based on player and item conditions.
+    /// Can be utilized to modify damage beyond the tools that DamageClass has to offer.
+    /// <para/> <b>Do not</b> modify <see cref="Item.knockBack"/>, modify the <paramref name="knockback"/> parameter.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="item">The item being used.</param>
+    /// <param name="player">The player using the item.</param>
+    /// <param name="knockback">The StatModifier object representing the totality of the various modifiers to be applied to the item's base knockback.</param>
+    public virtual void ModifyWeaponKnockback(Item item, Player player, ref StatModifier knockback) { }
+
+    /// <summary>
+    /// Allows you to dynamically modify a weapon's crit chance based on player and item conditions.
+    /// Can be utilized to modify damage beyond the tools that DamageClass has to offer.
+    /// <para/> <b>Do not</b> modify <see cref="Item.crit"/>, modify the <paramref name="crit"/> parameter.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="item">The item being used.</param>
+    /// <param name="player">The player using the item.</param>
+    /// <param name="crit">The total crit chance of the item after all normal crit chance calculations.</param>
+    public virtual void ModifyWeaponCrit(Item item, Player player, ref float crit) { }
+
+    /// <summary>
+    /// Whether or not having no ammo prevents an item that uses ammo from shooting.
+    /// Return false to allow shooting with no ammo in the inventory, in which case the item will act as if the default ammo for it is being used.
+    /// Returns true by default.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual bool NeedsAmmo(Item item, Player player) => true;
+
+    /// <summary>
+    /// Allows you to modify various properties of the projectile created by a weapon based on the ammo it is using.
+    /// <para/> Called on local and remote clients when a player picking ammo but only on the local client when held projectiles are picking ammo.
+    /// </summary>
+    /// <param name="weapon">The item that is using the given ammo.</param>
+    /// <param name="ammo">The ammo item being used by the given weapon.</param>
+    /// <param name="player">The player using the item.</param>
+    /// <param name="type">The ID of the fired projectile.</param>
+    /// <param name="speed">The speed of the fired projectile.</param>
+    /// <param name="damage">
+    /// The damage modifier for the projectile.<br></br>
+    /// Total weapon damage is included as Flat damage.<br></br>
+    /// Be careful not to apply flat or base damage bonuses which are already applied to the weapon.
+    /// </param>
+    /// <param name="knockback">The knockback of the fired projectile.</param>
+    public virtual void PickAmmo(Item weapon, Item ammo, Player player, ref int type, ref float speed, ref StatModifier damage, ref float knockback) { }
+
+    /// <summary>
+    /// Whether or not the given ammo item is valid for the given weapon; called on the weapon. If this, or <see cref="CanBeChosenAsAmmo"/> on the ammo, returns false, then the ammo will not be valid for this weapon.
+    /// <para/> By default, returns null and allows <see cref="Item.useAmmo"/> and <see cref="Item.ammo"/> to decide. Return true to make the ammo valid regardless of these fields, and return false to make it invalid.
+    /// <para/> If false is returned, the <see cref="CanConsumeAmmo"/>, <see cref="CanBeConsumedAsAmmo"/>, <see cref="OnConsumeAmmo"/>, and <see cref="OnConsumedAsAmmo"/> hooks are never called.
+    /// <para/> Called on local and remote clients.
+    /// </summary>
+    /// <param name="weapon">The weapon that this hook is being called for.</param>
+    /// <param name="ammo">The ammo that the weapon is attempting to select.</param>
+    /// <param name="player">The player which this weapon and the potential ammo belong to.</param>
+    /// <returns></returns>
+    public virtual bool? CanChooseAmmo(Item weapon, Item ammo, Player player) => null;
+
+    /// <summary>
+    /// Whether or not the given ammo item is valid for the given weapon; called on the ammo. If this, or <see cref="CanChooseAmmo"/> on the weapon, returns false, then the ammo will not be valid for this weapon.
+    /// <para/> By default, returns null and allows <see cref="Item.useAmmo"/> and <see cref="Item.ammo"/> to decide. Return true to make the ammo valid regardless of these fields, and return false to make it invalid.
+    /// <para/> If false is returned, the <see cref="CanConsumeAmmo"/>, <see cref="CanBeConsumedAsAmmo"/>, <see cref="OnConsumeAmmo"/>, and <see cref="OnConsumedAsAmmo"/> hooks are never called.
+    /// <para/> Called on local and remote clients.
+    /// </summary>
+    /// <param name="ammo">The ammo that this hook is being called for.</param>
+    /// <param name="weapon">The weapon attempting to select the ammo.</param>
+    /// <param name="player">The player which the weapon and this potential ammo belong to.</param>
+    /// <returns></returns>
+    public virtual bool? CanBeChosenAsAmmo(Item ammo, Item weapon, Player player) => null;
+
+    /// <summary>
+    /// Whether or not the given ammo item will be consumed; called on the weapon.
+    /// <para/> By default, returns true; return false to prevent ammo consumption.
+    /// <para/> If false is returned, the <see cref="OnConsumeAmmo"/> and <see cref="OnConsumedAsAmmo"/> hooks are never called.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="weapon">The weapon that this hook is being called for.</param>
+    /// <param name="ammo">The ammo that the weapon is attempting to consume.</param>
+    /// <param name="player">The player which this weapon and the ammo belong to.</param>
+    /// <returns></returns>
+    public virtual bool CanConsumeAmmo(Item weapon, Item ammo, Player player) => true;
+
+    /// <summary>
+    /// Whether or not the given ammo item will be consumed; called on the ammo.
+    /// <para/> By default, returns true; return false to prevent ammo consumption.
+    /// <para/> If false is returned, the <see cref="OnConsumeAmmo"/> and <see cref="OnConsumedAsAmmo"/> hooks are never called.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="ammo">The ammo that this hook is being called for.</param>
+    /// <param name="weapon">The weapon attempting to consume the ammo.</param>
+    /// <param name="player">The player which the weapon and this ammo belong to.</param>
+    /// <returns></returns>
+    public virtual bool CanBeConsumedAsAmmo(Item ammo, Item weapon, Player player) => true;
+
+    /// <summary>
+    /// Allows you to make things happen when the given ammo is consumed by the given weapon. Called by the weapon.
+    /// <para/> Called before the ammo stack is reduced, and is never called if the ammo isn't consumed in the first place.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="weapon">The currently-active weapon.</param>
+    /// <param name="ammo">The ammo that the given weapon is currently using.</param>
+    /// <param name="player">The player which the given weapon and the given ammo belong to.</param>
+    public virtual void OnConsumeAmmo(Item weapon, Item ammo, Player player) { }
+
+    /// <summary>
+    /// Allows you to make things happen when the given ammo is consumed by the given weapon. Called by the ammo.
+    /// <para/> Called before the ammo stack is reduced, and is never called if the ammo isn't consumed in the first place.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="ammo">The currently-active ammo.</param>
+    /// <param name="weapon">The weapon that is currently using the given ammo.</param>
+    /// <param name="player">The player which the given weapon and the given ammo belong to.</param>
+    public virtual void OnConsumedAsAmmo(Item ammo, Item weapon, Player player) { }
+
+    /// <summary>
+    /// Allows you to prevent an item from shooting a projectile on use. Returns true by default.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="item"> The item being used. </param>
+    /// <param name="player"> The player using the item. </param>
+    /// <returns></returns>
+    public virtual bool CanShoot(Item item, Player player) => true;
+
+    /// <summary>
+    /// Allows you to modify the position, velocity, type, damage and/or knockback of a projectile being shot by an item.
+    /// <para/> These parameters will be provided to <see cref="Shoot(Item, Player, EntitySource_ItemUse_WithAmmo, Vector2, Vector2, int, int, float)"/> where the projectile will actually be spawned.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="item"> The item being used. </param>
+    /// <param name="player"> The player using the item. </param>
+    /// <param name="position"> The center position of the projectile. </param>
+    /// <param name="velocity"> The velocity of the projectile. </param>
+    /// <param name="type"> The ID of the projectile. </param>
+    /// <param name="damage"> The damage of the projectile. </param>
+    /// <param name="knockback"> The knockback of the projectile. </param>
+    public virtual void ModifyShootStats(Item item, Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback) { }
+
+    /// <summary>
+    /// Allows you to modify an item's shooting mechanism. Return false to prevent vanilla's shooting code from running. Returns true by default.
+    /// <para/> This method is called after the <see cref="ModifyShootStats"/> hook has had a chance to adjust the spawn parameters.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="item"> The item being used. </param>
+    /// <param name="player"> The player using the item. </param>
+    /// <param name="source"> The projectile source's information. </param>
+    /// <param name="position"> The center position of the projectile. </param>
+    /// <param name="velocity"> The velocity of the projectile. </param>
+    /// <param name="type"> The ID of the projectile. </param>
+    /// <param name="damage"> The damage of the projectile. </param>
+    /// <param name="knockback"> The knockback of the projectile. </param>
+    public virtual bool Shoot(Item item, Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback) => true;
+
+    /// <summary>
+    /// Changes the hitbox of a melee weapon when it is used.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual void UseItemHitbox(Item item, Player player, ref Rectangle hitbox, ref bool noHitbox) { }
+
+    /// <summary>
+    /// Allows you to give melee weapons special effects, such as creating light or dust.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual void MeleeEffects(Item item, Player player, Rectangle hitbox) { }
+
+    /// <summary>
+    /// Allows you to determine whether the given item can catch the given NPC.
+    /// <para/> Return true or false to say the given NPC can or cannot be caught, respectively, regardless of vanilla rules.
+    /// <para/> Returns null by default, which allows vanilla's NPC catching rules to decide the target's fate.
+    /// <para/> If this returns false, <see cref="CombinedHooks.OnCatchNPC"/> is never called.
+    /// <para/> NOTE: this does not classify the given item as an NPC-catching tool, which is necessary for catching NPCs in the first place. To do that, you will need to use <see cref="ItemID.Sets.CatchingTool"/>.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="item">The item with which the player is trying to catch the target NPC.</param>
+    /// <param name="target">The NPC the player is trying to catch.</param>
+    /// <param name="player">The player attempting to catch the NPC.</param>
+    /// <returns></returns>
+    public virtual bool? CanCatchNPC(Item item, NPC target, Player player) => null;
+
+    /// <summary>
+    /// Allows you to make things happen when the given item attempts to catch the given NPC.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="item">The item used to catch the given NPC.</param>
+    /// <param name="npc">The NPC which the player attempted to catch.</param>
+    /// <param name="player">The player attempting to catch the given NPC.</param>
+    /// <param name="failed">Whether or not the given NPC has been successfully caught.</param>
+    public virtual void OnCatchNPC(Item item, NPC npc, Player player, bool failed) { }
+
+    /// <summary>
+    /// Allows you to dynamically modify the given item's size for the given player, similarly to the effect of the Titan Glove.
+    /// <para/> <b>Do not</b> modify <see cref="Item.scale"/>, modify the <paramref name="scale"/> parameter.
+    /// <para/> Called on local and remote clients
+    /// </summary>
+    /// <param name="item">The item to modify the scale of.</param>
+    /// <param name="player">The player wielding the given item.</param>
+    /// <param name="scale">
+    /// The scale multiplier to be applied to the given item.<br></br>
+    /// Will be 1.1 if the Titan Glove is equipped, and 1 otherwise.
+    /// </param>
+    public virtual void ModifyItemScale(Item item, Player player, ref float scale) { }
+
+    /// <summary>
+    /// Allows you to determine whether a melee weapon can hit the given NPC when swung. Return true to allow hitting the target, return false to block the weapon from hitting the target, and return null to use the vanilla code for whether the target can be hit. Returns null by default.
+    /// <para/> Called on the client hitting the target.
+    /// </summary>
+    public virtual bool? CanHitNPC(Item item, Player player, NPC target) => null;
+
+    /// <summary>
+    /// Allows you to determine whether a melee weapon can collide with the given NPC when swung.
+    /// <para/> Use <see cref="CanHitNPC(Item, Player, NPC)"/> instead for Flymeal-type effects.
+    /// <para/> Called on the client hitting the target.
+    /// </summary>
+    /// <param name="item">The weapon item the player is holding.</param>
+    /// <param name="meleeAttackHitbox">Hitbox of melee attack.</param>
+    /// <param name="player">The player wielding this item.</param>
+    /// <param name="target">The target npc.</param>
+    /// <returns>
+    /// Return true to allow colliding with target, return false to block the weapon from colliding with target, and return null to use the vanilla code for whether the target can be colliding. Returns null by default.
+    /// </returns>
+    public virtual bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, Player player, NPC target) => null;
+
+    /// <summary>
+    /// Allows you to modify the damage, knockback, etc., that a melee weapon does to an NPC.
+    /// <para/> Called on the client hitting the target.
+    /// </summary>
+    public virtual void ModifyHitNPC(Item item, Player player, NPC target, ref NPC.HitModifiers modifiers) { }
+
+    /// <summary>
+    /// Allows you to create special effects when a melee weapon hits an NPC (for example how the Pumpkin Sword creates pumpkin heads).
+    /// <para/> Called on the client hitting the target.
+    /// </summary>
+    public virtual void OnHitNPC(Item item, Player player, NPC target, NPC.HitInfo hit, int damageDone) { }
+
+    /// <summary>
+    /// Allows you to determine whether a melee weapon can hit the given opponent player when swung. Return false to block the weapon from hitting the target. Returns true by default.
+    /// <para/> Called on the client hitting the target.
+    /// </summary>
+    public virtual bool CanHitPvp(Item item, Player player, Player target) => true;
+
+    /// <summary>
+    /// Allows you to modify the damage, etc., that a melee weapon does to a player.
+    /// <para/> Called on the client taking damage.
+    /// </summary>
+    public virtual void ModifyHitPvp(Item item, Player player, Player target, ref Player.HurtModifiers modifiers) { }
+
+    /// <summary>
+    /// Allows you to create special effects when a melee weapon hits a player.
+    /// <para/> Called on the client taking damage.
+    /// </summary>
+    public virtual void OnHitPvp(Item item, Player player, Player target, Player.HurtInfo hurtInfo) { }
+
+    /// <summary>
+    /// Allows you to make things happen when an item is used. The return value controls whether or not ApplyItemTime will be called for the player.
+    /// <para/> Return true if the item actually did something, to force itemTime.
+    /// <para/> Return false to keep itemTime at 0.
+    /// <para/> Return null for vanilla behavior.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual bool? UseItem(Item item, Player player) => null;
+
+    /// <summary>
+    /// Allows you to make things happen when an item's use animation starts.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void UseAnimation(Item item, Player player) { }
+
+    /// <summary>
+    /// If the item is consumable and this returns true, then the item will be consumed upon usage. Returns true by default.
+    /// If false is returned, the OnConsumeItem hook is never called.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual bool ConsumeItem(Item item, Player player) => true;
+
+    /// <summary>
+    /// Allows you to make things happen when this item is consumed.
+    /// Called before the item stack is reduced.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual void OnConsumeItem(Item item, Player player) { }
+
+    /// <summary>
+    /// Allows you to modify the player's animation when an item is being used.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void UseItemFrame(Item item, Player player) { }
+
+    /// <summary>
+    /// Allows you to modify the player's animation when the player is holding an item.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void HoldItemFrame(Item item, Player player) { }
+
+    /// <inheritdoc cref="ModItem.AltFunctionUse(Player)"/>
+    public virtual bool AltFunctionUse(Item item, Player player) => false;
+
+    /// <summary>
+    /// Allows you to make things happen when an item is in the player's inventory. This should NOT be used for information accessories;
+    /// use <seealso cref="UpdateInfoAccessory"/> for those instead.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void UpdateInventory(Item item, Player player) { }
+
+    /// <summary>
+    /// Allows you to set information accessory fields with the passed in player argument. This hook should only be used for information
+    /// accessory fields such as the Radar, Lifeform Analyzer, and others. Using it for other fields will likely cause weird side-effects.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void UpdateInfoAccessory(Item item, Player player) { }
+
+    /// <summary>
+    /// Allows you to give effects to armors and accessories, such as increased damage.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void UpdateEquip(Item item, Player player) { }
+
+    /// <summary>
+    /// Allows you to give effects to accessories. The hideVisual parameter is whether the player has marked the accessory slot to be hidden from being drawn on the player.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void UpdateAccessory(Item item, Player player, bool hideVisual) { }
+
+    /// <summary>
+    /// Allows you to give effects to this accessory when equipped in a vanity slot. Vanilla uses this for boot effects, wings and merman/werewolf visual flags
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void UpdateVanity(Item item, Player player) { }
+
+    /// <inheritdoc cref="ModItem.UpdateVisibleAccessory(Player, bool)"/>
+    public virtual void UpdateVisibleAccessory(Item item, Player player, bool hideVisual) { }
+
+    /// <inheritdoc cref="ModItem.UpdateItemDye(Player, int, bool)"/>
+    public virtual void UpdateItemDye(Item item, Player player, int dye, bool hideVisual) { }
+
+    /// <summary>
+    /// Allows you to determine whether the player is wearing an armor set, and return a name for this set. If there is no armor set, return the empty string. Returns the empty string by default.
+    /// <para/> This method is not instanced.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual string IsArmorSet(Item head, Item body, Item legs) => "";
+
+    /// <summary>
+    /// Allows you to give set bonuses to your armor set with the given name.
+    /// The set name will be the same as returned by IsArmorSet.
+    /// <para/> This method is not instanced.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void UpdateArmorSet(Player player, string set) { }
+
+    /// <summary>
+    /// Returns whether or not the head armor, body armor, and leg armor textures make up a set.
+    /// This hook is used for the PreUpdateVanitySet, UpdateVanitySet, and ArmorSetShadows hooks, and will use items in the social slots if they exist.
+    /// By default this will return the same value as the IsArmorSet hook, so you will not have to use this hook unless you want vanity effects to be entirely separate from armor sets.
+    /// <para/> This method is not instanced.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual string IsVanitySet(int head, int body, int legs)
+    {
+        int headItemType = 0;
+        if (head >= 0)
+            headItemType = Item.headType[head];
+
+        Item headItem = ContentSamples.ItemsByType[headItemType];
+
+        int bodyItemType = 0;
+        if (body >= 0)
+            bodyItemType = Item.bodyType[body];
+
+        Item bodyItem = ContentSamples.ItemsByType[bodyItemType];
+
+        int legsItemType = 0;
+        if (legs >= 0)
+            legsItemType = Item.legType[legs];
+
+        Item legItem = ContentSamples.ItemsByType[legsItemType];
+
+        return IsArmorSet(headItem, bodyItem, legItem);
+    }
+
+    /// <summary>
+    /// Allows you to create special effects (such as the necro armor's hurt noise) when the player wears the vanity set with the given name returned by IsVanitySet.
+    /// This hook is called regardless of whether the player is frozen in any way.
+    /// <para/> This method is not instanced.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void PreUpdateVanitySet(Player player, string set) { }
+
+    /// <summary>
+    /// Allows you to create special effects (such as dust) when the player wears the vanity set with the given name returned by IsVanitySet. This hook will only be called if the player is not frozen in any way.
+    /// <para/> This method is not instanced.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void UpdateVanitySet(Player player, string set) { }
+
+    /// <summary>
+    /// Allows you to determine special visual effects a vanity has on the player without having to code them yourself.
+    /// <para/> This method is not instanced.
+    /// <para/> Called on local, server, and remote clients.
+    /// <example><code>player.armorEffectDrawShadow = true;</code></example>
+    /// </summary>
+    public virtual void ArmorSetShadows(Player player, string set) { }
+
+    /// <summary>
+    /// Allows you to modify the equipment that the player appears to be wearing.
+    /// <para/> Note that type and equipSlot are not the same as the item type of the armor the player will appear to be wearing. Worn equipment has a separate set of IDs.
+    /// <para/> You can find the vanilla equipment IDs by looking at the headSlot, bodySlot, and legSlot fields for items, and modded equipment IDs by looking at EquipLoader.
+    /// <para/> This method is not instanced.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    /// <param name="armorSlot">head armor (0), body armor (1) or leg armor (2).</param>
+    /// <param name="type">The equipment texture ID of the item that the player is wearing.</param>
+    /// <param name="male">True if the player is male.</param>
+    /// <param name="equipSlot">The altered equipment texture ID for the legs (armorSlot 1 and 2) or head (armorSlot 0)</param>
+    /// <param name="robes">Set to true if you modify equipSlot when armorSlot == 1 to set Player.wearsRobe, otherwise ignore it</param>
+    public virtual void SetMatch(int armorSlot, int type, bool male, ref int equipSlot, ref bool robes) { }
+
+    /// <summary>
+    /// Returns whether or not an item does something when right-clicked in the inventory. Returns false by default.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual bool CanRightClick(Item item) => false;
+
+    /// <summary>
+    /// Allows you to make things happen when this item is right-clicked in the inventory. By default this will consume the item by 1 stack, so return false in <see cref="ConsumeItem(Player)"/> if that behavior is undesired.
+    /// <para/> This is only called if the item can be right-clicked, meaning <see cref="ItemID.Sets.OpenableBag"/> is true for the item type or <see cref="GlobalItem.CanRightClick"/> returns true.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual void RightClick(Item item, Player player) { }
+
+    /// <summary>
+    /// Allows you to add and modify the loot items that spawn from bag items when opened.
+    /// <para/> The <see href="https://github.com/tModLoader/tModLoader/wiki/Basic-NPC-Drops-and-Loot-1.4">Basic NPC Drops and Loot 1.4 Guide</see> explains how to use the <see cref="ModNPC.ModifyNPCLoot(NPCLoot)"/> hook to modify NPC loot as well as this hook. A common usage is to use this hook and <see cref="ModNPC.ModifyNPCLoot(NPCLoot)"/> to edit non-expert exclusive drops for bosses.
+    /// <para/> This hook only runs once per item type during mod loading, any dynamic behavior must be contained in the rules themselves.
+    /// <para/> This hook is not instanced.
+    /// </summary>
+    /// <param name="item">A default item of the type being opened, not the actual item instance</param>
+    /// <param name="itemLoot">A reference to the item drop database for this item type</param>
+    public virtual void ModifyItemLoot(Item item, ItemLoot itemLoot) { }
+
+    /// <summary>
+    /// Allows you to prevent items from stacking.
+    /// <para/>This is only called when two items of the same type attempt to stack.
+    /// <para/>This is usually not called for coins and ammo in the inventory/UI.
+    /// <para/>This covers all scenarios, if you just need to change in-world stacking behavior, use <see cref="CanStackInWorld"/>.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="destination">The item instance that <paramref name="source"/> will attempt to stack onto</param>
+    /// <param name="source">The item instance being stacked onto <paramref name="destination"/></param>
+    /// <returns>Whether or not the items are allowed to stack</returns>
+    public virtual bool CanStack(Item destination, Item source) => true;
+
+    /// <summary>
+    /// Allows you to prevent items from stacking in the world.
+    /// <para/> This is only called when two items of the same type attempt to stack.
+    /// <para/> Called on the local client or server, depending on who the item is reserved for.
+    /// </summary>
+    /// <param name="destination">The item instance that <paramref name="source"/> will attempt to stack onto</param>
+    /// <param name="source">The item instance being stacked onto <paramref name="destination"/></param>
+    /// <returns>Whether or not the items are allowed to stack</returns>
+    public virtual bool CanStackInWorld(Item destination, Item source) => true;
+
+    /// <summary>
+    /// Allows you to make things happen when items stack together.
+    /// <para/> This hook is called before the items are transferred from <paramref name="source"/> to <paramref name="destination"/>
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="destination">The item instance that <paramref name="source"/> will attempt to stack onto</param>
+    /// <param name="source">The item instance being stacked onto <paramref name="destination"/></param>
+    /// <param name="numToTransfer">The quantity of <paramref name="source"/> that will be transferred to <paramref name="destination"/></param>
+    public virtual void OnStack(Item destination, Item source, int numToTransfer) { }
+
+    /// <summary>
+    /// Allows you to make things happen when an item stack is split. This hook is called before the stack values are modified.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="destination">
+    /// The item instance that <paramref name="source"/> will transfer items to, and is usually a clone of <paramref name="source"/>.<br/>
+    /// This parameter's stack will always be zero.
+    /// </param>
+    /// <param name="source">The item instance being stacked onto <paramref name="destination"/></param>
+    /// <param name="numToTransfer">The quantity of <paramref name="source"/> that will be transferred to to <paramref name="destination"/></param>
+    public virtual void SplitStack(Item destination, Item source, int numToTransfer) { }
+
+    /// <summary>
+    /// Returns if the normal reforge pricing is applied.
+    /// If true or false is returned and the price is altered, the price will equal the altered price.
+    /// The passed reforge price equals the item.value. Vanilla pricing will apply 20% discount if applicable and then price the reforge at a third of that value.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual bool ReforgePrice(Item item, ref int reforgePrice, ref bool canApplyDiscount) => true;
+
+    /// <summary>
+    /// This hook gets called when the player clicks on the reforge button and can afford the reforge.
+    /// Returns whether the reforge will take place. If false is returned by the ModItem or any GlobalItem, the item will not be reforged, the cost to reforge will not be paid, and PreReforge and PostReforge hooks will not be called.
+    /// Reforging preserves modded data on the item.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual bool CanReforge(Item item) => true;
+
+    /// <summary>
+    /// This hook gets called immediately before an item gets reforged by the Goblin Tinkerer.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual void PreReforge(Item item) { }
+
+    /// <summary>
+    /// This hook gets called immediately after an item gets reforged by the Goblin Tinkerer.
+    /// Useful for modifying modded data based on the reforge result.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual void PostReforge(Item item) { }
+
+    /// <summary>
+    /// Allows you to modify the colors in which the player's armor and their surrounding accessories are drawn, in addition to which glow mask and in what color is drawn.
+    /// <para/> This method is not instanced.
+    /// <para/> Called on local and remote clients.
+    /// </summary>
+    public virtual void DrawArmorColor(EquipType type, int slot, Player drawPlayer, float shadow, ref Color color, ref int glowMask, ref Color glowMaskColor) { }
+
+    /// <summary>
+    /// Allows you to modify which glow mask and in what color is drawn on the player's arms. Note that this is only called for body armor.
+    /// <para/> This method is not instanced.
+    /// <para/> Called on local and remote clients.
+    /// </summary>
+    public virtual void ArmorArmGlowMask(int slot, Player drawPlayer, float shadow, ref int glowMask, ref Color color) { }
+
+    /// <summary>
+    /// Allows you to modify the speeds at which you rise and fall when wings are equipped.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void VerticalWingSpeeds(Item item, Player player, ref float ascentWhenFalling, ref float ascentWhenRising, ref float maxCanAscendMultiplier, ref float maxAscentMultiplier, ref float constantAscend) { }
+
+    /// <summary>
+    /// Allows you to modify the horizontal flight speed and acceleration of wings.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void HorizontalWingSpeeds(Item item, Player player, ref float speed, ref float acceleration) { }
+
+    /// <summary>
+    /// Allows for Wings to do various things while in use. "inUse" is whether or not the jump button is currently pressed.
+    /// Called when wings visually appear on the player.
+    /// Use to animate wings, create dusts, invoke sounds, and create lights. False will keep everything the same.
+    /// True, you need to handle all animations in your own code.
+    /// <para/> This method is not instanced.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual bool WingUpdate(int wings, Player player, bool inUse) => false;
+
+    /// <summary>
+    /// Allows you to customize an item's movement when lying in the world. Note that this will not be called if the item is currently being grabbed by a player.
+    /// <para/> Called on all clients and the server.
+    /// </summary>
+    public virtual void Update(Item item, ref float gravity, ref float maxFallSpeed) { }
+
+    /// <summary>
+    /// Allows you to make things happen when an item is lying in the world. This will always be called, even when the item is being grabbed by a player. This hook should be used for adding light, or for increasing the age of less valuable items.
+    /// <para/> Called on all clients and the server.
+    /// </summary>
+    public virtual void PostUpdate(Item item) { }
+
+    /// <summary>
+    /// Allows you to modify how close an item must be to the player in order to move towards the player.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual void GrabRange(Item item, Player player, ref int grabRange) { }
+
+    /// <summary>
+    /// Allows you to modify the way an item moves towards the player. Return false to allow the vanilla grab style to take place. Returns false by default.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual bool GrabStyle(Item item, Player player) => false;
+
+    /// <summary>
+    /// Allows you to determine whether or not the item can be picked up
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual bool CanPickup(Item item, Player player) => true;
+
+    /// <summary>
+    /// Allows you to make special things happen when the player picks up an item. Return false to stop the item from being added to the player's inventory; returns true by default.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual bool OnPickup(Item item, Player player) => true;
+
+    /// <summary>
+    /// Return true to specify that the item can be picked up despite not having enough room in inventory. Useful for something like hearts or experience items. Use in conjunction with OnPickup to actually consume the item and handle it.
+    /// <para/> Called on local, server, and remote clients.
+    /// </summary>
+    public virtual bool ItemSpace(Item item, Player player) => false;
+
+    /// <summary>
+    /// Allows you to determine the color and transparency in which an item is drawn. Return null to use the default color (normally light color). Returns null by default.
+    /// <para/> Called on all clients.
+    /// </summary>
+    public virtual Color? GetAlpha(Item item, Color lightColor) => null;
+
+    /// <summary>
+    /// <inheritdoc cref="ModItem.PreDrawInWorld(SpriteBatch, Color, Color, ref float, ref float, int)"/>
+    /// </summary>
+    public virtual bool PreDrawInWorld(Item item, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI) => true;
+
+    /// <summary>
+    /// <inheritdoc cref="ModItem.PostDrawInWorld(SpriteBatch, Color, Color, float, float, int)"/>
+    /// </summary>
+    public virtual void PostDrawInWorld(Item item, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, float rotation, float scale, int whoAmI) { }
+
+    /// <summary>
+    /// <inheritdoc cref="ModItem.PreDrawInInventory(SpriteBatch, Vector2, Rectangle, Color, Color, Vector2, float)"/>
+    /// </summary>
+    public virtual bool PreDrawInInventory(Item item, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale) => true;
+
+    /// <summary>
+    /// <inheritdoc cref="ModItem.PostDrawInInventory(SpriteBatch, Vector2, Rectangle, Color, Color, Vector2, float)"/>
+    /// </summary>
+    public virtual void PostDrawInInventory(Item item, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale) { }
+
+    /// <summary>
+    /// Allows you to determine the offset of an item's sprite when used by the player.
+    /// This is only used for items with a useStyle of 5 that aren't staves.
+    /// Return null to use the item's default holdout offset; returns null by default.
+    /// <para/> This method is not instanced.
+    /// <para/> Called on local and remote clients.
+    /// <example><code>return new Vector2(10, 0);</code></example>
+    /// </summary>
+    public virtual Vector2? HoldoutOffset(int type) => null;
+
+    /// <summary>
+    /// Allows you to determine the point on an item's sprite that the player holds onto when using the item.
+    /// The origin is from the bottom left corner of the sprite. This is only used for staves with a useStyle of 5.
+    /// Return null to use the item's default holdout origin; returns null by default.
+    /// <para/> This method is not instanced.
+    /// <para/> Called on local and remote clients.
+    /// </summary>
+    public virtual Vector2? HoldoutOrigin(int type) => null;
+
+    /// <summary>
+    /// Allows you to disallow the player from equipping an accessory. Return false to disallow equipping the accessory. Returns true by default.
+    /// </summary>
+    /// <param name="item">The item that is attempting to equip.</param>
+    /// <param name="player">The player.</param>
+    /// <param name="slot">The inventory slot that the item is attempting to occupy.</param>
+    /// <param name="modded">If the inventory slot index is for modded slots.</param>
+    public virtual bool CanEquipAccessory(Item item, Player player, int slot, bool modded) => true;
+
+    /// <summary>
+    /// Allows you to prevent similar accessories from being equipped multiple times. For example, vanilla Wings.
+    /// Return false to have the currently equipped item swapped with the incoming item - ie both can't be equipped at same time.
+    /// </summary>
+    public virtual bool CanAccessoryBeEquippedWith(Item equippedItem, Item incomingItem, Player player) => true;
+
+    /// <summary>
+    /// Allows you to modify what item, and in what quantity, is obtained when an item of the given type is fed into the Extractinator. Use <see cref="ItemID.Sets.ExtractinatorMode"/> to allow an item to be fed into the Extractinator.
+    /// <para/> An extractType of 0 represents the default extraction (Silt and Slush). 0, <see cref="ItemID.DesertFossil"/>, <see cref="ItemID.OldShoe"/>, and <see cref="ItemID.LavaMoss"/> are vanilla extraction types. Modded types by convention will correspond to the iconic item of the extraction type. The <see href="https://terraria.wiki.gg/wiki/Extractinator">Extractinator wiki page</see> has more info.
+    /// <para/> By default the parameters will be set to the output of feeding Silt/Slush into the Extractinator.
+    /// <para/> Use <paramref name="extractinatorBlockType"/> to provide different behavior for <see cref="TileID.ChlorophyteExtractinator"/> if desired.
+    /// <para/> If the Chlorophyte Extractinator item swapping behavior is desired, see the example in <see href="https://github.com/tModLoader/tModLoader/blob/stable/ExampleMod/Common/GlobalItems/TorchExtractinatorGlobalItem.cs">TorchExtractinatorGlobalItem.cs</see>.
+    /// <para/> This method is not instanced.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="extractType">The extractinator type corresponding to the items being processed</param>
+    /// <param name="extractinatorBlockType">Which Extractinator tile is being used, <see cref="TileID.Extractinator"/> or <see cref="TileID.ChlorophyteExtractinator"/>.</param>
+    /// <param name="resultType">Type of the result.</param>
+    /// <param name="resultStack">The result stack.</param>
+    public virtual void ExtractinatorUse(int extractType, int extractinatorBlockType, ref int resultType, ref int resultStack) { }
+
+    /// <summary>
+    /// Allows you to modify how many of an item a player obtains when the player fishes that item.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual void CaughtFishStack(int type, ref int stack) { }
+
+    /// <summary>
+    /// Whether or not specific conditions have been satisfied for the Angler to be able to request the given item. (For example, Hardmode.)
+    /// Returns true by default.
+    /// <para/> This method is not instanced.
+    /// <para/> Called on the server only.
+    /// </summary>
+    public virtual bool IsAnglerQuestAvailable(int type) => true;
+
+    /// <summary>
+    /// Allows you to set what the Angler says when the Quest button is clicked in his chat.
+    /// The chat parameter is his dialogue, and catchLocation should be set to "Caught at [location]" for the given type.
+    /// <para/> This method is not instanced.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual void AnglerChat(int type, ref string chat, ref string catchLocation) { }
+
+    /// <summary>
+    /// Override this method to add <see cref="Recipe"/>s to the game.<br/>
+    /// The <see href="https://github.com/tModLoader/tModLoader/wiki/Basic-Recipes">Basic Recipes Guide</see> teaches how to add new recipes to the game and how to manipulate existing recipes.<br/>
+    /// </summary>
+    public virtual void AddRecipes() { }
+
+    /// <summary>
+    /// Allows you to do things before this item's tooltip is drawn.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="item">The item</param>
+    /// <param name="lines">The tooltip lines for this item</param>
+    /// <param name="x">The top X position for this tooltip. It is where the first line starts drawing</param>
+    /// <param name="y">The top Y position for this tooltip. It is where the first line starts drawing</param>
+    /// <returns>Whether or not to draw this tooltip</returns>
+    public virtual bool PreDrawTooltip(Item item, ReadOnlyCollection<TooltipLine> lines, ref int x, ref int y) => true;
+
+    /// <summary>
+    /// Allows you to do things after this item's tooltip is drawn. The lines contain draw information as this is ran after drawing the tooltip.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="item">The item</param>
+    /// <param name="lines">The tooltip lines for this item</param>
+    public virtual void PostDrawTooltip(Item item, ReadOnlyCollection<DrawableTooltipLine> lines) { }
+
+    /// <summary>
+    /// Allows you to do things before a tooltip line of this item is drawn. The line contains draw info.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="item">The item</param>
+    /// <param name="line">The line that would be drawn</param>
+    /// <param name="yOffset">The Y offset added for next tooltip lines</param>
+    /// <returns>Whether or not to draw this tooltip line</returns>
+    public virtual bool PreDrawTooltipLine(Item item, DrawableTooltipLine line, ref int yOffset) => true;
+
+    /// <summary>
+    /// Allows you to do things after a tooltip line of this item is drawn. The line contains draw info.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    /// <param name="item">The item</param>
+    /// <param name="line">The line that was drawn</param>
+    public virtual void PostDrawTooltipLine(Item item, DrawableTooltipLine line) { }
+
+    /// <summary>
+    /// Allows you to modify all the tooltips that display for the given item. See here for information about TooltipLine. To hide tooltips, please use <see cref="TooltipLine.Hide"/> and defensive coding.
+    /// <para/> Called on a clone of the item, not the original. Modifying instanced fields will have no effect.
+    /// <para/> Called on the local client only.
+    /// </summary>
+    public virtual void ModifyTooltips(Item item, List<TooltipLine> tooltips) { }
+
+    /// <summary>
+    /// Allows you to save custom data for this item.
+    /// <br/>
+    /// <br/><b>NOTE:</b> The provided tag is always empty by default, and is provided as an argument only for the sake of convenience and optimization.
+    /// <br/><b>NOTE:</b> Try to only save data that isn't default values.
+    /// </summary>
+    /// <param name="item"> The item. </param>
+    /// <param name="tag"> The TagCompound to save data into. Note that this is always empty by default, and is provided as an argument only for the sake of convenience and optimization. </param>
+    public virtual void SaveData(Item item, TagCompound tag) { }
+
+    /// <summary>
+    /// Allows you to load custom data that you have saved for this item.
+    /// <br/><b>Try to write defensive loading code that won't crash if something's missing.</b>
+    /// </summary>
+    /// <param name="item"> The item. </param>
+    /// <param name="tag"> The TagCompound to load data from. </param>
+    public virtual void LoadData(Item item, TagCompound tag) { }
+
+    /// <inheritdoc cref="ModItem.NetSend"/>
+    public virtual void NetSend(Item item, BinaryWriter writer) { }
+
+    /// <inheritdoc cref="ModItem.NetReceive"/>
+    public virtual void NetReceive(Item item, BinaryReader reader) { }
+}
+#endregion General Behavior
+
+#region Transoceanic General Behavior
+public abstract class TOPlayerBehavior : PlayerBehavior
+{
+    public sealed override TOMain Mod => TOMain.Instance;
+}
+
+public abstract class TOGlobalNPCBehavior : GlobalNPCBehavior
+{
+    public sealed override TOMain Mod => TOMain.Instance;
+}
+
+public abstract class TOGlobalProjectileBehavior : GlobalProjectileBehavior
+{
+    public sealed override TOMain Mod => TOMain.Instance;
+}
+
+public abstract class TOGlobalItemBehavior : GlobalItemBehavior
+{
+    public sealed override TOMain Mod => TOMain.Instance;
+}
+#endregion Transoceanic General Behavior
+
+#region Single Behavior
+public abstract class SingleNPCBehavior : SingleEntityBehavior<NPC>
+{
     public NPC NPC { get; private set; } = null;
 
     public TOGlobalNPC OceanNPC { get; private set; } = null;
@@ -1270,7 +3384,6 @@ public abstract class NPCBehavior : SingleEntityBehavior<NPC>
         get => OceanNPC.Timer5;
         set => OceanNPC.Timer5 = value;
     }
-    #endregion 实成员
 
     #region 虚成员
     #region Defaults
@@ -1831,9 +3944,8 @@ public abstract class NPCBehavior : SingleEntityBehavior<NPC>
     #endregion 虚成员
 }
 
-public abstract class ProjectileBehavior : SingleEntityBehavior<Projectile>
+public abstract class SingleProjectileBehavior : SingleEntityBehavior<Projectile>
 {
-    #region 实成员
     public Projectile Projectile { get; private set; } = null;
 
     public TOGlobalProjectile OceanProjectile { get; private set; } = null;
@@ -1846,8 +3958,6 @@ public abstract class ProjectileBehavior : SingleEntityBehavior<Projectile>
         Owner = Main.player[Projectile.owner];
         OceanProjectile = projectile.Ocean();
     }
-
-    #endregion 实成员
 
     #region 虚成员
     #region Defaults
@@ -2096,9 +4206,8 @@ public abstract class ProjectileBehavior : SingleEntityBehavior<Projectile>
     #endregion 虚成员
 }
 
-public abstract class ItemBehavior : SingleEntityBehavior<Item>
+public abstract class SingleItemBehavior : SingleEntityBehavior<Item>
 {
-    #region 实成员
     public Item Item { get; private set; } = null;
 
     public TOGlobalItem OceanItem { get; private set; } = null;
@@ -2108,7 +4217,6 @@ public abstract class ItemBehavior : SingleEntityBehavior<Item>
         Item = item;
         OceanItem = item.Ocean();
     }
-    #endregion 实成员
 
     #region 虚成员
     #region Defaults
@@ -2706,906 +4814,15 @@ public abstract class ItemBehavior : SingleEntityBehavior<Item>
     #endregion Net
     #endregion 虚成员
 }
-#endregion Behavior
-
-#region Global
-public abstract class ModPlayerWithBehavior<TPlayerBehavior> : ModPlayer where TPlayerBehavior : PlayerBehavior
-{
-    protected abstract GlobalEntityBehaviorSet<Player, TPlayerBehavior> BehaviorSet { get; }
-
-    public override void SetStaticDefaults()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.SetStaticDefaults();
-    }
-
-    public override void Initialize()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.Initialize();
-    }
-
-    public override void ResetEffects()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ResetEffects();
-    }
-
-    public override void ResetInfoAccessories()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ResetInfoAccessories();
-    }
-
-    public override void RefreshInfoAccessoriesFromTeamPlayers(Player otherPlayer)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.RefreshInfoAccessoriesFromTeamPlayers(otherPlayer);
-    }
-
-    public override void ModifyMaxStats(out StatModifier health, out StatModifier mana)
-    {
-        health = StatModifier.Default;
-        mana = StatModifier.Default;
-
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-        {
-            behavior.ModifyMaxStats(out StatModifier newHealth, out StatModifier newMana);
-            health = health.CombineWith(newHealth);
-            mana = mana.CombineWith(newMana);
-        }
-    }
-
-    public override void UpdateDead()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.UpdateDead();
-    }
-
-    public override void PreSaveCustomData()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PreSaveCustomData();
-    }
-
-    public override void SaveData(TagCompound tag)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.SaveData(tag);
-    }
-
-    public override void LoadData(TagCompound tag)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.LoadData(tag);
-    }
-
-    public override void PreSavePlayer()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PreSavePlayer();
-    }
-
-    public override void PostSavePlayer()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PostSavePlayer();
-    }
-
-    public override void CopyClientState(ModPlayer targetCopy)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.CopyClientState(targetCopy);
-    }
-
-    public override void SyncPlayer(int toWho, int fromWho, bool newPlayer)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.SyncPlayer(toWho, fromWho, newPlayer);
-    }
-
-    public override void SendClientChanges(ModPlayer clientPlayer)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.SendClientChanges(clientPlayer);
-    }
-
-    public override void UpdateBadLifeRegen()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.UpdateBadLifeRegen();
-    }
-
-    public override void UpdateLifeRegen()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.UpdateLifeRegen();
-    }
-
-    public override void NaturalLifeRegen(ref float regen)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.NaturalLifeRegen(ref regen);
-    }
-
-    public override void UpdateAutopause()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.UpdateAutopause();
-    }
-
-    public override void PreUpdate()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PreUpdate();
-    }
-
-    public override void ProcessTriggers(TriggersSet triggersSet)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ProcessTriggers(triggersSet);
-    }
-
-    public override void ArmorSetBonusActivated()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ArmorSetBonusActivated();
-    }
-
-    public override void ArmorSetBonusHeld(int holdTime)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ArmorSetBonusHeld(holdTime);
-    }
-
-    public override void SetControls()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.SetControls();
-    }
-
-    public override void PreUpdateBuffs()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PreUpdateBuffs();
-    }
-
-    public override void PostUpdateBuffs()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PostUpdateBuffs();
-    }
-
-    public override void UpdateEquips()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.UpdateEquips();
-    }
-
-    public override void PostUpdateEquips()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PostUpdateEquips();
-    }
-
-    public override void UpdateVisibleAccessories()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.UpdateVisibleAccessories();
-    }
-
-    public override void UpdateVisibleVanityAccessories()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.UpdateVisibleVanityAccessories();
-    }
-
-    public override void UpdateDyes()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.UpdateDyes();
-    }
-
-    public override void PostUpdateMiscEffects()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PostUpdateMiscEffects();
-    }
-
-    public override void PostUpdateRunSpeeds()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PostUpdateRunSpeeds();
-    }
-
-    public override void PreUpdateMovement()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PreUpdateMovement();
-    }
-
-    public override void PostUpdate()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PostUpdate();
-    }
-
-    public override void ModifyExtraJumpDurationMultiplier(ExtraJump jump, ref float duration)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyExtraJumpDurationMultiplier(jump, ref duration);
-    }
-
-    public override bool CanStartExtraJump(ExtraJump jump)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.CanStartExtraJump(jump);
-        return result;
-    }
-
-    public override void OnExtraJumpStarted(ExtraJump jump, ref bool playSound)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnExtraJumpStarted(jump, ref playSound);
-    }
-
-    public override void OnExtraJumpEnded(ExtraJump jump)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnExtraJumpEnded(jump);
-    }
-
-    public override void OnExtraJumpRefreshed(ExtraJump jump)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnExtraJumpRefreshed(jump);
-    }
-
-    public override void ExtraJumpVisuals(ExtraJump jump)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ExtraJumpVisuals(jump);
-    }
-
-    public override bool CanShowExtraJumpVisuals(ExtraJump jump)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.CanShowExtraJumpVisuals(jump);
-        return result;
-    }
-
-    public override void OnExtraJumpCleared(ExtraJump jump)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnExtraJumpCleared(jump);
-    }
-
-    public override void FrameEffects()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.FrameEffects();
-    }
-
-    public override bool ImmuneTo(PlayerDeathReason damageSource, int cooldownCounter, bool dodgeable)
-    {
-        bool result = false;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result |= behavior.ImmuneTo(damageSource, cooldownCounter, dodgeable);
-        return result;
-    }
-
-    public override bool FreeDodge(Player.HurtInfo info)
-    {
-        bool result = false;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result |= behavior.FreeDodge(info);
-        return result;
-    }
-
-    public override bool ConsumableDodge(Player.HurtInfo info)
-    {
-        bool result = false;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result |= behavior.ConsumableDodge(info);
-        return result;
-    }
-
-    public override void ModifyHurt(ref Player.HurtModifiers modifiers)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyHurt(ref modifiers);
-    }
-
-    public override void OnHurt(Player.HurtInfo info)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnHurt(info);
-    }
-
-    public override void PostHurt(Player.HurtInfo info)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PostHurt(info);
-    }
-
-    public override bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genDust, ref PlayerDeathReason damageSource)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.PreKill(damage, hitDirection, pvp, ref playSound, ref genDust, ref damageSource);
-        return result;
-    }
-
-    public override void Kill(double damage, int hitDirection, bool pvp, PlayerDeathReason damageSource)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.Kill(damage, hitDirection, pvp, damageSource);
-    }
-
-    public override bool PreModifyLuck(ref float luck)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.PreModifyLuck(ref luck);
-        return result;
-    }
-
-    public override void ModifyLuck(ref float luck)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyLuck(ref luck);
-    }
-
-    public override bool PreItemCheck()
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.PreItemCheck();
-        return result;
-    }
-
-    public override void PostItemCheck()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PostItemCheck();
-    }
-
-    public override float UseTimeMultiplier(Item item)
-    {
-        float result = 1f;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result *= behavior.UseTimeMultiplier(item);
-        return result;
-    }
-
-    public override float UseAnimationMultiplier(Item item)
-    {
-        float result = 1f;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result *= behavior.UseAnimationMultiplier(item);
-        return result;
-    }
-
-    public override float UseSpeedMultiplier(Item item)
-    {
-        float result = 1f;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result *= behavior.UseSpeedMultiplier(item);
-        return result;
-    }
-
-    public override void GetHealLife(Item item, bool quickHeal, ref int healValue)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.GetHealLife(item, quickHeal, ref healValue);
-    }
-
-    public override void GetHealMana(Item item, bool quickHeal, ref int healValue)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.GetHealMana(item, quickHeal, ref healValue);
-    }
-
-    public override void ModifyManaCost(Item item, ref float reduce, ref float mult)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyManaCost(item, ref reduce, ref mult);
-    }
-
-    public override void OnMissingMana(Item item, int neededMana)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnMissingMana(item, neededMana);
-    }
-
-    public override void OnConsumeMana(Item item, int manaConsumed)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnConsumeMana(item, manaConsumed);
-    }
-
-    public override void ModifyWeaponDamage(Item item, ref StatModifier damage)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyWeaponDamage(item, ref damage);
-    }
-
-    public override void ModifyWeaponKnockback(Item item, ref StatModifier knockback)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyWeaponKnockback(item, ref knockback);
-    }
-
-    public override void ModifyWeaponCrit(Item item, ref float crit)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyWeaponCrit(item, ref crit);
-    }
-
-    public override bool CanConsumeAmmo(Item weapon, Item ammo)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.CanConsumeAmmo(weapon, ammo);
-        return result;
-    }
-
-    public override void OnConsumeAmmo(Item weapon, Item ammo)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnConsumeAmmo(weapon, ammo);
-    }
-
-    public override bool CanShoot(Item item)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.CanShoot(item);
-        return result;
-    }
-
-    public override void ModifyShootStats(Item item, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyShootStats(item, ref position, ref velocity, ref type, ref damage, ref knockback);
-    }
-
-    public override bool Shoot(Item item, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.Shoot(item, source, position, velocity, type, damage, knockback);
-        return result;
-    }
-
-    public override void MeleeEffects(Item item, Rectangle hitbox)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.MeleeEffects(item, hitbox);
-    }
-
-    public override void EmitEnchantmentVisualsAt(Projectile projectile, Vector2 boxPosition, int boxWidth, int boxHeight)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.EmitEnchantmentVisualsAt(projectile, boxPosition, boxWidth, boxHeight);
-    }
-
-    public override bool? CanCatchNPC(NPC target, Item item)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-        {
-            bool? result = behavior.CanCatchNPC(target, item);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }
-
-    public override void OnCatchNPC(NPC npc, Item item, bool failed)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnCatchNPC(npc, item, failed);
-    }
-
-    public override void ModifyItemScale(Item item, ref float scale)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyItemScale(item, ref scale);
-    }
-
-    public override void OnHitAnything(float x, float y, Entity victim)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnHitAnything(x, y, victim);
-    }
-
-    public override bool CanHitNPC(NPC target)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.CanHitNPC(target);
-        return result;
-    }
-
-    public override bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, NPC target)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-        {
-            bool? result = behavior.CanMeleeAttackCollideWithNPC(item, meleeAttackHitbox, target);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }
-
-    public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyHitNPC(target, ref modifiers);
-    }
-
-    public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnHitNPC(target, hit, damageDone);
-    }
-
-    public override bool? CanHitNPCWithItem(Item item, NPC target)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-        {
-            bool? result = behavior.CanHitNPCWithItem(item, target);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }
-
-    public override void ModifyHitNPCWithItem(Item item, NPC target, ref NPC.HitModifiers modifiers)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyHitNPCWithItem(item, target, ref modifiers);
-    }
-
-    public override void OnHitNPCWithItem(Item item, NPC target, NPC.HitInfo hit, int damageDone)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnHitNPCWithItem(item, target, hit, damageDone);
-    }
-
-    public override bool? CanHitNPCWithProj(Projectile proj, NPC target)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-        {
-            bool? result = behavior.CanHitNPCWithProj(proj, target);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }
-
-    public override void ModifyHitNPCWithProj(Projectile proj, NPC target, ref NPC.HitModifiers modifiers)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyHitNPCWithProj(proj, target, ref modifiers);
-    }
-
-    public override void OnHitNPCWithProj(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnHitNPCWithProj(proj, target, hit, damageDone);
-    }
-
-    public override bool CanHitPvp(Item item, Player target)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.CanHitPvp(item, target);
-        return result;
-    }
-
-    public override bool CanHitPvpWithProj(Projectile proj, Player target)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.CanHitPvpWithProj(proj, target);
-        return result;
-    }
-
-    public override bool CanBeHitByNPC(NPC npc, ref int cooldownSlot)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.CanBeHitByNPC(npc, ref cooldownSlot);
-        return result;
-    }
-
-    public override void ModifyHitByNPC(NPC npc, ref Player.HurtModifiers modifiers)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyHitByNPC(npc, ref modifiers);
-    }
-
-    public override void OnHitByNPC(NPC npc, Player.HurtInfo hurtInfo)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnHitByNPC(npc, hurtInfo);
-    }
-
-    public override bool CanBeHitByProjectile(Projectile proj)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.CanBeHitByProjectile(proj);
-        return result;
-    }
-
-    public override void ModifyHitByProjectile(Projectile proj, ref Player.HurtModifiers modifiers)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyHitByProjectile(proj, ref modifiers);
-    }
-
-    public override void OnHitByProjectile(Projectile proj, Player.HurtInfo hurtInfo)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnHitByProjectile(proj, hurtInfo);
-    }
-
-    public override void ModifyFishingAttempt(ref FishingAttempt attempt)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyFishingAttempt(ref attempt);
-    }
-
-    public override void CatchFish(FishingAttempt attempt, ref int itemDrop, ref int npcSpawn, ref AdvancedPopupRequest sonar, ref Vector2 sonarPosition)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.CatchFish(attempt, ref itemDrop, ref npcSpawn, ref sonar, ref sonarPosition);
-    }
-
-    public override void ModifyCaughtFish(Item fish)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyCaughtFish(fish);
-    }
-
-    public override bool? CanConsumeBait(Item bait)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-        {
-            bool? result = behavior.CanConsumeBait(bait);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }
-
-    public override void GetFishingLevel(Item fishingRod, Item bait, ref float fishingLevel)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.GetFishingLevel(fishingRod, bait, ref fishingLevel);
-    }
-
-    public override void AnglerQuestReward(float rareMultiplier, List<Item> rewardItems)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.AnglerQuestReward(rareMultiplier, rewardItems);
-    }
-
-    public override void GetDyeTraderReward(List<int> rewardPool)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.GetDyeTraderReward(rewardPool);
-    }
-
-    public override void DrawEffects(PlayerDrawSet drawInfo, ref float r, ref float g, ref float b, ref float a, ref bool fullBright)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.DrawEffects(drawInfo, ref r, ref g, ref b, ref a, ref fullBright);
-    }
-
-    public override void ModifyDrawInfo(ref PlayerDrawSet drawInfo)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyDrawInfo(ref drawInfo);
-    }
-
-    public override void ModifyDrawLayerOrdering(IDictionary<PlayerDrawLayer, PlayerDrawLayer.Position> positions)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyDrawLayerOrdering(positions);
-    }
-
-    public override void HideDrawLayers(PlayerDrawSet drawInfo)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.HideDrawLayers(drawInfo);
-    }
-
-    public override void ModifyScreenPosition()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyScreenPosition();
-    }
-
-    public override void ModifyZoom(ref float zoom)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyZoom(ref zoom);
-    }
-
-    public override void PlayerConnect()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PlayerConnect();
-    }
-
-    public override void PlayerDisconnect()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PlayerDisconnect();
-    }
-
-    public override void OnEnterWorld()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnEnterWorld();
-    }
-
-    public override void OnRespawn()
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnRespawn();
-    }
-
-    public override bool ShiftClickSlot(Item[] inventory, int context, int slot)
-    {
-        bool result = false;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result |= behavior.ShiftClickSlot(inventory, context, slot);
-        return result;
-    }
-
-    public override bool HoverSlot(Item[] inventory, int context, int slot)
-    {
-        bool result = false;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result |= behavior.HoverSlot(inventory, context, slot);
-        return result;
-    }
-
-    public override void PostSellItem(NPC vendor, Item[] shopInventory, Item item)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PostSellItem(vendor, shopInventory, item);
-    }
-
-    public override bool CanSellItem(NPC vendor, Item[] shopInventory, Item item)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.CanSellItem(vendor, shopInventory, item);
-        return result;
-    }
-
-    public override void PostBuyItem(NPC vendor, Item[] shopInventory, Item item)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PostBuyItem(vendor, shopInventory, item);
-    }
-
-    public override bool CanBuyItem(NPC vendor, Item[] shopInventory, Item item)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.CanBuyItem(vendor, shopInventory, item);
-        return result;
-    }
-
-    public override bool CanUseItem(Item item)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.CanUseItem(item);
-        return result;
-    }
-
-    public override bool? CanAutoReuseItem(Item item)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-        {
-            bool? result = behavior.CanAutoReuseItem(item);
-            if (result is not null)
-                return result;
-        }
-        return null;
-    }
-
-    public override bool ModifyNurseHeal(NPC nurse, ref int health, ref bool removeDebuffs, ref string chatText)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.ModifyNurseHeal(nurse, ref health, ref removeDebuffs, ref chatText);
-        return result;
-    }
-
-    public override void ModifyNursePrice(NPC nurse, int health, bool removeDebuffs, ref int price)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyNursePrice(nurse, health, removeDebuffs, ref price);
-    }
-
-    public override void PostNurseHeal(NPC nurse, int health, bool removeDebuffs, int price)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.PostNurseHeal(nurse, health, removeDebuffs, price);
-    }
-
-    public override IEnumerable<Item> AddStartingItems(bool mediumCoreDeath)
-    {
-        List<Item> allItems = [];
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-        {
-            IEnumerable<Item> items = behavior.AddStartingItems(mediumCoreDeath);
-            if (items is not null)
-                allItems.AddRange(items);
-        }
-        return allItems;
-    }
-
-    public override void ModifyStartingInventory(IReadOnlyDictionary<string, List<Item>> itemsByMod, bool mediumCoreDeath)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.ModifyStartingInventory(itemsByMod, mediumCoreDeath);
-    }
-
-    public override IEnumerable<Item> AddMaterialsForCrafting(out ItemConsumedCallback itemConsumedCallback)
-    {
-        itemConsumedCallback = null;
-        List<Item> allItems = [];
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-        {
-            IEnumerable<Item> items = behavior.AddMaterialsForCrafting(out ItemConsumedCallback callback);
-            if (items is not null)
-                allItems.AddRange(items);
-            itemConsumedCallback += callback;
-        }
-        return allItems;
-    }
-
-    public override bool OnPickup(Item item)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.OnPickup(item);
-        return result;
-    }
-
-    public override bool CanBeTeleportedTo(Vector2 teleportPosition, string context)
-    {
-        bool result = true;
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            result &= behavior.CanBeTeleportedTo(teleportPosition, context);
-        return result;
-    }
-
-    public override void OnEquipmentLoadoutSwitched(int oldLoadoutIndex, int loadoutIndex)
-    {
-        foreach (TPlayerBehavior behavior in BehaviorSet[Player])
-            behavior.OnEquipmentLoadoutSwitched(oldLoadoutIndex, loadoutIndex);
-    }
-}
-
-public abstract class GlobalNPCWithBehavior<TNPCBehavior> : GlobalNPC where TNPCBehavior : NPCBehavior
+#endregion Single Behavior
+
+#region Single Behavior Handler
+[CriticalBehavior]
+public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior where TNPCBehavior : SingleNPCBehavior
 {
     protected abstract SingleEntityBehaviorSet<NPC, TNPCBehavior> BehaviorSet { get; }
 
     public virtual bool TryGetBehavior(NPC npc, out TNPCBehavior npcBehavior, [CallerMemberName] string methodName = null!) => BehaviorSet.TryGetBehavior(npc, methodName, out npcBehavior);
-
-    public override bool InstancePerEntity => true;
 
     #region Defaults
     public override void SetStaticDefaults()
@@ -4175,13 +5392,12 @@ public abstract class GlobalNPCWithBehavior<TNPCBehavior> : GlobalNPC where TNPC
     #endregion WorldSaving
 }
 
-public abstract class GlobalProjectileWithBehavior<TProjectileBehavior> : GlobalProjectile where TProjectileBehavior : ProjectileBehavior
+[CriticalBehavior]
+public abstract class SingleProjectileBehaviorHandler<TProjectileBehavior> : GlobalProjectileBehavior where TProjectileBehavior : SingleProjectileBehavior
 {
     protected abstract SingleEntityBehaviorSet<Projectile, TProjectileBehavior> BehaviorSet { get; }
 
     public virtual bool TryGetBehavior(Projectile projectile, out TProjectileBehavior projectileBehavior, [CallerMemberName] string methodName = null!) => BehaviorSet.TryGetBehavior(projectile, methodName, out projectileBehavior);
-
-    public override bool InstancePerEntity => true;
 
     #region Defaults
     public override void SetStaticDefaults()
@@ -4482,13 +5698,12 @@ public abstract class GlobalProjectileWithBehavior<TProjectileBehavior> : Global
     #endregion SpecialEffects
 }
 
-public abstract class GlobalItemWithBehavior<TItemBehavior> : GlobalItem where TItemBehavior : ItemBehavior
+[CriticalBehavior]
+public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehavior where TItemBehavior : SingleItemBehavior
 {
     protected abstract SingleEntityBehaviorSet<Item, TItemBehavior> BehaviorSet { get; }
 
     public virtual bool TryGetBehavior(Item item, out TItemBehavior itemBehavior, [CallerMemberName] string methodName = null!) => BehaviorSet.TryGetBehavior(item, methodName, out itemBehavior);
-
-    public override bool InstancePerEntity => true;
 
     #region Defaults
     public override void SetStaticDefaults()
@@ -5177,4 +6392,2658 @@ public abstract class GlobalItemWithBehavior<TItemBehavior> : GlobalItem where T
     }
     #endregion Net
 }
-#endregion Global
+#endregion Single Behavior Handler
+
+#region General Behavior Handler
+public sealed class PlayerBehaviorHandler : ModPlayer, IResourceLoader
+{
+    public static GeneralEntityBehaviorSet<Player, PlayerBehavior> BehaviorSet { get; } = new();
+
+    public override void SetStaticDefaults()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.SetStaticDefaults();
+    }
+
+    public override void Initialize()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.Initialize();
+    }
+
+    public override void ResetEffects()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ResetEffects();
+    }
+
+    public override void ResetInfoAccessories()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ResetInfoAccessories();
+    }
+
+    public override void RefreshInfoAccessoriesFromTeamPlayers(Player otherPlayer)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.RefreshInfoAccessoriesFromTeamPlayers(otherPlayer);
+    }
+
+    public override void ModifyMaxStats(out StatModifier health, out StatModifier mana)
+    {
+        health = StatModifier.Default;
+        mana = StatModifier.Default;
+
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+        {
+            behavior.ModifyMaxStats(out StatModifier newHealth, out StatModifier newMana);
+            health = health.CombineWith(newHealth);
+            mana = mana.CombineWith(newMana);
+        }
+    }
+
+    public override void UpdateDead()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.UpdateDead();
+    }
+
+    public override void PreSaveCustomData()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PreSaveCustomData();
+    }
+
+    public override void SaveData(TagCompound tag)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.SaveData(tag);
+    }
+
+    public override void LoadData(TagCompound tag)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.LoadData(tag);
+    }
+
+    public override void PreSavePlayer()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PreSavePlayer();
+    }
+
+    public override void PostSavePlayer()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PostSavePlayer();
+    }
+
+    public override void CopyClientState(ModPlayer targetCopy)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.CopyClientState(targetCopy);
+    }
+
+    public override void SyncPlayer(int toWho, int fromWho, bool newPlayer)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.SyncPlayer(toWho, fromWho, newPlayer);
+    }
+
+    public override void SendClientChanges(ModPlayer clientPlayer)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.SendClientChanges(clientPlayer);
+    }
+
+    public override void UpdateBadLifeRegen()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.UpdateBadLifeRegen();
+    }
+
+    public override void UpdateLifeRegen()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.UpdateLifeRegen();
+    }
+
+    public override void NaturalLifeRegen(ref float regen)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.NaturalLifeRegen(ref regen);
+    }
+
+    public override void UpdateAutopause()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.UpdateAutopause();
+    }
+
+    public override void PreUpdate()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PreUpdate();
+    }
+
+    public override void ProcessTriggers(TriggersSet triggersSet)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ProcessTriggers(triggersSet);
+    }
+
+    public override void ArmorSetBonusActivated()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ArmorSetBonusActivated();
+    }
+
+    public override void ArmorSetBonusHeld(int holdTime)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ArmorSetBonusHeld(holdTime);
+    }
+
+    public override void SetControls()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.SetControls();
+    }
+
+    public override void PreUpdateBuffs()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PreUpdateBuffs();
+    }
+
+    public override void PostUpdateBuffs()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PostUpdateBuffs();
+    }
+
+    public override void UpdateEquips()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.UpdateEquips();
+    }
+
+    public override void PostUpdateEquips()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PostUpdateEquips();
+    }
+
+    public override void UpdateVisibleAccessories()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.UpdateVisibleAccessories();
+    }
+
+    public override void UpdateVisibleVanityAccessories()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.UpdateVisibleVanityAccessories();
+    }
+
+    public override void UpdateDyes()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.UpdateDyes();
+    }
+
+    public override void PostUpdateMiscEffects()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PostUpdateMiscEffects();
+    }
+
+    public override void PostUpdateRunSpeeds()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PostUpdateRunSpeeds();
+    }
+
+    public override void PreUpdateMovement()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PreUpdateMovement();
+    }
+
+    public override void PostUpdate()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PostUpdate();
+    }
+
+    public override void ModifyExtraJumpDurationMultiplier(ExtraJump jump, ref float duration)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyExtraJumpDurationMultiplier(jump, ref duration);
+    }
+
+    public override bool CanStartExtraJump(ExtraJump jump)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.CanStartExtraJump(jump);
+        return result;
+    }
+
+    public override void OnExtraJumpStarted(ExtraJump jump, ref bool playSound)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnExtraJumpStarted(jump, ref playSound);
+    }
+
+    public override void OnExtraJumpEnded(ExtraJump jump)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnExtraJumpEnded(jump);
+    }
+
+    public override void OnExtraJumpRefreshed(ExtraJump jump)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnExtraJumpRefreshed(jump);
+    }
+
+    public override void ExtraJumpVisuals(ExtraJump jump)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ExtraJumpVisuals(jump);
+    }
+
+    public override bool CanShowExtraJumpVisuals(ExtraJump jump)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.CanShowExtraJumpVisuals(jump);
+        return result;
+    }
+
+    public override void OnExtraJumpCleared(ExtraJump jump)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnExtraJumpCleared(jump);
+    }
+
+    public override void FrameEffects()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.FrameEffects();
+    }
+
+    public override bool ImmuneTo(PlayerDeathReason damageSource, int cooldownCounter, bool dodgeable)
+    {
+        bool result = false;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result |= behavior.ImmuneTo(damageSource, cooldownCounter, dodgeable);
+        return result;
+    }
+
+    public override bool FreeDodge(Player.HurtInfo info)
+    {
+        bool result = false;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result |= behavior.FreeDodge(info);
+        return result;
+    }
+
+    public override bool ConsumableDodge(Player.HurtInfo info)
+    {
+        bool result = false;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result |= behavior.ConsumableDodge(info);
+        return result;
+    }
+
+    public override void ModifyHurt(ref Player.HurtModifiers modifiers)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyHurt(ref modifiers);
+    }
+
+    public override void OnHurt(Player.HurtInfo info)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnHurt(info);
+    }
+
+    public override void PostHurt(Player.HurtInfo info)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PostHurt(info);
+    }
+
+    public override bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genDust, ref PlayerDeathReason damageSource)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.PreKill(damage, hitDirection, pvp, ref playSound, ref genDust, ref damageSource);
+        return result;
+    }
+
+    public override void Kill(double damage, int hitDirection, bool pvp, PlayerDeathReason damageSource)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.Kill(damage, hitDirection, pvp, damageSource);
+    }
+
+    public override bool PreModifyLuck(ref float luck)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.PreModifyLuck(ref luck);
+        return result;
+    }
+
+    public override void ModifyLuck(ref float luck)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyLuck(ref luck);
+    }
+
+    public override bool PreItemCheck()
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.PreItemCheck();
+        return result;
+    }
+
+    public override void PostItemCheck()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PostItemCheck();
+    }
+
+    public override float UseTimeMultiplier(Item item)
+    {
+        float result = 1f;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result *= behavior.UseTimeMultiplier(item);
+        return result;
+    }
+
+    public override float UseAnimationMultiplier(Item item)
+    {
+        float result = 1f;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result *= behavior.UseAnimationMultiplier(item);
+        return result;
+    }
+
+    public override float UseSpeedMultiplier(Item item)
+    {
+        float result = 1f;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result *= behavior.UseSpeedMultiplier(item);
+        return result;
+    }
+
+    public override void GetHealLife(Item item, bool quickHeal, ref int healValue)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.GetHealLife(item, quickHeal, ref healValue);
+    }
+
+    public override void GetHealMana(Item item, bool quickHeal, ref int healValue)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.GetHealMana(item, quickHeal, ref healValue);
+    }
+
+    public override void ModifyManaCost(Item item, ref float reduce, ref float mult)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyManaCost(item, ref reduce, ref mult);
+    }
+
+    public override void OnMissingMana(Item item, int neededMana)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnMissingMana(item, neededMana);
+    }
+
+    public override void OnConsumeMana(Item item, int manaConsumed)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnConsumeMana(item, manaConsumed);
+    }
+
+    public override void ModifyWeaponDamage(Item item, ref StatModifier damage)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyWeaponDamage(item, ref damage);
+    }
+
+    public override void ModifyWeaponKnockback(Item item, ref StatModifier knockback)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyWeaponKnockback(item, ref knockback);
+    }
+
+    public override void ModifyWeaponCrit(Item item, ref float crit)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyWeaponCrit(item, ref crit);
+    }
+
+    public override bool CanConsumeAmmo(Item weapon, Item ammo)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.CanConsumeAmmo(weapon, ammo);
+        return result;
+    }
+
+    public override void OnConsumeAmmo(Item weapon, Item ammo)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnConsumeAmmo(weapon, ammo);
+    }
+
+    public override bool CanShoot(Item item)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.CanShoot(item);
+        return result;
+    }
+
+    public override void ModifyShootStats(Item item, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyShootStats(item, ref position, ref velocity, ref type, ref damage, ref knockback);
+    }
+
+    public override bool Shoot(Item item, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.Shoot(item, source, position, velocity, type, damage, knockback);
+        return result;
+    }
+
+    public override void MeleeEffects(Item item, Rectangle hitbox)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.MeleeEffects(item, hitbox);
+    }
+
+    public override void EmitEnchantmentVisualsAt(Projectile projectile, Vector2 boxPosition, int boxWidth, int boxHeight)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.EmitEnchantmentVisualsAt(projectile, boxPosition, boxWidth, boxHeight);
+    }
+
+    public override bool? CanCatchNPC(NPC target, Item item)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+        {
+            bool? result = behavior.CanCatchNPC(target, item);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void OnCatchNPC(NPC npc, Item item, bool failed)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnCatchNPC(npc, item, failed);
+    }
+
+    public override void ModifyItemScale(Item item, ref float scale)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyItemScale(item, ref scale);
+    }
+
+    public override void OnHitAnything(float x, float y, Entity victim)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnHitAnything(x, y, victim);
+    }
+
+    public override bool CanHitNPC(NPC target)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.CanHitNPC(target);
+        return result;
+    }
+
+    public override bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, NPC target)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+        {
+            bool? result = behavior.CanMeleeAttackCollideWithNPC(item, meleeAttackHitbox, target);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyHitNPC(target, ref modifiers);
+    }
+
+    public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnHitNPC(target, hit, damageDone);
+    }
+
+    public override bool? CanHitNPCWithItem(Item item, NPC target)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+        {
+            bool? result = behavior.CanHitNPCWithItem(item, target);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void ModifyHitNPCWithItem(Item item, NPC target, ref NPC.HitModifiers modifiers)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyHitNPCWithItem(item, target, ref modifiers);
+    }
+
+    public override void OnHitNPCWithItem(Item item, NPC target, NPC.HitInfo hit, int damageDone)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnHitNPCWithItem(item, target, hit, damageDone);
+    }
+
+    public override bool? CanHitNPCWithProj(Projectile proj, NPC target)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+        {
+            bool? result = behavior.CanHitNPCWithProj(proj, target);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void ModifyHitNPCWithProj(Projectile proj, NPC target, ref NPC.HitModifiers modifiers)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyHitNPCWithProj(proj, target, ref modifiers);
+    }
+
+    public override void OnHitNPCWithProj(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnHitNPCWithProj(proj, target, hit, damageDone);
+    }
+
+    public override bool CanHitPvp(Item item, Player target)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.CanHitPvp(item, target);
+        return result;
+    }
+
+    public override bool CanHitPvpWithProj(Projectile proj, Player target)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.CanHitPvpWithProj(proj, target);
+        return result;
+    }
+
+    public override bool CanBeHitByNPC(NPC npc, ref int cooldownSlot)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.CanBeHitByNPC(npc, ref cooldownSlot);
+        return result;
+    }
+
+    public override void ModifyHitByNPC(NPC npc, ref Player.HurtModifiers modifiers)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyHitByNPC(npc, ref modifiers);
+    }
+
+    public override void OnHitByNPC(NPC npc, Player.HurtInfo hurtInfo)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnHitByNPC(npc, hurtInfo);
+    }
+
+    public override bool CanBeHitByProjectile(Projectile proj)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.CanBeHitByProjectile(proj);
+        return result;
+    }
+
+    public override void ModifyHitByProjectile(Projectile proj, ref Player.HurtModifiers modifiers)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyHitByProjectile(proj, ref modifiers);
+    }
+
+    public override void OnHitByProjectile(Projectile proj, Player.HurtInfo hurtInfo)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnHitByProjectile(proj, hurtInfo);
+    }
+
+    public override void ModifyFishingAttempt(ref FishingAttempt attempt)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyFishingAttempt(ref attempt);
+    }
+
+    public override void CatchFish(FishingAttempt attempt, ref int itemDrop, ref int npcSpawn, ref AdvancedPopupRequest sonar, ref Vector2 sonarPosition)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.CatchFish(attempt, ref itemDrop, ref npcSpawn, ref sonar, ref sonarPosition);
+    }
+
+    public override void ModifyCaughtFish(Item fish)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyCaughtFish(fish);
+    }
+
+    public override bool? CanConsumeBait(Item bait)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+        {
+            bool? result = behavior.CanConsumeBait(bait);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void GetFishingLevel(Item fishingRod, Item bait, ref float fishingLevel)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.GetFishingLevel(fishingRod, bait, ref fishingLevel);
+    }
+
+    public override void AnglerQuestReward(float rareMultiplier, List<Item> rewardItems)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.AnglerQuestReward(rareMultiplier, rewardItems);
+    }
+
+    public override void GetDyeTraderReward(List<int> rewardPool)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.GetDyeTraderReward(rewardPool);
+    }
+
+    public override void DrawEffects(PlayerDrawSet drawInfo, ref float r, ref float g, ref float b, ref float a, ref bool fullBright)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.DrawEffects(drawInfo, ref r, ref g, ref b, ref a, ref fullBright);
+    }
+
+    public override void ModifyDrawInfo(ref PlayerDrawSet drawInfo)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyDrawInfo(ref drawInfo);
+    }
+
+    public override void ModifyDrawLayerOrdering(IDictionary<PlayerDrawLayer, PlayerDrawLayer.Position> positions)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyDrawLayerOrdering(positions);
+    }
+
+    public override void HideDrawLayers(PlayerDrawSet drawInfo)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.HideDrawLayers(drawInfo);
+    }
+
+    public override void ModifyScreenPosition()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyScreenPosition();
+    }
+
+    public override void ModifyZoom(ref float zoom)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyZoom(ref zoom);
+    }
+
+    public override void PlayerConnect()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PlayerConnect();
+    }
+
+    public override void PlayerDisconnect()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PlayerDisconnect();
+    }
+
+    public override void OnEnterWorld()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnEnterWorld();
+    }
+
+    public override void OnRespawn()
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnRespawn();
+    }
+
+    public override bool ShiftClickSlot(Item[] inventory, int context, int slot)
+    {
+        bool result = false;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result |= behavior.ShiftClickSlot(inventory, context, slot);
+        return result;
+    }
+
+    public override bool HoverSlot(Item[] inventory, int context, int slot)
+    {
+        bool result = false;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result |= behavior.HoverSlot(inventory, context, slot);
+        return result;
+    }
+
+    public override void PostSellItem(NPC vendor, Item[] shopInventory, Item item)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PostSellItem(vendor, shopInventory, item);
+    }
+
+    public override bool CanSellItem(NPC vendor, Item[] shopInventory, Item item)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.CanSellItem(vendor, shopInventory, item);
+        return result;
+    }
+
+    public override void PostBuyItem(NPC vendor, Item[] shopInventory, Item item)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PostBuyItem(vendor, shopInventory, item);
+    }
+
+    public override bool CanBuyItem(NPC vendor, Item[] shopInventory, Item item)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.CanBuyItem(vendor, shopInventory, item);
+        return result;
+    }
+
+    public override bool CanUseItem(Item item)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.CanUseItem(item);
+        return result;
+    }
+
+    public override bool? CanAutoReuseItem(Item item)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+        {
+            bool? result = behavior.CanAutoReuseItem(item);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override bool ModifyNurseHeal(NPC nurse, ref int health, ref bool removeDebuffs, ref string chatText)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.ModifyNurseHeal(nurse, ref health, ref removeDebuffs, ref chatText);
+        return result;
+    }
+
+    public override void ModifyNursePrice(NPC nurse, int health, bool removeDebuffs, ref int price)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyNursePrice(nurse, health, removeDebuffs, ref price);
+    }
+
+    public override void PostNurseHeal(NPC nurse, int health, bool removeDebuffs, int price)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.PostNurseHeal(nurse, health, removeDebuffs, price);
+    }
+
+    public override IEnumerable<Item> AddStartingItems(bool mediumCoreDeath)
+    {
+        List<Item> allItems = [];
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+        {
+            IEnumerable<Item> items = behavior.AddStartingItems(mediumCoreDeath);
+            if (items is not null)
+                allItems.AddRange(items);
+        }
+        return allItems;
+    }
+
+    public override void ModifyStartingInventory(IReadOnlyDictionary<string, List<Item>> itemsByMod, bool mediumCoreDeath)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.ModifyStartingInventory(itemsByMod, mediumCoreDeath);
+    }
+
+    public override IEnumerable<Item> AddMaterialsForCrafting(out ModPlayer.ItemConsumedCallback itemConsumedCallback)
+    {
+        itemConsumedCallback = null;
+        List<Item> allItems = [];
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+        {
+            IEnumerable<Item> items = behavior.AddMaterialsForCrafting(out ModPlayer.ItemConsumedCallback callback);
+            if (items is not null)
+                allItems.AddRange(items);
+            itemConsumedCallback += callback;
+        }
+        return allItems;
+    }
+
+    public override bool OnPickup(Item item)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.OnPickup(item);
+        return result;
+    }
+
+    public override bool CanBeTeleportedTo(Vector2 teleportPosition, string context)
+    {
+        bool result = true;
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            result &= behavior.CanBeTeleportedTo(teleportPosition, context);
+        return result;
+    }
+
+    public override void OnEquipmentLoadoutSwitched(int oldLoadoutIndex, int loadoutIndex)
+    {
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            behavior.OnEquipmentLoadoutSwitched(oldLoadoutIndex, loadoutIndex);
+    }
+
+    void IResourceLoader.PostSetupContent() => BehaviorSet.FillSet();
+
+    void IResourceLoader.OnModUnload() => BehaviorSet.Clear();
+}
+
+public sealed class GlobalNPCBehaviorHandler : GlobalNPC, IResourceLoader
+{
+    public override bool InstancePerEntity => true;
+
+    public static GlobalEntityBehaviorSet<NPC, GlobalNPCBehavior> BehaviorSet { get; } = new();
+
+    public override void SetStaticDefaults()
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.SetStaticDefaults();
+    }
+
+    public override void SetDefaults(NPC npc)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.SetDefaults(npc);
+    }
+
+    public override void SetDefaultsFromNetId(NPC npc)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.SetDefaultsFromNetId(npc);
+    }
+
+    public override void OnSpawn(NPC npc, IEntitySource source)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnSpawn(npc, source);
+    }
+
+    public override void ApplyDifficultyAndPlayerScaling(NPC npc, int numPlayers, float balance, float bossAdjustment)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ApplyDifficultyAndPlayerScaling(npc, numPlayers, balance, bossAdjustment);
+    }
+
+    public override void SetBestiary(NPC npc, BestiaryDatabase database, BestiaryEntry bestiaryEntry)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.SetBestiary(npc, database, bestiaryEntry);
+    }
+
+    public override void ModifyTypeName(NPC npc, ref string typeName)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyTypeName(npc, ref typeName);
+    }
+
+    public override void ModifyHoverBoundingBox(NPC npc, ref Rectangle boundingBox)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyHoverBoundingBox(npc, ref boundingBox);
+    }
+
+    public override ITownNPCProfile ModifyTownNPCProfile(NPC npc)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            ITownNPCProfile temp = behavior.ModifyTownNPCProfile(npc);
+            if (temp is not null)
+                return temp;
+        }
+        return null;
+    }
+
+    public override void ModifyNPCNameList(NPC npc, List<string> nameList)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyNPCNameList(npc, nameList);
+    }
+
+    public override void ResetEffects(NPC npc)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ResetEffects(npc);
+    }
+
+    public override bool PreAI(NPC npc)
+    {
+        bool result = true;
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.PreAI(npc);
+        return result;
+    }
+
+    public override void AI(NPC npc)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.AI(npc);
+    }
+
+    public override void PostAI(NPC npc)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.PostAI(npc);
+    }
+
+    public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.SendExtraAI(npc, bitWriter, binaryWriter);
+    }
+
+    public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ReceiveExtraAI(npc, bitReader, binaryReader);
+    }
+
+    public override void FindFrame(NPC npc, int frameHeight)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.FindFrame(npc, frameHeight);
+    }
+
+    public override void HitEffect(NPC npc, NPC.HitInfo hit)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.HitEffect(npc, hit);
+    }
+
+    public override void UpdateLifeRegen(NPC npc, ref int damage)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.UpdateLifeRegen(npc, ref damage);
+    }
+
+    public override bool CheckActive(NPC npc)
+    {
+        bool result = true;
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CheckActive(npc);
+        return result;
+    }
+
+    public override bool CheckDead(NPC npc)
+    {
+        bool result = true;
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CheckDead(npc);
+        return result;
+    }
+
+    public override bool SpecialOnKill(NPC npc)
+    {
+        bool result = false;
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            result |= behavior.SpecialOnKill(npc);
+        return result;
+    }
+
+    public override bool PreKill(NPC npc)
+    {
+        bool result = true;
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.PreKill(npc);
+        return result;
+    }
+
+    public override void OnKill(NPC npc)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnKill(npc);
+    }
+
+    public override bool? CanFallThroughPlatforms(NPC npc)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanFallThroughPlatforms(npc);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override bool? CanBeCaughtBy(NPC npc, Item item, Player player)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanBeCaughtBy(npc, item, player);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void OnCaughtBy(NPC npc, Player player, Item item, bool failed)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnCaughtBy(npc, player, item, failed);
+    }
+
+    public override void ModifyNPCLoot(NPC npc, NPCLoot npcLoot)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyNPCLoot(npc, npcLoot);
+    }
+
+    public override void ModifyGlobalLoot(GlobalLoot globalLoot)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyGlobalLoot(globalLoot);
+    }
+
+    public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot)
+    {
+        bool result = true;
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanHitPlayer(npc, target, ref cooldownSlot);
+        return result;
+    }
+
+    public override void ModifyHitPlayer(NPC npc, Player target, ref Player.HurtModifiers modifiers)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyHitPlayer(npc, target, ref modifiers);
+    }
+
+    public override void OnHitPlayer(NPC npc, Player target, Player.HurtInfo hurtInfo)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnHitPlayer(npc, target, hurtInfo);
+    }
+
+    public override bool CanHitNPC(NPC npc, NPC target)
+    {
+        bool result = true;
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanHitNPC(npc, target);
+        return result;
+    }
+
+    public override bool CanBeHitByNPC(NPC npc, NPC attacker)
+    {
+        bool result = true;
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanBeHitByNPC(npc, attacker);
+        return result;
+    }
+
+    public override void ModifyHitNPC(NPC npc, NPC target, ref NPC.HitModifiers modifiers)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyHitNPC(npc, target, ref modifiers);
+    }
+
+    public override void OnHitNPC(NPC npc, NPC target, NPC.HitInfo hit)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnHitNPC(npc, target, hit);
+    }
+
+    public override bool? CanBeHitByItem(NPC npc, Player player, Item item)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanBeHitByItem(npc, player, item);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override bool? CanCollideWithPlayerMeleeAttack(NPC npc, Player player, Item item, Rectangle meleeAttackHitbox)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanCollideWithPlayerMeleeAttack(npc, player, item, meleeAttackHitbox);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyHitByItem(npc, player, item, ref modifiers);
+    }
+
+    public override void OnHitByItem(NPC npc, Player player, Item item, NPC.HitInfo hit, int damageDone)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnHitByItem(npc, player, item, hit, damageDone);
+    }
+
+    public override bool? CanBeHitByProjectile(NPC npc, Projectile projectile)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanBeHitByProjectile(npc, projectile);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyHitByProjectile(npc, projectile, ref modifiers);
+    }
+
+    public override void OnHitByProjectile(NPC npc, Projectile projectile, NPC.HitInfo hit, int damageDone)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnHitByProjectile(npc, projectile, hit, damageDone);
+    }
+
+    public override void ModifyIncomingHit(NPC npc, ref NPC.HitModifiers modifiers)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyIncomingHit(npc, ref modifiers);
+    }
+
+    public override void BossHeadSlot(NPC npc, ref int index)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.BossHeadSlot(npc, ref index);
+    }
+
+    public override void BossHeadRotation(NPC npc, ref float rotation)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.BossHeadRotation(npc, ref rotation);
+    }
+
+    public override void BossHeadSpriteEffects(NPC npc, ref SpriteEffects spriteEffects)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.BossHeadSpriteEffects(npc, ref spriteEffects);
+    }
+
+    public override Color? GetAlpha(NPC npc, Color drawColor)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            Color? result = behavior.GetAlpha(npc, drawColor);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void DrawEffects(NPC npc, ref Color drawColor)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.DrawEffects(npc, ref drawColor);
+    }
+
+    public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
+    {
+        bool result = true;
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.PreDraw(npc, spriteBatch, screenPos, drawColor);
+        return result;
+    }
+
+    public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.PostDraw(npc, spriteBatch, screenPos, drawColor);
+    }
+
+    public override void DrawBehind(NPC npc, int index)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.DrawBehind(npc, index);
+    }
+
+    public override bool? DrawHealthBar(NPC npc, byte hbPosition, ref float scale, ref Vector2 position)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.DrawHealthBar(npc, hbPosition, ref scale, ref position);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void EditSpawnRate(Player player, ref int spawnRate, ref int maxSpawns)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.EditSpawnRate(player, ref spawnRate, ref maxSpawns);
+    }
+
+    public override void EditSpawnRange(Player player, ref int spawnRangeX, ref int spawnRangeY, ref int safeRangeX, ref int safeRangeY)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.EditSpawnRange(player, ref spawnRangeX, ref spawnRangeY, ref safeRangeX, ref safeRangeY);
+    }
+
+    public override void EditSpawnPool(IDictionary<int, float> pool, NPCSpawnInfo spawnInfo)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.EditSpawnPool(pool, spawnInfo);
+    }
+
+    public override void SpawnNPC(int npc, int tileX, int tileY)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.SpawnNPC(npc, tileX, tileY);
+    }
+
+    public override bool? CanChat(NPC npc)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanChat(npc);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void GetChat(NPC npc, ref string chat)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.GetChat(npc, ref chat);
+    }
+
+    public override bool PreChatButtonClicked(NPC npc, bool firstButton)
+    {
+        bool result = true;
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.PreChatButtonClicked(npc, firstButton);
+        return result;
+    }
+
+    public override void OnChatButtonClicked(NPC npc, bool firstButton)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnChatButtonClicked(npc, firstButton);
+    }
+
+    public override void ModifyShop(NPCShop shop)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyShop(shop);
+    }
+
+    public override void ModifyActiveShop(NPC npc, string shopName, Item[] items)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyActiveShop(npc, shopName, items);
+    }
+
+    public override void SetupTravelShop(int[] shop, ref int nextSlot)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.SetupTravelShop(shop, ref nextSlot);
+    }
+
+    public override bool? CanGoToStatue(NPC npc, bool toKingStatue)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanGoToStatue(npc, toKingStatue);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void OnGoToStatue(NPC npc, bool toKingStatue)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnGoToStatue(npc, toKingStatue);
+    }
+
+    public override void BuffTownNPC(ref float damageMult, ref int defense)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.BuffTownNPC(ref damageMult, ref defense);
+    }
+
+    public override bool ModifyDeathMessage(NPC npc, ref NetworkText customText, ref Color color)
+    {
+        bool result = true;
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.ModifyDeathMessage(npc, ref customText, ref color);
+        return result;
+    }
+
+    public override void TownNPCAttackStrength(NPC npc, ref int damage, ref float knockback)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.TownNPCAttackStrength(npc, ref damage, ref knockback);
+    }
+
+    public override void TownNPCAttackCooldown(NPC npc, ref int cooldown, ref int randExtraCooldown)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.TownNPCAttackCooldown(npc, ref cooldown, ref randExtraCooldown);
+    }
+
+    public override void TownNPCAttackProj(NPC npc, ref int projType, ref int attackDelay)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.TownNPCAttackProj(npc, ref projType, ref attackDelay);
+    }
+
+    public override void TownNPCAttackProjSpeed(NPC npc, ref float multiplier, ref float gravityCorrection, ref float randomOffset)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.TownNPCAttackProjSpeed(npc, ref multiplier, ref gravityCorrection, ref randomOffset);
+    }
+
+    public override void TownNPCAttackShoot(NPC npc, ref bool inBetweenShots)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.TownNPCAttackShoot(npc, ref inBetweenShots);
+    }
+
+    public override void TownNPCAttackMagic(NPC npc, ref float auraLightMultiplier)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.TownNPCAttackMagic(npc, ref auraLightMultiplier);
+    }
+
+    public override void TownNPCAttackSwing(NPC npc, ref int itemWidth, ref int itemHeight)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.TownNPCAttackSwing(npc, ref itemWidth, ref itemHeight);
+    }
+
+    public override void DrawTownAttackGun(NPC npc, ref Texture2D item, ref Rectangle itemFrame, ref float scale, ref int horizontalHoldoutOffset)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.DrawTownAttackGun(npc, ref item, ref itemFrame, ref scale, ref horizontalHoldoutOffset);
+    }
+
+    public override void DrawTownAttackSwing(NPC npc, ref Texture2D item, ref Rectangle itemFrame, ref int itemSize, ref float scale, ref Vector2 offset)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.DrawTownAttackSwing(npc, ref item, ref itemFrame, ref itemSize, ref scale, ref offset);
+    }
+
+    public override bool ModifyCollisionData(NPC npc, Rectangle victimHitbox, ref int immunityCooldownSlot, ref MultipliableFloat damageMultiplier, ref Rectangle npcHitbox)
+    {
+        bool result = true;
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.ModifyCollisionData(npc, victimHitbox, ref immunityCooldownSlot, ref damageMultiplier, ref npcHitbox);
+        return result;
+    }
+
+    public override bool NeedSaving(NPC npc)
+    {
+        bool result = false;
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            result |= behavior.NeedSaving(npc);
+        return result;
+    }
+
+    public override void SaveData(NPC npc, TagCompound tag)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.SaveData(npc, tag);
+    }
+
+    public override void LoadData(NPC npc, TagCompound tag)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.LoadData(npc, tag);
+    }
+
+    public override int? PickEmote(NPC npc, Player closestPlayer, List<int> emoteList, WorldUIAnchor otherAnchor)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            int? result = behavior.PickEmote(npc, closestPlayer, emoteList, otherAnchor);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void ChatBubblePosition(NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ChatBubblePosition(npc, ref position, ref spriteEffects);
+    }
+
+    public override void PartyHatPosition(NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.PartyHatPosition(npc, ref position, ref spriteEffects);
+    }
+
+    public override void EmoteBubblePosition(NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects)
+    {
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.EmoteBubblePosition(npc, ref position, ref spriteEffects);
+    }
+
+    void IResourceLoader.PostSetupContent() => BehaviorSet.FillSet();
+
+    void IResourceLoader.OnModUnload() => BehaviorSet.Clear();
+}
+
+public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile, IResourceLoader
+{
+    public override bool InstancePerEntity => true;
+
+    public static GlobalEntityBehaviorSet<Projectile, GlobalProjectileBehavior> BehaviorSet { get; } = new();
+
+    public override void SetStaticDefaults()
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.SetStaticDefaults();
+    }
+
+    public override void SetDefaults(Projectile projectile)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.SetDefaults(projectile);
+    }
+
+    public override void OnSpawn(Projectile projectile, IEntitySource source)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnSpawn(projectile, source);
+    }
+
+    public override bool PreAI(Projectile projectile)
+    {
+        bool result = true;
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.PreAI(projectile);
+        return result;
+    }
+
+    public override void AI(Projectile projectile)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.AI(projectile);
+    }
+
+    public override void PostAI(Projectile projectile)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.PostAI(projectile);
+    }
+
+    public override void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.SendExtraAI(projectile, bitWriter, binaryWriter);
+    }
+
+    public override void ReceiveExtraAI(Projectile projectile, BitReader bitReader, BinaryReader binaryReader)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ReceiveExtraAI(projectile, bitReader, binaryReader);
+    }
+
+    public override bool ShouldUpdatePosition(Projectile projectile)
+    {
+        bool result = true;
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.ShouldUpdatePosition(projectile);
+        return result;
+    }
+
+    public override bool TileCollideStyle(Projectile projectile, ref int width, ref int height, ref bool fallThrough, ref Vector2 hitboxCenterFrac)
+    {
+        bool result = true;
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.TileCollideStyle(projectile, ref width, ref height, ref fallThrough, ref hitboxCenterFrac);
+        return result;
+    }
+
+    public override bool OnTileCollide(Projectile projectile, Vector2 oldVelocity)
+    {
+        bool result = true;
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.OnTileCollide(projectile, oldVelocity);
+        return result;
+    }
+
+    public override bool PreKill(Projectile projectile, int timeLeft)
+    {
+        bool result = true;
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.PreKill(projectile, timeLeft);
+        return result;
+    }
+
+    public override void OnKill(Projectile projectile, int timeLeft)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnKill(projectile, timeLeft);
+    }
+
+    public override bool? CanCutTiles(Projectile projectile)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanCutTiles(projectile);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void CutTiles(Projectile projectile)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.CutTiles(projectile);
+    }
+
+    public override bool? CanDamage(Projectile projectile)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanDamage(projectile);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override bool MinionContactDamage(Projectile projectile)
+    {
+        bool result = false;  // 默认值为false，使用或运算
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            result |= behavior.MinionContactDamage(projectile);
+        return result;
+    }
+
+    public override void ModifyDamageHitbox(Projectile projectile, ref Rectangle hitbox)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyDamageHitbox(projectile, ref hitbox);
+    }
+
+    public override bool? CanHitNPC(Projectile projectile, NPC target)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanHitNPC(projectile, target);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void ModifyHitNPC(Projectile projectile, NPC target, ref NPC.HitModifiers modifiers)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyHitNPC(projectile, target, ref modifiers);
+    }
+
+    public override void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damageDone)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnHitNPC(projectile, target, hit, damageDone);
+    }
+
+    public override bool CanHitPvp(Projectile projectile, Player target)
+    {
+        bool result = true;
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanHitPvp(projectile, target);
+        return result;
+    }
+
+    public override bool CanHitPlayer(Projectile projectile, Player target)
+    {
+        bool result = true;
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanHitPlayer(projectile, target);
+        return result;
+    }
+
+    public override void ModifyHitPlayer(Projectile projectile, Player target, ref Player.HurtModifiers modifiers)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyHitPlayer(projectile, target, ref modifiers);
+    }
+
+    public override void OnHitPlayer(Projectile projectile, Player target, Player.HurtInfo info)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnHitPlayer(projectile, target, info);
+    }
+
+    public override bool? Colliding(Projectile projectile, Rectangle projHitbox, Rectangle targetHitbox)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.Colliding(projectile, projHitbox, targetHitbox);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override Color? GetAlpha(Projectile projectile, Color lightColor)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            Color? result = behavior.GetAlpha(projectile, lightColor);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override bool PreDrawExtras(Projectile projectile)
+    {
+        bool result = true;
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.PreDrawExtras(projectile);
+        return result;
+    }
+
+    public override bool PreDraw(Projectile projectile, ref Color lightColor)
+    {
+        bool result = true;
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.PreDraw(projectile, ref lightColor);
+        return result;
+    }
+
+    public override void PostDraw(Projectile projectile, Color lightColor)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.PostDraw(projectile, lightColor);
+    }
+
+    public override void DrawBehind(Projectile projectile, int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.DrawBehind(projectile, index, behindNPCsAndTiles, behindNPCs, behindProjectiles, overPlayers, overWiresUI);
+    }
+
+    public override bool? CanUseGrapple(int type, Player player)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanUseGrapple(type, player);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void UseGrapple(Player player, ref int type)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.UseGrapple(player, ref type);
+    }
+
+    public override void NumGrappleHooks(Projectile projectile, Player player, ref int numHooks)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.NumGrappleHooks(projectile, player, ref numHooks);
+    }
+
+    public override void GrappleRetreatSpeed(Projectile projectile, Player player, ref float speed)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.GrappleRetreatSpeed(projectile, player, ref speed);
+    }
+
+    public override void GrapplePullSpeed(Projectile projectile, Player player, ref float speed)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.GrapplePullSpeed(projectile, player, ref speed);
+    }
+
+    public override void GrappleTargetPoint(Projectile projectile, Player player, ref float grappleX, ref float grappleY)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.GrappleTargetPoint(projectile, player, ref grappleX, ref grappleY);
+    }
+
+    public override bool? GrappleCanLatchOnTo(Projectile projectile, Player player, int x, int y)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.GrappleCanLatchOnTo(projectile, player, x, y);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void PrepareBombToBlow(Projectile projectile)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.PrepareBombToBlow(projectile);
+    }
+
+    public override void EmitEnchantmentVisualsAt(Projectile projectile, Vector2 boxPosition, int boxWidth, int boxHeight)
+    {
+        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.EmitEnchantmentVisualsAt(projectile, boxPosition, boxWidth, boxHeight);
+    }
+
+    void IResourceLoader.PostSetupContent() => BehaviorSet.FillSet();
+
+    void IResourceLoader.OnModUnload() => BehaviorSet.Clear();
+}
+
+public sealed class GlobalItemBehaviorHandler : GlobalItem, IResourceLoader
+{
+    public override bool InstancePerEntity => true;
+
+    public static GlobalEntityBehaviorSet<Item, GlobalItemBehavior> BehaviorSet { get; } = new();
+
+    public override void SetStaticDefaults()
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.SetStaticDefaults();
+    }
+
+    public override void SetDefaults(Item item)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.SetDefaults(item);
+    }
+
+    public override void OnCreated(Item item, ItemCreationContext context)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnCreated(item, context);
+    }
+
+    public override void OnSpawn(Item item, IEntitySource source)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnSpawn(item, source);
+    }
+
+    public override int ChoosePrefix(Item item, UnifiedRandom rand)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            int result = behavior.ChoosePrefix(item, rand);
+            if (result != -1)
+                return result;
+        }
+        return -1;
+    }
+
+    public override bool? PrefixChance(Item item, int pre, UnifiedRandom rand)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.PrefixChance(item, pre, rand);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override bool AllowPrefix(Item item, int pre)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.AllowPrefix(item, pre);
+        return result;
+    }
+
+    public override bool CanUseItem(Item item, Player player)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanUseItem(item, player);
+        return result;
+    }
+
+    public override bool? CanAutoReuseItem(Item item, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanAutoReuseItem(item, player);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void UseStyle(Item item, Player player, Rectangle heldItemFrame)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.UseStyle(item, player, heldItemFrame);
+    }
+
+    public override void HoldStyle(Item item, Player player, Rectangle heldItemFrame)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.HoldStyle(item, player, heldItemFrame);
+    }
+
+    public override void HoldItem(Item item, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.HoldItem(item, player);
+    }
+
+    public override float UseTimeMultiplier(Item item, Player player)
+    {
+        float result = 1f;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result *= behavior.UseTimeMultiplier(item, player);
+        return result;
+    }
+
+    public override float UseAnimationMultiplier(Item item, Player player)
+    {
+        float result = 1f;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result *= behavior.UseAnimationMultiplier(item, player);
+        return result;
+    }
+
+    public override float UseSpeedMultiplier(Item item, Player player)
+    {
+        float result = 1f;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result *= behavior.UseSpeedMultiplier(item, player);
+        return result;
+    }
+
+    public override void GetHealLife(Item item, Player player, bool quickHeal, ref int healValue)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.GetHealLife(item, player, quickHeal, ref healValue);
+    }
+
+    public override void GetHealMana(Item item, Player player, bool quickHeal, ref int healValue)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.GetHealMana(item, player, quickHeal, ref healValue);
+    }
+
+    public override void ModifyManaCost(Item item, Player player, ref float reduce, ref float mult)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyManaCost(item, player, ref reduce, ref mult);
+    }
+
+    public override void OnMissingMana(Item item, Player player, int neededMana)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnMissingMana(item, player, neededMana);
+    }
+
+    public override void OnConsumeMana(Item item, Player player, int manaConsumed)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnConsumeMana(item, player, manaConsumed);
+    }
+
+    public override void ModifyWeaponDamage(Item item, Player player, ref StatModifier damage)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyWeaponDamage(item, player, ref damage);
+    }
+
+    public override void ModifyResearchSorting(Item item, ref ContentSamples.CreativeHelper.ItemGroup itemGroup)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyResearchSorting(item, ref itemGroup);
+    }
+
+    public override bool? CanConsumeBait(Player player, Item bait)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanConsumeBait(player, bait);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override bool CanResearch(Item item)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanResearch(item);
+        return result;
+    }
+
+    public override void OnResearched(Item item, bool fullyResearched)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnResearched(item, fullyResearched);
+    }
+
+    public override void ModifyWeaponKnockback(Item item, Player player, ref StatModifier knockback)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyWeaponKnockback(item, player, ref knockback);
+    }
+
+    public override void ModifyWeaponCrit(Item item, Player player, ref float crit)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyWeaponCrit(item, player, ref crit);
+    }
+
+    public override bool NeedsAmmo(Item item, Player player)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.NeedsAmmo(item, player);
+        return result;
+    }
+
+    public override void PickAmmo(Item weapon, Item ammo, Player player, ref int type, ref float speed, ref StatModifier damage, ref float knockback)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.PickAmmo(weapon, ammo, player, ref type, ref speed, ref damage, ref knockback);
+    }
+
+    public override bool? CanChooseAmmo(Item weapon, Item ammo, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanChooseAmmo(weapon, ammo, player);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override bool? CanBeChosenAsAmmo(Item ammo, Item weapon, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanBeChosenAsAmmo(ammo, weapon, player);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override bool CanConsumeAmmo(Item weapon, Item ammo, Player player)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanConsumeAmmo(weapon, ammo, player);
+        return result;
+    }
+
+    public override bool CanBeConsumedAsAmmo(Item ammo, Item weapon, Player player)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanBeConsumedAsAmmo(ammo, weapon, player);
+        return result;
+    }
+
+    public override void OnConsumeAmmo(Item weapon, Item ammo, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnConsumeAmmo(weapon, ammo, player);
+    }
+
+    public override void OnConsumedAsAmmo(Item ammo, Item weapon, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnConsumedAsAmmo(ammo, weapon, player);
+    }
+
+    public override bool CanShoot(Item item, Player player)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanShoot(item, player);
+        return result;
+    }
+
+    public override void ModifyShootStats(Item item, Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyShootStats(item, player, ref position, ref velocity, ref type, ref damage, ref knockback);
+    }
+
+    public override bool Shoot(Item item, Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.Shoot(item, player, source, position, velocity, type, damage, knockback);
+        return result;
+    }
+
+    public override void UseItemHitbox(Item item, Player player, ref Rectangle hitbox, ref bool noHitbox)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.UseItemHitbox(item, player, ref hitbox, ref noHitbox);
+    }
+
+    public override void MeleeEffects(Item item, Player player, Rectangle hitbox)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.MeleeEffects(item, player, hitbox);
+    }
+
+    public override bool? CanCatchNPC(Item item, NPC target, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanCatchNPC(item, target, player);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void OnCatchNPC(Item item, NPC npc, Player player, bool failed)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnCatchNPC(item, npc, player, failed);
+    }
+
+    public override void ModifyItemScale(Item item, Player player, ref float scale)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyItemScale(item, player, ref scale);
+    }
+
+    public override bool? CanHitNPC(Item item, Player player, NPC target)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanHitNPC(item, player, target);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, Player player, NPC target)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.CanMeleeAttackCollideWithNPC(item, meleeAttackHitbox, player, target);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void ModifyHitNPC(Item item, Player player, NPC target, ref NPC.HitModifiers modifiers)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyHitNPC(item, player, target, ref modifiers);
+    }
+
+    public override void OnHitNPC(Item item, Player player, NPC target, NPC.HitInfo hit, int damageDone)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnHitNPC(item, player, target, hit, damageDone);
+    }
+
+    public override bool CanHitPvp(Item item, Player player, Player target)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanHitPvp(item, player, target);
+        return result;
+    }
+
+    public override void ModifyHitPvp(Item item, Player player, Player target, ref Player.HurtModifiers modifiers)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyHitPvp(item, player, target, ref modifiers);
+    }
+
+    public override void OnHitPvp(Item item, Player player, Player target, Player.HurtInfo hurtInfo)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnHitPvp(item, player, target, hurtInfo);
+    }
+
+    public override bool? UseItem(Item item, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            bool? result = behavior.UseItem(item, player);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override void UseAnimation(Item item, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.UseAnimation(item, player);
+    }
+
+    public override bool ConsumeItem(Item item, Player player)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.ConsumeItem(item, player);
+        return result;
+    }
+
+    public override void OnConsumeItem(Item item, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnConsumeItem(item, player);
+    }
+
+    public override void UseItemFrame(Item item, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.UseItemFrame(item, player);
+    }
+
+    public override void HoldItemFrame(Item item, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.HoldItemFrame(item, player);
+    }
+
+    public override bool AltFunctionUse(Item item, Player player)
+    {
+        bool result = false;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result |= behavior.AltFunctionUse(item, player);
+        return result;
+    }
+
+    public override void UpdateInventory(Item item, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.UpdateInventory(item, player);
+    }
+
+    public override void UpdateInfoAccessory(Item item, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.UpdateInfoAccessory(item, player);
+    }
+
+    public override void UpdateEquip(Item item, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.UpdateEquip(item, player);
+    }
+
+    public override void UpdateAccessory(Item item, Player player, bool hideVisual)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.UpdateAccessory(item, player, hideVisual);
+    }
+
+    public override void UpdateVanity(Item item, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.UpdateVanity(item, player);
+    }
+
+    public override void UpdateVisibleAccessory(Item item, Player player, bool hideVisual)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.UpdateVisibleAccessory(item, player, hideVisual);
+    }
+
+    public override void UpdateItemDye(Item item, Player player, int dye, bool hideVisual)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.UpdateItemDye(item, player, dye, hideVisual);
+    }
+
+    public override string IsArmorSet(Item head, Item body, Item legs)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            string result = behavior.IsArmorSet(head, body, legs);
+            if (result != "")
+                return result;
+        }
+        return "";
+    }
+
+    public override void UpdateArmorSet(Player player, string set)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.UpdateArmorSet(player, set);
+    }
+
+    public override string IsVanitySet(int head, int body, int legs)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            string result = behavior.IsVanitySet(head, body, legs);
+            if (result != "")
+                return result;
+        }
+        return "";
+    }
+
+    public override void PreUpdateVanitySet(Player player, string set)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.PreUpdateVanitySet(player, set);
+    }
+
+    public override void UpdateVanitySet(Player player, string set)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.UpdateVanitySet(player, set);
+    }
+
+    public override void ArmorSetShadows(Player player, string set)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ArmorSetShadows(player, set);
+    }
+
+    public override void SetMatch(int armorSlot, int type, bool male, ref int equipSlot, ref bool robes)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.SetMatch(armorSlot, type, male, ref equipSlot, ref robes);
+    }
+
+    public override bool CanRightClick(Item item)
+    {
+        bool result = false;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result |= behavior.CanRightClick(item);
+        return result;
+    }
+
+    public override void RightClick(Item item, Player player)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.RightClick(item, player);
+    }
+
+    public override void ModifyItemLoot(Item item, ItemLoot itemLoot)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyItemLoot(item, itemLoot);
+    }
+
+    public override bool CanStack(Item destination, Item source)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanStack(destination, source);
+        return result;
+    }
+
+    public override bool CanStackInWorld(Item destination, Item source)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanStackInWorld(destination, source);
+        return result;
+    }
+
+    public override void OnStack(Item destination, Item source, int numToTransfer)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.OnStack(destination, source, numToTransfer);
+    }
+
+    public override void SplitStack(Item destination, Item source, int numToTransfer)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.SplitStack(destination, source, numToTransfer);
+    }
+
+    public override bool ReforgePrice(Item item, ref int reforgePrice, ref bool canApplyDiscount)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.ReforgePrice(item, ref reforgePrice, ref canApplyDiscount);
+        return result;
+    }
+
+    public override bool CanReforge(Item item)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanReforge(item);
+        return result;
+    }
+
+    public override void PreReforge(Item item)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.PreReforge(item);
+    }
+
+    public override void PostReforge(Item item)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.PostReforge(item);
+    }
+
+    public override void DrawArmorColor(EquipType type, int slot, Player drawPlayer, float shadow, ref Color color, ref int glowMask, ref Color glowMaskColor)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.DrawArmorColor(type, slot, drawPlayer, shadow, ref color, ref glowMask, ref glowMaskColor);
+    }
+
+    public override void ArmorArmGlowMask(int slot, Player drawPlayer, float shadow, ref int glowMask, ref Color color)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ArmorArmGlowMask(slot, drawPlayer, shadow, ref glowMask, ref color);
+    }
+
+    public override void VerticalWingSpeeds(Item item, Player player, ref float ascentWhenFalling, ref float ascentWhenRising, ref float maxCanAscendMultiplier, ref float maxAscentMultiplier, ref float constantAscend)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.VerticalWingSpeeds(item, player, ref ascentWhenFalling, ref ascentWhenRising, ref maxCanAscendMultiplier, ref maxAscentMultiplier, ref constantAscend);
+    }
+
+    public override void HorizontalWingSpeeds(Item item, Player player, ref float speed, ref float acceleration)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.HorizontalWingSpeeds(item, player, ref speed, ref acceleration);
+    }
+
+    public override bool WingUpdate(int wings, Player player, bool inUse)
+    {
+        bool result = false;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result |= behavior.WingUpdate(wings, player, inUse);
+        return result;
+    }
+
+    public override void Update(Item item, ref float gravity, ref float maxFallSpeed)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.Update(item, ref gravity, ref maxFallSpeed);
+    }
+
+    public override void PostUpdate(Item item)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.PostUpdate(item);
+    }
+
+    public override void GrabRange(Item item, Player player, ref int grabRange)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.GrabRange(item, player, ref grabRange);
+    }
+
+    public override bool GrabStyle(Item item, Player player)
+    {
+        bool result = false;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result |= behavior.GrabStyle(item, player);
+        return result;
+    }
+
+    public override bool CanPickup(Item item, Player player)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanPickup(item, player);
+        return result;
+    }
+
+    public override bool OnPickup(Item item, Player player)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.OnPickup(item, player);
+        return result;
+    }
+
+    public override bool ItemSpace(Item item, Player player)
+    {
+        bool result = false;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result |= behavior.ItemSpace(item, player);
+        return result;
+    }
+
+    public override Color? GetAlpha(Item item, Color lightColor)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            Color? result = behavior.GetAlpha(item, lightColor);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override bool PreDrawInWorld(Item item, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.PreDrawInWorld(item, spriteBatch, lightColor, alphaColor, ref rotation, ref scale, whoAmI);
+        return result;
+    }
+
+    public override void PostDrawInWorld(Item item, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, float rotation, float scale, int whoAmI)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.PostDrawInWorld(item, spriteBatch, lightColor, alphaColor, rotation, scale, whoAmI);
+    }
+
+    public override bool PreDrawInInventory(Item item, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.PreDrawInInventory(item, spriteBatch, position, frame, drawColor, itemColor, origin, scale);
+        return result;
+    }
+
+    public override void PostDrawInInventory(Item item, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.PostDrawInInventory(item, spriteBatch, position, frame, drawColor, itemColor, origin, scale);
+    }
+
+    public override Vector2? HoldoutOffset(int type)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            Vector2? result = behavior.HoldoutOffset(type);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override Vector2? HoldoutOrigin(int type)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+        {
+            Vector2? result = behavior.HoldoutOrigin(type);
+            if (result is not null)
+                return result;
+        }
+        return null;
+    }
+
+    public override bool CanEquipAccessory(Item item, Player player, int slot, bool modded)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanEquipAccessory(item, player, slot, modded);
+        return result;
+    }
+
+    public override bool CanAccessoryBeEquippedWith(Item equippedItem, Item incomingItem, Player player)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.CanAccessoryBeEquippedWith(equippedItem, incomingItem, player);
+        return result;
+    }
+
+    public override void ExtractinatorUse(int extractType, int extractinatorBlockType, ref int resultType, ref int resultStack)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ExtractinatorUse(extractType, extractinatorBlockType, ref resultType, ref resultStack);
+    }
+
+    public override void CaughtFishStack(int type, ref int stack)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.CaughtFishStack(type, ref stack);
+    }
+
+    public override bool IsAnglerQuestAvailable(int type)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.IsAnglerQuestAvailable(type);
+        return result;
+    }
+
+    public override void AnglerChat(int type, ref string chat, ref string catchLocation)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.AnglerChat(type, ref chat, ref catchLocation);
+    }
+
+    public override void AddRecipes()
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.AddRecipes();
+    }
+
+    public override bool PreDrawTooltip(Item item, ReadOnlyCollection<TooltipLine> lines, ref int x, ref int y)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.PreDrawTooltip(item, lines, ref x, ref y);
+        return result;
+    }
+
+    public override void PostDrawTooltip(Item item, ReadOnlyCollection<DrawableTooltipLine> lines)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.PostDrawTooltip(item, lines);
+    }
+
+    public override bool PreDrawTooltipLine(Item item, DrawableTooltipLine line, ref int yOffset)
+    {
+        bool result = true;
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.PreDrawTooltipLine(item, line, ref yOffset);
+        return result;
+    }
+
+    public override void PostDrawTooltipLine(Item item, DrawableTooltipLine line)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.PostDrawTooltipLine(item, line);
+    }
+
+    public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.ModifyTooltips(item, tooltips);
+    }
+
+    public override void SaveData(Item item, TagCompound tag)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.SaveData(item, tag);
+    }
+
+    public override void LoadData(Item item, TagCompound tag)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.LoadData(item, tag);
+    }
+
+    public override void NetSend(Item item, BinaryWriter writer)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.NetSend(item, writer);
+    }
+
+    public override void NetReceive(Item item, BinaryReader reader)
+    {
+        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            behavior.NetReceive(item, reader);
+    }
+
+    void IResourceLoader.PostSetupContent() => BehaviorSet.FillSet();
+
+    void IResourceLoader.OnModUnload() => BehaviorSet.Clear();
+}
+#endregion General Behavior Handler

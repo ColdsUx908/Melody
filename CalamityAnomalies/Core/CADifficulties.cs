@@ -1,5 +1,4 @@
-﻿using CalamityMod.Events;
-using CalamityMod.NPCs.SupremeCalamitas;
+﻿using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.Systems;
 using CalamityMod.World;
 
@@ -34,7 +33,7 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
 
     public AnomalyMode()
     {
-        Texture = ModContent.Request<Texture2D>("CalamityAnomalies/Textures/UI/ModeIndicator_Anomaly", AssetRequestMode.AsyncLoad);
+        Texture = CAMain.Instance.Assets.Request<Texture2D>("Textures/UI/ModeIndicator_Anomaly", AssetRequestMode.AsyncLoad);
         DifficultyScale = 2.49147E23f;
         Name = this.GetTextWithPrefix("Anomaly");
         ShortDescription = this.GetTextWithPrefix("AnomalyShortInfo");
@@ -45,53 +44,7 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
     }
 }
 
-/// <summary>
-/// BossRush难度。
-/// <br/>所有相关更改均用钩子实现。
-/// </summary>
-public sealed class BossRushMode : DifficultyMode, ILocalizationPrefix
-{
-    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "Difficulty.BossRushMode.";
-
-    public static readonly Color BossRushModeColor = new(0xF0, 0x80, 0x80);
-
-    internal static BossRushMode Instance { get; set; }
-
-    public override bool Enabled
-    {
-        get => CAWorld.BossRush;
-        set => CAWorld.BossRush = value;
-    }
-
-    public override Asset<Texture2D> Texture { get; }
-
-    public override LocalizedText ExpandedDescription => this.GetTextWithPrefix("BossRushExpandedInfo");
-
-    public override int FavoredDifficultyAtTier(int tier)
-    {
-        DifficultyMode[] tierList = DifficultyModeSystem.DifficultyTiers[tier];
-        for (int i = 0; i < tierList.Length; i++)
-        {
-            if (tierList[i].Name == CalamityUtils.GetText("UI.Death"))
-                return i;
-        }
-        return 0;
-    }
-
-    public BossRushMode()
-    {
-        Texture = ModContent.Request<Texture2D>("CalamityAnomalies/Textures/UI/ModeIndicator_BossRush", AssetRequestMode.AsyncLoad);
-        DifficultyScale = 2f;
-        Name = this.GetTextWithPrefix("BossRush");
-        ShortDescription = this.GetTextWithPrefix("BossRushShortInfo");
-        ActivationTextKey = LocalizationPrefix + "BossRushActivate";
-        DeactivationTextKey = LocalizationPrefix + "BossRushDeactivate";
-        ActivationSound = SupremeCalamitas.SpawnSound;
-        ChatTextColor = BossRushModeColor;
-    }
-}
-
-public sealed class CADifficultyManagement : ModSystem, IResourceLoader, ILocalizationPrefix
+public sealed class CADifficultyHandler : ModSystem, IResourceLoader, ILocalizationPrefix
 {
     public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "Difficulty.AnomalyMode.";
 
@@ -99,7 +52,7 @@ public sealed class CADifficultyManagement : ModSystem, IResourceLoader, ILocali
     {
         if (CAWorld.Anomaly)
         {
-            if (!TOMain.MasterMode)
+            if (!TOWorld.MasterMode)
             {
                 DisableAnomaly();
                 return;
@@ -107,9 +60,8 @@ public sealed class CADifficultyManagement : ModSystem, IResourceLoader, ILocali
 
             CalamityWorld.revenge = true;
             CalamityWorld.death = true;
-            CAWorld.BossRush = false;
 
-            switch (TOMain.LegendaryMode, !Main.zenithWorld)
+            switch (TOWorld.LegendaryMode, !Main.zenithWorld)
             {
                 case (false, true) when CAWorld.AnomalyUltramundane: //不是传奇难度，不在GFB世界
                     NotLegendaryInfo();
@@ -136,46 +88,38 @@ public sealed class CADifficultyManagement : ModSystem, IResourceLoader, ILocali
             if (CAWorld.AnomalyUltramundane)
                 DisableUltra();
         }
-
-        CAWorld.RealBossRushEventActive = BossRushEvent.BossRushActive;
-
-        if (CAWorld.BossRush)
-        {
-            CalamityWorld.revenge = true;
-            CalamityWorld.death = true;
-        }
     }
 
     private void DisableUltra()
     {
-        if (TOMain.GeneralClient)
+        if (TOWorld.GeneralClient)
             TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyUltramundaneDeactivate", Color.Red);
         CAWorld.AnomalyUltramundane = false;
     }
 
     private void EnableUltra()
     {
-        if (TOMain.GeneralClient)
+        if (TOWorld.GeneralClient)
             TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyUltramundaneActivate", Color.Red);
         CAWorld.AnomalyUltramundane = true;
     }
 
     private void ZenithInfo()
     {
-        if (TOMain.GeneralClient)
+        if (TOWorld.GeneralClient)
             TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyUltraInvalidZenith", CAMain.MainColor);
         //SoundEngine.PlaySound();
     }
 
     private void NotLegendaryInfo()
     {
-        if (TOMain.GeneralClient)
+        if (TOWorld.GeneralClient)
             TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyUltraInvalidNotLegendary", Color.Red);
     }
 
     private void DisableAnomaly()
     {
-        if (TOMain.GeneralClient)
+        if (TOWorld.GeneralClient)
             TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyInvalid", Color.Red);
         CAWorld.Anomaly = false;
     }
@@ -183,18 +127,13 @@ public sealed class CADifficultyManagement : ModSystem, IResourceLoader, ILocali
     void IResourceLoader.PostSetupContent()
     {
         DifficultyModeSystem.Difficulties.Add(AnomalyMode.Instance = new());
-        BossRushMode.Instance = new();
-        if (CAServerConfig.Instance.BossRushDifficulty)
-            DifficultyModeSystem.Difficulties.Add(BossRushMode.Instance);
         DifficultyModeSystem.CalculateDifficultyData();
     }
 
     void IResourceLoader.OnModUnload()
     {
-        DifficultyModeSystem.Difficulties.Remove(BossRushMode.Instance);
         DifficultyModeSystem.Difficulties.Remove(AnomalyMode.Instance);
         DifficultyModeSystem.CalculateDifficultyData();
-        BossRushMode.Instance = null;
         AnomalyMode.Instance = null;
     }
 }

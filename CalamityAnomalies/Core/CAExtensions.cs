@@ -20,7 +20,7 @@ public static class CAExtensions
     {
         public CAGlobalItem Anomaly() => item.GetGlobalItem<CAGlobalItem>();
 
-        public bool TryGetBehavior(out CAItemBehavior itemBehavior, [CallerMemberName] string methodName = null!) => CABehaviorHelper.ItemBehaviors.TryGetBehavior(item, methodName, out itemBehavior);
+        public bool TryGetBehavior(out CASingleItemBehavior itemBehavior, [CallerMemberName] string methodName = null!) => CASingleBehaviorHelper.ItemBehaviors.TryGetBehavior(item, methodName, out itemBehavior);
     }
 
     extension(List<TooltipLine> tooltips)
@@ -57,7 +57,7 @@ public static class CAExtensions
 
                 if (line.Mod == "CalamityAnomalies")
                 {
-                    Match match = Regex.Match(line.Name, """^Tooltip(\d+)$""");
+                    Match match = ItemTooltipModifier._tooltipRegex.Match(line.Name);
                     if (!match.Success)
                         continue;
                     int lineNum = int.Parse(match.Groups[1].Value);
@@ -86,7 +86,7 @@ public static class CAExtensions
     {
         public CAGlobalNPC Anomaly() => npc.GetGlobalNPC<CAGlobalNPC>();
 
-        public bool TryGetBehavior(out CANPCBehavior npcBehavior, [CallerMemberName] string methodName = null!) => CABehaviorHelper.NPCBehaviors.TryGetBehavior(npc, methodName, out npcBehavior);
+        public bool TryGetBehavior(out CASingleNPCBehavior npcBehavior, [CallerMemberName] string methodName = null!) => CASingleBehaviorHelper.NPCBehaviors.TryGetBehavior(npc, methodName, out npcBehavior);
 
         public bool DesertScourge => npc.ModNPC is DesertScourgeHead or DesertScourgeBody or DesertScourgeTail;
 
@@ -120,7 +120,7 @@ public static class CAExtensions
 
         public bool ExoMechs => npc.Thanatos || npc.ExoTwins || npc.Ares;
 
-        public void ApplyCalamityBossHealthBoost() => npc.lifeMax += (int)(npc.lifeMax * CalamityConfig.Instance.BossHealthBoost * 0.01);
+        public void ApplyCalamityBossHealthBoost() => npc.lifeMax += (int)(npc.lifeMax * CalamityConfig.Instance.BossHealthBoost * 0.01f);
 
         public int GetProjectileDamage<T>() where T : ModProjectile => npc.GetProjectileDamage(ModContent.ProjectileType<T>());
     }
@@ -128,14 +128,12 @@ public static class CAExtensions
     extension(Player player)
     {
         public CAPlayer Anomaly() => player.GetModPlayer<CAPlayer>();
-
-        public NewCalamityPlayer NewCalamity() => player.GetModPlayer<NewCalamityPlayer>();
     }
 
     extension(Projectile projectile)
     {
         public CAGlobalProjectile Anomaly() => projectile.GetGlobalProjectile<CAGlobalProjectile>();
 
-        public bool TryGetBehavior(out CAProjectileBehavior projectileBehavior, [CallerMemberName] string methodName = null!) => CABehaviorHelper.ProjectileBehaviors.TryGetBehavior(projectile, methodName, out projectileBehavior);
+        public bool TryGetBehavior(out CASingleProjectileBehavior projectileBehavior, [CallerMemberName] string methodName = null!) => CASingleBehaviorHelper.ProjectileBehaviors.TryGetBehavior(projectile, methodName, out projectileBehavior);
     }
 }

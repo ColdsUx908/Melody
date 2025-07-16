@@ -6,7 +6,7 @@ public sealed class TOUpdateReminder : ModSystem, IResourceLoader
 
     public override void PreUpdateEntities()
     {
-        if (TOMain.GameTimer == 300 && UpdateReminder is not null)
+        if (TOWorld.GameTimer == 300 && UpdateReminder is not null)
         {
             TOLocalizationUtils.ChatLiteralText("[TRANSOCEANIC UPDATE REMINDER]", TOMain.TODebugWarnColor, Main.LocalPlayer);
             UpdateReminder();

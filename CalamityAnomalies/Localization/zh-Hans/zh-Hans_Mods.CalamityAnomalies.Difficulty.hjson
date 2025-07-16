@@ -24,16 +24,3 @@ AnomalyMode: {
 		你已经尝试过了，对吧？
 		'''
 }
-
-BossRushMode: {
-	BossRush: BossRush
-	BossRushShortInfo: 完整的BossRush流程体验
-	BossRushExpandedInfo:
-		'''
-		所有Boss应用BossRush中的AI
-		[c/FF0000:会禁止使用终末石开启真正的BossRush]
-		你的面前是登神长阶，还是无尽深渊？
-		'''
-	BossRushActivate: BossRush模式已开启，纯粹的疯狂！
-	BossRushDeactivate: BossRush模式已关闭，平静依旧。
-}

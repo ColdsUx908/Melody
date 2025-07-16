@@ -1,7 +1,6 @@
 displayName = Calamity Anomalies [c/afffff:Rebirth]
 author = ColdsUx
 version = 0.1
-hideCode = true
 hideResources = true
 dllReferences = ZLinq
 modReferences = CalamityMod, Transoceanic

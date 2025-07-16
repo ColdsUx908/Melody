@@ -1,8 +1,13 @@
-﻿namespace Transoceanic.GlobalInstances;
+﻿
+namespace Transoceanic.GlobalInstances;
 
-public partial class TOPlayer : ModPlayer
+public sealed class TOPlayer : ModPlayer, IResourceLoader
 {
-    #region 透支生命值
+    public CommandCallInfo CommandCallInfo { get; internal set; } = null;
+
+    public int GameTime { get; set; } = 0;
+
+    public bool IsHurt { get; set; } = false;
 
     /// <summary>
     /// 透支生命值。
@@ -15,9 +20,9 @@ public partial class TOPlayer : ModPlayer
     public double OverdrawnLifeLimit { get; set; } = 0;
 
     /// <summary>
-    /// 回复透支生命值所需的最小未受击时间。
+    /// 透支生命值回复指数。
     /// </summary>
-    public int OverdrawnLifeRegenThreshold { get; set; } = 0;
+    public double OverdrawnLifeRegenExponent { get; set; } = 2;
 
     /// <summary>
     /// 每帧回复透支生命值的最大值。
@@ -30,349 +35,40 @@ public partial class TOPlayer : ModPlayer
     public double OverdrawnLifeRegenMult { get; set; } = 1;
 
     /// <summary>
-    /// 透支生命值回复指数。
+    /// 回复透支生命值所需的最小未受击时间。
     /// </summary>
-    public double OverdrawnLifeRegenExponent { get; set; } = 2;
-    #endregion 透支生命值
-
-    #region 通用
-
-    public int GameTime { get; set; } = 0;
-
-    public bool IsHurt { get; set; } = false;
+    public int OverdrawnLifeRegenThreshold { get; set; } = 0;
 
     public int TimeWithoutHurt { get; set; } = 0;
 
-    public CommandCallInfo CommandCallInfo { get; internal set; } = null;
-    #endregion 通用
+    /// <summary>
+    /// 提升玩家翅膀飞行时间的乘区。
+    /// <br/>每个索引独立计算。
+    /// </summary>
+    public AddableFloat[] WingTimeMaxMultipliers { get; } = new AddableFloat[5];
 
-    #region Update
-    public override void PreUpdate()
+    public override ModPlayer Clone(Player newEntity)
     {
-        GameTime++;
+        TOPlayer clone = (TOPlayer)base.Clone(newEntity);
+
+        clone.CommandCallInfo = CommandCallInfo;
+        clone.GameTime = GameTime;
+        clone.IsHurt = IsHurt;
+        clone.OverdrawnLife = OverdrawnLife;
+        clone.OverdrawnLifeLimit = OverdrawnLifeLimit;
+        clone.OverdrawnLifeRegenExponent = OverdrawnLifeRegenExponent;
+        clone.OverdrawnLifeRegenLimit = OverdrawnLifeRegenLimit;
+        clone.OverdrawnLifeRegenMult = OverdrawnLifeRegenMult;
+        clone.OverdrawnLifeRegenThreshold = OverdrawnLifeRegenThreshold;
+        clone.TimeWithoutHurt = TimeWithoutHurt;
+        Array.Copy(WingTimeMaxMultipliers, clone.WingTimeMaxMultipliers, WingTimeMaxMultipliers.Length);
+
+        return clone;
     }
 
-    public override void PostUpdate()
+    public override void ResetEffects()
     {
-        if (IsHurt)
-        {
-            IsHurt = false;
-            TimeWithoutHurt = 0;
-        }
-        else
-            TimeWithoutHurt++;
-        if (OverdrawnLife > OverdrawnLifeLimit && TimeWithoutHurt > OverdrawnLifeRegenThreshold)
-        {
-            OverdrawnLife = Math.Max(0,
-                OverdrawnLife - Math.Min(
-                    Math.Pow(TimeWithoutHurt - OverdrawnLifeRegenThreshold, OverdrawnLifeRegenExponent) / 300 * OverdrawnLifeRegenMult,
-                    OverdrawnLifeRegenLimit));
-        }
-    }
-    #endregion Update
-
-    #region Hit
-    public override void OnHurt(Player.HurtInfo info)
-    {
-        IsHurt = true;
-        if (OverdrawnLife != 0)
-        {
-            OverdrawnLife = Math.Ceiling(OverdrawnLife);
-            int temp = (int)OverdrawnLife;
-            //if (temp > Player.statLife)
-            //    ;
-            //else
-            info.Damage += temp;
-        }
-    }
-    #endregion Hit
-
-    #region WorldData
-    public override void SaveData(TagCompound tag)
-    {
-    }
-
-    public override void LoadData(TagCompound tag)
-    {
-    }
-
-    public override void OnEnterWorld()
-    {
-        GameTime = 0;
-    }
-    #endregion WorldData
-}
-
-public abstract class PlayerDownedBoss
-{
-    public bool KingSlime { get; set; } = false;
-    public bool EyeOfCthulhu { get; set; } = false;
-    public bool EvilBoss { get; set; } = false;
-    public bool EaterOfWorld { get; set; } = false;
-    public bool BrainOfCthulhu { get; set; } = false;
-    public bool QueenBee { get; set; } = false;
-    public bool Skeletron { get; set; } = false;
-    public bool Deerclops { get; set; } = false;
-    public bool WallOfFlesh { get; set; } = false;
-    public bool DukeFishron { get; set; } = false;
-    public bool QueenSlime { get; set; } = false;
-    public bool Destroyer { get; set; } = false;
-    public bool Twins { get; set; } = false;
-    public bool SkeletronPrime { get; set; } = false;
-    public bool MechBossAny { get; set; } = false;
-    public bool MechBossAnyTwo { get; set; } = false;
-    public bool MechBossAll { get; set; } = false;
-    public bool Plantera { get; set; } = false;
-    public bool EmpressOfLight { get; set; } = false;
-    public bool Golem { get; set; } = false;
-    public bool LunaticCultist { get; set; } = false;
-    public bool MoonLord { get; set; } = false;
-
-    public bool Goblins { get; set; } = false;
-    public bool Frost { get; set; } = false;
-    public bool Pirates { get; set; } = false;
-    public bool Martians { get; set; } = false;
-
-    public bool MourningWood { get; set; } = false;
-    public bool Pumpking { get; set; } = false;
-    public bool Everscream { get; set; } = false;
-    public bool SantaNK1 { get; set; } = false;
-    public bool IceQueen { get; set; } = false;
-    public bool Betsy { get; set; } = false;
-    public bool Dreadnautilus { get; set; } = false;
-
-    public bool SolarTower { get; set; } = false;
-    public bool VortexTower { get; set; } = false;
-    public bool NebulaTower { get; set; } = false;
-    public bool StardustTower { get; set; } = false;
-
-    public virtual void WorldPolluted()
-    {
-        if (NPC.downedSlimeKing)
-            KingSlime = true;
-        if (NPC.downedBoss1)
-            EyeOfCthulhu = true;
-        if (NPC.downedBoss2)
-            EvilBoss = true;
-        if (NPC.downedQueenBee)
-            QueenBee = true;
-        if (NPC.downedBoss3)
-            Skeletron = true;
-        if (NPC.downedDeerclops)
-            Deerclops = true;
-        if (Main.hardMode)
-            WallOfFlesh = true;
-        if (NPC.downedFishron)
-            DukeFishron = true;
-        if (NPC.downedQueenSlime)
-            QueenSlime = true;
-        if (NPC.downedMechBoss1)
-            Destroyer = true;
-        if (NPC.downedMechBoss2)
-            Twins = true;
-        if (NPC.downedMechBoss3)
-            SkeletronPrime = true;
-        if (NPC.downedMechBossAny)
-            MechBossAny = true;
-        MechBossAnyTwo = TOMathHelper.AtLeastXTrue(2, Destroyer, Twins, SkeletronPrime); //完全依靠游戏内更新
-        MechBossAll = Destroyer && Twins && SkeletronPrime; //完全依靠游戏内更新
-        if (NPC.downedPlantBoss)
-            Plantera = true;
-        if (NPC.downedEmpressOfLight)
-            EmpressOfLight = true;
-        if (NPC.downedGolemBoss)
-            Golem = true;
-        if (NPC.downedAncientCultist)
-            LunaticCultist = true;
-        if (NPC.downedMoonlord)
-            MoonLord = true;
-
-        if (NPC.downedGoblins)
-            Goblins = true;
-        if (NPC.downedFrost)
-            Frost = true;
-        if (NPC.downedPirates)
-            Pirates = true;
-        if (NPC.downedMartians)
-            Martians = true;
-
-        if (NPC.downedHalloweenTree)
-            MourningWood = true;
-        if (NPC.downedHalloweenKing)
-            Pumpking = true;
-        if (NPC.downedChristmasTree)
-            Everscream = true;
-        if (NPC.downedChristmasSantank)
-            SantaNK1 = true;
-        if (NPC.downedChristmasIceQueen)
-            IceQueen = true;
-
-        if (NPC.downedTowerSolar)
-            SolarTower = true;
-        if (NPC.downedTowerVortex)
-            VortexTower = true;
-        if (NPC.downedTowerNebula)
-            NebulaTower = true;
-        if (NPC.downedTowerStardust)
-            StardustTower = true;
-    }
-
-    public virtual void SaveData(TagCompound tag, string key)
-    {
-        List<string> downed = [];
-
-        SaveDataToList(downed);
-
-        tag[key] = downed;
-    }
-
-    public virtual void SaveDataToList(List<string> downed)
-    {
-        if (KingSlime)
-            downed.Add("KingSlime");
-        if (EyeOfCthulhu)
-            downed.Add("EyeOfCthulhu");
-        if (EvilBoss)
-            downed.Add("EvilBoss");
-        if (EaterOfWorld)
-            downed.Add("EaterOfWorld");
-        if (BrainOfCthulhu)
-            downed.Add("BrainOfCthulhu");
-        if (QueenBee)
-            downed.Add("QueenBee");
-        if (Skeletron)
-            downed.Add("Skeletron");
-        if (Deerclops)
-            downed.Add("Deerclops");
-        if (WallOfFlesh)
-            downed.Add("WallOfFlesh");
-        if (DukeFishron)
-            downed.Add("DukeFishron");
-        if (QueenSlime)
-            downed.Add("QueenSlime");
-        if (Destroyer)
-            downed.Add("Destroyer");
-        if (Twins)
-            downed.Add("Twins");
-        if (SkeletronPrime)
-            downed.Add("SkeletronPrime");
-        if (MechBossAny)
-            downed.Add("MechBossAny");
-        if (Plantera)
-            downed.Add("Plantera");
-        if (EmpressOfLight)
-            downed.Add("EmpressOfLight");
-        if (Golem)
-            downed.Add("Golem");
-        if (LunaticCultist)
-            downed.Add("LunaticCultist");
-        if (MoonLord)
-            downed.Add("MoonLord");
-        if (Goblins)
-            downed.Add("Goblins");
-        if (Frost)
-            downed.Add("Frost");
-        if (Pirates)
-            downed.Add("Pirates");
-        if (Martians)
-            downed.Add("Martians");
-        if (MourningWood)
-            downed.Add("MourningWood");
-        if (Pumpking)
-            downed.Add("Pumpking");
-        if (Everscream)
-            downed.Add("Everscream");
-        if (SantaNK1)
-            downed.Add("SantaNK1");
-        if (IceQueen)
-            downed.Add("IceQueen");
-        if (Betsy)
-            downed.Add("Betsy");
-        if (Dreadnautilus)
-            downed.Add("Dreadnautilus");
-        if (SolarTower)
-            downed.Add("SolarTower");
-        if (VortexTower)
-            downed.Add("VortexTower");
-        if (NebulaTower)
-            downed.Add("NebulaTower");
-        if (StardustTower)
-            downed.Add("StardustTower");
-    }
-
-    public virtual void LoadData(TagCompound tag, string key) => LoadDataFromIList(tag.GetList<string>(key));
-
-    public virtual void LoadDataFromIList(IList<string> downedLoaded)
-    {
-        if (downedLoaded.Contains("KingSlime"))
-            KingSlime = true;
-        if (downedLoaded.Contains("EyeOfCthulhu"))
-            EyeOfCthulhu = true;
-        if (downedLoaded.Contains("EvilBoss"))
-            EvilBoss = true;
-        if (downedLoaded.Contains("EaterOfWorld"))
-            EaterOfWorld = true;
-        if (downedLoaded.Contains("BrainOfCthulhu"))
-            BrainOfCthulhu = true;
-        if (downedLoaded.Contains("QueenBee"))
-            QueenBee = true;
-        if (downedLoaded.Contains("Skeletron"))
-            Skeletron = true;
-        if (downedLoaded.Contains("Deerclops"))
-            Deerclops = true;
-        if (downedLoaded.Contains("WallOfFlesh"))
-            WallOfFlesh = true;
-        if (downedLoaded.Contains("DukeFishron"))
-            DukeFishron = true;
-        if (downedLoaded.Contains("QueenSlime"))
-            QueenSlime = true;
-        if (downedLoaded.Contains("Destroyer"))
-            Destroyer = true;
-        if (downedLoaded.Contains("Twins"))
-            Twins = true;
-        if (downedLoaded.Contains("SkeletronPrime"))
-            SkeletronPrime = true;
-        if (downedLoaded.Contains("MechBossAny"))
-            MechBossAny = true;
-        if (downedLoaded.Contains("Plantera"))
-            Plantera = true;
-        if (downedLoaded.Contains("EmpressOfLight"))
-            EmpressOfLight = true;
-        if (downedLoaded.Contains("Golem"))
-            Golem = true;
-        if (downedLoaded.Contains("LunaticCultist"))
-            LunaticCultist = true;
-        if (downedLoaded.Contains("MoonLord"))
-            MoonLord = true;
-        if (downedLoaded.Contains("Goblins"))
-            Goblins = true;
-        if (downedLoaded.Contains("Frost"))
-            Frost = true;
-        if (downedLoaded.Contains("Pirates"))
-            Pirates = true;
-        if (downedLoaded.Contains("Martians"))
-            Martians = true;
-        if (downedLoaded.Contains("MourningWood"))
-            MourningWood = true;
-        if (downedLoaded.Contains("Pumpking"))
-            Pumpking = true;
-        if (downedLoaded.Contains("Everscream"))
-            Everscream = true;
-        if (downedLoaded.Contains("SantaNK1"))
-            SantaNK1 = true;
-        if (downedLoaded.Contains("IceQueen"))
-            IceQueen = true;
-        if (downedLoaded.Contains("Betsy"))
-            Betsy = true;
-        if (downedLoaded.Contains("Dreadnautilus"))
-            Dreadnautilus = true;
-        if (downedLoaded.Contains("SolarTower"))
-            SolarTower = true;
-        if (downedLoaded.Contains("VortexTower"))
-            VortexTower = true;
-        if (downedLoaded.Contains("NebulaTower"))
-            NebulaTower = true;
-        if (downedLoaded.Contains("StardustTower"))
-            StardustTower = true;
+        for (int i = 0; i < WingTimeMaxMultipliers.Length; i++)
+            WingTimeMaxMultipliers[i] = AddableFloat.Zero;
     }
 }

@@ -7,7 +7,7 @@ public record Main_Publicizer
 {
     public static readonly Type c_type = typeof(Main);
 
-    public static readonly FieldInfo s_f__currentGameModInfo = c_type.GetField("_currentGameModeInfo", TOReflectionUtils.UniversalBindingFlags);
+    public static readonly FieldInfo s_f__currentGameModInfo = c_type.GetField("_currentGameModeInfo", TOReflectionUtils.StaticBindingFlags);
 
     public static GameModeData _currentGameModeInfo
     {

@@ -251,11 +251,20 @@ public sealed class TODetourHelper : IResourceLoader
     void IResourceLoader.OnModUnload() => Detours.Clear();
 }
 
-public static class TODetourUtils
+public static partial class TODetourUtils
 {
     private const string DefaultPrefix = "Detour_";
     [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern = """^{0}(?<methodName>[\S]*?)(?:__[\S]*)?$""";
     [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern2 = """^{0}(?<typeName>[\S]*?)__(?<methodName>[\S]*?)(?:__[\S]*)?$""";
+
+    private static readonly Regex _defaultDetourNameRegex = GetDefaultDetourNameRegex();
+    private static readonly Regex _defaultDetourNameRegex2 = GetDefaultDetourNameRegex2();
+
+    [GeneratedRegex("""^Detour_(?<methodName>[\S]*?)(?:__[\S]*)?$""")]
+    private static partial Regex GetDefaultDetourNameRegex();
+
+    [GeneratedRegex("""^Detour_(?<typeName>[\S]*?)__(?<methodName>[\S]*?)(?:__[\S]*)?$""")]
+    private static partial Regex GetDefaultDetourNameRegex2();
 
     /// <summary>
     /// 尝试解析提供的Detour方法名，获取其应用的源方法名。
@@ -269,8 +278,8 @@ public static class TODetourUtils
     /// <returns>解析是否成功。</returns>
     public static bool EvaluateDetourName(MethodInfo detour, [NotNullWhen(true)] out string sourceName)
     {
-        string prefix = detour.GetAttribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
-        Match match = Regex.Match(detour.Name, string.Format(Pattern, prefix));
+        string prefix = detour.Attribute<CustomDetourPrefixAttribute>()?.Prefix;
+        Match match = prefix is null ? _defaultDetourNameRegex.Match(detour.Name) : Regex.Match(detour.Name, string.Format(Pattern, prefix));
         if (match.Success)
         {
             sourceName = match.Groups["methodName"].Value;
@@ -293,8 +302,8 @@ public static class TODetourUtils
     /// <returns>解析是否成功。</returns>
     public static bool EvaluateTypedDetourName(MethodInfo detour, [NotNullWhen(true)] out string sourceTypeName, [NotNullWhen(true)] out string sourceMethodName)
     {
-        string prefix = detour.GetAttribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
-        Match match = Regex.Match(detour.Name, string.Format(Pattern2, prefix));
+        string prefix = detour.Attribute<CustomDetourPrefixAttribute>()?.Prefix ?? DefaultPrefix;
+        Match match = prefix is null ? _defaultDetourNameRegex2.Match(detour.Name) : Regex.Match(detour.Name, string.Format(Pattern2, prefix));
         if (match.Success)
         {
             sourceTypeName = match.Groups["typeName"].Value;
@@ -314,7 +323,7 @@ public static class TODetourUtils
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(detour);
-        DetourConfig detourConfig = detour.GetAttribute<CustomDetourConfigAttribute>()?.DetourConfig;
+        DetourConfig detourConfig = detour.Attribute<CustomDetourConfigAttribute>()?.DetourConfig;
         Hook hook = detourConfig is not null ? new(source, detour, detourConfig, true) : new(source, detour, true);
         TODetourHelper.Detours.Add(hook);
         return hook;
@@ -328,7 +337,7 @@ public static class TODetourUtils
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(detour);
-        DetourConfig detourConfig = detour.Method.GetAttribute<CustomDetourConfigAttribute>()?.DetourConfig;
+        DetourConfig detourConfig = detour.Method.Attribute<CustomDetourConfigAttribute>()?.DetourConfig;
         Hook hook = detourConfig is not null ? new(source, detour, detourConfig, true) : new(source, detour, true);
         TODetourHelper.Detours.Add(hook);
         return hook;

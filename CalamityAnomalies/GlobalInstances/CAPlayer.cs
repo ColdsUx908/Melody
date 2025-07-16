@@ -26,27 +26,19 @@ using CalamityMod.NPCs.StormWeaver;
 using CalamityMod.NPCs.SunkenSea;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.NPCs.Yharon;
-using Terraria.GameInput;
 
 namespace CalamityAnomalies.GlobalInstances;
 
-public sealed class CAPlayer : ModPlayerWithBehavior<CAPlayerBehavior>
+public sealed class CAPlayer : ModPlayer
 {
-    protected override GlobalEntityBehaviorSet<Player, CAPlayerBehavior> BehaviorSet => CABehaviorHelper.PlayerBehaviors;
+    //数据变量按字母顺序排列
 
-    #region Data
-    //变量按字母顺序排列
+    public bool Debuff_DimensionalTorn { get; internal set; } = false;
 
     public PlayerDownedBossCalamity DownedBossCalamity { get; private set; } = new();
     public PlayerDownedBossCalamity DownedBossAnomaly { get; private set; } = new();
 
     public Item LastYharimsGift { get; set; } = null;
-
-    /// <summary>
-    /// 提升玩家翅膀飞行时间的乘区。
-    /// <br/>每个索引独立计算。
-    /// </summary>
-    public AddableFloat[] WingTimeMaxMultipliers { get; } = new AddableFloat[3];
 
     public int YharimsGiftTimer
     {
@@ -56,47 +48,29 @@ public sealed class CAPlayer : ModPlayerWithBehavior<CAPlayerBehavior>
 
     public YharimsGift_CurrentBlessing YharimsGiftBuff { get; set; } = YharimsGift_CurrentBlessing.None;
 
-    #region 计算属性
     public bool HasYharimsGift => YharimsGiftTimer > 0;
-    #endregion 计算属性
 
     public override ModPlayer Clone(Player newEntity)
     {
         CAPlayer clone = (CAPlayer)base.Clone(newEntity);
 
+        clone.Debuff_DimensionalTorn = Debuff_DimensionalTorn;
         clone.DownedBossCalamity = DownedBossCalamity;
         clone.DownedBossAnomaly = DownedBossAnomaly;
-        Array.Copy(WingTimeMaxMultipliers, clone.WingTimeMaxMultipliers, WingTimeMaxMultipliers.Length);
         clone.LastYharimsGift = LastYharimsGift;
         clone.YharimsGiftTimer = YharimsGiftTimer;
         clone.YharimsGiftBuff = YharimsGiftBuff;
 
         return clone;
     }
-    #endregion Data
-
-    public override void SetStaticDefaults() => base.SetStaticDefaults();
-
-    public override void Initialize() => base.Initialize();
 
     public override void ResetEffects()
     {
-        for (int i = 0; i < WingTimeMaxMultipliers.Length; i++)
-            WingTimeMaxMultipliers[i] = AddableFloat.Zero;
+        Debuff_DimensionalTorn = false;
         YharimsGiftTimer--;
 
         base.ResetEffects();
     }
-
-    public override void ResetInfoAccessories() => base.ResetInfoAccessories();
-
-    public override void RefreshInfoAccessoriesFromTeamPlayers(Player otherPlayer) => base.RefreshInfoAccessoriesFromTeamPlayers(otherPlayer);
-
-    public override void ModifyMaxStats(out StatModifier health, out StatModifier mana) => base.ModifyMaxStats(out health, out mana);
-
-    public override void UpdateDead() => base.UpdateDead();
-
-    public override void PreSaveCustomData() => base.PreSaveCustomData();
 
     public override void SaveData(TagCompound tag)
     {
@@ -115,257 +89,6 @@ public sealed class CAPlayer : ModPlayerWithBehavior<CAPlayerBehavior>
 
         base.LoadData(tag);
     }
-
-    public override void PreSavePlayer() => base.PreSavePlayer();
-
-    public override void PostSavePlayer() => base.PostSavePlayer();
-
-    public override void CopyClientState(ModPlayer targetCopy) => base.CopyClientState(targetCopy);
-
-    public override void SyncPlayer(int toWho, int fromWho, bool newPlayer) => base.SyncPlayer(toWho, fromWho, newPlayer);
-
-    public override void SendClientChanges(ModPlayer clientPlayer) => base.SendClientChanges(clientPlayer);
-
-    public override void UpdateBadLifeRegen() => base.UpdateBadLifeRegen();
-
-    public override void UpdateLifeRegen() => base.UpdateLifeRegen();
-
-    public override void NaturalLifeRegen(ref float regen) => base.NaturalLifeRegen(ref regen);
-
-    public override void UpdateAutopause() => base.UpdateAutopause();
-
-    public override void PreUpdate() => base.PreUpdate();
-
-    public override void ProcessTriggers(TriggersSet triggersSet) => base.ProcessTriggers(triggersSet);
-
-    public override void ArmorSetBonusActivated() => base.ArmorSetBonusActivated();
-
-    public override void ArmorSetBonusHeld(int holdTime) => base.ArmorSetBonusHeld(holdTime);
-
-    public override void SetControls() => base.SetControls();
-
-    public override void PreUpdateBuffs() => base.PreUpdateBuffs();
-
-    public override void PostUpdateBuffs() => base.PostUpdateBuffs();
-
-    public override void UpdateEquips() => base.UpdateEquips();
-
-    public override void PostUpdateEquips() => base.PostUpdateEquips();
-
-    public override void UpdateVisibleAccessories() => base.UpdateVisibleAccessories();
-
-    public override void UpdateVisibleVanityAccessories() => base.UpdateVisibleVanityAccessories();
-
-    public override void UpdateDyes() => base.UpdateDyes();
-
-    public override void PostUpdateMiscEffects()
-    {
-        base.PostUpdateMiscEffects();
-
-        if (Player.wingTimeMax > 0)
-        {
-            float multiplier = 1f;
-            foreach (AddableFloat wingTimeMaxMultiplier in WingTimeMaxMultipliers)
-                multiplier *= (1f + wingTimeMaxMultiplier.Value);
-            Player.wingTimeMax = (int)(Player.wingTimeMax * multiplier);
-        }
-    }
-
-    public override void PostUpdateRunSpeeds() => base.PostUpdateRunSpeeds();
-
-    public override void PreUpdateMovement() => base.PreUpdateMovement();
-
-    public override void PostUpdate() => base.PostUpdate();
-
-    public override void ModifyExtraJumpDurationMultiplier(ExtraJump jump, ref float duration) => base.ModifyExtraJumpDurationMultiplier(jump, ref duration);
-
-    public override bool CanStartExtraJump(ExtraJump jump) => base.CanStartExtraJump(jump);
-
-    public override void OnExtraJumpStarted(ExtraJump jump, ref bool playSound) => base.OnExtraJumpStarted(jump, ref playSound);
-
-    public override void OnExtraJumpEnded(ExtraJump jump) => base.OnExtraJumpEnded(jump);
-
-    public override void OnExtraJumpRefreshed(ExtraJump jump) => base.OnExtraJumpRefreshed(jump);
-
-    public override void ExtraJumpVisuals(ExtraJump jump) => base.ExtraJumpVisuals(jump);
-
-    public override bool CanShowExtraJumpVisuals(ExtraJump jump) => base.CanShowExtraJumpVisuals(jump);
-
-    public override void OnExtraJumpCleared(ExtraJump jump) => base.OnExtraJumpCleared(jump);
-
-    public override void FrameEffects() => base.FrameEffects();
-
-    public override bool ImmuneTo(PlayerDeathReason damageSource, int cooldownCounter, bool dodgeable) => base.ImmuneTo(damageSource, cooldownCounter, dodgeable);
-
-    public override bool FreeDodge(Player.HurtInfo info) => base.FreeDodge(info);
-
-    public override bool ConsumableDodge(Player.HurtInfo info) => base.ConsumableDodge(info);
-
-    public override void ModifyHurt(ref Player.HurtModifiers modifiers) => base.ModifyHurt(ref modifiers);
-
-    public override void OnHurt(Player.HurtInfo info) => base.OnHurt(info);
-
-    public override void PostHurt(Player.HurtInfo info) => base.PostHurt(info);
-
-    public override bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genDust, ref PlayerDeathReason damageSource) => base.PreKill(damage, hitDirection, pvp, ref playSound, ref genDust, ref damageSource);
-
-    public override void Kill(double damage, int hitDirection, bool pvp, PlayerDeathReason damageSource) => base.Kill(damage, hitDirection, pvp, damageSource);
-
-    public override bool PreModifyLuck(ref float luck) => base.PreModifyLuck(ref luck);
-
-    public override void ModifyLuck(ref float luck) => base.ModifyLuck(ref luck);
-
-    public override bool PreItemCheck() => base.PreItemCheck();
-
-    public override void PostItemCheck() => base.PostItemCheck();
-
-    public override float UseTimeMultiplier(Item item) => base.UseTimeMultiplier(item);
-
-    public override float UseAnimationMultiplier(Item item) => base.UseAnimationMultiplier(item);
-
-    public override float UseSpeedMultiplier(Item item) => base.UseSpeedMultiplier(item);
-
-    public override void GetHealLife(Item item, bool quickHeal, ref int healValue) => base.GetHealLife(item, quickHeal, ref healValue);
-
-    public override void GetHealMana(Item item, bool quickHeal, ref int healValue) => base.GetHealMana(item, quickHeal, ref healValue);
-
-    public override void ModifyManaCost(Item item, ref float reduce, ref float mult) => base.ModifyManaCost(item, ref reduce, ref mult);
-
-    public override void OnMissingMana(Item item, int neededMana) => base.OnMissingMana(item, neededMana);
-
-    public override void OnConsumeMana(Item item, int manaConsumed) => base.OnConsumeMana(item, manaConsumed);
-
-    public override void ModifyWeaponDamage(Item item, ref StatModifier damage) => base.ModifyWeaponDamage(item, ref damage);
-
-    public override void ModifyWeaponKnockback(Item item, ref StatModifier knockback) => base.ModifyWeaponKnockback(item, ref knockback);
-
-    public override void ModifyWeaponCrit(Item item, ref float crit) => base.ModifyWeaponCrit(item, ref crit);
-
-    public override bool CanConsumeAmmo(Item weapon, Item ammo) => base.CanConsumeAmmo(weapon, ammo);
-
-    public override void OnConsumeAmmo(Item weapon, Item ammo) => base.OnConsumeAmmo(weapon, ammo);
-
-    public override bool CanShoot(Item item) => base.CanShoot(item);
-
-    public override void ModifyShootStats(Item item, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback) => base.ModifyShootStats(item, ref position, ref velocity, ref type, ref damage, ref knockback);
-
-    public override bool Shoot(Item item, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback) => base.Shoot(item, source, position, velocity, type, damage, knockback);
-
-    public override void MeleeEffects(Item item, Rectangle hitbox) => base.MeleeEffects(item, hitbox);
-
-    public override void EmitEnchantmentVisualsAt(Projectile projectile, Vector2 boxPosition, int boxWidth, int boxHeight) => base.EmitEnchantmentVisualsAt(projectile, boxPosition, boxWidth, boxHeight);
-
-    public override bool? CanCatchNPC(NPC target, Item item) => base.CanCatchNPC(target, item);
-
-    public override void OnCatchNPC(NPC npc, Item item, bool failed) => base.OnCatchNPC(npc, item, failed);
-
-    public override void ModifyItemScale(Item item, ref float scale) => base.ModifyItemScale(item, ref scale);
-
-    public override void OnHitAnything(float x, float y, Entity victim) => base.OnHitAnything(x, y, victim);
-
-    public override bool CanHitNPC(NPC target) => base.CanHitNPC(target);
-
-    public override bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, NPC target) => base.CanMeleeAttackCollideWithNPC(item, meleeAttackHitbox, target);
-
-    public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) => base.ModifyHitNPC(target, ref modifiers);
-
-    public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) => base.OnHitNPC(target, hit, damageDone);
-
-    public override bool? CanHitNPCWithItem(Item item, NPC target) => base.CanHitNPCWithItem(item, target);
-
-    public override void ModifyHitNPCWithItem(Item item, NPC target, ref NPC.HitModifiers modifiers) => base.ModifyHitNPCWithItem(item, target, ref modifiers);
-
-    public override void OnHitNPCWithItem(Item item, NPC target, NPC.HitInfo hit, int damageDone) => base.OnHitNPCWithItem(item, target, hit, damageDone);
-
-    public override bool? CanHitNPCWithProj(Projectile proj, NPC target) => base.CanHitNPCWithProj(proj, target);
-
-    public override void ModifyHitNPCWithProj(Projectile proj, NPC target, ref NPC.HitModifiers modifiers) => base.ModifyHitNPCWithProj(proj, target, ref modifiers);
-
-    public override void OnHitNPCWithProj(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone) => base.OnHitNPCWithProj(proj, target, hit, damageDone);
-
-    public override bool CanHitPvp(Item item, Player target) => base.CanHitPvp(item, target);
-
-    public override bool CanHitPvpWithProj(Projectile proj, Player target) => base.CanHitPvpWithProj(proj, target);
-
-    public override bool CanBeHitByNPC(NPC npc, ref int cooldownSlot) => base.CanBeHitByNPC(npc, ref cooldownSlot);
-
-    public override void ModifyHitByNPC(NPC npc, ref Player.HurtModifiers modifiers) => base.ModifyHitByNPC(npc, ref modifiers);
-
-    public override void OnHitByNPC(NPC npc, Player.HurtInfo hurtInfo) => base.OnHitByNPC(npc, hurtInfo);
-
-    public override bool CanBeHitByProjectile(Projectile proj) => base.CanBeHitByProjectile(proj);
-
-    public override void ModifyHitByProjectile(Projectile proj, ref Player.HurtModifiers modifiers) => base.ModifyHitByProjectile(proj, ref modifiers);
-
-    public override void OnHitByProjectile(Projectile proj, Player.HurtInfo hurtInfo) => base.OnHitByProjectile(proj, hurtInfo);
-
-    public override void ModifyFishingAttempt(ref FishingAttempt attempt) => base.ModifyFishingAttempt(ref attempt);
-
-    public override void CatchFish(FishingAttempt attempt, ref int itemDrop, ref int npcSpawn, ref AdvancedPopupRequest sonar, ref Vector2 sonarPosition) => base.CatchFish(attempt, ref itemDrop, ref npcSpawn, ref sonar, ref sonarPosition);
-
-    public override void ModifyCaughtFish(Item fish) => base.ModifyCaughtFish(fish);
-
-    public override bool? CanConsumeBait(Item bait) => base.CanConsumeBait(bait);
-
-    public override void GetFishingLevel(Item fishingRod, Item bait, ref float fishingLevel) => base.GetFishingLevel(fishingRod, bait, ref fishingLevel);
-
-    public override void AnglerQuestReward(float rareMultiplier, List<Item> rewardItems) => base.AnglerQuestReward(rareMultiplier, rewardItems);
-
-    public override void GetDyeTraderReward(List<int> rewardPool) => base.GetDyeTraderReward(rewardPool);
-
-    public override void DrawEffects(PlayerDrawSet drawInfo, ref float r, ref float g, ref float b, ref float a, ref bool fullBright) => base.DrawEffects(drawInfo, ref r, ref g, ref b, ref a, ref fullBright);
-
-    public override void ModifyDrawInfo(ref PlayerDrawSet drawInfo) => base.ModifyDrawInfo(ref drawInfo);
-
-    public override void ModifyDrawLayerOrdering(IDictionary<PlayerDrawLayer, PlayerDrawLayer.Position> positions) => base.ModifyDrawLayerOrdering(positions);
-
-    public override void HideDrawLayers(PlayerDrawSet drawInfo) => base.HideDrawLayers(drawInfo);
-
-    public override void ModifyScreenPosition() => base.ModifyScreenPosition();
-
-    public override void ModifyZoom(ref float zoom) => base.ModifyZoom(ref zoom);
-
-    public override void PlayerConnect() => base.PlayerConnect();
-
-    public override void PlayerDisconnect() => base.PlayerDisconnect();
-
-    public override void OnEnterWorld() => base.OnEnterWorld();
-
-    public override void OnRespawn() => base.OnRespawn();
-
-    public override bool ShiftClickSlot(Item[] inventory, int context, int slot) => base.ShiftClickSlot(inventory, context, slot);
-
-    public override bool HoverSlot(Item[] inventory, int context, int slot) => base.HoverSlot(inventory, context, slot);
-
-    public override void PostSellItem(NPC vendor, Item[] shopInventory, Item item) => base.PostSellItem(vendor, shopInventory, item);
-
-    public override bool CanSellItem(NPC vendor, Item[] shopInventory, Item item) => base.CanSellItem(vendor, shopInventory, item);
-
-    public override void PostBuyItem(NPC vendor, Item[] shopInventory, Item item) => base.PostBuyItem(vendor, shopInventory, item);
-
-    public override bool CanBuyItem(NPC vendor, Item[] shopInventory, Item item) => base.CanBuyItem(vendor, shopInventory, item);
-
-    public override bool CanUseItem(Item item) => base.CanUseItem(item);
-
-    public override bool? CanAutoReuseItem(Item item) => base.CanAutoReuseItem(item);
-
-    public override bool ModifyNurseHeal(NPC nurse, ref int health, ref bool removeDebuffs, ref string chatText) => base.ModifyNurseHeal(nurse, ref health, ref removeDebuffs, ref chatText);
-
-    public override void ModifyNursePrice(NPC nurse, int health, bool removeDebuffs, ref int price) => base.ModifyNursePrice(nurse, health, removeDebuffs, ref price);
-
-    public override void PostNurseHeal(NPC nurse, int health, bool removeDebuffs, int price) => base.PostNurseHeal(nurse, health, removeDebuffs, price);
-
-    public override IEnumerable<Item> AddStartingItems(bool mediumCoreDeath) => base.AddStartingItems(mediumCoreDeath);
-
-    public override void ModifyStartingInventory(IReadOnlyDictionary<string, List<Item>> itemsByMod, bool mediumCoreDeath) => base.ModifyStartingInventory(itemsByMod, mediumCoreDeath);
-
-    public override IEnumerable<Item> AddMaterialsForCrafting(out ItemConsumedCallback itemConsumedCallback) => base.AddMaterialsForCrafting(out itemConsumedCallback);
-
-    public override bool OnPickup(Item item) => base.OnPickup(item);
-
-    public override bool CanBeTeleportedTo(Vector2 teleportPosition, string context) => base.CanBeTeleportedTo(teleportPosition, context);
-
-    public override void OnEquipmentLoadoutSwitched(int oldLoadoutIndex, int loadoutIndex) => base.OnEquipmentLoadoutSwitched(oldLoadoutIndex, loadoutIndex);
 }
 
 public class PlayerDownedBossCalamity : PlayerDownedBoss

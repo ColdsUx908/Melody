@@ -1,26 +1,31 @@
-﻿
-namespace Transoceanic.GlobalInstances;
+﻿namespace Transoceanic.GlobalInstances;
 
 public class TOGlobalItem : GlobalItem
 {
     public override bool InstancePerEntity => true;
 
-    private const int dataSlot = 33;
-    private const int dataSlot2 = 17;
-
     public override GlobalItem Clone(Item from, Item to)
     {
         TOGlobalItem clone = (TOGlobalItem)base.Clone(from, to);
 
+        clone.InternalEquipped = InternalEquipped;
+        clone._lastEquippedTime = _lastEquippedTime;
+        clone._lastUnequippedTime = _lastUnequippedTime;
 
         return clone;
     }
 
-    private bool _internalEquipped = false;
-    private int _lastEquippedTime = -1;
-    private int _lastUnequippedTime = -1;
-    private bool ShouldUpdateLastEquippedTime => _internalEquipped && _lastEquippedTime <= _lastUnequippedTime;
-    private bool ShouldUpdateLastUnequippedTime => Main.hasFocus && !_internalEquipped && _lastUnequippedTime <= _lastEquippedTime;
+    public ItemTooltipDictionary TooltipDictionary { get; internal set; } = null;
+
+    internal int InternalEquipped
+    {
+        get;
+        set => field = Math.Clamp(value, 0, 2);
+    }
+    internal int _lastEquippedTime = -1;
+    internal int _lastUnequippedTime = -1;
+    internal bool ShouldUpdateLastEquippedTime => InternalEquipped > 0 && _lastEquippedTime <= _lastUnequippedTime;
+    internal bool ShouldUpdateLastUnequippedTime => Main.hasFocus && InternalEquipped == 0 && _lastUnequippedTime <= _lastEquippedTime;
 
     public bool IsEquipped => _lastEquippedTime > _lastUnequippedTime;
 
@@ -32,20 +37,6 @@ public class TOGlobalItem : GlobalItem
     /// <br/>在物品装备时，返回值从0逐渐增加至max；未装备时，从max逐渐减少至0。
     /// </returns>
     public int GetEquippedTimer(int max) => IsEquipped
-            ? Math.Clamp(TOMain.GameTimer.TotalTicks - _lastEquippedTime, 0, max)
-            : Math.Clamp(max - TOMain.GameTimer.TotalTicks + _lastUnequippedTime, 0, max);
-
-    public override void UpdateEquip(Item item, Player player)
-    {
-        _internalEquipped = true;
-        if (ShouldUpdateLastEquippedTime)
-            _lastEquippedTime = TOMain.GameTimer.TotalTicks;
-    }
-
-    public override void PostDrawInInventory(Item item, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
-    {
-        if (ShouldUpdateLastUnequippedTime)
-            _lastUnequippedTime = TOMain.GameTimer.TotalTicks;
-        _internalEquipped = false;
-    }
+        ? Math.Clamp(TOWorld.GameTimer.TotalTicks - _lastEquippedTime, 0, max)
+        : Math.Clamp(max - TOWorld.GameTimer.TotalTicks + _lastUnequippedTime, 0, max);
 }

@@ -17,6 +17,15 @@ public static class TOReflectionUtils
     /// </summary>
     public const BindingFlags StaticBindingFlags = BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
 
+    public static string[] ObjectMethods { get; } =
+    [
+        nameof(Equals),
+        nameof(GetHashCode),
+        nameof(GetType),
+        nameof(ToString),
+        nameof(MemberwiseClone)
+    ];
+
     /// <summary>
     /// 获取能被tML加载的所有类型。
     /// </summary>
@@ -116,9 +125,9 @@ public static class TOReflectionUtils
     /// <typeparam name="T"></typeparam>
     /// <param name="assemblyToSearch"></param>
     /// <returns></returns>
-    public static IEnumerable<(Type type, T attribute)> GetTypesWithAttribute<T>(Assembly assemblyToSearch) where T : Attribute =>
+    public static IEnumerable<(Type type, T attribute)> GetTypesWithAttribute<T>(Assembly assemblyToSearch, bool inherit = true) where T : Attribute =>
         from type in AssemblyManager.GetLoadableTypes(assemblyToSearch)
-        let attribute = type.GetAttribute<T>()
+        let attribute = type.Attribute<T>(inherit)
         where attribute is not null
         select (type, attribute);
 
@@ -129,9 +138,9 @@ public static class TOReflectionUtils
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    public static IEnumerable<(Type type, T attribute)> GetTypesWithAttribute<T>() where T : Attribute =>
+    public static IEnumerable<(Type type, T attribute)> GetTypesWithAttribute<T>(bool inherit = true) where T : Attribute =>
         from type in GetAllTypes()
-        let attribute = type.GetAttribute<T>()
+        let attribute = type.Attribute<T>(inherit)
         where attribute is not null
         select (type, attribute);
 
@@ -141,10 +150,10 @@ public static class TOReflectionUtils
     /// <typeparam name="T"></typeparam>
     /// <param name="assemblyToSearch"></param>
     /// <returns></returns>
-    public static IEnumerable<(MethodInfo method, T attribute)> GetMethodsWithAttribute<T>(Assembly assemblyToSearch) where T : Attribute =>
+    public static IEnumerable<(MethodInfo method, T attribute)> GetMethodsWithAttribute<T>(Assembly assemblyToSearch, bool inherit = true) where T : Attribute =>
         from type in AssemblyManager.GetLoadableTypes(assemblyToSearch)
         from method in type.GetRealMethods(UniversalBindingFlags)
-        let attribute = method.GetAttribute<T>()
+        let attribute = method.Attribute<T>(inherit)
         where attribute is not null
         select (method, attribute);
 
@@ -155,10 +164,10 @@ public static class TOReflectionUtils
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    public static IEnumerable<(MethodInfo method, T attribute)> GetMethodsWithAttribute<T>() where T : Attribute =>
+    public static IEnumerable<(MethodInfo method, T attribute)> GetMethodsWithAttribute<T>(bool inherit = true) where T : Attribute =>
         from type in GetAllTypes()
         from method in type.GetRealMethods(UniversalBindingFlags)
-        let attribute = method.GetAttribute<T>()
+        let attribute = method.Attribute<T>(inherit)
         where attribute is not null
         select (method, attribute);
 

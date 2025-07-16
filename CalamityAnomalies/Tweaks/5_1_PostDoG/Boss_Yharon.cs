@@ -27,7 +27,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
         public const int Phase2InvincibilityTime = 900;
     }
 
-    public Yharon_Publicizer YharonPublicizer { get; private set; }
+    public Yharon_Publicizer YharonPublicizer { get; private set; } = null;
 
 #pragma warning disable IDE1006
     public Rectangle safeBox
@@ -321,7 +321,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
         {
             spawnArena = true;
             enraged = false;
-            if (TOMain.GeneralClient)
+            if (TOWorld.GeneralClient)
             {
                 int safeBoxWidth = Main.zenithWorld ? 3000 : Main.getGoodWorld ? 2000 : bossRush ? 4000 : revenge ? 6000 : 7000;
                 safeBox = new Rectangle
@@ -378,7 +378,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
             NPC.localAI[0] = 1f;
             NPC.Opacity = 0f;
             NPC.rotation = 0f;
-            if (TOMain.GeneralClient)
+            if (TOWorld.GeneralClient)
             {
                 NPC.ai[0] = -1f;
                 NPC.netUpdate = true;
@@ -660,7 +660,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
             if (NPC.ai[2] == 0f)
                 RoarSoundSlot = SoundEngine.PlaySound(RoarSound, NPC.Center);
 
-            if (NPC.ai[2] % flareBombSpawnDivisor == 0f && TOMain.GeneralClient)
+            if (NPC.ai[2] % flareBombSpawnDivisor == 0f && TOWorld.GeneralClient)
             {
                 Projectile.NewProjectileAction<FlareBomb>(NPC.GetSource_FromAI(), fromMouth, Vector2.Zero, NPC.GetProjectileDamage<FlareBomb>(), 0f, Main.myPlayer, p =>
                 {
@@ -703,7 +703,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
             if (NPC.ai[2] == fireTornadoPhaseTimer - 30)
                 SoundEngine.PlaySound(ShortRoarSound, NPC.Center);
 
-            if (TOMain.GeneralClient && NPC.ai[2] == fireTornadoPhaseTimer - 30)
+            if (TOWorld.GeneralClient && NPC.ai[2] == fireTornadoPhaseTimer - 30)
             {
                 for (int i = -1; i < 2; i += 2)
                     Projectile.NewProjectileAction<Flare>(NPC.GetSource_FromAI(), NPC.Center, new Vector2(NPC.direction * 4 * i, 8f), 0, 0f, Main.myPlayer);
@@ -863,7 +863,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
                     {
                         SoundEngine.PlaySound(ShortRoarSound, NPC.Center);
 
-                        if (TOMain.GeneralClient)
+                        if (TOWorld.GeneralClient)
                         {
                             float bulletHellTeleportLocationDistance = 540f;
                             Vector2 defaultTeleportLocation = new(0f, -bulletHellTeleportLocationDistance);
@@ -1006,7 +1006,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
 
             if (NPC.ai[2] % flareDustSpawnDivisor == 0f)
             {
-                if (TOMain.GeneralClient)
+                if (TOWorld.GeneralClient)
                 {
                     int ringReduction = (int)MathHelper.Lerp(0f, 14f, NPC.ai[2] / flareDustPhaseTimer);
                     int totalProjectiles = 38 - ringReduction; // 36 for first ring, 22 for last ring
@@ -1036,7 +1036,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
             if (NPC.ai[2] == fireTornadoPhaseTimer - 30)
                 SoundEngine.PlaySound(ShortRoarSound, NPC.Center);
 
-            if (TOMain.GeneralClient && NPC.ai[2] == fireTornadoPhaseTimer - 30)
+            if (TOWorld.GeneralClient && NPC.ai[2] == fireTornadoPhaseTimer - 30)
             {
                 Projectile.NewProjectileAction<BigFlare>(NPC.GetSource_FromAI(), NPC.Center, Vector2.Zero, 0, 0f, Main.myPlayer, p =>
                 {
@@ -1112,7 +1112,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
 
             NPC.ai[2] += 1f;
 
-            if (NPC.ai[2] % flareDustSpawnDivisor2 == 0f && TOMain.GeneralClient)
+            if (NPC.ai[2] % flareDustSpawnDivisor2 == 0f && TOWorld.GeneralClient)
             {
                 Projectile.NewProjectileAction<FlareDust2>(NPC.GetSource_FromAI(), fromMouth, NPC.velocity.SafelyNormalized, NPC.GetProjectileDamage<FlareDust2>(), 0f, Main.myPlayer, p =>
                 {
@@ -1236,7 +1236,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
                     {
                         SoundEngine.PlaySound(ShortRoarSound, NPC.Center);
 
-                        if (TOMain.GeneralClient)
+                        if (TOWorld.GeneralClient)
                         {
                             float bulletHellTeleportLocationDistance = 540f;
                             Vector2 defaultTeleportLocation = new(0f, -bulletHellTeleportLocationDistance);
@@ -1389,7 +1389,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
             {
                 // Rotate spiral by 7.2 * (300 / 12) = +90 degrees and then back -90 degrees
 
-                if (TOMain.GeneralClient)
+                if (TOWorld.GeneralClient)
                 {
                     DoFlareDustBulletHell(1, flareDustPhaseTimer, NPC.GetProjectileDamage(ModContent.ProjectileType<FlareDust>()), 8, 12f, 3.6f, false);
                 }
@@ -1418,7 +1418,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
             if (NPC.ai[2] == fireTornadoPhaseTimer - 30)
                 SoundEngine.PlaySound(ShortRoarSound, NPC.Center);
 
-            if (TOMain.GeneralClient && NPC.ai[2] == fireTornadoPhaseTimer - 30)
+            if (TOWorld.GeneralClient && NPC.ai[2] == fireTornadoPhaseTimer - 30)
             {
                 Projectile.NewProjectileAction<BigFlare>(NPC.GetSource_FromAI(), NPC.Center, Vector2.Zero, 0, 0f, Main.myPlayer, p =>
                 {
@@ -1455,7 +1455,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
                     RoarSoundSlot = SoundEngine.PlaySound(RoarSound, NPC.Center);
                     break;
                 case 130f:
-                    if (TOMain.GeneralClient)
+                    if (TOWorld.GeneralClient)
                     {
                         Projectile.NewProjectileAction<ResplendentExplosion>(NPC.GetSource_FromAI(), NPC.Center, Vector2.Zero, 0, 0f, Main.myPlayer, p =>
                         {
@@ -1510,7 +1510,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
 
             NPC.ai[2] += 1f;
 
-            if (NPC.ai[2] % flareDustSpawnDivisor2 == 0f && TOMain.GeneralClient)
+            if (NPC.ai[2] % flareDustSpawnDivisor2 == 0f && TOWorld.GeneralClient)
             {
                 Projectile.NewProjectileAction<FlareDust2>(NPC.GetSource_FromAI(), fromMouth, NPC.velocity.SafelyNormalized, NPC.GetProjectileDamage<FlareDust2>(), 0f, Main.myPlayer, p =>
                 {
@@ -1554,7 +1554,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
             if (NPC.ai[2] == 0f)
                 RoarSoundSlot = SoundEngine.PlaySound(RoarSound, NPC.Center);
 
-            if (NPC.ai[2] % flareBombSpawnDivisor == 0f && TOMain.GeneralClient)
+            if (NPC.ai[2] % flareBombSpawnDivisor == 0f && TOWorld.GeneralClient)
             {
                 Projectile.NewProjectileAction<FlareBomb>(NPC.GetSource_FromAI(), fromMouth, Vector2.Zero, NPC.GetProjectileDamage<FlareBomb>(), 0f, Main.myPlayer, p =>
                 {
@@ -1626,19 +1626,19 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
         NPC.dontTakeDamage = false;
 
         // 巨 龙 重 生
-        bool invincible = invincibilityCounter++ < Data.Phase2InvincibilityTime;
+        invincibilityCounter++;
+        bool invincible = invincibilityCounter <= Data.Phase2InvincibilityTime;
         if (invincible)
         {
-            int newLifeMax = InitialLifeMax + InitialLifeMax + (int)(
-                (Main.zenithWorld ? InitialLifeMax : InitialLifeMax / 10.0)
-                / Data.Phase2InvincibilityTime * invincibilityCounter); //GFB中会重生至二倍生命值
+            float invincibleRatio = invincibilityCounter / Data.Phase2InvincibilityTime;
+            int newLifeMax = InitialLifeMax + (int)((Main.zenithWorld ? InitialLifeMax : InitialLifeMax / 10.0) * invincibleRatio); //GFB中会重生至二倍生命值
             int increasedLifeMax = newLifeMax - NPC.lifeMax;
             if (increasedLifeMax > 0)
                 NPC.lifeMax += increasedLifeMax;
 
             //对数插值: y = ln((e - 1)x / 900 + 1)
-            int newLife = (int)MathHelper.Lerp(NPC.life, NPC.lifeMax * (0.1f + invincibilityCounter / 1000f), MathF.Log((MathF.E - 1) * invincibilityCounter / Data.Phase2GateValue + 1));
-            int increasedLife = Math.Clamp(newLife - NPC.life + increasedLifeMax, 0, NPC.lifeMax - NPC.life);
+            int newLife = (int)MathHelper.Lerp(NPC.life, NPC.lifeMax, MathF.Log((MathF.E - 1) * invincibleRatio + 1));
+            int increasedLife = Math.Clamp(newLife - NPC.life, 0, NPC.lifeMax - NPC.life);
 
             if (increasedLife > 0)
             {
@@ -1649,7 +1649,6 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
 
             if (NPC.life > NPC.lifeMax)
                 NPC.life = NPC.lifeMax;
-
 
             NPC.dontTakeDamage = true;
             phase2 = phase3 = phase4 = false;
@@ -1971,7 +1970,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
                     {
                         SoundEngine.PlaySound(ShortRoarSound, NPC.Center);
 
-                        if (TOMain.GeneralClient)
+                        if (TOWorld.GeneralClient)
                         {
                             if (CalamityWorld.LegendaryMode && revenge && !NPC.AnyNPCs<Bumblefuck>())
                                 NPC.SpawnOnPlayer<Bumblefuck>(NPC.FindClosestPlayer());
@@ -2200,7 +2199,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
 
             if (NPC.ai[1] >= fireballBreathTimer)
             {
-                if (NPC.ai[1] % (expertMode ? 6f : 8f) == 0f && TOMain.GeneralClient)
+                if (NPC.ai[1] % (expertMode ? 6f : 8f) == 0f && TOWorld.GeneralClient)
                     Projectile.NewProjectileAction<FlareDust2>(NPC.GetSource_FromAI(), NPC.Center + new Vector2(140f * NPC.direction, -20f).RotatedBy(NPC.rotation), NPC.velocity.SafelyNormalized, NPC.GetProjectileDamage<FlareDust2>(), 0f, Main.myPlayer);
 
                 if (Math.Abs(targetData.Center.X - NPC.Center.X) > 700f && Math.Abs(NPC.velocity.X) < chargeSpeed)
@@ -2261,7 +2260,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
                 Vector2 position = NPC.Center + new Vector2((110f + xOffset) * NPC.direction, -20f).RotatedBy(NPC.rotation);
                 int yharonFireballTimer = (int)(NPC.ai[1] - splittingFireballBreathTimer + 1f);
 
-                if (yharonFireballTimer <= splittingFireballBreathTimer2 && yharonFireballTimer % splittingFireballBreathDivisor == 0 && TOMain.GeneralClient)
+                if (yharonFireballTimer <= splittingFireballBreathTimer2 && yharonFireballTimer % splittingFireballBreathDivisor == 0 && TOWorld.GeneralClient)
                     Projectile.NewProjectileAction<YharonFireball>(NPC.GetSource_FromAI(), position, NPC.velocity, NPC.GetProjectileDamage<YharonFireball>(), 0f, Main.myPlayer);
             }
 
@@ -2291,7 +2290,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
             }
 
             NPC.ai[1] += 1f;
-            if (TOMain.GeneralClient)
+            if (TOWorld.GeneralClient)
             {
                 if (secondPhasePhase >= 3)
                 {
@@ -2385,7 +2384,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
                     NPC.velocity.Y -= 3f;
                 }
 
-                if (TOMain.GeneralClient)
+                if (TOWorld.GeneralClient)
                 {
                     if (NPC.ai[1] is 20f or 80f or 140f)
                     {
@@ -2402,7 +2401,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
             {
                 SoundEngine.PlaySound(ShortRoarSound, NPC.Center);
 
-                if (TOMain.GeneralClient)
+                if (TOWorld.GeneralClient)
                 {
                     Projectile.NewProjectileAction<BigFlare2>(NPC.GetSource_FromAI(), NPC.Center, Vector2.Zero, 0, 0f, Main.myPlayer, p =>
                     {
@@ -2458,7 +2457,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
             if (NPC.ai[2] == 15f)
                 SoundEngine.PlaySound(ShortRoarSound, NPC.Center);
 
-            if (TOMain.GeneralClient && NPC.ai[2] == 15f)
+            if (TOWorld.GeneralClient && NPC.ai[2] == 15f)
             {
                 if (NPC.ai[1] == 0f)
                     NPC.ai[1] = 450 * Math.Sign((NPC.Center - targetData.Center).X);
@@ -2638,7 +2637,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
 
     public void DoFireRing(int timeLeft, int damage, float ai0, float ai1)
     {
-        if (!TOMain.GeneralClient)
+        if (!TOWorld.GeneralClient)
             return;
 
         float velocity = ai1 == 0f ? 10f : 5f;
@@ -2678,7 +2677,7 @@ public sealed class Yharon_Detour : ModNPCDetour<Yharon>
         }
 
         for (int k = 0; k < 5; k++)
-            Dust.NewDustAction(npc.Center, npc.width, npc.height, DustID.Blood, d => d.velocity = new Vector2(hit.HitDirection, -1f));
+            Dust.NewDustAction(npc.Center, npc.width, npc.height, DustID.Blood, new Vector2(hit.HitDirection, -1f));
 
         Yharon_Publicizer yharonPublicizer = new(self);
         bool shouldNotDie = !yharonPublicizer.startSecondAI || yharonPublicizer.invincibilityCounter < Yharon_Tweak.Data.Phase2InvincibilityTime;
@@ -2713,7 +2712,7 @@ public sealed class Yharon_Detour : ModNPCDetour<Yharon>
             npc.position.Y -= (npc.height / 2);
             for (int i = 0; i < 40; i++)
             {
-                Dust.NewDustAction(npc.Center, npc.width, npc.height, DustID.CopperCoin, d =>
+                Dust.NewDustAction(npc.Center, npc.width, npc.height, DustID.CopperCoin, Vector2.Zero, d =>
                 {
                     d.alpha = 100;
                     d.velocity *= 3f;
@@ -2728,14 +2727,14 @@ public sealed class Yharon_Detour : ModNPCDetour<Yharon>
             }
             for (int j = 0; j < 70; j++)
             {
-                Dust.NewDustAction(npc.Center, npc.width, npc.height, DustID.CopperCoin, d =>
+                Dust.NewDustAction(npc.Center, npc.width, npc.height, DustID.CopperCoin, Vector2.Zero, d =>
                 {
                     d.alpha = 100;
                     d.velocity *= 5f;
                     d.noGravity = true;
                     d.scale = 3f;
                 });
-                Dust.NewDustAction(npc.Center, npc.width, npc.height, DustID.CopperCoin, d =>
+                Dust.NewDustAction(npc.Center, npc.width, npc.height, DustID.CopperCoin, Vector2.Zero, d =>
                 {
                     d.alpha = 100;
                     d.velocity *= 2f;

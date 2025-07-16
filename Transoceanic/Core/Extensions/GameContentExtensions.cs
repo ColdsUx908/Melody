@@ -60,9 +60,9 @@ public static partial class TOExtensions
         /// <param name="height">Y偏移最大值。</param>
         /// <param name="type">类型。</param>
         /// <param name="action">执行的行为。仅当成功生成Dust时生效。</param>
-        public static void NewDustAction(Vector2 position, int width, int height, int type, Action<Dust> action = null)
+        public static void NewDustAction(Vector2 position, int width, int height, int type, Vector2 velocity = default, Action<Dust> action = null)
         {
-            int index = Dust.NewDust(position - new Vector2(width / 2f, height / 2f), width, height, type);
+            int index = Dust.NewDust(position - new Vector2(width / 2f, height / 2f), width, height, type, velocity.X, velocity.Y);
             if (index < Main.maxDust)
                 action?.Invoke(Main.dust[index]);
         }
@@ -75,8 +75,8 @@ public static partial class TOExtensions
         /// <param name="width">X偏移最大值。</param>
         /// <param name="height">Y偏移最大值。</param>
         /// <param name="action">执行的行为。仅当成功生成Dust时生效。</param>
-        public static void NewDustAction<T>(Vector2 position, int width, int height, Action<Dust> action = null) where T : ModDust =>
-            NewDustAction(position, width, height, ModContent.DustType<T>(), action);
+        public static void NewDustAction<T>(Vector2 position, int width, int height, Vector2 velocity = default, Action<Dust> action = null) where T : ModDust =>
+            NewDustAction(position, width, height, ModContent.DustType<T>(), velocity, action);
 
         /// <summary>
         /// 生成一个新的Dust，并在生成后执行一个Action。
@@ -84,14 +84,14 @@ public static partial class TOExtensions
         /// <param name="index">输出的Dust索引。</param>
         /// <param name="dust">输出的Dust实例。</param>
         /// <param name="position">生成位置。<br>注意：该参数表示生成中心，而不是左上角。</br></param>
-        /// <param name="offsetX">X偏移最大值。</param>
-        /// <param name="offsetY">Y偏移最大值。</param>
+        /// <param name="width">X偏移最大值。</param>
+        /// <param name="height">Y偏移最大值。</param>
         /// <param name="type">类型。</param>
         /// <param name="action">执行的行为。仅当成功生成Dust时生效。</param>
         /// <returns>生成Dust是否成功。</returns>
-        public static bool NewDustActionCheck(out int index, [NotNullWhen(true)] out Dust dust, Vector2 position, int offsetX, int offsetY, int type, Action<Dust> action = null)
+        public static bool NewDustActionCheck(out int index, [NotNullWhen(true)] out Dust dust, Vector2 position, int width, int height, int type, Vector2 velocity = default, Action<Dust> action = null)
         {
-            index = Dust.NewDust(position - new Vector2(offsetX, offsetY), offsetX * 2, offsetY * 2, type);
+            index = Dust.NewDust(position - new Vector2(width / 2f, height / 2f), width, height, type, velocity.X, velocity.Y);
             if (index < Main.maxDust)
             {
                 dust = Main.dust[index];
@@ -112,12 +112,12 @@ public static partial class TOExtensions
         /// <param name="index">输出的Dust索引。</param>
         /// <param name="dust">输出的Dust实例。</param>
         /// <param name="position">生成位置。<br>注意：该参数表示生成中心，而不是左上角。</br></param>
-        /// <param name="offsetX">X偏移最大值。</param>
-        /// <param name="offsetY">Y偏移最大值。</param>
+        /// <param name="width">X偏移最大值。</param>
+        /// <param name="height">Y偏移最大值。</param>
         /// <param name="action">执行的行为。仅当成功生成Dust时生效。</param>
         /// <returns>生成Dust是否成功。</returns>
-        public static bool NewDustActionCheck<T>(out int index, [NotNullWhen(true)] out Dust dust, Vector2 position, int offsetX, int offsetY, Action<Dust> action = null) where T : ModDust =>
-            NewDustActionCheck(out index, out dust, position, offsetX, offsetY, ModContent.DustType<T>(), action);
+        public static bool NewDustActionCheck<T>(out int index, [NotNullWhen(true)] out Dust dust, Vector2 position, int width, int height, Vector2 velocity, Action<Dust> action = null) where T : ModDust =>
+            NewDustActionCheck(out index, out dust, position, width, height, ModContent.DustType<T>(), velocity, action);
 
         /// <summary>
         /// 生成一个新的Dust（无随机偏移），并在生成后执行一个Action。
@@ -185,7 +185,10 @@ public static partial class TOExtensions
         /// <summary>
         /// 尝试获取实体的 <c>type</c>。
         /// </summary>
-        /// <returns>获取的 <c>type</c> 值。对于 <see cref="NPC"/>，如果其 <see cref="NPC.netID"/> 小于0，则返回 <see cref="NPC.netID"/>，否则返回 <see cref="NPC.type"/>。</returns>
+        /// <returns>
+        /// 获取的 <c>type</c> 值。
+        /// <br/>对于 <see cref="NPC"/>，如果其 <see cref="NPC.netID"/> 小于0，则返回 <see cref="NPC.netID"/>，否则返回 <see cref="NPC.type"/>。
+        /// </returns>
         /// <exception cref="ArgumentException"></exception>
         public int EntityType => entity switch
         {
@@ -232,6 +235,60 @@ public static partial class TOExtensions
             else
                 return false;
         }
+    }
+
+    extension(Gore)
+    {
+        public static void NewGoreAction(IEntitySource source, Vector2 position, Vector2 velocity, int type, Action<Gore> action = null)
+        {
+            int index = Gore.NewGore(source, position, velocity, type);
+            if (index < Main.maxGore)
+                action?.Invoke(Main.gore[index]);
+        }
+
+        public static void NewGoreAction<T>(IEntitySource source, Vector2 position, Vector2 velocity, Action<Gore> action = null) where T : ModGore =>
+            NewGoreAction(source, position, velocity, ModContent.GoreType<T>(), action);
+
+        public static bool NewGoreActionCheck(out int index, [NotNullWhen(true)] out Gore gore, IEntitySource source, Vector2 position, Vector2 velocity, int type, Action<Gore> action = null)
+        {
+            index = Gore.NewGore(source, position, velocity, type);
+            if (index < Main.maxGore)
+            {
+                gore = Main.gore[index];
+                action?.Invoke(gore);
+                return true;
+            }
+            else
+            {
+                gore = null;
+                return false;
+            }
+        }
+
+        public static bool NewGoreActionCheck<T>(out int index, [NotNullWhen(true)] out Gore gore, IEntitySource source, Vector2 position, Vector2 velocity, Action<Gore> action = null) where T : ModGore =>
+            NewGoreActionCheck(out index, out gore, source, position, velocity, ModContent.GoreType<T>(), action);
+
+        public static void NewGoreActionPerfect(IEntitySource source, Vector2 position, int type, Action<Gore> action = null) =>
+            NewGoreAction(source, position, Vector2.Zero, type, g =>
+            {
+                g.position = position;
+                g.velocity = Vector2.Zero;
+                action?.Invoke(g);
+            });
+
+        public static void NewGoreActionPerfect<T>(IEntitySource source, Vector2 position, Action<Gore> action = null) where T : ModGore =>
+            NewGoreActionPerfect(source, position, ModContent.GoreType<T>(), action);
+
+        public static bool NewGoreActionPerfectCheck(out int index, [NotNullWhen(true)] out Gore gore, IEntitySource source, Vector2 position, int type, Action<Gore> action = null) =>
+            NewGoreActionCheck(out index, out gore, source, position, Vector2.Zero, type, g =>
+            {
+                g.position = position;
+                g.velocity = Vector2.Zero;
+                action?.Invoke(g);
+            });
+
+        public static bool NewGoreActionPerfectCheck<T>(out int index, [NotNullWhen(true)] out Gore gore, IEntitySource source, Vector2 position, Action<Gore> action = null) where T : ModGore =>
+            NewGoreActionPerfectCheck(out index, out gore, source, position, ModContent.GoreType<T>(), action);
     }
 
     extension(Item item)
@@ -290,6 +347,24 @@ public static partial class TOExtensions
             tooltips.ModifyVanillaTooltipByName($"Tooltip{num}", action);
     }
 
+    extension(ModContent)
+    {
+        public static T GetModNPC<T>() where T : ModNPC => (T)ModContent.GetModNPC(ModContent.NPCType<T>());
+
+        public static T GetModItem<T>() where T : ModItem => (T)ModContent.GetModItem(ModContent.ItemType<T>());
+
+        public static T GetModDust<T>() where T : ModDust => (T)ModContent.GetModDust(ModContent.DustType<T>());
+
+        public static T GetModProjectile<T>() where T : ModProjectile => (T)ModContent.GetModProjectile(ModContent.ProjectileType<T>());
+
+        public static T GetModBuff<T>() where T : ModBuff => (T)ModContent.GetModBuff(ModContent.BuffType<T>());
+
+        public static T GetModMount<T>() where T : ModMount => (T)ModContent.GetModMount(ModContent.MountType<T>());
+
+        public static T GetModTile<T>() where T : ModTile => (T)ModContent.GetModTile(ModContent.TileType<T>());
+
+        public static T GetModWall<T>() where T : ModWall => (T)ModContent.GetModWall(ModContent.WallType<T>());
+    }
 
     extension(NPC npc)
     {
@@ -389,10 +464,18 @@ public static partial class TOExtensions
             npc.position.X -= npc.width / 2;
             npc.position.Y -= npc.height;
         }
+
+        public void ApplyDOT(int dot, int damageValue, ref int damage)
+        {
+            npc.lifeRegen = Math.Min(npc.lifeRegen, 0) - dot;
+            damage = Math.Max(damage, damageValue);
+        }
     }
 
     extension(NPC)
     {
+        public static NPC DummyNPC => Main.npc[Main.maxNPCs];
+
         public static bool AnyNPCs<T>() where T : ModNPC => NPC.AnyNPCs(ModContent.NPCType<T>());
 
         public static bool AnyNPCs(int type, [NotNullWhen(true)] out NPC npc)
@@ -543,6 +626,8 @@ public static partial class TOExtensions
 
     extension(Player)
     {
+        public static Player Server => Main.player[Main.maxPlayers];
+
         public static TOIterator<Player> ActivePlayers => TOIteratorFactory.NewActivePlayerIterator();
 
         public static TOIterator<Player> PVPPlayers => TOIteratorFactory.NewPlayerIterator(p => p.PvP);
@@ -586,6 +671,8 @@ public static partial class TOExtensions
 
     extension(Projectile)
     {
+        public static Projectile DummyProjectile => Main.projectile[Main.maxProjectiles];
+
         public static TOIterator<Projectile> ActiveProjectiles => TOIteratorFactory.NewActiveProjectileIterator();
 
         /// <summary>

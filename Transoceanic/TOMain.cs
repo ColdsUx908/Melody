@@ -35,15 +35,13 @@ global using Transoceanic.Localization;
 global using Transoceanic.Maths;
 global using Transoceanic.Visual;
 global using ZLinq;
-using Terraria.GameContent.Creative;
-using Transoceanic.Publicizer.Terraria;
 using Transoceanic.RuntimeEditing;
 
 namespace Transoceanic;
 
-public sealed class Transoceanic : Mod
+public sealed class TOMain : Mod
 {
-    internal static Transoceanic Instance { get; private set; }
+    internal static TOMain Instance { get; private set; }
 
     internal static bool Loading { get; private set; } = false;
 
@@ -59,10 +57,11 @@ public sealed class Transoceanic : Mod
         try
         {
             Instance = this;
+            TOWorld.GameTimer = 0;
 
             foreach (ITOLoader loader in
                 from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(TOMain.Assembly).AsValueEnumerable()
-                orderby pair.type.GetMethod("Load", TOReflectionUtils.UniversalBindingFlags)?.GetAttribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+                orderby pair.type.GetMethod(nameof(ITOLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                 select pair.instance)
             {
                 loader.Load();
@@ -79,7 +78,7 @@ public sealed class Transoceanic : Mod
     {
         foreach (IResourceLoader loader in
             from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IResourceLoader>().AsValueEnumerable()
-            orderby pair.type.GetMethod("PostSetupContent", TOReflectionUtils.UniversalBindingFlags)?.GetAttribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+            orderby pair.type.GetMethod(nameof(IResourceLoader.PostSetupContent), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
             select pair.instance)
         {
             loader.PostSetupContent();
@@ -95,26 +94,31 @@ public sealed class Transoceanic : Mod
             {
                 foreach (ITOLoader loader in (
                     from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>().AsValueEnumerable()
-                    orderby pair.type.GetMethod("Load", TOReflectionUtils.UniversalBindingFlags)?.GetAttribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+                    orderby pair.type.GetMethod(nameof(ITOLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                     select pair.instance).Reverse())
                 {
                     loader.Unload();
                 }
-                TOMain.SyncEnabled = false;
+
+                TOWorld.GameTimer = 0;
+                TOWorld.Time24Hour = 0.0;
+                TOWorld.TerrariaTime = default;
+                TOWorld.TrueMasterMode = false;
+                TOWorld.JourneyMasterMode = false;
+                TOWorld.BossList = [];
+                TOWorld.BossActive = false;
+
+                SyncEnabled = false;
                 Instance = null;
             }
         }
         finally
         {
+            Loaded = false;
             Unloaded = true;
             Unloading = false;
         }
     }
-}
-
-public sealed class TOMain : ITOLoader
-{
-    #region NotUpdate
 
     public static bool DEBUG { get; internal set; } =
 #if DEBUG
@@ -124,7 +128,9 @@ public sealed class TOMain : ITOLoader
 #endif
         ;
 
-    public static bool IsDEBUGPlayer(Player player) => DEBUG && player.name == "~ColdsUx";
+    private const string DEBUGPlayerName = "~ColdsUx";
+
+    public static bool IsDEBUGPlayer(Player player) => DEBUG && player.name == DEBUGPlayerName;
 
     /// <summary>
     /// 是否启用Transoceanic模组内置的网络同步。
@@ -135,27 +141,17 @@ public sealed class TOMain : ITOLoader
         get;
         set
         {
-            if (field && !value && !Transoceanic.Unloading)
+            if (field && !value && !Unloading)
                 throw new InvalidOperationException("SyncEnabled cannot be set to false after it has been set to true, unless unloading.");
             field = value;
         }
     } = false;
 
-    public static Assembly Assembly { get; } = Transoceanic.Instance.Code;
+    public static Assembly Assembly => field ??= Instance.Code;
 
     public static Assembly TerrariaAssembly { get; } = typeof(Main).Assembly;
 
     public static Type[] TerrariaTypes { get; } = TerrariaAssembly.GetTypes();
-
-    public static bool MasterMode => TrueMasterMode || JourneyMasterMode;
-
-    public static bool GeneralClient => Main.netMode != NetmodeID.MultiplayerClient;
-
-    public static NPC DummyNPC => Main.npc[Main.maxNPCs];
-
-    public static Projectile DummyProjectile => Main.projectile[Main.maxProjectiles];
-
-    public static Player Server => Main.player[Main.maxPlayers];
 
     #region Constant
     public const string ModLocalizationPrefix = "Mods.Transoceanic.";
@@ -170,100 +166,9 @@ public sealed class TOMain : ITOLoader
 
     public static Color CelestialColor { get; } = new(0xAF, 0xFF, 0xFF);
 
-    public static Color DiscoColor { get; internal set; } = new(Main.DiscoR, Main.DiscoG, Main.DiscoB, Main.DiscoR);
+    public static Color DiscoColor => new(Main.DiscoR, Main.DiscoG, Main.DiscoB, Main.DiscoR);
 
     public const int CelestialPrice = 25000000;
+
     #endregion Constant
-
-    #endregion NotUpdate
-
-    #region ShouldUpdate
-
-    #region PreUpdateEntities
-    public static float GeneralSeconds => Main.GlobalTimeWrappedHourly;
-
-    public static float GeneralMinutes => GeneralSeconds / 60f;
-
-    public static TerrariaTimer GameTimer { get; private set; }
-
-    public static double Time24Hour { get; private set; } = 0.0;
-
-    public static TerrariaTime TerrariaTime { get; private set; }
-
-    public static bool TrueMasterMode { get; private set; } = false;
-
-    public static bool JourneyMasterMode { get; private set; } = false;
-
-    public static bool LegendaryMode { get; private set; } = false;
-    #endregion PreUpdateEntities
-
-    #region PostUpdateNPCs
-    public static List<NPC> BossList { get; private set; } = [];
-
-    public static bool BossActive { get; private set; } = false;
-    #endregion PostUpdateNPCs
-
-    public class Update : ModSystem
-    {
-        public override void PreUpdateEntities()
-        {
-            GameTimer++;
-            Time24Hour = (Main.dayTime ? 4.5 : 19.5) + Main.time / 3600.0;
-            TerrariaTime = new(Time24Hour, Main.GetMoonPhase());
-
-            GameModeData gameModeInfo = Main_Publicizer._currentGameModeInfo;
-            TrueMasterMode = gameModeInfo.IsMasterMode;
-            if (gameModeInfo.IsJourneyMode)
-            {
-                CreativePowers.DifficultySliderPower power = CreativePowerManager.Instance.GetPower<CreativePowers.DifficultySliderPower>();
-                bool currentJourneyMaster = power.StrengthMultiplierToGiveNPCs == 3f;
-                if (power.GetIsUnlocked())
-                    JourneyMasterMode = currentJourneyMaster;
-                else if (!currentJourneyMaster)
-                    JourneyMasterMode = false;
-            }
-            else
-                JourneyMasterMode = false;
-
-            LegendaryMode = Main.getGoodWorld && MasterMode;
-
-            DiscoColor = new(Main.DiscoR, Main.DiscoG, Main.DiscoB, Main.DiscoR);
-        }
-
-        public override void PostUpdateNPCs()
-        {
-            BossList = NPC.Bosses.ToList();
-            BossActive = BossList.Count > 0;
-        }
-
-        public override void OnWorldLoad()
-        {
-            GameTimer = 0;
-        }
-
-        public override void OnWorldUnload()
-        {
-            GameTimer = 0;
-        }
-    }
-    #endregion ShouldUpdate
-
-    #region ShouldLoad
-    void ITOLoader.Load()
-    {
-        GameTimer = 0;
-    }
-
-    void ITOLoader.Unload()
-    {
-        GameTimer = 0;
-        Time24Hour = 0.0;
-        TerrariaTime = default;
-        TrueMasterMode = false;
-        JourneyMasterMode = false;
-        LegendaryMode = false;
-        BossList = [];
-        BossActive = false;
-    }
-    #endregion ShouldLoad
 }

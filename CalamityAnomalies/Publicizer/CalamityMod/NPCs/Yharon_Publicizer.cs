@@ -7,17 +7,17 @@ public record Yharon_Publicizer(Yharon Yharon)
 {
     public static readonly Type c_type = typeof(Yharon);
 
-    public static readonly FieldInfo i_f_safeBox = c_type.GetField("safeBox", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo i_f_enraged = c_type.GetField("enraged", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo i_f_protectionBoost = c_type.GetField("protectionBoost", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo i_f_moveCloser = c_type.GetField("moveCloser", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo i_f_useTornado = c_type.GetField("useTornado", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo i_f_secondPhasePhase = c_type.GetField("secondPhasePhase", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo i_f_teleportLocation = c_type.GetField("teleportLocation", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo i_f_startSecondAI = c_type.GetField("startSecondAI", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo i_f_spawnArena = c_type.GetField("spawnArena", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo i_f_invincibilityCounter = c_type.GetField("invincibilityCounter", TOReflectionUtils.UniversalBindingFlags);
-    public static readonly FieldInfo i_f_fastChargeTelegraphTime = c_type.GetField("fastChargeTelegraphTime", TOReflectionUtils.UniversalBindingFlags);
+    public static readonly FieldInfo i_f_safeBox = c_type.GetField("safeBox", TOReflectionUtils.InstanceBindingFlags);
+    public static readonly FieldInfo i_f_enraged = c_type.GetField("enraged", TOReflectionUtils.InstanceBindingFlags);
+    public static readonly FieldInfo i_f_protectionBoost = c_type.GetField("protectionBoost", TOReflectionUtils.InstanceBindingFlags);
+    public static readonly FieldInfo i_f_moveCloser = c_type.GetField("moveCloser", TOReflectionUtils.InstanceBindingFlags);
+    public static readonly FieldInfo i_f_useTornado = c_type.GetField("useTornado", TOReflectionUtils.InstanceBindingFlags);
+    public static readonly FieldInfo i_f_secondPhasePhase = c_type.GetField("secondPhasePhase", TOReflectionUtils.InstanceBindingFlags);
+    public static readonly FieldInfo i_f_teleportLocation = c_type.GetField("teleportLocation", TOReflectionUtils.InstanceBindingFlags);
+    public static readonly FieldInfo i_f_startSecondAI = c_type.GetField("startSecondAI", TOReflectionUtils.InstanceBindingFlags);
+    public static readonly FieldInfo i_f_spawnArena = c_type.GetField("spawnArena", TOReflectionUtils.InstanceBindingFlags);
+    public static readonly FieldInfo i_f_invincibilityCounter = c_type.GetField("invincibilityCounter", TOReflectionUtils.InstanceBindingFlags);
+    public static readonly FieldInfo i_f_fastChargeTelegraphTime = c_type.GetField("fastChargeTelegraphTime", TOReflectionUtils.InstanceBindingFlags);
 
     public Rectangle safeBox
     {

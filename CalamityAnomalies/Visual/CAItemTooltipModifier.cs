@@ -17,12 +17,7 @@ public class CAItemTooltipModifier : ItemTooltipModifier
 
     public CAItemTooltipModifier ClearAllCATooltips()
     {
-        for (int i = _tooltipLast; i < Tooltips.Count; i++)
-        {
-            TooltipLine line = Tooltips[i];
-            if (line.Mod == CAMain.ModName && line.Name.StartsWith("Tooltip"))
-                Tooltips.RemoveAt(i);
-        }
+        Tooltips.RemoveAll(line => line.Mod == CAMain.ModName && line.Name.StartsWith("Tooltip"));
         return this;
     }
 
