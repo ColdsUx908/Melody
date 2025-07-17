@@ -23,16 +23,16 @@ namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
 /* 鬼妖村正
  * 改动
  * 
- * 1. 全局
- * 1) 怒气或肾上腺素开启时，攻击速度翻倍，但非大型挥砍仅造成30%伤害。
- * 2) 忽视敌人200%防御、90%基础伤害减免和所有动态伤害减免。
+ * 全局
+ * 怒气或肾上腺素开启时，攻击速度翻倍，但非大型挥砍仅造成30%伤害。
+ * 忽视敌人200%防御、90%基础伤害减免和所有动态伤害减免。
  * 
- * 2. 无彩蛋
- * 击败犽戎后，基础伤害提升至3000，大小提升50%。
+ * 无彩蛋
+ * 击败犽戎后，基础伤害提升至3000（原灾厄：2222），大小提升50%。
  * 
- * 3. 彩蛋（玩家名含"Jetstream Sam"）
- * 1) 大小翻倍。
- * 1) 基础伤害改为15，但随击败Boss提升倍率：（所有倍率提升相加后作用于基础伤害）
+ * 彩蛋（玩家名含"Jetstream Sam"）
+ * 大小翻倍。
+ * 基础伤害改为15，但随击败Boss提升倍率：（所有倍率提升相加后作用于基础伤害）
  *  括号内数值：（总倍率, 基础伤害, 传奇复仇加强下的基础伤害）
  *   克苏鲁之眼 - 20%（1.2x, 18, 24）
  *   世界吞噬者或克苏鲁之脑 - 40%（1.6x, 24, 32）
@@ -52,13 +52,13 @@ namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
  *   星流巨械 - 5000%（300x, 4500, 6000）
  *   灾厄 - 5000%（350x, 5250, 7000）
  *   同时击败星流巨械和灾厄 - 15000%（500x, 7500, 10000）
- * 2) 若处于BossRush事件中，基础伤害锁定为20001（真实力量回归！）。
+ * 若处于BossRush事件中，基础伤害锁定为20001（真实力量回归！）。
  * 
- * 4. 彩蛋（传奇复仇加强）
- * 1) 基础伤害提升1/3（20）。
- * 2) 击退翻倍（13）。
- * 3) 怒气和肾上腺素同时开启时，大小再翻倍，为原版的四倍。
- * 4) 对下列敌怪具有特殊效果：
+ * 彩蛋（传奇复仇加强）
+ * 基础伤害提升1/3（20）。
+ * 击退翻倍（13）。
+ * 怒气和肾上腺素同时开启时，大小再翻倍，为原版的四倍。
+ * 对下列敌怪具有特殊效果：
  *   彩虹史莱姆 - 秒杀
  *   黄沙恶虫 - 300%伤害
  *   真菌孢子（生物） - 秒杀
@@ -444,7 +444,7 @@ public sealed class MurasamaSlash_Tweak : CAProjectileTweak<MurasamaSlash>
             case CryogenShield:
             case AnahitasIceShield:
             case AureusSpawn:
-            case Bumblefuck when CAUtils.PermaFrostActive || (NPC.AnyNPCs(out _, out Yharon yharon) && new Yharon_Publicizer(yharon).startSecondAI):
+            case Bumblefuck when CAWorld.PermaFrostActive || (NPC.AnyNPCs(out _, out Yharon yharon) && new Yharon_Publicizer(yharon).startSecondAI):
             case Bumblefuck2:
             case CeaselessVoid when target.Ocean().LifeRatio < 0.2f:
             case PhantomFuckYou:

@@ -1,4 +1,5 @@
-﻿using Transoceanic.RuntimeEditing;
+﻿using System.Text.RegularExpressions;
+using Transoceanic.RuntimeEditing;
 
 namespace Transoceanic.Core.Extensions;
 
@@ -173,7 +174,7 @@ public static partial class TOExtensions
         /// 判定指定方法是否为真正的虚方法。
         /// <br/>具体判定逻辑：必须为虚方法，且不是重写方法或最终方法（sealed，用于判定逻辑上非虚的接口实现）。
         /// </summary>
-        public bool IsRealVirtualOrAbstract => method.IsVirtual && !method.IsOverride && !method.IsFinal;
+        public bool IsRealVirtualOrAbstract => (method.IsVirtual && !method.IsOverride && !method.IsFinal) || method.IsAbstract;
 
         public bool IsRealVirtual => method.IsRealVirtualOrAbstract && !method.IsAbstract;
 
@@ -219,6 +220,25 @@ public static partial class TOExtensions
         public bool IsExplicitInterfaceImplementation => method.IsInterfaceImplementation && method.Name.Contains('.');
 
         public bool IsImplicitInterfaceImplementation => method.IsInterfaceImplementation && !method.Name.Contains('.');
+    }
+
+    extension(Regex regex)
+    {
+        public bool TryMatch(string input, [NotNullWhen(true)] out Match match)
+        {
+            ArgumentNullException.ThrowIfNull(input);
+            return (match = regex.Match(input)).Success;
+        }
+    }
+
+    extension(Regex)
+    {
+        public static bool TryMatch(string input, string pattern, [NotNullWhen(true)] out Match match)
+        {
+            ArgumentNullException.ThrowIfNull(input);
+            ArgumentNullException.ThrowIfNull(pattern);
+            return (match = Regex.Match(input, pattern)).Success;
+        }
     }
 
     extension(StringBuilder builder)

@@ -1,7 +1,13 @@
 AnomalyMode: {
 	Anomaly: Anomaly
 	AnomalyShortInfo: "[c/FFCFFF:Extreme]"
-	AnomalyExpandedInfo: "[c/FF0000:>:(]"
+	AnomalyExpandedInfo:
+		'''
+		[c/AFFFFF:Do you think you are worthy of transcending the gods?]
+		[c/AFFFFF:If you crave a challenge beyond Legendary+Death Mode...]
+		[c/FF0000:Then...]
+		[c/FF0000:>:(]
+		'''
 	AnomalyActivate: Anomaly is active... are you serious?
 	AnomalyDeactivate: Anomaly is not active; wise choice.
 	AnomalyInvalid: Anomaly is only available in TRUE Master difficulty.

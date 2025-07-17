@@ -300,11 +300,8 @@ public static partial class TOExtensions
         public bool TryGetModItem<T>([NotNullWhen(true)] out T result) where T : ModItem => (result = item.GetModItem<T>()) is not null;
 
         public void DrawInventoryWithBorder(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Vector2 origin, float scale,
-            int way, float borderWidth, Color borderColor)
-        {
-            Texture2D texture = TextureAssets.Item[item.type].Value;
-            TODrawUtils.DrawBorderTexture(spriteBatch, texture, position, frame, borderColor, origin: origin, scale: scale, way: way, borderWidth: borderWidth);
-        }
+            int way, float borderWidth, Color borderColor) =>
+            TODrawUtils.DrawBorderTexture(spriteBatch, TextureAssets.Item[item.type].Value, position, frame, borderColor, 0f, origin, scale, way: way, borderWidth: borderWidth);
     }
 
     extension(Language)
@@ -314,14 +311,29 @@ public static partial class TOExtensions
 
     extension(List<TooltipLine> tooltips)
     {
-        public int FindLastTerrariaTooltipIndex()
+        public int FindFirstTerrariaTooltipIndex()
         {
-            for (int i = tooltips.Count - 1; i >= 0; i--)
+            for (int i = 0; i < tooltips.Count; i++)
             {
                 TooltipLine line = tooltips[i];
                 if (line.Mod == "Terraria" && line.Name.StartsWith("Tooltip"))
                     return i;
             }
+            return -1;
+        }
+
+        public int FindLastTerrariaTooltipIndex(out int num)
+        {
+            for (int i = tooltips.Count - 1; i >= 0; i--)
+            {
+                TooltipLine line = tooltips[i];
+                if (line.Mod == "Terraria" && ItemTooltipModifier._tooltipRegex.TryMatch(line.Name, out Match match))
+                {
+                    num = int.Parse(match.Groups[1].Value);
+                    return i;
+                }
+            }
+            num = -1;
             return -1;
         }
 
@@ -621,7 +633,7 @@ public static partial class TOExtensions
         /// 获取玩家的手持物品。
         /// </summary>
         /// <returns>若玩家光标持有物品，返回该物品；否则返回玩家物品栏中选中的物品。</returns>
-        public Item ActiveItem => Main.mouseItem.IsAir ? player.HeldItem : Main.mouseItem;
+        public Item CurrentItem => Main.mouseItem.IsAir ? player.HeldItem : Main.mouseItem;
     }
 
     extension(Player)
@@ -638,6 +650,8 @@ public static partial class TOExtensions
     extension(Projectile projectile)
     {
         public TOGlobalProjectile Ocean() => projectile.GetGlobalProjectile<TOGlobalProjectile>();
+
+        public Player Owner => Main.player[projectile.owner];
 
         public T GetModProjectile<T>() where T : ModProjectile => projectile.ModProjectile as T;
 

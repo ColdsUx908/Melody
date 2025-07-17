@@ -2,7 +2,7 @@
 using CalamityMod.Systems;
 using CalamityMod.World;
 
-namespace CalamityAnomalies.Core;
+namespace CalamityAnomalies.Anomaly;
 
 public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
 {
@@ -44,7 +44,7 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
     }
 }
 
-public sealed class CADifficultyHandler : ModSystem, IResourceLoader, ILocalizationPrefix
+public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizationPrefix
 {
     public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "Difficulty.AnomalyMode.";
 

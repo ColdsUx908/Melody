@@ -16,20 +16,7 @@ public static class CAUtils
 
     public static bool DownedEvilBossT2 => DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator;
 
-    public static bool PermaFrostActive
-    {
-        get
-        {
-            if (CalamityGlobalNPC.SCal != -1)
-            {
-                NPC supremeCalamitas = Main.npc[CalamityGlobalNPC.SCal];
-                return supremeCalamitas.active && supremeCalamitas.GetModNPC<SupremeCalamitas>().permafrost;
-            }
-            return false;
-        }
-    }
-
-    public static void LogILFailure(string name, string reason) => CAMain.Instance.Logger.Warn($"IL edit \"{name}\" failed! {reason}");
+    public static void LogILFailure(string name, string reason) => CAMain.Instance.Logger.Warn($"""IL edit "{name}" failed! {reason}""");
 
     public static TooltipLine CreateNewTooltipLine(int num, Action<TooltipLine> action, bool tweak)
     {

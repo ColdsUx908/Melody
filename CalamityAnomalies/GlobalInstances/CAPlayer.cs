@@ -40,7 +40,7 @@ public sealed class CAPlayer : ModPlayer
 
     public Item LastYharimsGift { get; set; } = null;
 
-    public int YharimsGiftTimer
+    public int YharimsGift
     {
         get;
         internal set => field = Math.Clamp(value, 0, 2);
@@ -48,7 +48,7 @@ public sealed class CAPlayer : ModPlayer
 
     public YharimsGift_CurrentBlessing YharimsGiftBuff { get; set; } = YharimsGift_CurrentBlessing.None;
 
-    public bool HasYharimsGift => YharimsGiftTimer > 0;
+    public bool HasYharimsGift => YharimsGift > 0;
 
     public override ModPlayer Clone(Player newEntity)
     {
@@ -58,7 +58,7 @@ public sealed class CAPlayer : ModPlayer
         clone.DownedBossCalamity = DownedBossCalamity;
         clone.DownedBossAnomaly = DownedBossAnomaly;
         clone.LastYharimsGift = LastYharimsGift;
-        clone.YharimsGiftTimer = YharimsGiftTimer;
+        clone.YharimsGift = YharimsGift;
         clone.YharimsGiftBuff = YharimsGiftBuff;
 
         return clone;
@@ -67,7 +67,7 @@ public sealed class CAPlayer : ModPlayer
     public override void ResetEffects()
     {
         Debuff_DimensionalTorn = false;
-        YharimsGiftTimer--;
+        YharimsGift--;
 
         base.ResetEffects();
     }

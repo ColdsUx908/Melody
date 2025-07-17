@@ -3955,7 +3955,7 @@ public abstract class SingleProjectileBehavior : SingleEntityBehavior<Projectile
     public override void Connect(Projectile projectile)
     {
         Projectile = projectile;
-        Owner = Main.player[Projectile.owner];
+        Owner = projectile.Owner;
         OceanProjectile = projectile.Ocean();
     }
 
@@ -4782,7 +4782,7 @@ public abstract class SingleItemBehavior : SingleEntityBehavior<Item>
     public virtual void PostDrawTooltipLine(DrawableTooltipLine line) { }
 
     /// <summary>
-    /// Allows you to modify all the tooltips that display for the given item. See here for information about TooltipLine. To hide tooltips, please use <see cref="TooltipLine.Hide"/> and defensive coding.
+    /// 修改物品的工具提示。
     /// </summary>
     public virtual void ModifyTooltips(List<TooltipLine> tooltips) { }
     #endregion Tooltip

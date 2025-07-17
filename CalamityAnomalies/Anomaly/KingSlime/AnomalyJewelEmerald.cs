@@ -1,6 +1,6 @@
 ﻿using CalamityMod.NPCs.NormalNPCs;
 
-namespace CalamityAnomalies.NPCs.KingSlime;
+namespace CalamityAnomalies.Anomaly.KingSlime;
 
 public class AnomalyJewelEmerald : AnomalyNPCBehavior<KingSlimeJewelEmerald>
 {

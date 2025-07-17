@@ -1,9 +1,0 @@
-2: {
-	Header: Post Yharon
-
-	YharimsGift: {
-		BlessingChange: Current blessing accessory changed to: {0}
-		BlessingTooltip: Blessed by Yharim's Gift
-		CATooltip0: Current blessing accessory: {0}
-	}
-}

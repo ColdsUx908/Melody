@@ -16,6 +16,7 @@ public sealed class ItemTooltipDictionary
 
     public bool TryGet(string mod, string name, out int index, out TooltipLine line)
     {
+        mod ??= "Terraria";
         if (_data.TryGetValue((mod, name), out (int index, TooltipLine line) value))
         {
             (index, line) = value;
@@ -28,6 +29,7 @@ public sealed class ItemTooltipDictionary
 
     public bool Modify(string mod, string name, Action<TooltipLine> action)
     {
+        mod ??= "Terraria";
         if (TryGet(mod, name, out _, out TooltipLine line))
         {
             action(line);

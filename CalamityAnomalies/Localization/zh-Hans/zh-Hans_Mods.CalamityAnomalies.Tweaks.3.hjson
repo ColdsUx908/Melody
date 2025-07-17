@@ -1,8 +1,0 @@
-2: {
-	Header: 石巨人后
-
-	SoaringInsignia: {
-		Tooltip0: 翅膀飞行时间提高1.3倍
-		Tooltip1: 移动速度提高1.15倍，跳跃速度提高36%，加速度提高1.35倍
-	}
-}

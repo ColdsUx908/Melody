@@ -11,10 +11,10 @@ using static CalamityMod.NPCs.Yharon.Yharon;
 namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
 
 /* 犽戎
- * 改动
- * 1. “巨龙重生”。
- * 2. 在进入二阶段时获得15秒无敌。
- * 3. 在转换阶段时获得97%无法削减的伤害减免（BossRush时为99%）。
+ * 
+ * “巨龙重生”。
+ * 在进入二阶段时释放一道无害的冲击波（GFB中有1伤害），获得15秒无敌。
+ * 在转换阶段时获得97%无法削减的伤害减免（BossRush时为99%）（原灾厄：70%，BossRush时为99%）。
  */
 
 public sealed class Yharon_Tweak : CANPCTweak<Yharon>
@@ -1457,7 +1457,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
                 case 130f:
                     if (TOWorld.GeneralClient)
                     {
-                        Projectile.NewProjectileAction<ResplendentExplosion>(NPC.GetSource_FromAI(), NPC.Center, Vector2.Zero, 0, 0f, Main.myPlayer, p =>
+                        Projectile.NewProjectileAction<ResplendentExplosion>(NPC.GetSource_FromAI(), NPC.Center, Vector2.Zero, Main.zenithWorld.ToInt(), 0f, Main.myPlayer, p =>
                         {
                             p.ai[1] = 1200f;
                             p.localAI[1] = 0.25f;
@@ -1466,7 +1466,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
                         });
                     }
                     break;
-                case >= 180:
+                case >= 180f:
                     startSecondAI = true;
                     NPC.ai[0] = 0f;
                     NPC.ai[1] = 0f;
@@ -1630,14 +1630,14 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
         bool invincible = invincibilityCounter <= Data.Phase2InvincibilityTime;
         if (invincible)
         {
-            float invincibleRatio = invincibilityCounter / Data.Phase2InvincibilityTime;
+            float invincibleRatio = (float)invincibilityCounter / Data.Phase2InvincibilityTime;
             int newLifeMax = InitialLifeMax + (int)((Main.zenithWorld ? InitialLifeMax : InitialLifeMax / 10.0) * invincibleRatio); //GFB中会重生至二倍生命值
             int increasedLifeMax = newLifeMax - NPC.lifeMax;
             if (increasedLifeMax > 0)
                 NPC.lifeMax += increasedLifeMax;
 
             //对数插值: y = ln((e - 1)x / 900 + 1)
-            int newLife = (int)MathHelper.Lerp(NPC.life, NPC.lifeMax, MathF.Log((MathF.E - 1) * invincibleRatio + 1));
+            int newLife = (int)MathHelper.Lerp(NPC.life, NPC.lifeMax * MathHelper.Lerp(0.1f, 1f, invincibleRatio), MathF.Log((MathF.E - 1) * invincibleRatio + 1));
             int increasedLife = Math.Clamp(newLife - NPC.life, 0, NPC.lifeMax - NPC.life);
 
             if (increasedLife > 0)

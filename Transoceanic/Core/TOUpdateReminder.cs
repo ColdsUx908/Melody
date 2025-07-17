@@ -2,7 +2,7 @@
 
 public sealed class TOUpdateReminder : ModSystem, IResourceLoader
 {
-    public static event Action UpdateReminder;
+    internal static event Action UpdateReminder;
 
     public override void PreUpdateEntities()
     {

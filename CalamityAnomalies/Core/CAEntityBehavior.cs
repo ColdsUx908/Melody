@@ -269,6 +269,15 @@ public abstract class CASingleItemBehavior : SingleItemBehavior
     public virtual void ModifyHitNPC_DR(NPC npc, Player player, ref NPC.HitModifiers modifiers, float baseDR,
         ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier)
     { }
+
+    /// <summary>
+    /// <inheritdoc/><para/>
+    /// <see cref="CAGlobalItem.TooltipModifier"/> 在此方法前更新，可在 <see cref="AnomalyItem"/> 中使用。
+    /// </summary>
+    /// <param name="tooltips"></param>
+    public override void ModifyTooltips(List<TooltipLine> tooltips) => base.ModifyTooltips(tooltips);
+
+    public void ApplyCATweakColorToDamage() => OceanItem.TooltipDictionary.Modify(null, "Damage", l => l.OverrideColor = CAMain.GetGradientColor(0.25f));
 }
 
 public abstract class CASingleItemBehavior<T> : CASingleItemBehavior where T : ModItem

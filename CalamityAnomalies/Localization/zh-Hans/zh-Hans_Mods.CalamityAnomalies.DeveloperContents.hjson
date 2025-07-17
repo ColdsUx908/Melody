@@ -7,13 +7,10 @@ Permafrost: {
 
 AscendantWings: {
 	DisplayName: 上界之翼
-	Tooltip: 飞翔于天空的传奇之翼
+	Tooltip:
+		'''
+		飞翔于天空的传奇之翼
+		雷鸣暴雪之夜，以雷击金雕之羽而成
+		抟扶摇。上九霄，弹指可至任意弦
+		'''
 }
-
-ImmortalCeless: {
-	DisplayName: 不朽之天渊
-	Tooltip: 传奇亘古，盛世笙歌
-}
-
-ImmortalBloodRain.DisplayName: Immortal Blood Rain
-ImmortalIceRain.DisplayName: Immortal Ice Rain

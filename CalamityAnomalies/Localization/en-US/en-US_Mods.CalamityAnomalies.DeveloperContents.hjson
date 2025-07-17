@@ -7,13 +7,10 @@ Permafrost: {
 
 AscendantWings: {
 	DisplayName: Ascendant Wings
-	Tooltip: Legendary wings that soar through the sky
+	Tooltip:
+		'''
+		Legendary wings that soar through the sky
+		Created from the feathers of a golden eagle struck by lightning on a stormy night
+		They can carry you to any height with a single flap
+		'''
 }
-
-ImmortalCeless: {
-	DisplayName: Immortal Celess
-	Tooltip: ""
-}
-
-ImmortalBloodRain.DisplayName: Immortal Blood Rain
-ImmortalIceRain.DisplayName: Immortal Ice Rain

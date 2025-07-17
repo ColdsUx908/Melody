@@ -5755,7 +5755,7 @@ public abstract class GlobalWallDetour<T> : GlobalBlockTypeDetour<T> where T : G
     }
 }
 
-public sealed class TypeDetourUpdateReminder : IResourceLoader
+internal sealed class TypeDetourUpdateReminder : IResourceLoader
 {
     void IResourceLoader.PostSetupContent()
     {
@@ -5870,5 +5870,5 @@ public sealed class TypeDetourUpdateReminder : IResourceLoader
         TODetourUtils.EvaluateDetourName(targetMethod, out string sourceNameGot) && sourceNameGot == sourceMethod.Name;
 
     private static bool ShouldMethodBeChecked(MethodInfo method) =>
-        (method.IsRealVirtual || method.IsAbstract) && !method.IsGenericMethod && !method.HasAttribute<ObsoleteAttribute>() && method.CanBeAccessedOutsideAssembly;
+        method.IsRealVirtualOrAbstract && !method.IsGenericMethod && !method.HasAttribute<ObsoleteAttribute>() && method.CanBeAccessedOutsideAssembly;
 }

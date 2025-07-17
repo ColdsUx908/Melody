@@ -1,4 +1,5 @@
-﻿using CalamityMod.World;
+﻿using CalamityMod.NPCs.SupremeCalamitas;
+using CalamityMod.World;
 
 namespace CalamityAnomalies.Core;
 
@@ -36,6 +37,19 @@ public sealed class CAWorld : ModSystem
     /// 传奇死亡GFB。
     /// </summary>
     public static bool LDG => CalamityWorld.LegendaryMode && CalamityWorld.death && Main.zenithWorld;
+
+    public static bool PermaFrostActive
+    {
+        get
+        {
+            if (CalamityGlobalNPC.SCal != -1)
+            {
+                NPC supremeCalamitas = Main.npc[CalamityGlobalNPC.SCal];
+                return supremeCalamitas.active && supremeCalamitas.GetModNPC<SupremeCalamitas>().permafrost;
+            }
+            return false;
+        }
+    }
 
     public override void OnWorldLoad()
     {

@@ -78,7 +78,7 @@ public sealed class YharimsGift_Tweak : CAItemTweak<YharimsGift>, ILocalizationP
     {
         CAPlayer anomalyPlayer = player.Anomaly();
         anomalyPlayer.LastYharimsGift = Item;
-        anomalyPlayer.YharimsGiftTimer += 2;
+        anomalyPlayer.YharimsGift += 2;
         YharimsGift_Handler._enchantmentEnergyParticles.Update();
     }
 

@@ -29,10 +29,11 @@ public static class TODrawUtils
     {
         if (borderWidth > 0f)
         {
+            Color realColor = color with { A = 0 };
             for (int i = 0; i < way; i++)
             {
                 Vector2 offset = new PolarVector2(borderWidth, MathHelper.TwoPi / way * i);
-                spriteBatch.Draw(texture, baseDrawPosition + offset, sourceRectangle, color with { A = 0 }, rotation, origin, scale, spriteEffects, layerDepth);
+                spriteBatch.Draw(texture, baseDrawPosition + offset, sourceRectangle, realColor, rotation, origin, scale, spriteEffects, layerDepth);
             }
         }
     }

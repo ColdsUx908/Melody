@@ -3,9 +3,20 @@
 namespace CalamityAnomalies.Tweaks._4_1_PostML;
 
 /* 天体洋葱
- * 改动
+ * 
  * 在大师模式下可正常使用，提供一个额外的饰品栏。
  */
+
+public sealed class CelestialOnion_Tweak : CAItemTweak<CelestialOnion>, ILocalizationPrefix
+{
+    public string LocalizationPrefix => CAMain.TweakLocalizationPrefix + "4.1.CelestialOnion.";
+
+    public override void ModifyTooltips(List<TooltipLine> tooltips)
+    {
+        AnomalyItem.TooltipModifier
+            .ModifyWithCATweakColor(1, l => l.Text = this.GetTextValueWithPrefix("Tooltip1"));
+    }
+}
 
 public sealed class CelestialOnion_Detour : ModItemDetour<CelestialOnion>
 {

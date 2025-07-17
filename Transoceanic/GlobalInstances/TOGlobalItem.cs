@@ -25,7 +25,7 @@ public class TOGlobalItem : GlobalItem
     internal int _lastEquippedTime = -1;
     internal int _lastUnequippedTime = -1;
     internal bool ShouldUpdateLastEquippedTime => InternalEquipped > 0 && _lastEquippedTime <= _lastUnequippedTime;
-    internal bool ShouldUpdateLastUnequippedTime => Main.hasFocus && InternalEquipped == 0 && _lastUnequippedTime <= _lastEquippedTime;
+    internal bool ShouldUpdateLastUnequippedTime => !Main.gamePaused && Main.hasFocus && InternalEquipped == 0 && _lastUnequippedTime <= _lastEquippedTime;
 
     public bool IsEquipped => _lastEquippedTime > _lastUnequippedTime;
 

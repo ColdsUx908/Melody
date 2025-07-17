@@ -5,6 +5,8 @@ namespace Transoceanic.Core;
 
 public sealed class TOWorld : ModSystem
 {
+    public static bool AprilFools => DateTime.Now is (int _, 4, 1);
+
     public static bool GeneralClient => Main.netMode != NetmodeID.MultiplayerClient;
 
     public static float GeneralSeconds => Main.GlobalTimeWrappedHourly;

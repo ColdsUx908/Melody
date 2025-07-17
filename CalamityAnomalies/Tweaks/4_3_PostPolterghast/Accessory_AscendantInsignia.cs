@@ -6,12 +6,12 @@ using Terraria.GameInput;
 namespace CalamityAnomalies.Tweaks._4_3_PostPolterghast;
 
 /* 进升证章
- * 改动
+ * 
  * 翅膀飞行时间乘1.5（原灾厄：提升30%）。
  * 移动速度乘1.2（原灾厄：提升10%）。
  * 跳跃速度提升60%（原灾厄：10%）。
  * 继承翱翔徽章的加速度提升效果。
- * 技能冷却时间减为1500（25秒）。
+ * 技能冷却时间减为1500（原灾厄：2400）。
  * 所有效果不与翱翔徽章叠加。
  * 
  * 寻神者之礼祝福
@@ -36,7 +36,9 @@ public sealed class AscendantInsignia_Tweak : CAItemTweak<AscendantInsignia>, IL
 
     public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
     {
-        YharimsGift_Handler.DrawEnergyAndBorderBehindItem(Item, spriteBatch, position, frame, origin, scale);
+        CAPlayer anomalyPlayer = Main.LocalPlayer.Anomaly();
+        if (anomalyPlayer.HasYharimsGift || (anomalyPlayer.LastYharimsGift is not null && anomalyPlayer.LastYharimsGift.Ocean().GetEquippedTimer(40) > 0))
+            YharimsGift_Handler.DrawEnergyAndBorderBehindItem(Item, spriteBatch, position, frame, origin, scale);
         return true;
     }
 
@@ -73,9 +75,9 @@ public sealed class AscendantInsignia_Player : CAPlayerBehavior
                     Player.moveSpeed *= 7f / 6f;
                     Player.jumpSpeedBoost += 2.4f;
                 }
+                if (CalamityPlayer.ascendantInsigniaCooldown is >= 1470 and < 1500)
+                    Player.moveSpeed *= 0.99f;
             }
-            if (CalamityPlayer.ascendantInsigniaCooldown is >= 1470 and < 1500)
-                Player.moveSpeed *= 0.99f;
         }
     }
 }
