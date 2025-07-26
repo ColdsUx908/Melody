@@ -1,13 +1,8 @@
 CAServerConfig: {
 	DisplayName: Server Settings
-	Headers.Content: Content Settings
 
-	BossRushDifficulty: {
-		Label: BossRush Difficulty
-		Tooltip:
-			'''
-			Add BossRush Difficulty
-			Completely OPTIONAL
-			'''
+	Contents: {
+		Label: Enable Mod Content
+		Tooltip: Enable or disable the content provided by the Calamity Anomalies mod.
 	}
 }

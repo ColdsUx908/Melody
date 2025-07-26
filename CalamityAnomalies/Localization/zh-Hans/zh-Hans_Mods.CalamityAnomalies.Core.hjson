@@ -1,0 +1,6 @@
+EnterWorldMessage: {
+	True: Calamity Anomalies 平衡已开启。
+	False: Calamity Anomalies 平衡已关闭。
+}
+
+TweakIdentifier: "[c/AFFFFF:由Calamity Anomalies修改]"

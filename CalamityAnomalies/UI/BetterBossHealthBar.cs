@@ -219,7 +219,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 
         public new void Draw(SpriteBatch spriteBatch, int x, int y)
         {
-            if (PreDraw(spriteBatch, x, y))
+            if (PreDraw(spriteBatch, ref x, ref y))
             {
                 DrawMainBar(spriteBatch, x, y);
 
@@ -255,17 +255,17 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
             PostDraw(spriteBatch, x, y);
         }
 
-        private bool PreDraw(SpriteBatch spriteBatch, int x, int y)
+        private bool PreDraw(SpriteBatch spriteBatch, ref int x, ref int y)
         {
             bool result = true;
             bool hasSingle = false;
             if (NPC.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreDrawCalBossBar)))
             {
-                result &= npcBehavior.PreDrawCalBossBar(this, spriteBatch, x, y);
+                result &= npcBehavior.PreDrawCalBossBar(this, spriteBatch, ref x, ref y);
                 hasSingle = true;
             }
             foreach (CAGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.GetBehaviors<CAGlobalNPCBehavior>(nameof(CAGlobalNPCBehavior.PreDrawCalBossBar)))
-                result &= anomalyGNPCBehavior.PreDrawCalBossBar(NPC, this, spriteBatch, x, y, hasSingle);
+                result &= anomalyGNPCBehavior.PreDrawCalBossBar(NPC, this, spriteBatch, ref x, ref y, hasSingle);
             return result;
         }
 
@@ -349,8 +349,8 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
     }
 
 
-    public static DynamicSpriteFont MouseFont { get; } = FontAssets.MouseText.Value;
-    public static DynamicSpriteFont ItemStackFont { get; } = FontAssets.ItemStack.Value;
+    public static DynamicSpriteFont MouseFont => FontAssets.MouseText?.Value;
+    public static DynamicSpriteFont ItemStackFont => FontAssets.ItemStack?.Value;
 
     private static readonly Dictionary<long, BetterBossHPUI> _trackingBars = [];
     private const int MaxBars = 6;

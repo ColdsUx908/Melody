@@ -16,8 +16,8 @@ public sealed class CAGlobalProjectile : GlobalProjectile
     private Union32[] InternalAnomalyAI32 { get; } = new Union32[AISlot];
     private Union64[] InternalAnomalyAI64 { get; } = new Union64[AISlot2];
 
-    private ref Bits32 InternalAIChanged32 => ref AnomalyAI32[^1].bits;
-    private ref Bits64 InternalAIChanged64 => ref AnomalyAI64[^1].bits;
+    private ref Bits32 InternalAIChanged32 => ref InternalAnomalyAI32[^1].bits;
+    private ref Bits64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].bits;
 
     public override GlobalProjectile Clone(Projectile from, Projectile to)
     {
@@ -79,7 +79,7 @@ public sealed class CAGlobalProjectile : GlobalProjectile
 
         for (int i = 0; i < AISlot2 - 1; i++)
         {
-            if (AIChanged64[i])
+            if (InternalAIChanged64[i])
                 aiToSend2[i] = InternalAnomalyAI64[i].d;
         }
         binaryWriter.Write(aiToSend2.Count);
@@ -95,19 +95,35 @@ public sealed class CAGlobalProjectile : GlobalProjectile
     {
         int recievedAICount = binaryReader.ReadInt32();
         for (int i = 0; i < recievedAICount; i++)
-            AnomalyAI32[binaryReader.ReadInt32()].f = binaryReader.ReadSingle();
+        {
+            int index = binaryReader.ReadInt32();
+            float value = binaryReader.ReadSingle();
+            AnomalyAI32[index].f = value;
+        }
 
         int recievedAICount2 = binaryReader.ReadInt32();
         for (int i = 0; i < recievedAICount2; i++)
-            AnomalyAI64[binaryReader.ReadInt32()].d = binaryReader.ReadDouble();
+        {
+            int index = binaryReader.ReadInt32();
+            double value = binaryReader.ReadDouble();
+            AnomalyAI64[index].d = value;
+        }
 
         int recievedAICount3 = binaryReader.ReadInt32();
         for (int i = 0; i < recievedAICount3; i++)
-            InternalAnomalyAI32[binaryReader.ReadInt32()].f = binaryReader.ReadSingle();
+        {
+            int index = binaryReader.ReadInt32();
+            float value = binaryReader.ReadSingle();
+            InternalAnomalyAI32[index].f = value;
+        }
 
         int recievedAICount4 = binaryReader.ReadInt32();
         for (int i = 0; i < recievedAICount4; i++)
-            InternalAnomalyAI64[binaryReader.ReadInt32()].d = binaryReader.ReadDouble();
+        {
+            int index = binaryReader.ReadInt32();
+            double value = binaryReader.ReadDouble();
+            InternalAnomalyAI64[index].d = value;
+        }
     }
 
     #region 额外数据
@@ -119,6 +135,19 @@ public sealed class CAGlobalProjectile : GlobalProjectile
             if (InternalAnomalyAI32[0].bits[0] != value)
             {
                 InternalAnomalyAI32[0].bits[0] = value;
+                InternalAIChanged32[0] = true;
+            }
+        }
+    }
+
+    public bool ShouldRunAnomalyAI
+    {
+        get => InternalAnomalyAI32[0].bits[1];
+        set
+        {
+            if (InternalAnomalyAI32[0].bits[1] != value)
+            {
+                InternalAnomalyAI32[0].bits[1] = value;
                 InternalAIChanged32[0] = true;
             }
         }

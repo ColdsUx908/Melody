@@ -8,6 +8,7 @@ using Terraria.GameContent.UI.Elements;
 using Terraria.GameContent.UI.ResourceSets;
 using Terraria.GameInput;
 using Terraria.Graphics.Capture;
+using Terraria.Graphics.Effects;
 using Terraria.Map;
 using Terraria.UI;
 using Terraria.WorldBuilding;
@@ -16,8 +17,16 @@ namespace Transoceanic.RuntimeEditing;
 
 public abstract class TypeDetour : ITODetourProvider
 {
+    void ITODetourProvider.ApplyDetour()
+    {
+        if (ShouldApplyDetour)
+            ApplyDetour();
+    }
+
+    public virtual bool ShouldApplyDetour => true;
+
     /// <summary>
-    /// <inheritdoc/><para/>
+    /// <inheritdoc cref="ITODetourProvider.ApplyDetour"/><para/>
     /// <strong>避免</strong>实现任何与自带方法同名的方法。
     /// <br/>如果需要重载方法，使用 <c>Detour_{methodName}__{paramNames}</c> 方法名格式。
     /// </summary>
@@ -26,10 +35,10 @@ public abstract class TypeDetour : ITODetourProvider
 
 public abstract class TypeDetour<T> : TypeDetour
 {
-    public static Type TargetType { get; } = typeof(T);
+    public static Type SourceType { get; } = typeof(T);
 
     /// <summary>
-    /// 尝试将指定的Detour应用到 <see cref="T"/> 类型的。
+    /// 尝试将指定的Detour应用到 <see cref="T"/> 类型。
     /// </summary>
     /// <remarks>这个方法仅会在类型实际上重写了Detour方法时应用。</remarks>
     /// <typeparam name="TDelegate">委托类型。</typeparam>
@@ -39,7 +48,7 @@ public abstract class TypeDetour<T> : TypeDetour
     /// </param>
     protected Hook TryApplyDetour<TDelegate>(TDelegate detour, bool hasThis = true) where TDelegate : Delegate =>
         detour.Method.DeclaringType == GetType() && TODetourUtils.EvaluateDetourName(detour.Method, out string sourceName)
-        ? TODetourUtils.Modify(TargetType, sourceName, hasThis, detour)
+        ? TODetourUtils.Modify(SourceType, sourceName, hasThis, detour)
         : null;
 }
 
@@ -5755,83 +5764,179 @@ public abstract class GlobalWallDetour<T> : GlobalBlockTypeDetour<T> where T : G
     }
 }
 
+public abstract class GameEffectDetour<T> : TypeDetour<T> where T : GameEffect
+{
+    // OnLoad
+    public delegate void Orig_OnLoad(T self);
+    public virtual void Detour_OnLoad(Orig_OnLoad orig, T self) => orig(self);
+
+    // IsVisible
+    public delegate bool Orig_IsVisible(T self);
+    public virtual bool Detour_IsVisible(Orig_IsVisible orig, T self) => orig(self);
+
+    // Activate
+    public delegate void Orig_Activate(T self, Vector2 position, params object[] args);
+    public virtual void Detour_Activate(Orig_Activate orig, T self, Vector2 position, params object[] args) => orig(self, position, args);
+
+    // Deactivate
+    public delegate void Orig_Deactivate(T self, params object[] args);
+    public virtual void Detour_Deactivate(Orig_Deactivate orig, T self, params object[] args) => orig(self, args);
+
+    public override void ApplyDetour()
+    {
+        base.ApplyDetour();
+        TryApplyDetour(Detour_OnLoad);
+        TryApplyDetour(Detour_IsVisible);
+        TryApplyDetour(Detour_Activate);
+        TryApplyDetour(Detour_Deactivate);
+    }
+}
+
+public abstract class CustomSkyDetour<T> : GameEffectDetour<T> where T : CustomSky
+{
+    // Update
+    public delegate void Orig_Update(T self, GameTime gameTime);
+    public virtual void Detour_Update(Orig_Update orig, T self, GameTime gameTime) => orig(self, gameTime);
+
+    // Draw
+    public delegate void Orig_Draw(T self, SpriteBatch spriteBatch, float minDepth, float maxDepth);
+    public virtual void Detour_Draw(Orig_Draw orig, T self, SpriteBatch spriteBatch, float minDepth, float maxDepth) => orig(self, spriteBatch, minDepth, maxDepth);
+
+    // IsActive
+    public delegate bool Orig_IsActive(T self);
+    public virtual bool Detour_IsActive(Orig_IsActive orig, T self) => orig(self);
+
+    // Reset
+    public delegate void Orig_Reset(T self);
+    public virtual void Detour_Reset(Orig_Reset orig, T self) => orig(self);
+
+    // OnTileColor
+    public delegate Color Orig_OnTileColor(T self, Color inColor);
+    public virtual Color Detour_OnTileColor(Orig_OnTileColor orig, T self, Color inColor) => orig(self, inColor);
+
+    // GetCloudAlpha
+    public delegate float Orig_GetCloudAlpha(T self);
+    public virtual float Detour_GetCloudAlpha(Orig_GetCloudAlpha orig, T self) => orig(self);
+
+    public override void ApplyDetour()
+    {
+        base.ApplyDetour();
+        TryApplyDetour(Detour_Update);
+        TryApplyDetour(Detour_Draw);
+        TryApplyDetour(Detour_IsActive);
+        TryApplyDetour(Detour_Reset);
+        TryApplyDetour(Detour_OnTileColor);
+        TryApplyDetour(Detour_GetCloudAlpha);
+    }
+}
+
 internal sealed class TypeDetourUpdateReminder : IResourceLoader
 {
+    private readonly record struct DetourTypeContainer(Type Source, Type Target, Predicate<MethodInfo> SourceIgnore = null, Predicate<MethodInfo> TargetIgnore = null)
+    {
+        public (List<string> sourceMissing, List<string> targetMissing) CompareVirtualMethods(Func<MethodInfo, MethodInfo, bool> match)
+        {
+            match ??= (s, t) => s == t;
+            List<string> sourceMissing = [];
+            List<string> targetMissing = [];
+            IEnumerable<MethodInfo> sourceMethods = Source.GetRealMethods(TOReflectionUtils.InstanceBindingFlags).Where(ShouldMethodBeChecked);
+            IEnumerable<MethodInfo> targetMethods = Target.GetRealMethods(TOReflectionUtils.InstanceBindingFlags).Where(ShouldMethodBeChecked);
+            foreach (MethodInfo sourceMethod in sourceMethods)
+            {
+                if (SourceIgnore?.Invoke(sourceMethod) ?? false)
+                    continue;
+                if (!targetMethods.Any(m => match(sourceMethod, m)))
+                    targetMissing.Add(sourceMethod.Name);
+            }
+            foreach (MethodInfo targetMethod in targetMethods)
+            {
+                if (TargetIgnore?.Invoke(targetMethod) ?? false)
+                    continue;
+                if (!sourceMethods.Any(m => match(m, targetMethod)))
+                    sourceMissing.Add(targetMethod.Name);
+            }
+            return (sourceMissing, targetMissing);
+        }
+    }
+
     void IResourceLoader.PostSetupContent()
     {
         bool hasWarn = false;
-        List<(Type source, Type target, Predicate<MethodInfo> sourceIgnore, Predicate<MethodInfo> targetIgnore)> typesToVerify =
+        List<DetourTypeContainer> typesToVerify =
         [
-            (typeof(ModType), typeof(ModTypeDetour<>), null, null),
-            (typeof(ModAccessorySlot), typeof(ModAccessorySlotDetour<>), null, null),
-            (typeof(ModBannerTile), typeof(ModBannerTileDetour<>), null, null),
-            (typeof(ModBiome), typeof(ModBiomeDetour<>), null, null),
-            (typeof(ModBiomeConversion), typeof(ModBiomeConversionDetour<>), null, null),
-            (typeof(ModBlockType), typeof(ModBlockTypeDetour<>), null, null),
-            (typeof(ModBossBar), typeof(ModBossBarDetour<>), null, null),
-            (typeof(ModBossBarStyle), typeof(ModBossBarStyleDetour<>), null, null),
-            (typeof(ModBuff), typeof(ModBuffDetour<>), null, null),
-            (typeof(ModCactus), typeof(ModCactusDetour<>), null, null),
-            (typeof(ModCloud), typeof(ModCloudDetour<>), null, null),
-            (typeof(ModCommand), typeof(ModCommandDetour<>), null, null),
-            (typeof(ModDust), typeof(ModDustDetour<>), null, null),
-            (typeof(ModEmoteBubble), typeof(ModEmoteBubbleDetour<>), null, null),
-            (typeof(ModGore), typeof(ModGoreDetour<>), null, null),
-            (typeof(ModHair), typeof(ModHairDetour<>), null, null),
-            (typeof(ModItem), typeof(ModItemDetour<>), null, null),
-            (typeof(ModMapLayer), typeof(ModMapLayerDetour<>), null, null),
-            (typeof(ModMenu), typeof(ModMenuDetour<>), null, null),
-            (typeof(ModMount), typeof(ModMountDetour<>), null, null),
-            (typeof(ModNPC), typeof(ModNPCDetour<>), null, null),
-            (typeof(ModPalmTree), typeof(ModPalmTreeDetour<>), null, null),
-            (typeof(ModPlayer), typeof(ModPlayerDetour<>), null, null),
-            (typeof(ModPrefix), typeof(ModPrefixDetour<>), null, null),
-            (typeof(ModProjectile), typeof(ModProjectileDetour<>), null, null),
-            (typeof(ModPylon), typeof(ModPylonDetour<>), null, null),
-            (typeof(ModRarity), typeof(ModRarityDetour<>), null, null),
-            (typeof(ModResourceDisplaySet), typeof(ModResourceDisplaySetDetour<>), null, null),
-            (typeof(ModResourceOverlay), typeof(ModResourceOverlayDetour<>), null, null),
-            (typeof(ModSceneEffect), typeof(ModSceneEffectDetour<>), null, null),
-            (typeof(ModSurfaceBackgroundStyle), typeof(ModSurfaceBackgroundStyleDetour<>), null, null),
-            (typeof(ModSystem), typeof(ModSystemDetour<>), null, null),
-            (typeof(ModTexturedType), typeof(ModTexturedTypeDetour<>), null, null),
-            (typeof(ModTile), typeof(ModTileDetour<>), null, null),
-            (typeof(ModTileEntity), typeof(ModTileEntityDetour<>), null, null),
-            (typeof(ModTree), typeof(ModTreeDetour<>), null, null),
-            (typeof(ModUndergroundBackgroundStyle), typeof(ModUndergroundBackgroundStyleDetour<>), null, null),
-            (typeof(ModWall), typeof(ModWallDetour<>), null, null),
-            (typeof(ModWaterfallStyle), typeof(ModWaterfallStyleDetour<>), null, null),
-            (typeof(ModWaterStyle), typeof(ModWaterStyleDetour<>), null, null),
+            new(typeof(ModType), typeof(ModTypeDetour<>)),
+            new(typeof(ModAccessorySlot), typeof(ModAccessorySlotDetour<>)),
+            new(typeof(ModBannerTile), typeof(ModBannerTileDetour<>)),
+            new(typeof(ModBiome), typeof(ModBiomeDetour<>)),
+            new(typeof(ModBiomeConversion), typeof(ModBiomeConversionDetour<>)),
+            new(typeof(ModBlockType), typeof(ModBlockTypeDetour<>)),
+            new(typeof(ModBossBar), typeof(ModBossBarDetour<>)),
+            new(typeof(ModBossBarStyle), typeof(ModBossBarStyleDetour<>)),
+            new(typeof(ModBuff), typeof(ModBuffDetour<>)),
+            new(typeof(ModCactus), typeof(ModCactusDetour<>)),
+            new(typeof(ModCloud), typeof(ModCloudDetour<>)),
+            new(typeof(ModCommand), typeof(ModCommandDetour<>)),
+            new(typeof(ModDust), typeof(ModDustDetour<>)),
+            new(typeof(ModEmoteBubble), typeof(ModEmoteBubbleDetour<>)),
+            new(typeof(ModGore), typeof(ModGoreDetour<>)),
+            new(typeof(ModHair), typeof(ModHairDetour<>)),
+            new(typeof(ModItem), typeof(ModItemDetour<>)),
+            new(typeof(ModMapLayer), typeof(ModMapLayerDetour<>)),
+            new(typeof(ModMenu), typeof(ModMenuDetour<>)),
+            new(typeof(ModMount), typeof(ModMountDetour<>)),
+            new(typeof(ModNPC), typeof(ModNPCDetour<>)),
+            new(typeof(ModPalmTree), typeof(ModPalmTreeDetour<>)),
+            new(typeof(ModPlayer), typeof(ModPlayerDetour<>)),
+            new(typeof(ModPrefix), typeof(ModPrefixDetour<>)),
+            new(typeof(ModProjectile), typeof(ModProjectileDetour<>)),
+            new(typeof(ModPylon), typeof(ModPylonDetour<>)),
+            new(typeof(ModRarity), typeof(ModRarityDetour<>)),
+            new(typeof(ModResourceDisplaySet), typeof(ModResourceDisplaySetDetour<>)),
+            new(typeof(ModResourceOverlay), typeof(ModResourceOverlayDetour<>)),
+            new(typeof(ModSceneEffect), typeof(ModSceneEffectDetour<>)),
+            new(typeof(ModSurfaceBackgroundStyle), typeof(ModSurfaceBackgroundStyleDetour<>)),
+            new(typeof(ModSystem), typeof(ModSystemDetour<>)),
+            new(typeof(ModTexturedType), typeof(ModTexturedTypeDetour<>)),
+            new(typeof(ModTile), typeof(ModTileDetour<>)),
+            new(typeof(ModTileEntity), typeof(ModTileEntityDetour<>)),
+            new(typeof(ModTree), typeof(ModTreeDetour<>)),
+            new(typeof(ModUndergroundBackgroundStyle), typeof(ModUndergroundBackgroundStyleDetour<>)),
+            new(typeof(ModWall), typeof(ModWallDetour<>)),
+            new(typeof(ModWaterfallStyle), typeof(ModWaterfallStyleDetour<>)),
+            new(typeof(ModWaterStyle), typeof(ModWaterStyleDetour<>)),
 
-            (typeof(GlobalType<,>), typeof(GlobalTypeDetour<,,>), null, null),
-            (typeof(GlobalBlockType), typeof(GlobalBlockTypeDetour<>), null, null),
-            (typeof(GlobalBossBar), typeof(GlobalBossBarDetour<>), null, null),
-            (typeof(GlobalBuff), typeof(GlobalBuffDetour<>), null, null),
-            (typeof(GlobalEmoteBubble), typeof(GlobalEmoteBubbleDetour<>), null, null),
-            (typeof(GlobalInfoDisplay), typeof(GlobalInfoDisplayDetour<>), null, null),
-            (typeof(GlobalItem), typeof(GlobalItemDetour<>), null, null),
-            (typeof(GlobalNPC), typeof(GlobalNPCDetour<>), null, null),
-            (typeof(GlobalProjectile), typeof(GlobalProjectileDetour<>), null, null),
-            (typeof(GlobalPylon), typeof(GlobalPylonDetour<>), null, null),
-            (typeof(GlobalTile), typeof(GlobalTileDetour<>), null, null),
-            (typeof(GlobalWall), typeof(GlobalWallDetour<>), null, null),
+            new(typeof(GlobalType<,>), typeof(GlobalTypeDetour<,,>)),
+            new(typeof(GlobalBlockType), typeof(GlobalBlockTypeDetour<>)),
+            new(typeof(GlobalBossBar), typeof(GlobalBossBarDetour<>)),
+            new(typeof(GlobalBuff), typeof(GlobalBuffDetour<>)),
+            new(typeof(GlobalEmoteBubble), typeof(GlobalEmoteBubbleDetour<>)),
+            new(typeof(GlobalInfoDisplay), typeof(GlobalInfoDisplayDetour<>)),
+            new(typeof(GlobalItem), typeof(GlobalItemDetour<>)),
+            new(typeof(GlobalNPC), typeof(GlobalNPCDetour<>)),
+            new(typeof(GlobalProjectile), typeof(GlobalProjectileDetour<>)),
+            new(typeof(GlobalPylon), typeof(GlobalPylonDetour<>)),
+            new(typeof(GlobalTile), typeof(GlobalTileDetour<>)),
+            new(typeof(GlobalWall), typeof(GlobalWallDetour<>)),
+
+            new(typeof(GameEffect), typeof(GameEffectDetour<>)),
+            new(typeof(CustomSky), typeof(CustomSkyDetour<>))
         ];
 
         StringBuilder builder = new();
         builder.AppendLine("Update Required: TypeDetour.cs");
 
-        foreach ((Type source, Type target, Predicate<MethodInfo> sourceIgnore, Predicate<MethodInfo> targetIgnore) in typesToVerify)
+        foreach (DetourTypeContainer item in typesToVerify)
         {
-            (List<string> sourceMissing, List<string> targetMissing) = CompareVirtualMethods(source, target, DetourMatch, sourceIgnore, targetIgnore);
+            (List<string> sourceMissing, List<string> targetMissing) = item.CompareVirtualMethods(DetourMatch);
             if (sourceMissing.Count > 0)
             {
                 hasWarn = true;
-                builder.AppendLine(new string(' ', 3) + $"[{target.RealName}] Source Type Method Missing: " + string.Join(", ", sourceMissing));
+                builder.AppendLine(new string(' ', 3) + $"[{item.Target.RealName}] Source Type Method Missing: " + string.Join(", ", sourceMissing));
             }
             if (targetMissing.Count > 0)
             {
                 hasWarn = true;
-                builder.AppendLine(new string(' ', 3) + $"[{target.RealName}] Target Type Method Missing: " + string.Join(", ", targetMissing));
+                builder.AppendLine(new string(' ', 3) + $"[{item.Target.RealName}] Target Type Method Missing: " + string.Join(", ", targetMissing));
             }
         }
 
@@ -5840,30 +5945,6 @@ internal sealed class TypeDetourUpdateReminder : IResourceLoader
             TOUpdateReminder.UpdateReminder += () => TOLocalizationUtils.ChatLiteralText("TypeDetour.cs", TOMain.TODebugWarnColor, Main.LocalPlayer);
             TOMain.Instance.Logger.Warn(builder.ToString());
         }
-    }
-
-    private static (List<string> sourceMissing, List<string> targetMissing) CompareVirtualMethods(Type source, Type target, Func<MethodInfo, MethodInfo, bool> match, Predicate<MethodInfo> sourceIgnore = null, Predicate<MethodInfo> targetIgnore = null)
-    {
-        match ??= (s, t) => s == t;
-        List<string> sourceMissing = [];
-        List<string> targetMissing = [];
-        IEnumerable<MethodInfo> sourceMethods = source.GetRealMethods(TOReflectionUtils.InstanceBindingFlags).Where(ShouldMethodBeChecked);
-        IEnumerable<MethodInfo> targetMethods = target.GetRealMethods(TOReflectionUtils.InstanceBindingFlags).Where(ShouldMethodBeChecked);
-        foreach (MethodInfo sourceMethod in sourceMethods)
-        {
-            if (sourceIgnore?.Invoke(sourceMethod) ?? false)
-                continue;
-            if (!targetMethods.Any(m => match(sourceMethod, m)))
-                targetMissing.Add(sourceMethod.Name);
-        }
-        foreach (MethodInfo targetMethod in targetMethods)
-        {
-            if (targetIgnore?.Invoke(targetMethod) ?? false)
-                continue;
-            if (!sourceMethods.Any(m => match(m, targetMethod)))
-                sourceMissing.Add(targetMethod.Name);
-        }
-        return (sourceMissing, targetMissing);
     }
 
     private static bool DetourMatch(MethodInfo sourceMethod, MethodInfo targetMethod) =>

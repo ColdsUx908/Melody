@@ -1,5 +1,6 @@
 ﻿using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.Systems;
+using CalamityMod.UI.ModeIndicator;
 using CalamityMod.World;
 
 namespace CalamityAnomalies.Anomaly;
@@ -33,7 +34,7 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
 
     public AnomalyMode()
     {
-        Texture = CAMain.Instance.Assets.Request<Texture2D>("Textures/UI/ModeIndicator_Anomaly", AssetRequestMode.AsyncLoad);
+        Texture = CAUtils.RequestTexture("UI/AnomalyModeIndicator");
         DifficultyScale = 2.49147E23f;
         Name = this.GetTextWithPrefix("Anomaly");
         ShortDescription = this.GetTextWithPrefix("AnomalyShortInfo");
@@ -90,6 +91,15 @@ public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizati
         }
     }
 
+    private void DisableAnomaly()
+    {
+        if (TOWorld.GeneralClient)
+            TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyInvalid", Color.Red);
+        if (CAWorld.AnomalyUltramundane)
+            DisableUltra();
+        CAWorld.Anomaly = false;
+    }
+
     private void DisableUltra()
     {
         if (TOWorld.GeneralClient)
@@ -117,17 +127,13 @@ public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizati
             TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyUltraInvalidNotLegendary", Color.Red);
     }
 
-    private void DisableAnomaly()
-    {
-        if (TOWorld.GeneralClient)
-            TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyInvalid", Color.Red);
-        CAWorld.Anomaly = false;
-    }
-
     void IResourceLoader.PostSetupContent()
     {
-        DifficultyModeSystem.Difficulties.Add(AnomalyMode.Instance = new());
-        DifficultyModeSystem.CalculateDifficultyData();
+        if (CAServerConfig.Instance.Contents)
+        {
+            DifficultyModeSystem.Difficulties.Add(AnomalyMode.Instance = new());
+            DifficultyModeSystem.CalculateDifficultyData();
+        }
     }
 
     void IResourceLoader.OnModUnload()
@@ -138,4 +144,15 @@ public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizati
     }
 }
 
+[DetourClassTo<ModeIndicatorUI>]
+public static class ModeIndicatorUIDetour
+{
+    public delegate void Orig_SwitchToDifficulty(DifficultyMode mode);
+
+    public static void Detour_SwitchToDifficulty(Orig_SwitchToDifficulty orig, DifficultyMode mode)
+    {
+        orig(mode);
+        CANetSync.SyncAnomalyMode(Main.myPlayer);
+    }
+}
 

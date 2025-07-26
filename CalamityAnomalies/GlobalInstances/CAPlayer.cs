@@ -35,20 +35,14 @@ public sealed class CAPlayer : ModPlayer
 
     public bool Debuff_DimensionalTorn { get; internal set; } = false;
 
-    public PlayerDownedBossCalamity DownedBossCalamity { get; private set; } = new();
-    public PlayerDownedBossCalamity DownedBossAnomaly { get; private set; } = new();
+    public PlayerDownedBossCalamity DownedBossCalamity = new();
+    public PlayerDownedBossCalamity DownedBossAnomaly = new();
 
-    public Item LastYharimsGift { get; set; } = null;
+    public Item LastYharimsGift = null;
 
-    public int YharimsGift
-    {
-        get;
-        internal set => field = Math.Clamp(value, 0, 2);
-    } = 0;
+    public GuaranteedBoolean YharimsGift = new();
 
-    public YharimsGift_CurrentBlessing YharimsGiftBuff { get; set; } = YharimsGift_CurrentBlessing.None;
-
-    public bool HasYharimsGift => YharimsGift > 0;
+    public YharimsGift_CurrentBlessing YharimsGiftBuff { get; internal set; } = YharimsGift_CurrentBlessing.None;
 
     public override ModPlayer Clone(Player newEntity)
     {
@@ -67,7 +61,7 @@ public sealed class CAPlayer : ModPlayer
     public override void ResetEffects()
     {
         Debuff_DimensionalTorn = false;
-        YharimsGift--;
+        YharimsGift.Value = false;
 
         base.ResetEffects();
     }

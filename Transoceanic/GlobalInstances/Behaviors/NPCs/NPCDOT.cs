@@ -6,10 +6,15 @@ public sealed class NPCDOT : TOGlobalNPCBehavior
     {
         float totalDOT = 0f;
         int finalDamageValue = 0;
-        foreach (ModDOT dot in ModDOTHelper.ModDOTSet)
+        foreach (ModDOT dot in ModDOTHandler.ModDOTSet)
         {
             if (dot.HasBuff(npc))
                 ApplyDOT(dot.GetDamage(npc), dot.GetDamageValue(npc));
+        }
+        foreach ((_, Predicate<NPC> hasBuffNPC, _, Func<NPC, float> damageNPC, Func<NPC, int> damageValue) in ModDOTHandler.ExternalDOTSet.Values)
+        {
+            if (hasBuffNPC(npc))
+                ApplyDOT(damageNPC(npc), damageValue(npc));
         }
         npc.ApplyDOT((int)totalDOT, finalDamageValue, ref damage);
 

@@ -1,6 +1,6 @@
 ﻿namespace CalamityAnomalies.GlobalInstances;
 
-public sealed class CalamityGlobalNPCDetour : GlobalNPCDetour<CalamityGlobalNPC>
+public sealed class CalamityGlobalNPCDetour : CAGlobalNPCDetour<CalamityGlobalNPC>
 {
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalNPC self, NPC npc)
     {

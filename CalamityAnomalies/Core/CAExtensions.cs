@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using CalamityMod.NPCs.AquaticScourge;
+﻿using CalamityMod.NPCs.AquaticScourge;
 using CalamityMod.NPCs.DesertScourge;
 using CalamityMod.NPCs.DevourerofGods;
 using CalamityMod.NPCs.ExoMechs.Apollo;

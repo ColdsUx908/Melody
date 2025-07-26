@@ -112,25 +112,13 @@ public sealed class Murasama_Handler : IResourceLoader
     public static bool Unlocked(Player player) => DownedBossSystem.downedDoG || IsSam(player) || TOMain.IsDEBUGPlayer(player);
 
     private static Asset<Texture2D> _texture;
-    public static Texture2D Texture
-    {
-        get => field ??= _texture.Value;
-        private set;
-    }
+    public static Texture2D Texture => _texture?.Value;
 
     private static Asset<Texture2D> _steathedTexture;
-    public static Texture2D SteathedTexture
-    {
-        get => field ??= _steathedTexture.Value;
-        private set;
-    }
+    public static Texture2D SteathedTexture => _steathedTexture?.Value;
 
     private static Asset<Texture2D> _glowTexture;
-    public static Texture2D GlowTexture
-    {
-        get => field ??= _glowTexture.Value;
-        private set;
-    }
+    public static Texture2D GlowTexture => _glowTexture?.Value;
 
     void IResourceLoader.PostSetupContent()
     {
@@ -145,9 +133,6 @@ public sealed class Murasama_Handler : IResourceLoader
         _texture = null;
         _steathedTexture = null;
         _glowTexture = null;
-        Texture = null;
-        SteathedTexture = null;
-        GlowTexture = null;
     }
 }
 
@@ -233,7 +218,7 @@ public sealed class Murasama_Tweak : CAItemTweak<Murasama>
     }
 }
 
-public sealed class Murasama_Detour : ModItemDetour<Murasama>
+public sealed class Murasama_Detour : CAModItemDetour<Murasama>
 {
     public override bool Detour_PreDrawInInventory(Orig_PreDrawInInventory orig, Murasama self, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
     {

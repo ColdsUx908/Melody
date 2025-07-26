@@ -1,7 +1,4 @@
-﻿using CalamityMod.NPCs.SupremeCalamitas;
-using CalamityMod.World;
-
-namespace CalamityAnomalies.Core;
+﻿namespace CalamityAnomalies.Core;
 
 public static class CAUtils
 {
@@ -26,4 +23,7 @@ public static class CAUtils
         action(newLine);
         return newLine;
     }
+
+    public static Asset<Texture2D> RequestTexture(string path, AssetRequestMode mode = AssetRequestMode.AsyncLoad) =>
+        CAMain.Instance.Assets.Request<Texture2D>("Assets/Textures/" + path, mode);
 }

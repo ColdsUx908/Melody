@@ -17,15 +17,11 @@ public class TOGlobalItem : GlobalItem
 
     public ItemTooltipDictionary TooltipDictionary { get; internal set; } = null;
 
-    internal int InternalEquipped
-    {
-        get;
-        set => field = Math.Clamp(value, 0, 2);
-    }
+    internal GuaranteedBoolean InternalEquipped = new();
     internal int _lastEquippedTime = -1;
     internal int _lastUnequippedTime = -1;
-    internal bool ShouldUpdateLastEquippedTime => InternalEquipped > 0 && _lastEquippedTime <= _lastUnequippedTime;
-    internal bool ShouldUpdateLastUnequippedTime => !Main.gamePaused && Main.hasFocus && InternalEquipped == 0 && _lastUnequippedTime <= _lastEquippedTime;
+    internal bool ShouldUpdateLastEquippedTime => InternalEquipped && _lastEquippedTime <= _lastUnequippedTime;
+    internal bool ShouldUpdateLastUnequippedTime => !Main.gamePaused && Main.hasFocus && !InternalEquipped && _lastUnequippedTime <= _lastEquippedTime;
 
     public bool IsEquipped => _lastEquippedTime > _lastUnequippedTime;
 

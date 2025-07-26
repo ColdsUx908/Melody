@@ -1,4 +1,5 @@
-﻿using CalamityMod.NPCs.Cryogen;
+﻿using CalamityAnomalies.Publicizer.CalamityMod;
+using CalamityMod.NPCs.Cryogen;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.NPCs.TownNPCs;
 using CalamityMod.Particles;
@@ -11,7 +12,29 @@ using static CalamityMod.Projectiles.Boss.SCalRitualDrama;
 
 namespace CalamityAnomalies.DeveloperContents;
 
-public class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocalizationPrefix
+public sealed class Permafrost_Handler : IResourceLoader
+{
+    private static Asset<Texture2D> _centerTexture;
+    public static Texture2D CenterTexture => _centerTexture?.Value;
+
+    private static Asset<Texture2D> _immuneTexture;
+    public static Texture2D ImmuneTexture => _immuneTexture?.Value;
+
+    void IResourceLoader.PostSetupContent()
+    {
+        AssetRepository assets = CalamityMod_Publicizer.Instance.Assets;
+        _centerTexture = assets.Request<Texture2D>("Particles/CentralGold");
+        _immuneTexture = assets.Request<Texture2D>("Particles/SemiCircularSmearVertical");
+    }
+
+    void IResourceLoader.OnModUnload()
+    {
+        _centerTexture = null;
+        _immuneTexture = null;
+    }
+}
+
+public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocalizationPrefix
 {
     #region 枚举、数值、属性、AI状态
     public enum AttackType
@@ -375,7 +398,7 @@ public class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocalizationPr
             if (lifeRatio <= 0.01f)
                 flickerPower += 0.08f;
             float opacity = self.forcefieldOpacity;
-            opacity *= MathHelper.Lerp(1f, MathHelper.Max(1f - flickerPower, 0.56f), (float)Math.Pow(Math.Cos(Main.GlobalTimeWrappedHourly * MathHelper.Lerp(3f, 5f, flickerPower)), 24D));
+            opacity *= MathHelper.Lerp(1f, MathHelper.Max(1f - flickerPower, 0.56f), MathF.Pow(MathF.Cos(Main.GlobalTimeWrappedHourly * MathHelper.Lerp(3f, 5f, flickerPower)), 24));
             opacity *= self.musicSyncCounter is <= 0 and > -30 ? Utils.GetLerpValue(120, 0, self.musicSyncCounter, true) : 0.75f;
 
             Texture2D forcefieldTexture = ForcefieldTexture.Value;
@@ -394,22 +417,19 @@ public class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocalizationPr
             miscShaderData.UseOpacity(0.65f);
             miscShaderData.Apply();
 
-            Texture2D centerTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/CentralGold").Value;
-
-            Texture2D immuneTex = ModContent.Request<Texture2D>("CalamityMod/Particles/SemiCircularSmearVertical").Value;
             if (self.postMusicHit)
-                spriteBatch.Draw(centerTexture, self.NPC.Center - Main.screenPosition, null, Color.White with { A = 0 } * opacity * 2f, self.rotateAwayPlayer, centerTexture.Size() * 0.5f, self.forcefieldScale * 0.088f * self.forcefieldPureVisualScale, SpriteEffects.None, 0f);
+                spriteBatch.Draw(Permafrost_Handler.CenterTexture, self.NPC.Center - Main.screenPosition, null, Color.White with { A = 0 } * opacity * 2f, self.rotateAwayPlayer, Permafrost_Handler.CenterTexture.Size() * 0.5f, self.forcefieldScale * 0.088f * self.forcefieldPureVisualScale, SpriteEffects.None, 0f);
             if (!self.NPC.dontTakeDamage)
                 spriteBatch.Draw(forcefieldTexture, self.NPC.Center - Main.screenPosition, null, Color.White * opacity, self.postMusicHit ? self.rotateToPlayer : 0, forcefieldTexture.Size() * 0.5f, self.forcefieldScale * 3f * self.forcefieldPureVisualScale, SpriteEffects.None, 0f);
             else
-                spriteBatch.Draw(immuneTex, self.NPC.Center - Main.screenPosition, null, Color.White * opacity * 0.3f, self.rotateToPlayer, immuneTex.Size() * 0.5f, self.forcefieldScale * 1.35f * self.forcefieldPureVisualScale, SpriteEffects.None, 0f);
+                spriteBatch.Draw(Permafrost_Handler.ImmuneTexture, self.NPC.Center - Main.screenPosition, null, Color.White * opacity * 0.3f, self.rotateToPlayer, Permafrost_Handler.ImmuneTexture.Size() * 0.5f, self.forcefieldScale * 1.35f * self.forcefieldPureVisualScale, SpriteEffects.None, 0f);
             spriteBatch.ExitShaderRegion();
         }
         else
             orig(self, spriteBatch);
     }
 
-    public override bool PreDrawCalBossBar(BetterBossHealthBar.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y)
+    public override bool PreDrawCalBossBar(BetterBossHealthBar.BetterBossHPUI newBar, SpriteBatch spriteBatch, ref int x, ref int y)
     {
         newBar.DrawMainBar(spriteBatch, x, y);
         newBar.DrawComboBar(spriteBatch, x, y);
@@ -426,9 +446,9 @@ public class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocalizationPr
     #endregion Draw
 }
 
-public class PermafrostRitualDrama : CASingleProjectileBehavior<SCalRitualDrama>
+public sealed class PermafrostRitualDrama : CASingleProjectileBehavior<SCalRitualDrama>, ILocalizationPrefix
 {
-    private const string localizationPrefix = CAMain.ModLocalizationPrefix + "DeveloperContents.Permafrost.";
+    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "DeveloperContents.Permafrost.";
 
     public override decimal Priority => 935m; //ICE
 
@@ -469,7 +489,7 @@ public class PermafrostRitualDrama : CASingleProjectileBehavior<SCalRitualDrama>
                 Vector2 spawnPosition = Projectile.Center - new Vector2(53f, 39f);
                 NPC.NewNPCAction<SupremeCalamitas>(NPC.GetBossSpawnSource(Player.FindClosest(spawnPosition, 1, 1)), spawnPosition, action: n =>
                 {
-                    TOLocalizationUtils.ChatLocalizedText(localizationPrefix + "Spawn", Color.Lerp(Color.Blue, Color.Cyan, 0.7f));
+                    TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "Spawn", Color.Lerp(Color.Blue, Color.Cyan, 0.7f));
                     n.GetModNPC<SupremeCalamitas>().permafrost = true;
                 });
             }

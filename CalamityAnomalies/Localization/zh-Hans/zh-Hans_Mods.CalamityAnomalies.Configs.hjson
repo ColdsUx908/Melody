@@ -1,13 +1,8 @@
 CAServerConfig: {
 	DisplayName: 服务器设置
-	Headers.Content: 内容设置
 
-	BossRushDifficulty: {
-		Label: BossRush难度
-		Tooltip:
-			'''
-			在游戏中添加BossRush难度
-			可选内容
-			'''
+	Contents: {
+		Label: 启用模组内容
+		Tooltip: 启用或禁用由 Calamity Anomalies 模组提供的内容。
 	}
 }

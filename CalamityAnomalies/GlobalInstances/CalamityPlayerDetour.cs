@@ -1,6 +1,6 @@
 ﻿namespace CalamityAnomalies.GlobalInstances;
 
-public abstract class CalamityPlayerDetour : ModPlayerDetour<CalamityPlayer>
+public abstract class CalamityPlayerDetour : CAModPlayerDetour<CalamityPlayer>
 {
     // MiscEffects
     public delegate void Orig_MiscEffects(CalamityPlayer self);

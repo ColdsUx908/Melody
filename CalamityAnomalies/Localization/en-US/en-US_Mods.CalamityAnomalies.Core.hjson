@@ -1,0 +1,6 @@
+EnterWorldMessage: {
+	True: Calamity Anomalies tweaks are enabled.
+	False: Calamity Anomalies tweaks are disabled.
+}
+
+TweakIdentifier: "[c/AFFFFF:Modified by Calamity Anomalies]"

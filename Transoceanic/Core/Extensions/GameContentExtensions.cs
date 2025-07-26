@@ -297,6 +297,9 @@ public static partial class TOExtensions
 
         public T GetModItem<T>() where T : ModItem => item.ModItem as T;
 
+        public T GetModItemThrow<T>() where T : ModItem => item.GetModItem<T>()
+            ?? throw new ArgumentException($"Item {item.Name} ({item.type}) does not have a ModItem of type {typeof(T).FullName}.", nameof(item));
+
         public bool TryGetModItem<T>([NotNullWhen(true)] out T result) where T : ModItem => (result = item.GetModItem<T>()) is not null;
 
         public void DrawInventoryWithBorder(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Vector2 origin, float scale,
@@ -383,6 +386,9 @@ public static partial class TOExtensions
         public TOGlobalNPC Ocean() => npc.GetGlobalNPC<TOGlobalNPC>();
 
         public T GetModNPC<T>() where T : ModNPC => npc.ModNPC as T;
+
+        public T GetModNPCThrow<T>() where T : ModNPC => npc.GetModNPC<T>()
+            ?? throw new ArgumentException($"NPC {npc.FullName} ({npc.type}) does not have a ModNPC of type {typeof(T).FullName}.", nameof(npc));
 
         public bool TryGetModNPC<T>([NotNullWhen(true)] out T result) where T : ModNPC => (result = npc.GetModNPC<T>()) is not null;
 
@@ -629,6 +635,8 @@ public static partial class TOExtensions
 
         public TOExclusiveIterator<Player> Teammates => TOIteratorFactory.NewPlayerIterator(p => p.IsTeammateOf(player), player);
 
+        public TOExclusiveIterator<Player> NonTeammates => TOIteratorFactory.NewPlayerIterator(p => !p.IsTeammateOf(player), player);
+
         /// <summary>
         /// 获取玩家的手持物品。
         /// </summary>
@@ -655,9 +663,14 @@ public static partial class TOExtensions
 
         public T GetModProjectile<T>() where T : ModProjectile => projectile.ModProjectile as T;
 
+        public T GetModProjectileThrow<T>() where T : ModProjectile => projectile.GetModProjectile<T>()
+            ?? throw new ArgumentException($"Projectile {projectile.Name} ({projectile.type}) does not have a ModProjectile of type {typeof(T).FullName}.", nameof(projectile));
+
         public bool TryGetModProjectile<T>([NotNullWhen(true)] out T result) where T : ModProjectile => (result = projectile.GetModProjectile<T>()) is not null;
 
         public bool OnOwnerClient => projectile.owner == Main.myPlayer;
+
+        public bool IsFinalUpdate => projectile.numUpdates == -1;
 
         /// <summary>
         /// 将弹幕速度设置为指定值，同时更新旋转。
@@ -811,45 +824,6 @@ public static partial class TOExtensions
         {
             for (int i = 0; i < number; i++)
                 NewProjectileAction(source, position, velocity.RotatedBy(radian * i), ModContent.ProjectileType<T>(), damage, knockback, owner, action);
-        }
-
-        /// <summary>
-        /// 生成指定数量的Projectile，使用指定的旋转角度。
-        /// </summary>
-        /// <param name="indexes">输出的Projectile索引数组。</param>
-        /// <param name="projectiles">输出的Projectile实例数组。</param>
-        /// <param name="spawnedNumber">输出的实际生成的Projectile数量。</param>
-        /// <param name="number">弹幕总数。</param>
-        /// <param name="offset">单次旋转角度（顺时针）。</param>
-        /// <param name="source">生成源。</param>
-        /// <param name="position">生成位置。</param>
-        /// <param name="velocity">速度。</param>
-        /// <param name="type">类型。</param>
-        /// <param name="damage">伤害。</param>
-        /// <param name="knockback">击退。</param>
-        /// <param name="owner">弹幕主人。</param>
-        /// <param name="action">执行的行为。仅当成功生成Projectile时生效。</param>
-        /// <returns>Projectile是否全部生成。</returns>
-        public static bool RotatedProjCheck(out List<int> indexes, out List<Projectile> projectiles, out int spawnedNumber, int number, float offset,
-            IEntitySource source, Vector2 position, Vector2 velocity, int type, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
-        {
-            indexes = [];
-            projectiles = [];
-            spawnedNumber = 0;
-            bool allSuccess = true;
-            PolarVector2 temp = (PolarVector2)velocity;
-            for (int i = 0; i < number; i++)
-            {
-                if (NewProjectileActionCheck(out int index, out Projectile projectile, source, position, temp.RotatedBy(offset * i), type, damage, knockback, owner, action))
-                {
-                    indexes.Add(index);
-                    projectiles.Add(projectile);
-                    spawnedNumber++;
-                }
-                else
-                    allSuccess = false;
-            }
-            return allSuccess;
         }
     }
 

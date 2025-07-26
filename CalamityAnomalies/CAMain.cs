@@ -106,6 +106,19 @@ public sealed class CAMain : Mod, IResourceLoader
         }
     }
 
+    public override void HandlePacket(BinaryReader reader, int whoAmI)
+    {/*
+        switch (reader.ReadByte())
+        {
+            case CANetSync.ID.SyncAnomalyMode:
+                int sender = reader.ReadInt32();
+                CAWorld.Anomaly = reader.ReadBoolean();
+                if (Main.dedServ)
+                    CANetSync.SyncAnomalyMode(sender);
+                break;
+        }*/
+    }
+
     public static Assembly Assembly => field ??= Instance.Code;
 
     public static string ModName => field ??= Instance.Name;
@@ -121,8 +134,6 @@ public sealed class CAMain : Mod, IResourceLoader
     public const string ModLocalizationPrefix = "Mods.CalamityAnomalies.";
 
     public const string TweakLocalizationPrefix = ModLocalizationPrefix + "Tweaks.";
-
-    public const string TexturePrefix = "CalamityAnomalies/Textures/";
 
     public const string CalamityModLocalizationPrefix = "Mods.CalamityMod.";
 

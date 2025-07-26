@@ -88,10 +88,6 @@ public static class TOLocalizationUtils
         }
     }
 
-    public static void ChatEmptyLine() => ChatLiteralText("");
-
-    public static void ChatEmptyLine(params ReadOnlySpan<Player> receivers) => ChatLiteralText("", null, receivers);
-
     public static StringBuilder CreateWithDebugHeader()
     {
         StringBuilder builder = new();

@@ -20,6 +20,8 @@ public abstract class EntityBehavior<TEntity> where TEntity : Entity
     /// </summary>
     public virtual decimal Priority { get; } = 0m;
 
+    public virtual bool ShouldProcess => true;
+
     /// <summary>
     /// 将指定实体连接到Behavior实例。
     /// </summary>
@@ -46,8 +48,6 @@ public abstract class GlobalEntityBehavior<TEntity> : GeneralEntityBehavior<TEnt
 public abstract class SingleEntityBehavior<TEntity> : EntityBehavior<TEntity> where TEntity : Entity
 {
     public abstract int ApplyingType { get; }
-
-    public virtual bool ShouldProcess => true;
 }
 
 public class GeneralEntityBehaviorSet<TEntity, TBehavior>
@@ -88,11 +88,16 @@ public class GeneralEntityBehaviorSet<TEntity, TBehavior>
         _initialized = true;
     }
 
-    public List<TBehavior> GetBehaviors([CallerMemberName] string methodName = null!)
+    public IEnumerable<TBehavior> GetBehaviors([CallerMemberName] string methodName = null!)
     {
         if (_data.TryGetValue(methodName, out List<TBehavior> behaviors))
-            return behaviors;
-        return [];
+        {
+            foreach (TBehavior behavior in behaviors)
+            {
+                if (behavior.ShouldProcess)
+                    yield return behavior;
+            }
+        }
     }
 
     public IEnumerable<T> GetBehaviors<T>([CallerMemberName] string methodName = null!) where T : TBehavior
@@ -101,7 +106,7 @@ public class GeneralEntityBehaviorSet<TEntity, TBehavior>
         {
             foreach (TBehavior behavior in behaviors)
             {
-                if (behavior is T typedBehavior)
+                if (behavior is T typedBehavior && typedBehavior.ShouldProcess)
                     yield return typedBehavior;
             }
         }
@@ -114,7 +119,8 @@ public class GeneralEntityBehaviorSet<TEntity, TBehavior>
             foreach (TBehavior behavior in behaviors)
             {
                 behavior.Connect(entity);
-                yield return behavior;
+                if (behavior.ShouldProcess)
+                    yield return behavior;
             }
         }
     }
@@ -128,7 +134,8 @@ public class GeneralEntityBehaviorSet<TEntity, TBehavior>
                 if (behavior is T typedBehavior)
                 {
                     typedBehavior.Connect(entity);
-                    yield return typedBehavior;
+                    if (typedBehavior.ShouldProcess)
+                        yield return typedBehavior;
                 }
             }
         }
@@ -6480,20 +6487,29 @@ public sealed class PlayerBehaviorHandler : ModPlayer, IResourceLoader
 
     public override void CopyClientState(ModPlayer targetCopy)
     {
-        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
-            behavior.CopyClientState(targetCopy);
+        if (TOMain.SyncEnabled)
+        {
+            //foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            //    behavior.CopyClientState(targetCopy);
+        }
     }
 
     public override void SyncPlayer(int toWho, int fromWho, bool newPlayer)
     {
-        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
-            behavior.SyncPlayer(toWho, fromWho, newPlayer);
+        if (TOMain.SyncEnabled)
+        {
+            //foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            //    behavior.SyncPlayer(toWho, fromWho, newPlayer);
+        }
     }
 
     public override void SendClientChanges(ModPlayer clientPlayer)
     {
-        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
-            behavior.SendClientChanges(clientPlayer);
+        if (TOMain.SyncEnabled)
+        {
+            //foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+            //    behavior.SendClientChanges(clientPlayer);
+        }
     }
 
     public override void UpdateBadLifeRegen()
@@ -7248,13 +7264,13 @@ public sealed class PlayerBehaviorHandler : ModPlayer, IResourceLoader
             behavior.ModifyStartingInventory(itemsByMod, mediumCoreDeath);
     }
 
-    public override IEnumerable<Item> AddMaterialsForCrafting(out ModPlayer.ItemConsumedCallback itemConsumedCallback)
+    public override IEnumerable<Item> AddMaterialsForCrafting(out ItemConsumedCallback itemConsumedCallback)
     {
         itemConsumedCallback = null;
         List<Item> allItems = [];
         foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
         {
-            IEnumerable<Item> items = behavior.AddMaterialsForCrafting(out ModPlayer.ItemConsumedCallback callback);
+            IEnumerable<Item> items = behavior.AddMaterialsForCrafting(out ItemConsumedCallback callback);
             if (items is not null)
                 allItems.AddRange(items);
             itemConsumedCallback += callback;
@@ -7388,14 +7404,20 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC, IResourceLoader
 
     public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
     {
-        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
-            behavior.SendExtraAI(npc, bitWriter, binaryWriter);
+        if (TOMain.SyncEnabled)
+        {
+            //foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            //    behavior.SendExtraAI(npc, bitWriter, binaryWriter);
+        }
     }
 
     public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
     {
-        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
-            behavior.ReceiveExtraAI(npc, bitReader, binaryReader);
+        if (TOMain.SyncEnabled)
+        {
+            //foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            //    behavior.ReceiveExtraAI(npc, bitReader, binaryReader);
+        }
     }
 
     public override void FindFrame(NPC npc, int frameHeight)
@@ -7937,14 +7959,20 @@ public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile, IResourc
 
     public override void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter)
     {
-        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
-            behavior.SendExtraAI(projectile, bitWriter, binaryWriter);
+        if (TOMain.SyncEnabled)
+        {
+            //foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            //    behavior.SendExtraAI(projectile, bitWriter, binaryWriter);
+        }
     }
 
     public override void ReceiveExtraAI(Projectile projectile, BitReader bitReader, BinaryReader binaryReader)
     {
-        foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
-            behavior.ReceiveExtraAI(projectile, bitReader, binaryReader);
+        if (TOMain.SyncEnabled)
+        {
+            //foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
+            //    behavior.ReceiveExtraAI(projectile, bitReader, binaryReader);
+        }
     }
 
     public override bool ShouldUpdatePosition(Projectile projectile)
@@ -9032,14 +9060,20 @@ public sealed class GlobalItemBehaviorHandler : GlobalItem, IResourceLoader
 
     public override void NetSend(Item item, BinaryWriter writer)
     {
-        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
-            behavior.NetSend(item, writer);
+        if (TOMain.SyncEnabled)
+        {
+            //foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            //    behavior.NetSend(item, writer);
+        }
     }
 
     public override void NetReceive(Item item, BinaryReader reader)
     {
-        foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
-            behavior.NetReceive(item, reader);
+        if (TOMain.SyncEnabled)
+        {
+            //foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
+            //    behavior.NetReceive(item, reader);
+        }
     }
 
     void IResourceLoader.PostSetupContent() => BehaviorSet.FillSet();

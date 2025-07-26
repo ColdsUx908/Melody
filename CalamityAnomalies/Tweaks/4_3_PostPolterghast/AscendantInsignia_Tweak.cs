@@ -30,14 +30,14 @@ public sealed class AscendantInsignia_Tweak : CAItemTweak<AscendantInsignia>, IL
         get
         {
             CAPlayer anomalyPlayer = Main.LocalPlayer.Anomaly();
-            return anomalyPlayer.HasYharimsGift && anomalyPlayer.YharimsGiftBuff == YharimsGift_CurrentBlessing.AscendantInsignia;
+            return anomalyPlayer.YharimsGift && anomalyPlayer.YharimsGiftBuff == YharimsGift_CurrentBlessing.AscendantInsignia;
         }
     }
 
     public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
     {
         CAPlayer anomalyPlayer = Main.LocalPlayer.Anomaly();
-        if (anomalyPlayer.HasYharimsGift || (anomalyPlayer.LastYharimsGift is not null && anomalyPlayer.LastYharimsGift.Ocean().GetEquippedTimer(40) > 0))
+        if (anomalyPlayer.YharimsGift || (anomalyPlayer.LastYharimsGift is not null && anomalyPlayer.LastYharimsGift.Ocean().GetEquippedTimer(40) > 0))
             YharimsGift_Handler.DrawEnergyAndBorderBehindItem(Item, spriteBatch, position, frame, origin, scale);
         return true;
     }

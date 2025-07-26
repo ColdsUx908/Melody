@@ -5,7 +5,7 @@ public sealed class TOPlayer : ModPlayer, IResourceLoader
 {
     public CommandCallInfo CommandCallInfo { get; internal set; } = null;
 
-    public int GameTime { get; set; } = 0;
+    public int GameTime { get; internal set; } = 0;
 
     public bool IsHurt { get; set; } = false;
 

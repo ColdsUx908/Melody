@@ -13,7 +13,6 @@ global using Microsoft.Xna.Framework;
 global using Microsoft.Xna.Framework.Graphics;
 global using ReLogic.Content;
 global using ReLogic.Graphics;
-global using ReLogic.Utilities;
 global using Terraria;
 global using Terraria.DataStructures;
 global using Terraria.Enums;

@@ -65,11 +65,19 @@ public class TOGlobalProjectile : GlobalProjectile
 
         int recievedAICount = binaryReader.ReadInt32();
         for (int i = 0; i < recievedAICount; i++)
-            OceanAI32[binaryReader.ReadInt32()].f = binaryReader.ReadSingle();
+        {
+            int index = binaryReader.ReadInt32();
+            float value = binaryReader.ReadSingle();
+            OceanAI32[index].f = value;
+        }
 
         int recievedAICount2 = binaryReader.ReadInt32();
         for (int i = 0; i < recievedAICount2; i++)
-            OceanAI64[binaryReader.ReadInt32()].d = binaryReader.ReadDouble();
+        {
+            int index = binaryReader.ReadInt32();
+            double value = binaryReader.ReadDouble();
+            OceanAI64[index].d = value;
+        }
     }
     #endregion Data
 

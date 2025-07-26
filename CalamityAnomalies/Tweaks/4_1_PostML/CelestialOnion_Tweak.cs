@@ -18,14 +18,14 @@ public sealed class CelestialOnion_Tweak : CAItemTweak<CelestialOnion>, ILocaliz
     }
 }
 
-public sealed class CelestialOnion_Detour : ModItemDetour<CelestialOnion>
+public sealed class CelestialOnion_Detour : CAModItemDetour<CelestialOnion>
 {
     public override bool Detour_CanUseItem(Orig_CanUseItem orig, CelestialOnion self, Player player) => !player.Calamity().extraAccessoryML;
 }
 
 public sealed class CelestialOnion_AccessorySlot : ModAccessorySlot
 {
-    public override bool IsEnabled() => !Main.gameMenu && Player.Calamity().extraAccessoryML;
+    public override bool IsEnabled() => CAServerConfig.Instance.Contents && !Main.gameMenu && Player.Calamity().extraAccessoryML;
 
     public override bool IsHidden() => IsEmpty && !IsEnabled();
 }

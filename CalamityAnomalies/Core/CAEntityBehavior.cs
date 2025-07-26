@@ -1,9 +1,11 @@
 ﻿namespace CalamityAnomalies.Core;
 
-#region Global Behavior
+#region General Behavior
 public abstract class CAPlayerBehavior : PlayerBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
+
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 
     public CAPlayer AnomalyPlayer { get; private set; } = null;
 
@@ -20,6 +22,8 @@ public abstract class CAPlayerBehavior : PlayerBehavior
 public abstract class CAGlobalNPCBehavior : GlobalNPCBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
+
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 
     /// <summary>
     /// 在更新灾厄的Boss血条之前调用。
@@ -38,7 +42,7 @@ public abstract class CAGlobalNPCBehavior : GlobalNPCBehavior
     /// <param name="x">绘制位置左上角的X坐标。</param>
     /// <param name="y">绘制位置左上角的Y坐标。</param>
     /// <returns>返回 <see langword="false"/> 以阻止默认的绘制血条方法运行。默认返回 <see langword="true"/>。</returns>
-    public virtual bool PreDrawCalBossBar(NPC npc, BetterBossHealthBar.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y, bool hasSingle) => true;
+    public virtual bool PreDrawCalBossBar(NPC npc, BetterBossHealthBar.BetterBossHPUI newBar, SpriteBatch spriteBatch, ref int x, ref int y, bool hasSingle) => true;
 
     /// <summary>
     /// 在绘制灾厄的Boss血条之后调用。
@@ -57,13 +61,17 @@ public abstract class CAGlobalNPCBehavior : GlobalNPCBehavior
 public abstract class CAGlobalProjectileBehavior : GlobalProjectileBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
+
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 
 public abstract class CAGlobalItemBehavior : GlobalItemBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
+
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
-#endregion
+#endregion General Behavior
 
 #region Single Behavior
 #region NPC
@@ -77,6 +85,8 @@ public enum OrigMethodType_CalamityGlobalNPC
 public abstract class CASingleNPCBehavior : SingleNPCBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
+
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 
     public CAGlobalNPC AnomalyNPC { get; private set; } = null;
 
@@ -112,7 +122,7 @@ public abstract class CASingleNPCBehavior : SingleNPCBehavior
     /// <param name="x">绘制位置左上角的X坐标。</param>
     /// <param name="y">绘制位置左上角的Y坐标。</param>
     /// <returns>返回 <see langword="false"/> 以阻止默认的绘制血条方法运行。默认返回 <see langword="true"/>。</returns>
-    public virtual bool PreDrawCalBossBar(BetterBossHealthBar.BetterBossHPUI newBar, SpriteBatch spriteBatch, int x, int y) => true;
+    public virtual bool PreDrawCalBossBar(BetterBossHealthBar.BetterBossHPUI newBar, SpriteBatch spriteBatch, ref int x, ref int y) => true;
 
     /// <summary>
     /// 在绘制灾厄的Boss血条之后调用。
@@ -145,16 +155,16 @@ public abstract class CASingleNPCBehavior<T> : CASingleNPCBehavior where T : Mod
 
 public abstract class AnomalyNPCBehavior : CASingleNPCBehavior
 {
-    public override decimal Priority => 10m;
+    public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => CAWorld.Anomaly;
+    public override bool ShouldProcess => base.ShouldProcess && CAWorld.Anomaly && AnomalyNPC.ShouldRunAnomalyAI;
 }
 
 public abstract class AnomalyNPCBehavior<T> : CASingleNPCBehavior<T> where T : ModNPC
 {
-    public override decimal Priority => 10m;
+    public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => CAWorld.Anomaly;
+    public override bool ShouldProcess => base.ShouldProcess && CAWorld.Anomaly && AnomalyNPC.ShouldRunAnomalyAI;
 }
 
 public abstract class CANPCTweak : CASingleNPCBehavior
@@ -179,6 +189,8 @@ public enum OrigMethodType_CalamityGlobalProjectile
 public abstract class CASingleProjectileBehavior : SingleProjectileBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
+
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 
     public CAGlobalProjectile AnomalyProjectile { get; private set; } = null;
 
@@ -223,16 +235,16 @@ public abstract class CASingleProjectileBehavior<T> : CASingleProjectileBehavior
 
 public abstract class AnomalyProjectileBehavior : CASingleProjectileBehavior
 {
-    public override decimal Priority => 10m;
+    public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => CAWorld.Anomaly;
+    public override bool ShouldProcess => base.ShouldProcess && CAWorld.Anomaly && AnomalyProjectile.ShouldRunAnomalyAI;
 }
 
 public abstract class AnomalyProjecileBehavior<T> : CASingleProjectileBehavior<T> where T : ModProjectile
 {
-    public override decimal Priority => 10m;
+    public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => CAWorld.Anomaly;
+    public override bool ShouldProcess => base.ShouldProcess && CAWorld.Anomaly && AnomalyProjectile.ShouldRunAnomalyAI;
 }
 
 public abstract class CAProjectileTweak : CASingleProjectileBehavior
@@ -250,6 +262,8 @@ public abstract class CAProjectileTweak<T> : CASingleProjectileBehavior<T> where
 public abstract class CASingleItemBehavior : SingleItemBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
+
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 
     public CAGlobalItem AnomalyItem { get; private set; } = null;
 
@@ -312,6 +326,8 @@ public sealed class CASingleNPCBehaviorHandler : SingleNPCBehaviorHandler<CASing
 {
     public override CAMain Mod => CAMain.Instance;
 
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
+
     public override decimal Priority => 50m;
 
     protected override SingleEntityBehaviorSet<NPC, CASingleNPCBehavior> BehaviorSet => CASingleBehaviorHelper.NPCBehaviors;
@@ -321,6 +337,8 @@ public sealed class CASingleProjectileBehaviorHandler : SingleProjectileBehavior
 {
     public override CAMain Mod => CAMain.Instance;
 
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
+
     public override decimal Priority => 50m;
 
     protected override SingleEntityBehaviorSet<Projectile, CASingleProjectileBehavior> BehaviorSet => CASingleBehaviorHelper.ProjectileBehaviors;
@@ -329,6 +347,8 @@ public sealed class CASingleProjectileBehaviorHandler : SingleProjectileBehavior
 public sealed class CASingleItemBehaviorHandler : SingleItemBehaviorHandler<CASingleItemBehavior>
 {
     public override CAMain Mod => CAMain.Instance;
+
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 
     public override decimal Priority => 50m;
 
@@ -343,7 +363,7 @@ public sealed class CASingleItemBehaviorHandler : SingleItemBehaviorHandler<CASi
             itemBehavior.ModifyTooltips(tooltips);
             anomalyItem.TooltipModifier.AddCATooltip(l =>
             {
-                l.Text = Language.GetTextValue(CAMain.ModLocalizationPrefix + "Tooltips.TweakIdentifier");
+                l.Text = Language.GetTextValue(CAMain.ModLocalizationPrefix + "Core.TweakIdentifier");
                 l.OverrideColor = TOMain.CelestialColor;
             }, false);
         }

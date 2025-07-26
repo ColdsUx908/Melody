@@ -7,7 +7,7 @@ public sealed class ItemEquipmentUpdate : TOGlobalItemBehavior
     public override void UpdateEquip(Item item, Player player)
     {
         TOGlobalItem oceanItem = item.Ocean();
-        oceanItem.InternalEquipped += 2;
+        oceanItem.InternalEquipped.Value = true;
         if (oceanItem.ShouldUpdateLastEquippedTime)
             oceanItem._lastEquippedTime = TOWorld.GameTimer.TotalTicks;
     }
@@ -17,6 +17,6 @@ public sealed class ItemEquipmentUpdate : TOGlobalItemBehavior
         TOGlobalItem oceanItem = item.Ocean();
         if (oceanItem.ShouldUpdateLastUnequippedTime)
             oceanItem._lastUnequippedTime = TOWorld.GameTimer.TotalTicks;
-        oceanItem.InternalEquipped--;
+        oceanItem.InternalEquipped.Value = false;
     }
 }

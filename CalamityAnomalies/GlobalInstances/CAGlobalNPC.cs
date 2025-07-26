@@ -18,11 +18,11 @@ public sealed class CAGlobalNPC : GlobalNPC, IResourceLoader
     private Union32[] InternalAnomalyAI32 { get; } = new Union32[AISlot3];
     private Union64[] InternalAnomalyAI64 { get; } = new Union64[AISlot4];
 
-    private ref Bits32 InternalAIChanged32 => ref AnomalyAI32[^4].bits;
-    private ref Bits32 InternalAIChanged32_2 => ref AnomalyAI32[^3].bits;
-    private ref Bits32 InternalAIChanged32_3 => ref AnomalyAI32[^2].bits;
-    private ref Bits32 InternalAIChanged32_4 => ref AnomalyAI32[^1].bits;
-    private ref Bits64 InternalAIChanged64 => ref AnomalyAI64[^1].bits;
+    private ref Bits32 InternalAIChanged32 => ref InternalAnomalyAI32[^4].bits;
+    private ref Bits32 InternalAIChanged32_2 => ref InternalAnomalyAI32[^3].bits;
+    private ref Bits32 InternalAIChanged32_3 => ref InternalAnomalyAI32[^2].bits;
+    private ref Bits32 InternalAIChanged32_4 => ref InternalAnomalyAI32[^1].bits;
+    private ref Bits64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].bits;
 
     public override GlobalNPC Clone(NPC from, NPC to)
     {
@@ -93,7 +93,7 @@ public sealed class CAGlobalNPC : GlobalNPC, IResourceLoader
 
         for (int i = 0; i < AISlot4 - 1; i++)
         {
-            if (AIChanged64[i])
+            if (InternalAIChanged64[i])
                 aiToSend2[i] = InternalAnomalyAI64[i].d;
         }
         binaryWriter.Write(aiToSend2.Count);
@@ -109,19 +109,35 @@ public sealed class CAGlobalNPC : GlobalNPC, IResourceLoader
     {
         int recievedAICount = binaryReader.ReadInt32();
         for (int i = 0; i < recievedAICount; i++)
-            AnomalyAI32[binaryReader.ReadInt32()].f = binaryReader.ReadSingle();
+        {
+            int index = binaryReader.ReadInt32();
+            float value = binaryReader.ReadSingle();
+            AnomalyAI32[index].f = value;
+        }
 
         int recievedAICount2 = binaryReader.ReadInt32();
         for (int i = 0; i < recievedAICount2; i++)
-            AnomalyAI64[binaryReader.ReadInt32()].d = binaryReader.ReadDouble();
+        {
+            int index = binaryReader.ReadInt32();
+            double value = binaryReader.ReadDouble();
+            AnomalyAI64[index].d = value;
+        }
 
         int recievedAICount3 = binaryReader.ReadInt32();
         for (int i = 0; i < recievedAICount3; i++)
-            InternalAnomalyAI32[binaryReader.ReadInt32()].f = binaryReader.ReadSingle();
+        {
+            int index = binaryReader.ReadInt32();
+            float value = binaryReader.ReadSingle();
+            InternalAnomalyAI32[index].f = value;
+        }
 
         int recievedAICount4 = binaryReader.ReadInt32();
         for (int i = 0; i < recievedAICount4; i++)
-            InternalAnomalyAI64[binaryReader.ReadInt32()].d = binaryReader.ReadDouble();
+        {
+            int index = binaryReader.ReadInt32();
+            double value = binaryReader.ReadDouble();
+            InternalAnomalyAI64[index].d = value;
+        }
     }
 
     #region 额外数据

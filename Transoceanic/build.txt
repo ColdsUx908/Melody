@@ -3,5 +3,5 @@ author = ColdsUx
 version = 0.1
 dllReferences = ZLinq
 includeSource = true
-side = Client
+side = NoSync
 buildIgnore = .vs\*, Properties\*, *.sln, obj\*, bin\*

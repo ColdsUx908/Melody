@@ -1,6 +1,6 @@
 ﻿namespace CalamityAnomalies.GlobalInstances;
 
-public sealed class CalamityGlobalProjectileDetour : GlobalProjectileDetour<CalamityGlobalProjectile>
+public sealed class CalamityGlobalProjectileDetour : CAGlobalProjectileDetour<CalamityGlobalProjectile>
 {
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalProjectile self, Projectile projectile)
     {

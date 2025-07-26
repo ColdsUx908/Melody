@@ -5,37 +5,33 @@ using MonoMod.RuntimeDetour;
 namespace Transoceanic.RuntimeEditing;
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-public class CustomDetourTargetAttribute : Attribute
+public class CustomDetourSourceAttribute : Attribute
 {
-    [DisallowNull]
-    public Type TargetType { get; }
+    public Type SourceType { get; }
 
-    [DisallowNull]
     public string Name { get; }
 
-    [DisallowNull]
     public BindingFlags BindingAttr { get; }
 
-    [AllowNull]
     public Type[] ParameterTypes { get; }
 
-    public CustomDetourTargetAttribute(Type targetType, string name, BindingFlags bindingAttr, Type[] parameterTypes = null)
+    public CustomDetourSourceAttribute(Type sourceType, string name, BindingFlags bindingAttr, Type[] parameterTypes = null)
     {
+        ArgumentNullException.ThrowIfNull(sourceType);
         ArgumentException.ThrowIfNullOrEmpty(name);
-        TargetType = targetType ?? throw new ArgumentNullException(nameof(targetType));
+        SourceType = sourceType;
         Name = name;
         BindingAttr = bindingAttr;
         ParameterTypes = parameterTypes;
     }
 
     public MethodInfo TargetMethod =>
-        ParameterTypes is not null ? TargetType.GetMethod(Name, BindingAttr, ParameterTypes) : TargetType.GetMethod(Name, BindingAttr);
+        ParameterTypes is not null ? SourceType.GetMethod(Name, BindingAttr, ParameterTypes) : SourceType.GetMethod(Name, BindingAttr);
 }
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class CustomDetourPrefixAttribute : Attribute
 {
-    [DisallowNull]
     public string Prefix { get; set; }
 
     public CustomDetourPrefixAttribute(string prefix) => Prefix = prefix ?? throw new ArgumentNullException(nameof(prefix));
@@ -44,16 +40,13 @@ public class CustomDetourPrefixAttribute : Attribute
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class CustomDetourConfigAttribute : Attribute
 {
-    [DisallowNull]
     public string Id { get; }
 
     public int? Priority { get; }
 
-    [AllowNull]
-    public IEnumerable<string> Before { get; }
+    public string[] Before { get; }
 
-    [AllowNull]
-    public IEnumerable<string> After { get; }
+    public string[] After { get; }
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -71,7 +64,6 @@ public class CustomDetourConfigAttribute : Attribute
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
 public class DetourClassToAttribute : Attribute
 {
-    [DisallowNull]
     public Type TargetType { get; }
 
     public DetourClassToAttribute(Type targetType) => TargetType = targetType ?? throw new ArgumentNullException(nameof(targetType));
@@ -92,7 +84,6 @@ public class DetourClassToAttribute<T> : DetourClassToAttribute where T : class
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
 public class MultiDetourClassToAttribute : Attribute
 {
-    [DisallowNull]
     public Type[] TargetTypes { get; }
 
     public MultiDetourClassToAttribute(params Type[] targetTypes)
@@ -110,7 +101,6 @@ public class MultiDetourClassToAttribute : Attribute
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class DetourMethodToAttribute : Attribute
 {
-    [DisallowNull]
     public Type TargetType { get; }
 
     public DetourMethodToAttribute(Type targetType) => TargetType = targetType ?? throw new ArgumentNullException(nameof(targetType));
@@ -159,25 +149,58 @@ public sealed class TODetourHelper : IResourceLoader
         {
             ArgumentNullException.ThrowIfNull(hook);
             Type targetType = hook.Source.DeclaringType;
-            if (!_data.TryGetValue(targetType, out Dictionary<MethodBase, List<Hook>> methodHooks))
-                _data[targetType] = methodHooks = [];
-            if (!methodHooks.TryGetValue(hook.Source, out List<Hook> hooks))
-                methodHooks[hook.Source] = hooks = [];
-            hooks.Add(hook);
+            if (!_data.ContainsKey(targetType))
+                _data[targetType] = [];
+            if (_data[targetType].ContainsKey(hook.Source))
+                _data[targetType][hook.Source].Add(hook);
+            else
+                _data[targetType][hook.Source] = [hook];
         }
 
-        public bool RemoveFirst(Hook hook)
+        public bool Remove(Hook hook)
         {
             ArgumentNullException.ThrowIfNull(hook);
             Type targetType = hook.Source.DeclaringType;
             if (!_data.TryGetValue(targetType, out Dictionary<MethodBase, List<Hook>> methodHooks))
                 return false;
-            foreach (List<Hook> hooks in methodHooks.Values)
+            foreach ((MethodBase source, List<Hook> hooks) in methodHooks)
             {
-                if (hooks.Remove(hook))
+                int index = hooks.IndexOf(hook);
+                if (index >= 0)
+                {
+                    hooks[index].Undo();
+                    hooks.RemoveAt(index);
+                    if (hooks.Count == 0)
+                        methodHooks.Remove(source);
+                    if (methodHooks.Count == 0)
+                        _data.Remove(targetType);
                     return true;
+                }
             }
             return false;
+        }
+
+        public void RemoveAll(Predicate<Hook> match)
+        {
+            ArgumentNullException.ThrowIfNull(match);
+            foreach ((Type sourceType, Dictionary<MethodBase, List<Hook>> methodHooks) in _data)
+            {
+                foreach ((MethodBase source, List<Hook> hooks) in methodHooks)
+                {
+                    foreach (Hook hook in hooks)
+                    {
+                        if (match(hook))
+                        {
+                            hook.Undo();
+                            hooks.Remove(hook);
+                        }
+                    }
+                    if (hooks.Count == 0)
+                        methodHooks.Remove(source);
+                    if (methodHooks.Count == 0)
+                        _data.Remove(sourceType);
+                }
+            }
         }
 
         public void Clear()
@@ -347,6 +370,12 @@ public static partial class TODetourUtils
     /// 尝试在指定类中获取对应名称方法，并将Detour应用到获取的方法上。
     /// </summary>
     /// <returns>创建的Hook对象。</returns>
+    public static Hook Modify<TSource, TTarget>(TSource source, TTarget detour) where TSource : Delegate where TTarget : Delegate => Modify(source.Method, detour);
+
+    /// <summary>
+    /// 尝试在指定类中获取对应名称方法，并将Detour应用到获取的方法上。
+    /// </summary>
+    /// <returns>创建的Hook对象。</returns>
     public static Hook Modify(Type sourceType, string sourceMethodName, MethodInfo detour) => Modify(sourceType.GetMethod(sourceMethodName, TOReflectionUtils.UniversalBindingFlags), detour);
 
     /// <summary>
@@ -429,7 +458,7 @@ public static partial class TODetourUtils
     {
         if (detour.HasAttribute<NotDetourMethodAttribute>())
             return null;
-        if (detour.TryGetAttribute(out CustomDetourTargetAttribute attribute))
+        if (detour.TryGetAttribute(out CustomDetourSourceAttribute attribute))
             return Modify(attribute.TargetMethod, detour);
         if (EvaluateDetourName(detour, out string sourceName))
             return Modify(targetType.GetMethod(sourceName, TOReflectionUtils.UniversalBindingFlags), detour);
@@ -440,7 +469,7 @@ public static partial class TODetourUtils
     {
         if (detour.HasAttribute<NotDetourMethodAttribute>())
             return null;
-        if (detour.TryGetAttribute(out CustomDetourTargetAttribute attribute))
+        if (detour.TryGetAttribute(out CustomDetourSourceAttribute attribute))
             return Modify(attribute.TargetMethod, detour);
         if (EvaluateTypedDetourName(detour, out string sourceTypeName, out string sourceMethodName))
         {

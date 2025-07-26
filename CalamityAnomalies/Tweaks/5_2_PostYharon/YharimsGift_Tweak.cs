@@ -53,7 +53,7 @@ public static class YharimsGift_Handler
         CAPlayer anomalyPlayer = Main.LocalPlayer.Anomaly();
         if (CurrentBlessingType == item.type)
         {
-            if (anomalyPlayer.HasYharimsGift)
+            if (anomalyPlayer.YharimsGift)
             {
                 _enchantmentEnergyParticles.EdgeColor = GiftColor;
                 _enchantmentEnergyParticles.CenterColor = Color.White;
@@ -78,7 +78,7 @@ public sealed class YharimsGift_Tweak : CAItemTweak<YharimsGift>, ILocalizationP
     {
         CAPlayer anomalyPlayer = player.Anomaly();
         anomalyPlayer.LastYharimsGift = Item;
-        anomalyPlayer.YharimsGift += 2;
+        anomalyPlayer.YharimsGift.Value = true;
         YharimsGift_Handler._enchantmentEnergyParticles.Update();
     }
 

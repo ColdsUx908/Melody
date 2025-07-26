@@ -2654,7 +2654,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
     #endregion AI
 }
 
-public sealed class Yharon_Detour : ModNPCDetour<Yharon>
+public sealed class Yharon_Detour : CAModNPCDetour<Yharon>
 {
     public override void Detour_SetDefaults(Orig_SetDefaults orig, Yharon self)
     {

@@ -1,13 +1,11 @@
-﻿using Transoceanic.RuntimeEditing;
-
-namespace Transoceanic.Publicizer.Terraria;
+﻿namespace Transoceanic.Publicizer.Terraria;
 
 #pragma warning disable IDE1006
-public record Main_Publicizer
-{
-    public static readonly Type c_type = typeof(Main);
 
-    public static readonly FieldInfo s_f__currentGameModInfo = c_type.GetField("_currentGameModeInfo", TOReflectionUtils.StaticBindingFlags);
+public record Main_Publicizer(Main Source) : PublicizerBase<Main>(Source)
+{
+    // _currentGameModInfo (static field)
+    public static readonly FieldInfo s_f__currentGameModInfo = GetStaticField("_currentGameModeInfo");
 
     public static GameModeData _currentGameModeInfo
     {
