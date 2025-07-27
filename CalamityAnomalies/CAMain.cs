@@ -106,18 +106,7 @@ public sealed class CAMain : Mod, IResourceLoader
         }
     }
 
-    public override void HandlePacket(BinaryReader reader, int whoAmI)
-    {/*
-        switch (reader.ReadByte())
-        {
-            case CANetSync.ID.SyncAnomalyMode:
-                int sender = reader.ReadInt32();
-                CAWorld.Anomaly = reader.ReadBoolean();
-                if (Main.dedServ)
-                    CANetSync.SyncAnomalyMode(sender);
-                break;
-        }*/
-    }
+    public override void HandlePacket(BinaryReader reader, int whoAmI) => CANetSync.HandlePacket(this, reader, whoAmI);
 
     public static Assembly Assembly => field ??= Instance.Code;
 

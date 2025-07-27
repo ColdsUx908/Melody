@@ -14,7 +14,13 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
     public override bool Enabled
     {
         get => CAWorld.Anomaly;
-        set => CAWorld.Anomaly = value;
+        set
+        {
+            bool temp = CAWorld.Anomaly;
+            CAWorld.Anomaly = value;
+            if (temp ^ value)
+                CANetSync.SyncAnomalyMode();
+        }
     }
 
     public override Asset<Texture2D> Texture { get; }
@@ -144,15 +150,10 @@ public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizati
     }
 }
 
-[DetourClassTo<ModeIndicatorUI>]
-public static class ModeIndicatorUIDetour
+public sealed class AnomalyModePlayerSync : CAPlayerBehavior
 {
-    public delegate void Orig_SwitchToDifficulty(DifficultyMode mode);
+    public override decimal Priority => 100m;
 
-    public static void Detour_SwitchToDifficulty(Orig_SwitchToDifficulty orig, DifficultyMode mode)
-    {
-        orig(mode);
-        CANetSync.SyncAnomalyMode(Main.myPlayer);
-    }
+    public override void OnEnterWorld() => CANetSync.SyncAnomalyModeFromServer();
 }
 

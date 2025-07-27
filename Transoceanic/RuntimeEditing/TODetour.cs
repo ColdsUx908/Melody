@@ -25,7 +25,7 @@ public class CustomDetourSourceAttribute : Attribute
         ParameterTypes = parameterTypes;
     }
 
-    public MethodInfo TargetMethod =>
+    public MethodInfo Source =>
         ParameterTypes is not null ? SourceType.GetMethod(Name, BindingAttr, ParameterTypes) : SourceType.GetMethod(Name, BindingAttr);
 }
 
@@ -64,9 +64,9 @@ public class CustomDetourConfigAttribute : Attribute
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
 public class DetourClassToAttribute : Attribute
 {
-    public Type TargetType { get; }
+    public Type SourceType { get; }
 
-    public DetourClassToAttribute(Type targetType) => TargetType = targetType ?? throw new ArgumentNullException(nameof(targetType));
+    public DetourClassToAttribute(Type sourceType) => SourceType = sourceType ?? throw new ArgumentNullException(nameof(sourceType));
 }
 
 /// <summary>
@@ -84,12 +84,12 @@ public class DetourClassToAttribute<T> : DetourClassToAttribute where T : class
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
 public class MultiDetourClassToAttribute : Attribute
 {
-    public Type[] TargetTypes { get; }
+    public Type[] SourceTypes { get; }
 
-    public MultiDetourClassToAttribute(params Type[] targetTypes)
+    public MultiDetourClassToAttribute(params Type[] sourceTypes)
     {
-        ArgumentException.ThrowIfNullOrEmptyOrAnyNull(targetTypes);
-        TargetTypes = targetTypes;
+        ArgumentException.ThrowIfNullOrEmptyOrAnyNull(sourceTypes);
+        SourceTypes = sourceTypes;
     }
 }
 
@@ -101,9 +101,9 @@ public class MultiDetourClassToAttribute : Attribute
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class DetourMethodToAttribute : Attribute
 {
-    public Type TargetType { get; }
+    public Type SourceType { get; }
 
-    public DetourMethodToAttribute(Type targetType) => TargetType = targetType ?? throw new ArgumentNullException(nameof(targetType));
+    public DetourMethodToAttribute(Type targetType) => SourceType = targetType ?? throw new ArgumentNullException(nameof(targetType));
 }
 
 /// <summary>
@@ -151,8 +151,8 @@ public sealed class TODetourHelper : IResourceLoader
             Type targetType = hook.Source.DeclaringType;
             if (!_data.ContainsKey(targetType))
                 _data[targetType] = [];
-            if (_data[targetType].ContainsKey(hook.Source))
-                _data[targetType][hook.Source].Add(hook);
+            if (_data[targetType].TryGetValue(hook.Source, out List<Hook> value))
+                value.Add(hook);
             else
                 _data[targetType][hook.Source] = [hook];
         }
@@ -253,19 +253,19 @@ public sealed class TODetourHelper : IResourceLoader
 
         foreach ((Type type, DetourClassToAttribute attribute) in TOReflectionUtils.GetTypesWithAttribute<DetourClassToAttribute>())
         {
-            Type targetType = attribute.TargetType;
+            Type targetType = attribute.SourceType;
             TODetourUtils.ApplyAllStaticMethodDetoursOfType(type, targetType);
         }
 
         foreach ((Type type, MultiDetourClassToAttribute attribute) in TOReflectionUtils.GetTypesWithAttribute<MultiDetourClassToAttribute>())
         {
-            Type[] targetTypes = attribute.TargetTypes;
+            Type[] targetTypes = attribute.SourceTypes;
             foreach (MethodInfo detour in type.GetRealMethods(TOReflectionUtils.StaticBindingFlags))
                 TODetourUtils.ApplyTypedStaticMethodDetour(detour, targetTypes);
         }
 
         foreach ((MethodInfo detour, DetourMethodToAttribute attribute) in TOReflectionUtils.GetMethodsWithAttribute<DetourMethodToAttribute>())
-            TODetourUtils.ApplyStaticMethodDetour(detour, attribute.TargetType);
+            TODetourUtils.ApplyStaticMethodDetour(detour, attribute.SourceType);
 
         foreach (ITODetourProvider detourProvider in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITODetourProvider>().OrderByDescending(d => d.LoadPriority))
             detourProvider.ApplyDetour();
@@ -454,35 +454,35 @@ public static partial class TODetourUtils
     /// <returns>创建的Hook对象。</returns>
     public static Hook Modify<T>(string sourceMethodName, bool hasThis, MethodInfo detour) => Modify(typeof(T), sourceMethodName, hasThis, detour);
 
-    public static Hook ApplyStaticMethodDetour(MethodInfo detour, Type targetType)
+    public static Hook ApplyStaticMethodDetour(MethodInfo detour, Type sourceType)
     {
         if (detour.HasAttribute<NotDetourMethodAttribute>())
             return null;
         if (detour.TryGetAttribute(out CustomDetourSourceAttribute attribute))
-            return Modify(attribute.TargetMethod, detour);
+            return Modify(attribute.Source, detour);
         if (EvaluateDetourName(detour, out string sourceName))
-            return Modify(targetType.GetMethod(sourceName, TOReflectionUtils.UniversalBindingFlags), detour);
+            return Modify(sourceType.GetMethod(sourceName, TOReflectionUtils.UniversalBindingFlags), detour);
         return null;
     }
 
-    public static Hook ApplyTypedStaticMethodDetour(MethodInfo detour, Type[] targetTypes)
+    public static Hook ApplyTypedStaticMethodDetour(MethodInfo detour, Type[] sourceTypes)
     {
         if (detour.HasAttribute<NotDetourMethodAttribute>())
             return null;
         if (detour.TryGetAttribute(out CustomDetourSourceAttribute attribute))
-            return Modify(attribute.TargetMethod, detour);
+            return Modify(attribute.Source, detour);
         if (EvaluateTypedDetourName(detour, out string sourceTypeName, out string sourceMethodName))
         {
-            Type targetType = targetTypes.AsValueEnumerable().FirstOrDefault(t => t.Name == sourceTypeName);
-            if (targetType is not null)
-                return Modify(targetType.GetMethod(sourceMethodName, TOReflectionUtils.UniversalBindingFlags), detour);
+            Type sourceType = sourceTypes.AsValueEnumerable().FirstOrDefault(t => t.Name == sourceTypeName);
+            if (sourceType is not null)
+                return Modify(sourceType.GetMethod(sourceMethodName, TOReflectionUtils.UniversalBindingFlags), detour);
         }
         return null;
     }
 
-    public static void ApplyAllStaticMethodDetoursOfType(Type type, Type targetType)
+    public static void ApplyAllStaticMethodDetoursOfType(Type type, Type sourceType)
     {
         foreach (MethodInfo detour in type.GetRealMethods(TOReflectionUtils.StaticBindingFlags))
-            ApplyStaticMethodDetour(detour, targetType);
+            ApplyStaticMethodDetour(detour, sourceType);
     }
 }

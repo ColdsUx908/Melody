@@ -146,6 +146,7 @@ public class CalamityILChangesDetour : ICALoader
 
     void ICALoader.Load()
     {
-        TODetourUtils.ApplyAllStaticMethodDetoursOfType(GetType(), typeof(ILChanges));
+        if (CAServerConfig.Instance.Contents)
+            TODetourUtils.ApplyAllStaticMethodDetoursOfType(GetType(), typeof(ILChanges));
     }
 }
