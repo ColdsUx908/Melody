@@ -17,8 +17,8 @@ public sealed class SoaringInsignia_Tweak : CAItemTweak, ILocalizationPrefix
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
         AnomalyItem.TooltipModifier
-            .ModifyWithCATweakColor(0, l => l.Text = this.GetTextValueWithPrefix("Tooltip0"))
-            .ModifyWithCATweakColor(1, l => l.Text = this.GetTextValueWithPrefix("Tooltip1"));
+            .ModifyWithCATweakColorDefault(this, 0)
+            .ModifyWithCATweakColorDefault(this, 1);
     }
 }
 
@@ -36,7 +36,7 @@ public sealed class SoaringInsignia_Player : CAPlayerBehavior
     }
 }
 
-public sealed class SoaringInsignia_CalamityPlayer : CalamityPlayerDetour
+public sealed class SoaringInsignia_CalamityPlayer : CACalamityPlayerDetour
 {
     public override void Detour_OtherBuffEffects(Orig_OtherBuffEffects orig, CalamityPlayer self)
     {

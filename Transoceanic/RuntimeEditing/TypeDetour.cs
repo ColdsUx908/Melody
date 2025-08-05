@@ -35,7 +35,7 @@ public abstract class TypeDetour : ITODetourProvider
 
 public abstract class TypeDetour<T> : TypeDetour
 {
-    public static Type SourceType { get; } = typeof(T);
+    public static readonly Type SourceType =  typeof(T);
 
     /// <summary>
     /// 尝试将指定的Detour应用到 <see cref="T"/> 类型。

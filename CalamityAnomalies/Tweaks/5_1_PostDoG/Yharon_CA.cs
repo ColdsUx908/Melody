@@ -2757,8 +2757,10 @@ public sealed class ResplendentExplosion : BaseMassiveExplosionProjectile
 
     public override float GetScreenshakePower(float pulseCompletionRatio) => CalamityUtils.Convert01To010(pulseCompletionRatio) * 20f;
 
+    public static readonly Color ExplosionColor = new(0xC4, 0xA9, 0x60);
+
     public override Color GetCurrentExplosionColor(float pulseCompletionRatio) =>
-        Color.Lerp(new Color(0xC4, 0xA9, 0x60), Color.Orange, MathHelper.Clamp(pulseCompletionRatio * 2f, 0f, 1f)) with { A = 0 };
+        Color.Lerp(ExplosionColor, Color.Orange, MathHelper.Clamp(pulseCompletionRatio * 2f, 0f, 1f)) with { A = 0 };
 
     public override void SetDefaults()
     {

@@ -7,9 +7,9 @@ namespace CalamityAnomalies.Anomaly;
 
 public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
 {
-    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "Difficulty.AnomalyMode.";
+    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "UI.AnomalyMode.";
 
-    internal static AnomalyMode Instance { get; set; }
+    internal static AnomalyMode Instance;
 
     public override bool Enabled
     {
@@ -40,7 +40,7 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
 
     public AnomalyMode()
     {
-        Texture = CAUtils.RequestTexture("UI/AnomalyModeIndicator");
+        Texture = AnomalyModeHandler._indicator;
         DifficultyScale = 2.49147E23f;
         Name = this.GetTextWithPrefix("Anomaly");
         ShortDescription = this.GetTextWithPrefix("AnomalyShortInfo");
@@ -53,7 +53,11 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
 
 public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizationPrefix
 {
-    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "Difficulty.AnomalyMode.";
+    internal static Asset<Texture2D> _indicator;
+
+    public static Texture2D Indicator => _indicator?.Value;
+
+    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "UI.AnomalyMode.";
 
     public override void PreUpdateWorld()
     {
@@ -135,6 +139,7 @@ public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizati
 
     void IResourceLoader.PostSetupContent()
     {
+        _indicator = CAUtils.RequestTexture("UI/AnomalyModeIndicator");
         if (CAServerConfig.Instance.Contents)
         {
             DifficultyModeSystem.Difficulties.Add(AnomalyMode.Instance = new());

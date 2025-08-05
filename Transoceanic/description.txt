@@ -1,3 +1,3 @@
-一个简单的类库，提供了一些用于模组开发的高级API。
+Transoceanic is a comprehensive foundational modding framework for Terraria that extends the game's base functionality through various respects, which serves as core infrastructure for other mods to build upon to implement gameplay modifications and enhancements.
 
-A simple library.
+Notice that the mod is NoSync side.

@@ -47,7 +47,7 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
     {
         public static Color BlueColor => Color.Lerp(Color.LightCyan, Color.Cyan, TOMathHelper.GetTimeSin(0.2f, 1f, 0f, true));
 
-        public static List<Color> NameColors { get; } =
+        public static readonly List<Color> NameColors =
         [
             Color.Cyan,
             Color.LightYellow,
@@ -102,11 +102,7 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
 
     public override decimal Priority => 935m; //ICE
 
-    public override bool ShouldProcess => ModNPC.permafrost;
-
-    public override void SetDefaults()
-    {
-    }
+    public override bool ShouldProcess => base.ShouldProcess && (ModNPC?.permafrost ?? false);
 
     public override void OnSpawn(IEntitySource source)
     {
@@ -128,7 +124,7 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
         return false;
     }
 
-    private void StartUp()
+    public void StartUp()
     {
         NPC.damage = 0;
 
@@ -260,7 +256,7 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
         #endregion 力场和护盾
 
         #region 竞技场
-        if (!ModNPC.spawnArena && Main.netMode != NetmodeID.MultiplayerClient)
+        if (!ModNPC.spawnArena && TOWorld.GeneralClient)
         {
             ModNPC.spawnX2 = ModNPC.spawnXReset2 = (int)NPC.Center.X + Data.ArenaSize * 8;
             ModNPC.safeBox.X = ModNPC.spawnX = ModNPC.spawnXReset = (int)NPC.Center.X - Data.ArenaSize * 8;
@@ -288,7 +284,7 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
                     tile.Get<TileWallWireStateData>().HasTile = true;
                 }
 
-                if (Main.netMode == NetmodeID.Server)
+                if (Main.dedServ)
                     NetMessage.SendTileSquare(-1, i, j, 1, TileChangeType.None);
                 else
                     WorldGen.SquareTileFrame(i, j, true);
@@ -328,7 +324,7 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
         #endregion 激怒和伤害减免
     }
 
-    private void Welcome()
+    public void Welcome()
     {
         NPC.dontTakeDamage = true;
 
@@ -375,61 +371,62 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
     [DetourMethodTo<SupremeCalamitas>]
     public static void Detour_DrawForcefield(Orig_DrawForcefield orig, SupremeCalamitas self, SpriteBatch spriteBatch)
     {
-        if (self.permafrost)
+        if (!self.permafrost)
         {
-            spriteBatch.EnterShaderRegion();
-
-            float lifeRatio = self.NPC.Ocean().LifeRatio;
-
-            if (lifeRatio < 0.05f)
-                self.forcefieldOpacity = 0.75f;
-            if (lifeRatio <= 0.01f)
-                self.forcefieldOpacity = 0.6f;
-
-            float flickerPower = 0f;
-            if (lifeRatio < 0.6f)
-                flickerPower += 0.1f;
-            if (lifeRatio < 0.3f)
-                flickerPower += 0.25f;
-            if (self.postMusicHit)
-                flickerPower += 0.61f;
-            if (lifeRatio < 0.05f)
-                flickerPower += Main.rand.NextFloat(0.7f, 1f);
-            if (lifeRatio <= 0.01f)
-                flickerPower += 0.08f;
-            float opacity = self.forcefieldOpacity;
-            opacity *= MathHelper.Lerp(1f, MathHelper.Max(1f - flickerPower, 0.56f), MathF.Pow(MathF.Cos(Main.GlobalTimeWrappedHourly * MathHelper.Lerp(3f, 5f, flickerPower)), 24));
-            opacity *= self.musicSyncCounter is <= 0 and > -30 ? Utils.GetLerpValue(120, 0, self.musicSyncCounter, true) : 0.75f;
-
-            Texture2D forcefieldTexture = ForcefieldTexture.Value;
-            MiscShaderData miscShaderData = GameShaders.Misc["CalamityMod:SupremeShield"];
-            miscShaderData.UseImage1("Images/Misc/Perlin");
-
-            Color forcefieldColor = Color.Cyan;
-            Color secondaryForcefieldColor = Color.SkyBlue;
-
-            forcefieldColor *= opacity;
-            secondaryForcefieldColor *= opacity;
-
-            miscShaderData.UseSecondaryColor(secondaryForcefieldColor);
-            miscShaderData.UseColor(forcefieldColor);
-            miscShaderData.UseSaturation(1);
-            miscShaderData.UseOpacity(0.65f);
-            miscShaderData.Apply();
-
-            if (self.postMusicHit)
-                spriteBatch.Draw(Permafrost_Handler.CenterTexture, self.NPC.Center - Main.screenPosition, null, Color.White with { A = 0 } * opacity * 2f, self.rotateAwayPlayer, Permafrost_Handler.CenterTexture.Size() * 0.5f, self.forcefieldScale * 0.088f * self.forcefieldPureVisualScale, SpriteEffects.None, 0f);
-            if (!self.NPC.dontTakeDamage)
-                spriteBatch.Draw(forcefieldTexture, self.NPC.Center - Main.screenPosition, null, Color.White * opacity, self.postMusicHit ? self.rotateToPlayer : 0, forcefieldTexture.Size() * 0.5f, self.forcefieldScale * 3f * self.forcefieldPureVisualScale, SpriteEffects.None, 0f);
-            else
-                spriteBatch.Draw(Permafrost_Handler.ImmuneTexture, self.NPC.Center - Main.screenPosition, null, Color.White * opacity * 0.3f, self.rotateToPlayer, Permafrost_Handler.ImmuneTexture.Size() * 0.5f, self.forcefieldScale * 1.35f * self.forcefieldPureVisualScale, SpriteEffects.None, 0f);
-            spriteBatch.ExitShaderRegion();
-        }
-        else
             orig(self, spriteBatch);
+            return;
+        }
+
+        spriteBatch.EnterShaderRegion();
+
+        float lifeRatio = self.NPC.Ocean().LifeRatio;
+
+        if (lifeRatio < 0.05f)
+            self.forcefieldOpacity = 0.75f;
+        if (lifeRatio <= 0.01f)
+            self.forcefieldOpacity = 0.6f;
+
+        float flickerPower = 0f;
+        if (lifeRatio < 0.6f)
+            flickerPower += 0.1f;
+        if (lifeRatio < 0.3f)
+            flickerPower += 0.25f;
+        if (self.postMusicHit)
+            flickerPower += 0.61f;
+        if (lifeRatio < 0.05f)
+            flickerPower += Main.rand.NextFloat(0.7f, 1f);
+        if (lifeRatio <= 0.01f)
+            flickerPower += 0.08f;
+        float opacity = self.forcefieldOpacity;
+        opacity *= MathHelper.Lerp(1f, MathHelper.Max(1f - flickerPower, 0.56f), MathF.Pow(MathF.Cos(Main.GlobalTimeWrappedHourly * MathHelper.Lerp(3f, 5f, flickerPower)), 24));
+        opacity *= self.musicSyncCounter is <= 0 and > -30 ? Utils.GetLerpValue(120, 0, self.musicSyncCounter, true) : 0.75f;
+
+        Texture2D forcefieldTexture = ForcefieldTexture.Value;
+        MiscShaderData miscShaderData = GameShaders.Misc["CalamityMod:SupremeShield"];
+        miscShaderData.UseImage1("Images/Misc/Perlin");
+
+        Color forcefieldColor = Color.Cyan;
+        Color secondaryForcefieldColor = Color.SkyBlue;
+
+        forcefieldColor *= opacity;
+        secondaryForcefieldColor *= opacity;
+
+        miscShaderData.UseSecondaryColor(secondaryForcefieldColor);
+        miscShaderData.UseColor(forcefieldColor);
+        miscShaderData.UseSaturation(1);
+        miscShaderData.UseOpacity(0.65f);
+        miscShaderData.Apply();
+
+        if (self.postMusicHit)
+            spriteBatch.Draw(Permafrost_Handler.CenterTexture, self.NPC.Center - Main.screenPosition, null, Color.White with { A = 0 } * opacity * 2f, self.rotateAwayPlayer, Permafrost_Handler.CenterTexture.Size() * 0.5f, self.forcefieldScale * 0.088f * self.forcefieldPureVisualScale, SpriteEffects.None, 0f);
+        if (!self.NPC.dontTakeDamage)
+            spriteBatch.Draw(forcefieldTexture, self.NPC.Center - Main.screenPosition, null, Color.White * opacity, self.postMusicHit ? self.rotateToPlayer : 0, forcefieldTexture.Size() * 0.5f, self.forcefieldScale * 3f * self.forcefieldPureVisualScale, SpriteEffects.None, 0f);
+        else
+            spriteBatch.Draw(Permafrost_Handler.ImmuneTexture, self.NPC.Center - Main.screenPosition, null, Color.White * opacity * 0.3f, self.rotateToPlayer, Permafrost_Handler.ImmuneTexture.Size() * 0.5f, self.forcefieldScale * 1.35f * self.forcefieldPureVisualScale, SpriteEffects.None, 0f);
+        spriteBatch.ExitShaderRegion();
     }
 
-    public override bool PreDrawCalBossBar(BetterBossHealthBar.BetterBossHPUI newBar, SpriteBatch spriteBatch, ref int x, ref int y)
+    public override bool PreDrawCalBossBar(BetterBossHPUI newBar, SpriteBatch spriteBatch, ref int x, ref int y)
     {
         newBar.DrawMainBar(spriteBatch, x, y);
         newBar.DrawComboBar(spriteBatch, x, y);

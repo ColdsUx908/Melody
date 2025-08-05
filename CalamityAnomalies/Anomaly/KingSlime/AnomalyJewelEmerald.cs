@@ -86,7 +86,7 @@ public class AnomalyJewelEmerald : AnomalyNPCBehavior<KingSlimeJewelEmerald>
         return false;
     }
 
-    private void MakeDust(int amount)
+    public void MakeDust(int amount)
     {
         for (int i = 0; i < amount; i++)
         {
@@ -103,7 +103,7 @@ public class AnomalyJewelEmerald : AnomalyNPCBehavior<KingSlimeJewelEmerald>
         }
     }
 
-    private void Despawn()
+    public void Despawn()
     {
         NPC.life = 0;
         NPC.HitEffect();
@@ -111,7 +111,7 @@ public class AnomalyJewelEmerald : AnomalyNPCBehavior<KingSlimeJewelEmerald>
         NPC.netUpdate = true;
     }
 
-    private void FollowTarget()
+    public void FollowTarget()
     {
         NPC.damage = 0;
 
@@ -160,7 +160,7 @@ public class AnomalyJewelEmerald : AnomalyNPCBehavior<KingSlimeJewelEmerald>
         }
     }
 
-    private void Charge()
+    public void Charge()
     {
         NPC.knockBackResist = 0f;
 

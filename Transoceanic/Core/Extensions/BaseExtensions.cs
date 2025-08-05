@@ -110,11 +110,17 @@ public static partial class TOExtensions
 
     extension(MethodInfo method)
     {
-        public string FullName => method.IsGenericMethod
+        public string RealName => method.IsGenericMethod
             ? method.Name + "<" + string.Join(", ", method.GetGenericArguments().Select(t => t.Name)) + ">"
             : method.Name;
 
-        public string FullNameWithParameter => method.FullName + "(" + string.Join(", ", method.ParameterTypes.Select(t => t.Name)) + ")";
+        public string RealNameWithParameter => method.RealName + "(" + string.Join(", ", method.ParameterTypes.Select(t => t.Name)) + ")";
+
+        public string TypedName => method.DeclaringType.NestedName + method.Name;
+
+        public string TypedRealName => method.DeclaringType.NestedRealName + method.RealName;
+
+        public string TypedRealNameWithParameter => method.DeclaringType.NestedRealName + method.RealNameWithParameter;
 
         public Type[] ParameterTypes => [.. method.GetParameters().Select(p => p.ParameterType)];
 
@@ -258,6 +264,10 @@ public static partial class TOExtensions
         public string RealName => type.IsGenericType
             ? type.Name[..type.Name.IndexOf('`')] + "<" + string.Join(", ", type.GetGenericArguments().Select(a => a.Name)) + ">"
             : type.Name;
+
+        public string NestedName => type.DeclaringType is not null ? type.DeclaringType.NestedName + "." + type.Name : type.Name; //递归
+
+        public string NestedRealName => type.DeclaringType is not null ? type.DeclaringType.NestedRealName + "." + type.RealName : type.RealName; //递归
 
         public IEnumerable<string> GetMethodNames(BindingFlags bindingAttr) => type.GetMethods(bindingAttr).Select(m => m.Name);
 

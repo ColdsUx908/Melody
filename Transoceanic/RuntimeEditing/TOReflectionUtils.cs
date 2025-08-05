@@ -17,7 +17,7 @@ public static class TOReflectionUtils
     /// </summary>
     public const BindingFlags StaticBindingFlags = BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
 
-    public static string[] ObjectMethods { get; } =
+    public static readonly string[] ObjectMethods =
     [
         nameof(Equals),
         nameof(GetHashCode),
@@ -174,4 +174,11 @@ public static class TOReflectionUtils
     public static Type GetTerrariaType(string typeName) =>
         TOMain.TerrariaTypes.FirstOrDefault(t => t.Name == typeName) ??
         throw new ArgumentException($"Type '{typeName}' not found in Terraria types.", nameof(typeName));
+
+    public static void SetStructField<T>(ref T target, FieldInfo field, object value) where T : struct
+    {
+        object boxed = target;
+        field.SetValue(boxed, value);
+        target = (T)boxed;
+    }
 }

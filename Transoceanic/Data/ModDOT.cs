@@ -23,9 +23,9 @@ public abstract class ModDOT : ModBuff
 
 public sealed class ModDOTHandler : IResourceLoader
 {
-    internal static List<ModDOT> ModDOTSet { get; } = [];
+    internal static readonly List<ModDOT> ModDOTSet = [];
 
-    internal static Dictionary<int, (Predicate<Player> hasBuffPlayer, Predicate<NPC> hasBuffNPC, Func<Player, float> damagePlayer, Func<NPC, float>, Func<NPC, int> damageValue)> ExternalDOTSet { get; } = [];
+    internal static readonly Dictionary<int, (Predicate<Player> hasBuffPlayer, Predicate<NPC> hasBuffNPC, Func<Player, float> damagePlayer, Func<NPC, float>, Func<NPC, int> damageValue)> ExternalDOTSet = [];
 
     public static void RegisterDOT(int type, Predicate<Player> hasBuffPlayer, Predicate<NPC> hasBuffNPC, Func<Player, float> damagePlayer = null, Func<NPC, float> damageNPC = null, Func<NPC, int> damageValue = null, bool cover = true)
     {

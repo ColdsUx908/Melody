@@ -32,4 +32,4 @@ public abstract record Publicizer<T> : IPublicizer
     public static EventInfo GetStaticEvent(string name) => C_type.GetEvent(name, TOReflectionUtils.StaticBindingFlags);
 }
 
-public abstract record PublicizerBase<T>(T Source) : Publicizer<T> where T : class;
+public abstract record PublicizerBase<T>(T Source) : Publicizer<T>;

@@ -7,45 +7,45 @@ public sealed class TOPlayer : ModPlayer, IResourceLoader
 
     public int GameTime { get; internal set; } = 0;
 
-    public bool IsHurt { get; set; } = false;
+    public bool IsHurt = false;
 
     /// <summary>
     /// 透支生命值。
     /// </summary>
-    public double OverdrawnLife { get; set; } = 0;
+    public double OverdrawnLife = 0;
 
     /// <summary>
     /// 透支生命值的最大值，可超过玩家生命值，默认为零。
     /// </summary>
-    public double OverdrawnLifeLimit { get; set; } = 0;
+    public double OverdrawnLifeLimit = 0;
 
     /// <summary>
     /// 透支生命值回复指数。
     /// </summary>
-    public double OverdrawnLifeRegenExponent { get; set; } = 2;
+    public double OverdrawnLifeRegenExponent = 2;
 
     /// <summary>
     /// 每帧回复透支生命值的最大值。
     /// </summary>
-    public double OverdrawnLifeRegenLimit { get; set; } = 0.5;
+    public double OverdrawnLifeRegenLimit = 0.5;
 
     /// <summary>
     /// 透支生命值回复乘数。
     /// </summary>
-    public double OverdrawnLifeRegenMult { get; set; } = 1;
+    public double OverdrawnLifeRegenMult = 1;
 
     /// <summary>
     /// 回复透支生命值所需的最小未受击时间。
     /// </summary>
-    public int OverdrawnLifeRegenThreshold { get; set; } = 0;
+    public int OverdrawnLifeRegenThreshold = 0;
 
-    public int TimeWithoutHurt { get; set; } = 0;
+    public int TimeWithoutHurt = 0;
 
     /// <summary>
     /// 提升玩家翅膀飞行时间的乘区。
     /// <br/>每个索引独立计算。
     /// </summary>
-    public AddableFloat[] WingTimeMaxMultipliers { get; } = new AddableFloat[5];
+    public AddableFloat[] WingTimeMaxMultipliers = new AddableFloat[5];
 
     public override ModPlayer Clone(Player newEntity)
     {

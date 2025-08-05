@@ -1,9 +1,8 @@
-﻿
-namespace CalamityAnomalies.Core;
+﻿namespace CalamityAnomalies.Core;
 
 public static class CANetSync
 {
-    private static class ID
+    public static class ID
     {
         public const byte SyncAnomalyMode = 0;
         public const byte SyncAnomalyModeFromServer = 1;
@@ -13,6 +12,9 @@ public static class CANetSync
 
     public static void SyncAnomalyMode(int ignoreClient = -1)
     {
+        if (!TOWorld.Multiplayer)
+            return;
+
         ModPacket packet = GetCAPacket();
         packet.Write(ID.SyncAnomalyMode);
         packet.Write(CAWorld.Anomaly);
@@ -21,6 +23,9 @@ public static class CANetSync
 
     public static void SyncAnomalyModeFromServer(int toClient = -1)
     {
+        if (!TOWorld.Multiplayer)
+            return;
+
         ModPacket packet = GetCAPacket();
         packet.Write(ID.SyncAnomalyModeFromServer);
         if (Main.dedServ)

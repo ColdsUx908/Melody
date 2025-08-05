@@ -11,12 +11,12 @@ public sealed class CAWorld : ModSystem
     /// <summary>
     /// 异象模式。
     /// </summary>
-    public static bool Anomaly { get; set; } = false;
+    public static bool Anomaly = false;
 
     /// <summary>
     /// 异象超凡。
     /// </summary>
-    public static bool AnomalyUltramundane { get; set; } = false;
+    public static bool AnomalyUltramundane = false;
 
     /// <summary>
     /// 传奇复仇。

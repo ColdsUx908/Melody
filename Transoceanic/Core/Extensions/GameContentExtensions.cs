@@ -1,4 +1,7 @@
-﻿namespace Transoceanic.Core.Extensions;
+﻿using Transoceanic.Publicizer.Terraria;
+using Transoceanic.RuntimeEditing;
+
+namespace Transoceanic.Core.Extensions;
 
 public static partial class TOExtensions
 {
@@ -488,6 +491,8 @@ public static partial class TOExtensions
             npc.lifeRegen = Math.Min(npc.lifeRegen, 0) - dot;
             damage = Math.Max(damage, damageValue);
         }
+
+        public void AddBuff<T>(int time, bool quiet = false) where T : ModBuff => npc.AddBuff(ModContent.BuffType<T>(), time, quiet);
     }
 
     extension(NPC)
@@ -619,6 +624,8 @@ public static partial class TOExtensions
     extension(ref NPC.HitModifiers modifiers)
     {
         public void SetInstantKillBetter(NPC target) => modifiers.FinalDamage += target.lifeMax;
+
+        public void ForceCrit() => TOReflectionUtils.SetStructField(ref modifiers, NPC_HitModifiers_Publicizer.i_f__critOverride, true);
     }
 
     extension(Player player)
@@ -642,6 +649,8 @@ public static partial class TOExtensions
         /// </summary>
         /// <returns>若玩家光标持有物品，返回该物品；否则返回玩家物品栏中选中的物品。</returns>
         public Item CurrentItem => Main.mouseItem.IsAir ? player.HeldItem : Main.mouseItem;
+
+        public void AddBuff<T>(int time, bool quiet = false, bool foodHack = false) where T : ModBuff => player.AddBuff(ModContent.BuffType<T>(), time, quiet, foodHack);
     }
 
     extension(Player)
@@ -832,5 +841,10 @@ public static partial class TOExtensions
         public void SetTileType(int type) => tile.TileType = (ushort)type;
 
         public void SetTileType<T>() where T : ModTile => tile.SetTileType(ModContent.TileType<T>());
+    }
+
+    extension(UnifiedRandom rand)
+    {
+        public bool NextProbability(float probability) => rand.NextFloat() < probability;
     }
 }

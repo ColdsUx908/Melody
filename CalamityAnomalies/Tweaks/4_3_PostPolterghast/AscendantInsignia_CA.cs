@@ -30,30 +30,29 @@ public sealed class AscendantInsignia_Tweak : CAItemTweak<AscendantInsignia>, IL
         get
         {
             CAPlayer anomalyPlayer = Main.LocalPlayer.Anomaly();
-            return anomalyPlayer.YharimsGift && anomalyPlayer.YharimsGiftBuff == YharimsGift_CurrentBlessing.AscendantInsignia;
+            return anomalyPlayer.YharimsGift && anomalyPlayer.YharimsGift_Blessing == YharimsGift_CurrentBlessing.AscendantInsignia;
         }
     }
 
     public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
     {
-        CAPlayer anomalyPlayer = Main.LocalPlayer.Anomaly();
-        if (anomalyPlayer.YharimsGift || (anomalyPlayer.LastYharimsGift is not null && anomalyPlayer.LastYharimsGift.Ocean().GetEquippedTimer(40) > 0))
-            YharimsGift_Handler.DrawEnergyAndBorderBehindItem(Item, spriteBatch, position, frame, origin, scale);
+        YharimsGift_Handler.DrawEnergyAndBorderBehindItem(Item, spriteBatch, position, frame, origin, scale);
         return true;
     }
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
         AnomalyItem.TooltipModifier
-            .ModifyWithCATweakColor(0, l => l.Text = this.GetTextValueWithPrefix("Tooltip0"))
-            .ModifyWithCATweakColor(1, l => l.Text = this.GetTextValueWithPrefix("Tooltip1"))
-            .ModifyWithCATweakColor(3, l => l.Text = this.GetTextValueWithPrefix("Tooltip3"));
+            .ModifyWithCATweakColorDefault(this, 0)
+            .ModifyWithCATweakColorDefault(this, 1)
+            .ModifyWithCATweakColorDefault(this, 3);
         if (HasYharimsGiftBuff)
         {
+            AnomalyItem.TooltipModifier.ClearAllCATooltips();
             YharimsGift_Handler.AddBlessingTooltip(Item);
-            YharimsGift_Handler.AddGoldTooltip(Item, l => l.Text = this.GetTextFormatWithPrefix("CATooltip1"));
-            YharimsGift_Handler.AddGoldTooltip(Item, l => l.Text = this.GetTextFormatWithPrefix("CATooltip2"));
-            YharimsGift_Handler.AddGoldTooltip(Item, l => l.Text = this.GetTextFormatWithPrefix("CATooltip3"));
+            YharimsGift_Handler.AddGoldTooltip(Item, l => l.Text = this.GetTextFormatWithPrefix("BlessingTooltip0"));
+            YharimsGift_Handler.AddGoldTooltip(Item, l => l.Text = this.GetTextFormatWithPrefix("BlessingTooltip1"));
+            YharimsGift_Handler.AddGoldTooltip(Item, l => l.Text = this.GetTextFormatWithPrefix("BlessingTooltip2"));
         }
     }
 }
@@ -82,7 +81,7 @@ public sealed class AscendantInsignia_Player : CAPlayerBehavior
     }
 }
 
-public sealed class AscendantInsignia_CalamityPlayer : CalamityPlayerDetour
+public sealed class AscendantInsignia_CalamityPlayer : CACalamityPlayerDetour
 {
     public override void Detour_ProcessTriggers(Orig_ProcessTriggers orig, CalamityPlayer self, TriggersSet triggersSet)
     {

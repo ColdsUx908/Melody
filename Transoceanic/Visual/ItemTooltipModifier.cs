@@ -6,9 +6,7 @@ public partial class ItemTooltipModifier
     protected readonly int _tooltipLast;
     protected readonly int _tooltipMax;
 
-    protected bool TooltipCorrupted => _tooltipMax == _tooltipLast - _tooltip0;
-
-    public List<TooltipLine> Tooltips { get; set; }
+    public readonly List<TooltipLine> Tooltips;
 
     public static readonly Regex _tooltipRegex = GetTooltipRegex();
 
@@ -26,37 +24,64 @@ public partial class ItemTooltipModifier
     public virtual ItemTooltipModifier Modify(int num, Action<TooltipLine> action)
     {
         ArgumentNullException.ThrowIfNull(action);
+        if (TryFind(num, out TooltipLine line))
+            action(line);
+        return this;
+    }
+
+    public virtual ItemTooltipModifier Hide(int num)
+    {
+        if (TryFind(num, out TooltipLine line))
+            line.Hide();
+        return this;
+    }
+
+    public bool TryFind(int num, [NotNullWhen(true)] out TooltipLine line)
+    {
         if (_tooltip0 >= 0)
         {
             int index = _tooltip0 + num;
             if (index < Tooltips.Count)
             {
-                TooltipLine line = Tooltips[index];
-                if (line.Mod == "Terraria" && line.Name == $"Tooltip{num}")
+                TooltipLine temp = Tooltips[index];
+                if (temp.Mod == "Terraria" && temp.Name == $"Tooltip{num}")
                 {
-                    action(line);
-                    return this;
+                    line = temp;
+                    return true;
                 }
             }
             for (int i = _tooltip0; i < Tooltips.Count; i++)
             {
-                TooltipLine line = Tooltips[i];
-                if (line.Mod == "Terraria" && line.Name == $"Tooltip{num}")
+                TooltipLine temp = Tooltips[i];
+                if (temp.Mod == "Terraria" && temp.Name == $"Tooltip{num}")
                 {
-                    action(line);
-                    return this;
+                    line = temp;
+                    return true;
                 }
             }
             for (int i = _tooltip0 - 1; i >= 0; i--)
             {
-                TooltipLine line = Tooltips[i];
-                if (line.Mod == "Terraria" && line.Name == $"Tooltip{num}")
+                TooltipLine temp = Tooltips[i];
+                if (temp.Mod == "Terraria" && temp.Name == $"Tooltip{num}")
                 {
-                    action(line);
-                    return this;
+                    line = temp;
+                    return true;
                 }
             }
         }
-        return this;
+        else
+        {
+            for (int i = 0; i < Tooltips.Count; i++)
+            {
+                TooltipLine temp = Tooltips[i];
+                if (temp.Mod == "Terraria" && temp.Name == $"Tooltip{num}")
+                {
+                    line = temp;
+                    return true;
+                }
+            }
+        }
+        line = null;
+        return false;
     }
 }

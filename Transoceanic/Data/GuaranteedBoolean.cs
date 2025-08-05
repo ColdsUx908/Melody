@@ -24,7 +24,7 @@ public struct GuaranteedBoolean : IEquatable<GuaranteedBoolean>
 
     public readonly bool Equals(GuaranteedBoolean other) => _value == other._value;
 
-    public override readonly bool Equals(object obj) => obj is GuaranteedBoolean other && Equals(other);
+    public override readonly bool Equals([NotNullWhen(true)] object obj) => obj is GuaranteedBoolean other && Equals(other);
 
     public static bool operator ==(GuaranteedBoolean left, GuaranteedBoolean right) => left.Equals(right);
 

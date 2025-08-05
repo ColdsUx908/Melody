@@ -24,3 +24,8 @@ AnomalyMode: {
 		你已经尝试过了，对吧？
 		'''
 }
+
+BetterBossHealthBar: {
+	BrainofCthulhuExtension: ""
+	CeaselessVoidExtension: (暗能量: {0}, {1} / {2})
+}

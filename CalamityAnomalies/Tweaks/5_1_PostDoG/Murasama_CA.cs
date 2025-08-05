@@ -24,11 +24,12 @@ namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
  * 改动
  * 
  * 全局
+ * 基础伤害提升至2300（原灾厄：2222）。
  * 怒气或肾上腺素开启时，攻击速度翻倍，但非大型挥砍仅造成30%伤害。
  * 忽视敌人200%防御、90%基础伤害减免和所有动态伤害减免。
  * 
  * 无彩蛋
- * 击败犽戎后，基础伤害提升至3000（原灾厄：2222），大小提升50%。
+ * 击败犽戎后，基础伤害提升至3000，大小提升50%。
  * 
  * 彩蛋（玩家名含"Jetstream Sam"）
  * 大小翻倍。
@@ -138,17 +139,20 @@ public sealed class Murasama_Handler : IResourceLoader
 
 public sealed class Murasama_Tweak : CAItemTweak<Murasama>
 {
+    public override void SetDefaults()
+    {
+        Item.damage = 2300;
+    }
+
     public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
     {
+        float finalDamage = Item.damage;
         if (!Murasama_Handler.IsSam(player))
         {
             if (DownedBossSystem.downedYharon)
-                damage.Base = -Item.damage + 3000f;
-            return;
+                finalDamage = 3000f;
         }
-
-        float finalDamage;
-        if (BossRushEvent.BossRushActive)
+        else if (BossRushEvent.BossRushActive)
             finalDamage = 20001f;
         else
         {
@@ -192,8 +196,7 @@ public sealed class Murasama_Tweak : CAItemTweak<Murasama>
                 multiplier += 150f;
             finalDamage = baseDamage * multiplier;
         }
-
-        damage.Base = -Item.damage + finalDamage;
+        damage.Base = finalDamage - Item.damage;
     }
 
     public override void ModifyWeaponKnockback(Player player, ref StatModifier knockback)
@@ -215,6 +218,7 @@ public sealed class Murasama_Tweak : CAItemTweak<Murasama>
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
+        ApplyCATweakColorToDamage();
     }
 }
 

@@ -7,13 +7,13 @@ namespace Transoceanic.RuntimeEditing;
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class CustomDetourSourceAttribute : Attribute
 {
-    public Type SourceType { get; }
+    public readonly Type SourceType;
 
-    public string Name { get; }
+    public readonly string Name;
 
-    public BindingFlags BindingAttr { get; }
+    public readonly BindingFlags BindingAttr;
 
-    public Type[] ParameterTypes { get; }
+    public readonly Type[] ParameterTypes;
 
     public CustomDetourSourceAttribute(Type sourceType, string name, BindingFlags bindingAttr, Type[] parameterTypes = null)
     {
@@ -32,7 +32,7 @@ public class CustomDetourSourceAttribute : Attribute
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class CustomDetourPrefixAttribute : Attribute
 {
-    public string Prefix { get; set; }
+    public readonly string Prefix;
 
     public CustomDetourPrefixAttribute(string prefix) => Prefix = prefix ?? throw new ArgumentNullException(nameof(prefix));
 }
@@ -40,17 +40,17 @@ public class CustomDetourPrefixAttribute : Attribute
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class CustomDetourConfigAttribute : Attribute
 {
-    public string Id { get; }
+    public readonly string Id;
 
-    public int? Priority { get; }
+    public readonly int? Priority;
 
-    public string[] Before { get; }
+    public readonly string[] Before;
 
-    public string[] After { get; }
+    public readonly string[] After;
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public int SubPriority { get; }
+    public readonly int SubPriority;
 
     public DetourConfig DetourConfig => new(Id, Priority, Before, After, SubPriority);
 
@@ -64,7 +64,7 @@ public class CustomDetourConfigAttribute : Attribute
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
 public class DetourClassToAttribute : Attribute
 {
-    public Type SourceType { get; }
+    public readonly Type SourceType;
 
     public DetourClassToAttribute(Type sourceType) => SourceType = sourceType ?? throw new ArgumentNullException(nameof(sourceType));
 }
@@ -84,7 +84,7 @@ public class DetourClassToAttribute<T> : DetourClassToAttribute where T : class
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
 public class MultiDetourClassToAttribute : Attribute
 {
-    public Type[] SourceTypes { get; }
+    public readonly Type[] SourceTypes;
 
     public MultiDetourClassToAttribute(params Type[] sourceTypes)
     {
@@ -101,7 +101,12 @@ public class MultiDetourClassToAttribute : Attribute
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class DetourMethodToAttribute : Attribute
 {
-    public Type SourceType { get; }
+    public readonly Type SourceType;
+
+    /// <summary>
+    /// 参数偏移量，设为负数以禁用参数偏移机制。
+    /// </summary>
+    public int ParamOffset { get; init; } = -1;
 
     public DetourMethodToAttribute(Type targetType) => SourceType = targetType ?? throw new ArgumentNullException(nameof(targetType));
 }
@@ -245,7 +250,7 @@ public sealed class TODetourHelper : IResourceLoader
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-    internal static DetourSet Detours { get; } = [];
+    internal static readonly DetourSet Detours = [];
 
     void IResourceLoader.PostSetupContent()
     {
@@ -253,19 +258,19 @@ public sealed class TODetourHelper : IResourceLoader
 
         foreach ((Type type, DetourClassToAttribute attribute) in TOReflectionUtils.GetTypesWithAttribute<DetourClassToAttribute>())
         {
-            Type targetType = attribute.SourceType;
-            TODetourUtils.ApplyAllStaticMethodDetoursOfType(type, targetType);
+            Type sourceType = attribute.SourceType;
+            TODetourUtils.ApplyAllStaticMethodDetoursOfType(type, sourceType);
         }
 
         foreach ((Type type, MultiDetourClassToAttribute attribute) in TOReflectionUtils.GetTypesWithAttribute<MultiDetourClassToAttribute>())
         {
-            Type[] targetTypes = attribute.SourceTypes;
+            Type[] sourceTypes = attribute.SourceTypes;
             foreach (MethodInfo detour in type.GetRealMethods(TOReflectionUtils.StaticBindingFlags))
-                TODetourUtils.ApplyTypedStaticMethodDetour(detour, targetTypes);
+                TODetourUtils.ApplyTypedStaticMethodDetour(detour, sourceTypes);
         }
 
         foreach ((MethodInfo detour, DetourMethodToAttribute attribute) in TOReflectionUtils.GetMethodsWithAttribute<DetourMethodToAttribute>())
-            TODetourUtils.ApplyStaticMethodDetour(detour, attribute.SourceType);
+            TODetourUtils.ApplyStaticMethodDetour(detour, attribute.SourceType, attribute.ParamOffset < 0 ? null : attribute.ParamOffset);
 
         foreach (ITODetourProvider detourProvider in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITODetourProvider>().OrderByDescending(d => d.LoadPriority))
             detourProvider.ApplyDetour();
@@ -454,14 +459,15 @@ public static partial class TODetourUtils
     /// <returns>创建的Hook对象。</returns>
     public static Hook Modify<T>(string sourceMethodName, bool hasThis, MethodInfo detour) => Modify(typeof(T), sourceMethodName, hasThis, detour);
 
-    public static Hook ApplyStaticMethodDetour(MethodInfo detour, Type sourceType)
+    public static Hook ApplyStaticMethodDetour(MethodInfo detour, Type sourceType, int? paramOffset = null)
     {
         if (detour.HasAttribute<NotDetourMethodAttribute>())
             return null;
         if (detour.TryGetAttribute(out CustomDetourSourceAttribute attribute))
             return Modify(attribute.Source, detour);
         if (EvaluateDetourName(detour, out string sourceName))
-            return Modify(sourceType.GetMethod(sourceName, TOReflectionUtils.UniversalBindingFlags), detour);
+            return paramOffset is null ? Modify(sourceType, sourceName, detour)
+                : Modify(sourceType, sourceName, paramOffset.Value, detour);
         return null;
     }
 

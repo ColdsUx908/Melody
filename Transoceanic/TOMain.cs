@@ -38,6 +38,9 @@ using Transoceanic.RuntimeEditing;
 
 namespace Transoceanic;
 
+// Developed by ColdsUx
+// build: 2025.7.29
+
 public sealed class TOMain : Mod
 {
     internal static TOMain Instance { get; private set; }
@@ -148,9 +151,9 @@ public sealed class TOMain : Mod
 
     public static Assembly Assembly => field ??= Instance.Code;
 
-    public static Assembly TerrariaAssembly { get; } = typeof(Main).Assembly;
+    public static readonly Assembly TerrariaAssembly = typeof(Main).Assembly;
 
-    public static Type[] TerrariaTypes { get; } = TerrariaAssembly.GetTypes();
+    public static readonly Type[] TerrariaTypes = TerrariaAssembly.GetTypes();
 
     #region Constant
     public const string ModLocalizationPrefix = "Mods.Transoceanic.";
@@ -159,11 +162,11 @@ public sealed class TOMain : Mod
 
     public const string DebugErrorMessageKey = ModLocalizationPrefix + "DEBUG.ErrorMessage";
 
-    public static Color TODebugWarnColor { get; } = Color.Orange;
+    public static readonly Color TODebugWarnColor = Color.Orange;
 
-    public static Color TODebugErrorColor { get; } = new(0xFF, 0x00, 0x00);
+    public static readonly Color TODebugErrorColor = new(0xFF, 0x00, 0x00);
 
-    public static Color CelestialColor { get; } = new(0xAF, 0xFF, 0xFF);
+    public static readonly Color CelestialColor = new(0xAF, 0xFF, 0xFF);
 
     public static Color DiscoColor => new(Main.DiscoR, Main.DiscoG, Main.DiscoB, Main.DiscoR);
 

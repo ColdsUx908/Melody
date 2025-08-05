@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using Terraria.ModLoader.Config;
 
-namespace CalamityAnomalies.Configs;
+namespace CalamityAnomalies.Core;
 
 public sealed class CAServerConfig : ModConfig
 {

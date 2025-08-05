@@ -4,7 +4,7 @@ using MonoMod.Cil;
 
 namespace CalamityAnomalies.CalamityEditing;
 
-public class CalamityILChangesDetour : ICALoader
+public sealed class CalamityILChangesDetour : ICALoader
 {
     public delegate void Orig_FixJumpHeightBoosts(ILContext il);
 

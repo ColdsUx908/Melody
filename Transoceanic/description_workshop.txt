@@ -1,3 +1,5 @@
-[h1]Transoceanic (¥Û—Û±À∞∂)[/h1]
+[h1]Transoceanic[/h1]
 
-A simple library.
+Transoceanic is a comprehensive foundational modding framework for Terraria that extends the game's base functionality through various respects, which serves as core infrastructure for other mods to build upon to implement gameplay modifications and enhancements.
+
+Notice that the mod is NoSync side.

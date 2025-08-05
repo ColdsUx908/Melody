@@ -14,7 +14,7 @@ public sealed class CelestialOnion_Tweak : CAItemTweak<CelestialOnion>, ILocaliz
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
         AnomalyItem.TooltipModifier
-            .ModifyWithCATweakColor(1, l => l.Text = this.GetTextValueWithPrefix("Tooltip1"));
+            .ModifyWithCATweakColorDefault(this, 1);
     }
 }
 

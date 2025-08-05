@@ -1,4 +1,5 @@
-﻿using CalamityMod.Projectiles.Rogue;
+﻿using CalamityMod.Items.Weapons.Rogue;
+using CalamityMod.Projectiles.Rogue;
 
 namespace CalamityAnomalies.Tweaks._1_4_PostSkeletron;
 
@@ -6,6 +7,14 @@ namespace CalamityAnomalies.Tweaks._1_4_PostSkeletron;
  * 改动
  * 在LR难度下，击中血肉墙眼睛时必定暴击。
  */
+
+public sealed class SlickCane_Tweak : CAItemTweak<SlickCane>
+{
+    public override void ModifyTooltips(List<TooltipLine> tooltips)
+    {
+        base.ModifyTooltips(tooltips);
+    }
+}
 
 public sealed class SlickCaneProjectile_Tweak : CAProjectileTweak<SlickCaneProjectile>
 {

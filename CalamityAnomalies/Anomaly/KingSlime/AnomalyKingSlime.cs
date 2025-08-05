@@ -273,7 +273,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
 
     public override int ApplyingType => NPCID.KingSlime;
 
-    public override bool AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC type) => type switch
+    public override bool AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC method) => method switch
     {
         OrigMethodType_CalamityGlobalNPC.PreAI => false,
         OrigMethodType_CalamityGlobalNPC.GetAlpha => false,
@@ -298,9 +298,9 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
     }
     #endregion Defaults
 
-    #region Active
+    #region Lifetime
     public override bool CheckActive() => false;
-    #endregion Active
+    #endregion Lifetime
 
     #region AI
     public override bool PreAI()
@@ -365,7 +365,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         return false;
     }
 
-    private void SelectNextAttack(int initialAITimer1 = 0)
+    public void SelectNextAttack(int initialAITimer1 = 0)
     {
         ChangedVelocityDirectionDuringJump = 0;
         if (TeleportTimer > 1000f || !NPC.WithinRange(Target.Center, 3000f))
@@ -393,7 +393,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         Timer1 = initialAITimer1;
     }
 
-    private bool StopHorizontalMovement()
+    public bool StopHorizontalMovement()
     {
         switch (Math.Abs(NPC.velocity.X))
         {
@@ -408,7 +408,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         return false;
     }
 
-    private void MakeSlimeDust(int amount)
+    public void MakeSlimeDust(int amount)
     {
         for (int i = 0; i < amount; i++)
         {
@@ -424,7 +424,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         }
     }
 
-    private void Despawn()
+    public void Despawn()
     {
         StopHorizontalMovement(); //停止水平移动，避免奇怪的滑行现象
         NPC.dontTakeDamage = true;
@@ -439,7 +439,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         }
     }
 
-    private static void MakeJewelDust(NPC jewel, int amount)
+    public static void MakeJewelDust(NPC jewel, int amount)
     {
         short type = jewel.ModNPC switch
         {
@@ -469,12 +469,12 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         }
     }
 
-    private void ChangeScale() => NPC.BetterChangeScale(98, 92, MathHelper.Lerp(
+    public void ChangeScale() => NPC.BetterChangeScale(98, 92, MathHelper.Lerp(
             Data.MaxScale,
             Data.MinScale,
             OceanNPC.LifeRatioReverse) * TeleportScaleMultiplier * DespawnScaleMultiplier);
 
-    private void TrySpawnMinions()
+    public void TrySpawnMinions()
     {
         if (!TOWorld.GeneralClient)
             return;
@@ -561,7 +561,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         }
     }
 
-    private void SpawnSlimeCore(int type)
+    public void SpawnSlimeCore(int type)
     {
         int spawnZoneWidth = NPC.width - 32;
         int spawnZoneHeight = NPC.height - 32;
@@ -575,7 +575,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         });
     }
 
-    private void Jump()
+    public void Jump()
     {
         switch (CurrentAttackPhase)
         {
@@ -652,7 +652,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         }
     }
 
-    private Vector2 Jump_VelocityInitial => CurrentAttack switch
+    public Vector2 Jump_VelocityInitial => CurrentAttack switch
     {
         AttackType.NormalJump_Phase1 => new(
             MathHelper.Lerp(5f, 7.5f, OceanNPC.LifeRatioReverse) * NPC.direction, -7.5f * (1f + Math.Min(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 800f, 0.75f))),
@@ -663,7 +663,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         _ => Vector2.Zero
     };
 
-    private float Jump_VelocityXLimit => CurrentAttack switch
+    public float Jump_VelocityXLimit => CurrentAttack switch
     {
         AttackType.RapidJump_Phase1 => 18f,
         _ => ChangedVelocityDirectionDuringJump switch
@@ -674,7 +674,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         }
     };
 
-    private float Jump_VelocityXDelta => CurrentAttack switch
+    public float Jump_VelocityXDelta => CurrentAttack switch
     {
         AttackType.RapidJump_Phase1 => ChangedVelocityDirectionDuringJump switch
         {
@@ -690,7 +690,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         }
     };
 
-    private void Teleport()
+    public void Teleport()
     {
         NPC.damage = 0;
         switch (CurrentAttackPhase)

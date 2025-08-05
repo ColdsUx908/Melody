@@ -9,14 +9,14 @@ public sealed class CAGlobalNPC : GlobalNPC, IResourceLoader
     private const int AISlot3 = 132;
     private const int AISlot4 = 33;
 
-    public Union32[] AnomalyAI32 { get; } = new Union32[AISlot];
-    public Union64[] AnomalyAI64 { get; } = new Union64[AISlot2];
+    public readonly Union32[] AnomalyAI32 = new Union32[AISlot];
+    public readonly Union64[] AnomalyAI64 = new Union64[AISlot2];
 
     public ref Bits32 AIChanged32 => ref AnomalyAI32[^1].bits;
     public ref Bits64 AIChanged64 => ref AnomalyAI64[^1].bits;
 
-    private Union32[] InternalAnomalyAI32 { get; } = new Union32[AISlot3];
-    private Union64[] InternalAnomalyAI64 { get; } = new Union64[AISlot4];
+    private readonly Union32[] InternalAnomalyAI32 = new Union32[AISlot3];
+    private readonly Union64[] InternalAnomalyAI64 = new Union64[AISlot4];
 
     private ref Bits32 InternalAIChanged32 => ref InternalAnomalyAI32[^4].bits;
     private ref Bits32 InternalAIChanged32_2 => ref InternalAnomalyAI32[^3].bits;

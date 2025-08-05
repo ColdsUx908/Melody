@@ -25,7 +25,7 @@ public sealed record CommandCallInfo(CommandType CommandType, string Command, Co
 
 public sealed class CommandArgumentException : Exception
 {
-    public CommandCallInfo CallInfo { get; }
+    public readonly CommandCallInfo CallInfo;
 
     public CommandArgumentException(CommandCallInfo callInfo) : base() => CallInfo = callInfo;
 
@@ -86,7 +86,7 @@ public sealed class TOCommandHelper : IResourceLoader, ILocalizationPrefix
 {
     internal static TOCommandHelper Instance { get; private set; }
 
-    internal static Dictionary<string, TOCommand> CommandSet { get; } = [];
+    internal static readonly Dictionary<string, TOCommand> CommandSet = [];
 
     public string LocalizationPrefix => TOMain.ModLocalizationPrefix + "Commands.GeneralCommand.";
 

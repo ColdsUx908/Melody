@@ -24,3 +24,8 @@ AnomalyMode: {
 		Did you try it?
 		'''
 }
+
+BetterBossHealthBar: {
+	BrainofCthulhuExtension: ""
+	CeaselessVoidExtension: (Dark Energy left: {0}, {1} / {2})
+}

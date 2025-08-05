@@ -21,7 +21,7 @@ public sealed class LoadPriorityAttribute : Attribute
     /// 加载优先级。
     /// <remarks>值越大，加载越早。</remarks>
     /// </summary>
-    public double Priority { get; }
+    public readonly double Priority;
 
     public LoadPriorityAttribute(double priority) => Priority = priority;
 }

@@ -17,17 +17,17 @@ public record TOModReferenceContainer
     /// <summary>
     /// Mod内部名。
     /// </summary>
-    public string Name { get; } = "";
+    public readonly string Name = "";
 
     /// <summary>
     /// Mod是否已加载。
     /// </summary>
-    public bool IsLoaded { get; } = false;
+    public readonly bool IsLoaded = false;
 
     /// <summary>
     /// Mod实例。若 <see cref="IsLoaded"/> 为 <see langword="false"/>，值为 <see langword="null"/>。
     /// </summary>
-    public Mod Mod { get; } = null;
+    public readonly Mod Mod = null;
 }
 
 public sealed class TOModReferences : IResourceLoader

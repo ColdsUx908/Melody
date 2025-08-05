@@ -1,13 +1,16 @@
 ﻿using System.Collections;
-using MonoMod.Utils;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
 using Transoceanic.RuntimeEditing;
 
-namespace Transoceanic.Data;
+namespace Transoceanic.GlobalInstances;
 
 #region Base
+/// <summary>
+/// 标识某个继承自 <see cref="EntityBehavior{TEntity}"/> 的类是关键类。
+/// <br/>在 <see cref="SimpleEntityBehaviorSet{TEntity, TBehavior}.Initialize(IEnumerable{TBehavior})"/> 逻辑中，具有此特性的类会无条件捕获几乎所有方法。
+/// </summary>
 [AttributeUsage(AttributeTargets.Class, Inherited = true)]
 public sealed class CriticalBehaviorAttribute : Attribute { }
 
@@ -18,7 +21,7 @@ public abstract class EntityBehavior<TEntity> where TEntity : Entity
     /// <summary>
     /// 优先级，越大越先应用。
     /// </summary>
-    public virtual decimal Priority { get; } = 0m;
+    public virtual decimal Priority => 0m;
 
     public virtual bool ShouldProcess => true;
 
@@ -50,43 +53,24 @@ public abstract class SingleEntityBehavior<TEntity> : EntityBehavior<TEntity> wh
     public abstract int ApplyingType { get; }
 }
 
-public class GeneralEntityBehaviorSet<TEntity, TBehavior>
+public class SimpleEntityBehaviorSet<TEntity, TBehavior> : IEnumerable<TBehavior>
     where TEntity : Entity
-    where TBehavior : GeneralEntityBehavior<TEntity>
+    where TBehavior : EntityBehavior<TEntity>
 {
-    private bool _initialized = false;
-    private readonly Dictionary<string, List<TBehavior>> _data = [];
+    protected readonly Dictionary<string, List<TBehavior>> _data = [];
+
+    public void Clear()
+    {
+        foreach ((string _, List<TBehavior> behaviors) in _data)
+            behaviors.Clear();
+        _data.Clear();
+    }
 
     public void FillSet() => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>());
 
-    public void FillSet<T>() where T : Mod => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>().Where(b => b.Mod is T));
-
     public void FillSet(Assembly assemblyToSearch) => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>(assemblyToSearch));
 
-    private void Initialize(IEnumerable<TBehavior> behaviors)
-    {
-        foreach ((TBehavior behavior, HashSet<string> behaviorMethods) in
-            behaviors.OrderByDescending(b => b.Priority).Select(b =>
-            {
-                Type type = b.GetType();
-                return (b, (type.HasAttribute<CriticalBehaviorAttribute>() ? type.GetMethodNamesExceptObject(TOReflectionUtils.UniversalBindingFlags) : type.GetOverrideMethodNames(TOReflectionUtils.UniversalBindingFlags)).ToHashSet());
-            }))
-        {
-            foreach (string method in behaviorMethods)
-            {
-                if (_data.TryGetValue(method, out List<TBehavior> behaviorList))
-                    _data[method].Add(behavior);
-                else
-                    _data[method] = [behavior];
-            }
-        }
-        if (_initialized)
-        {
-            foreach (string methodName in _data.Keys)
-                _data[methodName] = [.. _data[methodName].Distinct().OrderByDescending(b => b.Priority)];
-        }
-        _initialized = true;
-    }
+    public void FillSet<T>() where T : Mod => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>().Where(b => b.Mod is T));
 
     public IEnumerable<TBehavior> GetBehaviors([CallerMemberName] string methodName = null!)
     {
@@ -94,6 +78,19 @@ public class GeneralEntityBehaviorSet<TEntity, TBehavior>
         {
             foreach (TBehavior behavior in behaviors)
             {
+                if (behavior.ShouldProcess)
+                    yield return behavior;
+            }
+        }
+    }
+
+    public IEnumerable<TBehavior> GetBehaviors(TEntity entity, [CallerMemberName] string methodName = null!)
+    {
+        if (_data.TryGetValue(methodName, out List<TBehavior> behaviors))
+        {
+            foreach (TBehavior behavior in behaviors)
+            {
+                behavior.Connect(entity);
                 if (behavior.ShouldProcess)
                     yield return behavior;
             }
@@ -108,19 +105,6 @@ public class GeneralEntityBehaviorSet<TEntity, TBehavior>
             {
                 if (behavior is T typedBehavior && typedBehavior.ShouldProcess)
                     yield return typedBehavior;
-            }
-        }
-    }
-
-    public IEnumerable<TBehavior> GetBehaviors(TEntity entity, [CallerMemberName] string methodName = null!)
-    {
-        if (_data.TryGetValue(methodName, out List<TBehavior> behaviors))
-        {
-            foreach (TBehavior behavior in behaviors)
-            {
-                behavior.Connect(entity);
-                if (behavior.ShouldProcess)
-                    yield return behavior;
             }
         }
     }
@@ -141,8 +125,42 @@ public class GeneralEntityBehaviorSet<TEntity, TBehavior>
         }
     }
 
-    public void Clear() => _data.Clear();
+    internal void Initialize(IEnumerable<TBehavior> behaviors)
+    {
+        foreach ((TBehavior behavior, HashSet<string> behaviorMethods) in
+            behaviors.Select(b =>
+            {
+                Type type = b.GetType();
+                return (b, (type.HasAttribute<CriticalBehaviorAttribute>() ? type.GetMethodNamesExceptObject(TOReflectionUtils.UniversalBindingFlags) : type.GetOverrideMethodNames(TOReflectionUtils.UniversalBindingFlags)).ToHashSet());
+            }))
+        {
+            foreach (string method in behaviorMethods)
+            {
+                if (_data.TryGetValue(method, out List<TBehavior> behaviorList))
+                    behaviorList.Add(behavior);
+                else
+                    _data[method] = [behavior];
+            }
+        }
+        foreach (string methodName in _data.Keys)
+            _data[methodName] = [.. _data[methodName].Distinct().OrderByDescending(b => b.Priority)];
+    }
+
+    public IEnumerator<TBehavior> GetEnumerator()
+    {
+        foreach (var behaviors in _data.Values)
+        {
+            foreach (var behavior in behaviors)
+                yield return behavior;
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
+
+public class GeneralEntityBehaviorSet<TEntity, TBehavior> : SimpleEntityBehaviorSet<TEntity, TBehavior> where TEntity : Entity
+    where TBehavior : GeneralEntityBehavior<TEntity>
+{ }
 
 public class GlobalEntityBehaviorSet<TEntity, TBehavior> : GeneralEntityBehaviorSet<TEntity, TBehavior>
     where TEntity : Entity
@@ -153,19 +171,7 @@ public class SingleEntityBehaviorSet<TEntity, TBehavior> : IEnumerable<TBehavior
     where TEntity : Entity
     where TBehavior : SingleEntityBehavior<TEntity>
 {
-    private bool _initialized = false;
-    private readonly Dictionary<int, List<(TBehavior behavior, HashSet<string> behaviorMethods)>> _data = [];
-
-    public IEnumerator<TBehavior> GetEnumerator()
-    {
-        foreach (List<(TBehavior behavior, HashSet<string> behaviorMethods)> behaviors in _data.Values)
-        {
-            foreach ((TBehavior behavior, HashSet<string> _) in behaviors)
-                yield return behavior;
-        }
-    }
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    private readonly Dictionary<int, SimpleEntityBehaviorSet<TEntity, TBehavior>> _data = [];
 
     /// <summary>
     /// 尝试获取指定实体的行为实例。
@@ -177,13 +183,10 @@ public class SingleEntityBehaviorSet<TEntity, TBehavior> : IEnumerable<TBehavior
     /// <returns></returns>
     public bool TryGetBehavior(TEntity entity, string methodName, [NotNullWhen(true)] out TBehavior behavior)
     {
-        if (_data.TryGetValue(entity.EntityType, out List<(TBehavior behavior, HashSet<string> behaviorMethods)> behaviorList))
+        if (_data.TryGetValue(entity.EntityType, out SimpleEntityBehaviorSet<TEntity, TBehavior> set))
         {
-            foreach ((TBehavior temp, HashSet<string> behaviorMethods) in behaviorList)
+            foreach (TBehavior temp in set.GetBehaviors(methodName))
             {
-                if (!behaviorMethods.Contains(methodName))
-                    continue;
-
                 temp.Connect(entity);
                 if (temp.ShouldProcess)
                 {
@@ -202,41 +205,41 @@ public class SingleEntityBehaviorSet<TEntity, TBehavior> : IEnumerable<TBehavior
 
     public void FillSet(Assembly assemblyToSearch) => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>(assemblyToSearch));
 
-    private void Initialize(IEnumerable<TBehavior> behaviors)
+    internal void Initialize(IEnumerable<TBehavior> behaviors)
     {
-        _data.AddRange(behaviors.GroupBy(b => b.ApplyingType).ToDictionary(g => g.Key, g =>
-            g.OrderByDescending(b => b.Priority).Select(b =>
-            {
-                Type type = b.GetType();
-                return (b, (type.HasAttribute<CriticalBehaviorAttribute>() ? type.GetMethodNamesExceptObject(TOReflectionUtils.UniversalBindingFlags) : type.GetOverrideMethodNames(TOReflectionUtils.UniversalBindingFlags)).ToHashSet());
-            }).ToList()));
-        if (_initialized)
+        foreach (IGrouping<int, TBehavior> group in (IEnumerable<IGrouping<int, TBehavior>>)behaviors.GroupBy(b => b.ApplyingType))
         {
-            foreach (int entityType in _data.Keys)
-                _data[entityType] = [.. _data[entityType].Distinct().OrderByDescending(b => b.behavior.Priority)];
+            _data[group.Key] = [];
+            _data[group.Key].Initialize(group);
         }
-        _initialized = true;
     }
 
     public void Clear()
     {
-        foreach ((_, List<(TBehavior behaviorInstance, HashSet<string> behaviorMethods)> behaviorList) in _data)
-        {
-            foreach ((_, HashSet<string> behaviorMethods) in behaviorList)
-                behaviorMethods.Clear();
-            behaviorList.Clear();
-        }
+        foreach (SimpleEntityBehaviorSet<TEntity, TBehavior> set in _data.Values)
+            set.Clear();
         _data.Clear();
     }
+
+    public IEnumerator<TBehavior> GetEnumerator()
+    {
+        foreach (var behaviors in _data.Values)
+        {
+            foreach (TBehavior behavior in behaviors)
+                yield return behavior;
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 #endregion Base
 
 #region General Behavior
 public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
 {
-    public Player Player { get; private set; } = null;
+    public Player Player { get; protected set; } = null;
 
-    public TOPlayer OceanPlayer { get; private set; } = null;
+    public TOPlayer OceanPlayer { get; protected set; } = null;
 
     public override void Connect(Player player)
     {
@@ -873,6 +876,7 @@ public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
     /// </summary>
     /// <param name="target"></param>
     /// <returns>True by default</returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool CanHitNPC(NPC target) => true;
 
     /// <summary>
@@ -886,6 +890,7 @@ public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
     /// <returns>
     /// Return true to allow colliding the target, return false to block the player weapon from colliding the target, and return null to use the vanilla code for whether the target can be colliding by melee weapon. Returns null by default.
     /// </returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, NPC target) => null;
 
     /// <summary>
@@ -912,6 +917,7 @@ public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
     /// <param name="item"></param>
     /// <param name="target"></param>
     /// <returns></returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool? CanHitNPCWithItem(Item item, NPC target) => null;
 
     /// <summary>
@@ -940,6 +946,7 @@ public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
     /// <param name="proj"></param>
     /// <param name="target"></param>
     /// <returns></returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool? CanHitNPCWithProj(Projectile proj, NPC target) => null;
 
     /// <summary>
@@ -968,6 +975,7 @@ public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
     /// <param name="item"></param>
     /// <param name="target"></param>
     /// <returns></returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool CanHitPvp(Item item, Player target) => true;
 
     /// <summary>
@@ -977,6 +985,7 @@ public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
     /// <param name="proj"></param>
     /// <param name="target"></param>
     /// <returns></returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool CanHitPvpWithProj(Projectile proj, Player target) => true;
 
     /// <summary>
@@ -986,6 +995,7 @@ public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
     /// <param name="npc"></param>
     /// <param name="cooldownSlot"></param>
     /// <returns></returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool CanBeHitByNPC(NPC npc, ref int cooldownSlot) => true;
 
     /// <summary>
@@ -1006,6 +1016,7 @@ public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
     /// </summary>
     /// <param name="proj"></param>
     /// <returns></returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool CanBeHitByProjectile(Projectile proj) => true;
 
     /// <summary>
@@ -1551,6 +1562,7 @@ public abstract class GlobalNPCBehavior : GlobalEntityBehavior<NPC>
     /// <param name="target"></param>
     /// <param name="cooldownSlot"></param>
     /// <returns></returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot) => true;
 
     /// <summary>
@@ -1579,6 +1591,7 @@ public abstract class GlobalNPCBehavior : GlobalEntityBehavior<NPC>
     /// <param name="npc"></param>
     /// <param name="target"></param>
     /// <returns></returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool CanHitNPC(NPC npc, NPC target) => true;
 
     /// <summary>
@@ -1588,6 +1601,7 @@ public abstract class GlobalNPCBehavior : GlobalEntityBehavior<NPC>
     /// <param name="npc"></param>
     /// <param name="attacker"></param>
     /// <returns></returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool CanBeHitByNPC(NPC npc, NPC attacker) => true;
 
     /// <summary>
@@ -1617,6 +1631,7 @@ public abstract class GlobalNPCBehavior : GlobalEntityBehavior<NPC>
     /// <param name="player"></param>
     /// <param name="item"></param>
     /// <returns></returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool? CanBeHitByItem(NPC npc, Player player, Item item) => null;
 
     /// <summary>
@@ -1631,6 +1646,7 @@ public abstract class GlobalNPCBehavior : GlobalEntityBehavior<NPC>
     /// <returns>
     /// Return true to allow colliding with the melee attack, return false to block the weapon from colliding with the NPC, and return null to use the vanilla code for whether the attack can be colliding. Returns null by default.
     /// </returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool? CanCollideWithPlayerMeleeAttack(NPC npc, Player player, Item item, Rectangle meleeAttackHitbox) => null;
 
     /// <summary>
@@ -1662,6 +1678,7 @@ public abstract class GlobalNPCBehavior : GlobalEntityBehavior<NPC>
     /// <param name="npc"></param>
     /// <param name="projectile"></param>
     /// <returns></returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool? CanBeHitByProjectile(NPC npc, Projectile projectile) => null;
 
     /// <summary>
@@ -2193,6 +2210,7 @@ public abstract class GlobalProjectileBehavior : GlobalEntityBehavior<Projectile
     /// <param name="projectile"></param>
     /// <param name="target"></param>
     /// <returns></returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool? CanHitNPC(Projectile projectile, NPC target) => null;
 
     /// <summary>
@@ -2221,6 +2239,7 @@ public abstract class GlobalProjectileBehavior : GlobalEntityBehavior<Projectile
     /// <param name="projectile"></param>
     /// <param name="target"></param>
     /// <returns></returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool CanHitPvp(Projectile projectile, Player target) => true;
 
     /// <summary>
@@ -2230,6 +2249,7 @@ public abstract class GlobalProjectileBehavior : GlobalEntityBehavior<Projectile
     /// <param name="projectile"></param>
     /// <param name="target"></param>
     /// <returns></returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool CanHitPlayer(Projectile projectile, Player target) => true;
 
     /// <summary>
@@ -2258,6 +2278,7 @@ public abstract class GlobalProjectileBehavior : GlobalEntityBehavior<Projectile
     /// <param name="projHitbox"></param>
     /// <param name="targetHitbox"></param>
     /// <returns></returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool? Colliding(Projectile projectile, Rectangle projHitbox, Rectangle targetHitbox) => null;
 
     /// <summary>
@@ -2768,6 +2789,7 @@ public abstract class GlobalItemBehavior : GlobalEntityBehavior<Item>
     /// Allows you to determine whether a melee weapon can hit the given NPC when swung. Return true to allow hitting the target, return false to block the weapon from hitting the target, and return null to use the vanilla code for whether the target can be hit. Returns null by default.
     /// <para/> Called on the client hitting the target.
     /// </summary>
+    [Obsolete("Poor performance.", true)]
     public virtual bool? CanHitNPC(Item item, Player player, NPC target) => null;
 
     /// <summary>
@@ -2782,6 +2804,7 @@ public abstract class GlobalItemBehavior : GlobalEntityBehavior<Item>
     /// <returns>
     /// Return true to allow colliding with target, return false to block the weapon from colliding with target, and return null to use the vanilla code for whether the target can be colliding. Returns null by default.
     /// </returns>
+    [Obsolete("Poor performance.", true)]
     public virtual bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, Player player, NPC target) => null;
 
     /// <summary>
@@ -2800,6 +2823,7 @@ public abstract class GlobalItemBehavior : GlobalEntityBehavior<Item>
     /// Allows you to determine whether a melee weapon can hit the given opponent player when swung. Return false to block the weapon from hitting the target. Returns true by default.
     /// <para/> Called on the client hitting the target.
     /// </summary>
+    [Obsolete("Poor performance.", true)]
     public virtual bool CanHitPvp(Item item, Player player, Player target) => true;
 
     /// <summary>
@@ -3350,9 +3374,9 @@ public abstract class TOGlobalItemBehavior : GlobalItemBehavior
 #region Single Behavior
 public abstract class SingleNPCBehavior : SingleEntityBehavior<NPC>
 {
-    public NPC NPC { get; private set; } = null;
+    public NPC NPC { get; protected set; } = null;
 
-    public TOGlobalNPC OceanNPC { get; private set; } = null;
+    public TOGlobalNPC OceanNPC { get; protected set; } = null;
 
     public Player Target => Main.player[NPC.target];
 
@@ -3953,11 +3977,11 @@ public abstract class SingleNPCBehavior : SingleEntityBehavior<NPC>
 
 public abstract class SingleProjectileBehavior : SingleEntityBehavior<Projectile>
 {
-    public Projectile Projectile { get; private set; } = null;
+    public Projectile Projectile { get; protected set; } = null;
 
-    public TOGlobalProjectile OceanProjectile { get; private set; } = null;
+    public TOGlobalProjectile OceanProjectile { get; protected set; } = null;
 
-    public Player Owner { get; private set; } = null;
+    public Player Owner { get; protected set; } = null;
 
     public override void Connect(Projectile projectile)
     {
@@ -4215,9 +4239,9 @@ public abstract class SingleProjectileBehavior : SingleEntityBehavior<Projectile
 
 public abstract class SingleItemBehavior : SingleEntityBehavior<Item>
 {
-    public Item Item { get; private set; } = null;
+    public Item Item { get; protected set; } = null;
 
-    public TOGlobalItem OceanItem { get; private set; } = null;
+    public TOGlobalItem OceanItem { get; protected set; } = null;
 
     public override void Connect(Item item)
     {
@@ -5061,6 +5085,7 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
             npcBehavior.HitEffect(hit);
     }
 
+    [Obsolete("Poor performance.", true)]
     public override bool? CanBeHitByItem(NPC npc, Player player, Item item)
     {
         if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
@@ -5072,6 +5097,7 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
         return null;
     }
 
+    [Obsolete("Poor performance.", true)]
     public override bool? CanCollideWithPlayerMeleeAttack(NPC npc, Player player, Item item, Rectangle meleeAttackHitbox)
     {
         if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
@@ -5095,6 +5121,7 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
             npcBehavior.OnHitByItem(player, item, hit, damageDone);
     }
 
+    [Obsolete("Poor performance.", true)]
     public override bool? CanBeHitByProjectile(NPC npc, Projectile projectile)
     {
         if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
@@ -5118,6 +5145,7 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
             npcBehavior.OnHitByProjectile(projectile, hit, damageDone);
     }
 
+    [Obsolete("Poor performance.", true)]
     public override bool CanBeHitByNPC(NPC npc, NPC attacker)
     {
         if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
@@ -5134,6 +5162,7 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
             npcBehavior.ModifyIncomingHit(ref modifiers);
     }
 
+    [Obsolete("Poor performance.", true)]
     public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot)
     {
         if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
@@ -5156,6 +5185,7 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
             npcBehavior.OnHitPlayer(target, hurtInfo);
     }
 
+    [Obsolete("Poor performance.", true)]
     public override bool CanHitNPC(NPC npc, NPC target)
     {
         if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
@@ -5588,6 +5618,7 @@ public abstract class SingleProjectileBehaviorHandler<TProjectileBehavior> : Glo
             projectileBehavior.ModifyDamageHitbox(ref hitbox);
     }
 
+    [Obsolete("Poor performance.", true)]
     public override bool? CanHitNPC(Projectile projectile, NPC target)
     {
         if (TryGetBehavior(projectile, out TProjectileBehavior projectileBehavior))
@@ -5611,6 +5642,7 @@ public abstract class SingleProjectileBehaviorHandler<TProjectileBehavior> : Glo
             projectileBehavior.OnHitNPC(target, hit, damageDone);
     }
 
+    [Obsolete("Poor performance.", true)]
     public override bool CanHitPvp(Projectile projectile, Player target)
     {
         if (TryGetBehavior(projectile, out TProjectileBehavior projectileBehavior))
@@ -5621,6 +5653,7 @@ public abstract class SingleProjectileBehaviorHandler<TProjectileBehavior> : Glo
         return true;
     }
 
+    [Obsolete("Poor performance.", true)]
     public override bool CanHitPlayer(Projectile projectile, Player target)
     {
         if (TryGetBehavior(projectile, out TProjectileBehavior projectileBehavior))
@@ -5643,6 +5676,7 @@ public abstract class SingleProjectileBehaviorHandler<TProjectileBehavior> : Glo
             projectileBehavior.OnHitPlayer(target, info);
     }
 
+    [Obsolete("Poor performance.", true)]
     public override bool? Colliding(Projectile projectile, Rectangle projHitbox, Rectangle targetHitbox)
     {
         if (TryGetBehavior(projectile, out TProjectileBehavior projectileBehavior))
@@ -6129,6 +6163,7 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
     #endregion ModifyStats
 
     #region Hit
+    [Obsolete("Poor performance.", true)]
     public override bool? CanHitNPC(Item item, Player player, NPC target)
     {
         if (TryGetBehavior(item, out TItemBehavior itemBehavior))
@@ -6140,6 +6175,7 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
         return null;
     }
 
+    [Obsolete("Poor performance.", true)]
     public override bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, Player player, NPC target)
     {
         if (TryGetBehavior(item, out TItemBehavior itemBehavior))
@@ -6163,6 +6199,7 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
             itemBehavior.OnHitNPC(player, target, hit, damageDone);
     }
 
+    [Obsolete("Poor performance.", true)]
     public override bool CanHitPvp(Item item, Player player, Player target)
     {
         if (TryGetBehavior(item, out TItemBehavior itemBehavior))
@@ -6404,7 +6441,7 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
 #region General Behavior Handler
 public sealed class PlayerBehaviorHandler : ModPlayer, IResourceLoader
 {
-    public static GeneralEntityBehaviorSet<Player, PlayerBehavior> BehaviorSet { get; } = new();
+    public static readonly GeneralEntityBehaviorSet<Player, PlayerBehavior> BehaviorSet = new();
 
     public override void SetStaticDefaults()
     {
@@ -6923,6 +6960,7 @@ public sealed class PlayerBehaviorHandler : ModPlayer, IResourceLoader
             behavior.OnHitAnything(x, y, victim);
     }
 
+    /*
     public override bool CanHitNPC(NPC target)
     {
         bool result = true;
@@ -6940,7 +6978,7 @@ public sealed class PlayerBehaviorHandler : ModPlayer, IResourceLoader
                 return result;
         }
         return null;
-    }
+    }*/
 
     public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
     {
@@ -6954,6 +6992,7 @@ public sealed class PlayerBehaviorHandler : ModPlayer, IResourceLoader
             behavior.OnHitNPC(target, hit, damageDone);
     }
 
+    /*
     public override bool? CanHitNPCWithItem(Item item, NPC target)
     {
         foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
@@ -6963,7 +7002,7 @@ public sealed class PlayerBehaviorHandler : ModPlayer, IResourceLoader
                 return result;
         }
         return null;
-    }
+    }*/
 
     public override void ModifyHitNPCWithItem(Item item, NPC target, ref NPC.HitModifiers modifiers)
     {
@@ -6977,6 +7016,7 @@ public sealed class PlayerBehaviorHandler : ModPlayer, IResourceLoader
             behavior.OnHitNPCWithItem(item, target, hit, damageDone);
     }
 
+    /*
     public override bool? CanHitNPCWithProj(Projectile proj, NPC target)
     {
         foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
@@ -6986,7 +7026,7 @@ public sealed class PlayerBehaviorHandler : ModPlayer, IResourceLoader
                 return result;
         }
         return null;
-    }
+    }*/
 
     public override void ModifyHitNPCWithProj(Projectile proj, NPC target, ref NPC.HitModifiers modifiers)
     {
@@ -7000,6 +7040,7 @@ public sealed class PlayerBehaviorHandler : ModPlayer, IResourceLoader
             behavior.OnHitNPCWithProj(proj, target, hit, damageDone);
     }
 
+    /*
     public override bool CanHitPvp(Item item, Player target)
     {
         bool result = true;
@@ -7022,7 +7063,7 @@ public sealed class PlayerBehaviorHandler : ModPlayer, IResourceLoader
         foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
             result &= behavior.CanBeHitByNPC(npc, ref cooldownSlot);
         return result;
-    }
+    }*/
 
     public override void ModifyHitByNPC(NPC npc, ref Player.HurtModifiers modifiers)
     {
@@ -7036,13 +7077,14 @@ public sealed class PlayerBehaviorHandler : ModPlayer, IResourceLoader
             behavior.OnHitByNPC(npc, hurtInfo);
     }
 
+    /*
     public override bool CanBeHitByProjectile(Projectile proj)
     {
         bool result = true;
         foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
             result &= behavior.CanBeHitByProjectile(proj);
         return result;
-    }
+    }*/
 
     public override void ModifyHitByProjectile(Projectile proj, ref Player.HurtModifiers modifiers)
     {
@@ -7309,7 +7351,7 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC, IResourceLoader
 {
     public override bool InstancePerEntity => true;
 
-    public static GlobalEntityBehaviorSet<NPC, GlobalNPCBehavior> BehaviorSet { get; } = new();
+    public static readonly GlobalEntityBehaviorSet<NPC, GlobalNPCBehavior> BehaviorSet = new();
 
     public override void SetStaticDefaults()
     {
@@ -7516,13 +7558,14 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC, IResourceLoader
             behavior.ModifyGlobalLoot(globalLoot);
     }
 
+    /*
     public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot)
     {
         bool result = true;
         foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
             result &= behavior.CanHitPlayer(npc, target, ref cooldownSlot);
         return result;
-    }
+    }*/
 
     public override void ModifyHitPlayer(NPC npc, Player target, ref Player.HurtModifiers modifiers)
     {
@@ -7536,6 +7579,7 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC, IResourceLoader
             behavior.OnHitPlayer(npc, target, hurtInfo);
     }
 
+    /*
     public override bool CanHitNPC(NPC npc, NPC target)
     {
         bool result = true;
@@ -7550,7 +7594,7 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC, IResourceLoader
         foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
             result &= behavior.CanBeHitByNPC(npc, attacker);
         return result;
-    }
+    }*/
 
     public override void ModifyHitNPC(NPC npc, NPC target, ref NPC.HitModifiers modifiers)
     {
@@ -7564,6 +7608,7 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC, IResourceLoader
             behavior.OnHitNPC(npc, target, hit);
     }
 
+    /*
     public override bool? CanBeHitByItem(NPC npc, Player player, Item item)
     {
         foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
@@ -7584,7 +7629,7 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC, IResourceLoader
                 return result;
         }
         return null;
-    }
+    }*/
 
     public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
     {
@@ -7598,6 +7643,7 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC, IResourceLoader
             behavior.OnHitByItem(npc, player, item, hit, damageDone);
     }
 
+    /*
     public override bool? CanBeHitByProjectile(NPC npc, Projectile projectile)
     {
         foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
@@ -7607,7 +7653,7 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC, IResourceLoader
                 return result;
         }
         return null;
-    }
+    }*/
 
     public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
     {
@@ -7917,7 +7963,7 @@ public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile, IResourc
 {
     public override bool InstancePerEntity => true;
 
-    public static GlobalEntityBehaviorSet<Projectile, GlobalProjectileBehavior> BehaviorSet { get; } = new();
+    public static readonly GlobalEntityBehaviorSet<Projectile, GlobalProjectileBehavior> BehaviorSet = new();
 
     public override void SetStaticDefaults()
     {
@@ -8043,7 +8089,7 @@ public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile, IResourc
 
     public override bool MinionContactDamage(Projectile projectile)
     {
-        bool result = false;  // 默认值为false，使用或运算
+        bool result = false;
         foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
             result |= behavior.MinionContactDamage(projectile);
         return result;
@@ -8055,6 +8101,7 @@ public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile, IResourc
             behavior.ModifyDamageHitbox(projectile, ref hitbox);
     }
 
+    /*
     public override bool? CanHitNPC(Projectile projectile, NPC target)
     {
         foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
@@ -8064,7 +8111,7 @@ public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile, IResourc
                 return result;
         }
         return null;
-    }
+    }*/
 
     public override void ModifyHitNPC(Projectile projectile, NPC target, ref NPC.HitModifiers modifiers)
     {
@@ -8078,6 +8125,7 @@ public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile, IResourc
             behavior.OnHitNPC(projectile, target, hit, damageDone);
     }
 
+    /*
     public override bool CanHitPvp(Projectile projectile, Player target)
     {
         bool result = true;
@@ -8092,7 +8140,7 @@ public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile, IResourc
         foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
             result &= behavior.CanHitPlayer(projectile, target);
         return result;
-    }
+    }*/
 
     public override void ModifyHitPlayer(Projectile projectile, Player target, ref Player.HurtModifiers modifiers)
     {
@@ -8106,6 +8154,7 @@ public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile, IResourc
             behavior.OnHitPlayer(projectile, target, info);
     }
 
+    /*
     public override bool? Colliding(Projectile projectile, Rectangle projHitbox, Rectangle targetHitbox)
     {
         foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
@@ -8115,7 +8164,7 @@ public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile, IResourc
                 return result;
         }
         return null;
-    }
+    }*/
 
     public override Color? GetAlpha(Projectile projectile, Color lightColor)
     {
@@ -8229,7 +8278,7 @@ public sealed class GlobalItemBehaviorHandler : GlobalItem, IResourceLoader
 {
     public override bool InstancePerEntity => true;
 
-    public static GlobalEntityBehaviorSet<Item, GlobalItemBehavior> BehaviorSet { get; } = new();
+    public static readonly GlobalEntityBehaviorSet<Item, GlobalItemBehavior> BehaviorSet = new();
 
     public override void SetStaticDefaults()
     {
@@ -8546,6 +8595,7 @@ public sealed class GlobalItemBehaviorHandler : GlobalItem, IResourceLoader
             behavior.ModifyItemScale(item, player, ref scale);
     }
 
+    /*
     public override bool? CanHitNPC(Item item, Player player, NPC target)
     {
         foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
@@ -8566,7 +8616,7 @@ public sealed class GlobalItemBehaviorHandler : GlobalItem, IResourceLoader
                 return result;
         }
         return null;
-    }
+    }*/
 
     public override void ModifyHitNPC(Item item, Player player, NPC target, ref NPC.HitModifiers modifiers)
     {
@@ -8580,13 +8630,14 @@ public sealed class GlobalItemBehaviorHandler : GlobalItem, IResourceLoader
             behavior.OnHitNPC(item, player, target, hit, damageDone);
     }
 
+    /*
     public override bool CanHitPvp(Item item, Player player, Player target)
     {
         bool result = true;
         foreach (GlobalItemBehavior behavior in BehaviorSet.GetBehaviors())
             result &= behavior.CanHitPvp(item, player, target);
         return result;
-    }
+    }*/
 
     public override void ModifyHitPvp(Item item, Player player, Player target, ref Player.HurtModifiers modifiers)
     {

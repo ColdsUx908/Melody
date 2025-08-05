@@ -5,12 +5,12 @@ public readonly struct TerrariaTime : IEquatable<TerrariaTime>
     /// <summary>
     /// 时间。
     /// </summary>
-    public double Time { get; } = 0.0;
+    public readonly double Time = 0.0;
 
     /// <summary>
     /// 月相。
     /// </summary>
-    public MoonPhase MoonPhase { get; } = MoonPhase.Full;
+    public readonly MoonPhase MoonPhase = MoonPhase.Full;
 
     /// <summary>
     /// 小时数。
@@ -90,7 +90,7 @@ public readonly struct TerrariaTime : IEquatable<TerrariaTime>
 
     public override int GetHashCode() => HashCode.Combine(Hour, Minute, Second, MoonPhase);
 
-    public override bool Equals(object obj) => obj is TerrariaTime other && Equals(other);
+    public override bool Equals([NotNullWhen(true)] object obj) => obj is TerrariaTime other && Equals(other);
 
     public bool Equals(TerrariaTime other) => Hour == other.Hour && Minute == other.Minute && Second == other.Second && MoonPhase == other.MoonPhase;
 
@@ -199,7 +199,7 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
 
     public override readonly int GetHashCode() => TotalTicks.GetHashCode();
 
-    public override readonly bool Equals(object obj) => obj is TerrariaTimer other && Equals(other);
+    public override readonly bool Equals([NotNullWhen(true)] object obj) => obj is TerrariaTimer other && Equals(other);
 
     public readonly bool Equals(TerrariaTimer other) => TotalTicks == other.TotalTicks;
 

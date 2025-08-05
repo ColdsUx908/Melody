@@ -93,4 +93,12 @@ public static partial class TOMathHelper
 
     public static float ClampMapReverse(float oldMin, float oldMax, float newMin, float newMax, float value) =>
         MapReverse(oldMin, oldMax, newMin, newMax, Math.Clamp(value, oldMin, oldMax));
+
+    public static int Min(int first, params ReadOnlySpan<int> values)
+    {
+        int result = first;
+        for (int i = 0; i < values.Length; i++)
+            result = Math.Min(result, values[i]);
+        return result;
+    }
 }

@@ -38,11 +38,11 @@ public sealed class CAPlayer : ModPlayer
     public PlayerDownedBossCalamity DownedBossCalamity = new();
     public PlayerDownedBossCalamity DownedBossAnomaly = new();
 
-    public Item LastYharimsGift = null;
 
     public GuaranteedBoolean YharimsGift = new();
-
-    public YharimsGift_CurrentBlessing YharimsGiftBuff { get; internal set; } = YharimsGift_CurrentBlessing.None;
+    public YharimsGift_CurrentBlessing YharimsGift_Blessing { get; internal set; } = YharimsGift_CurrentBlessing.None;
+    public readonly SmoothInt[] YharimsGift_Change = new SmoothInt[YharimsGift_Handler._totalBlessings];
+    public Item YharimsGift_Last = null;
 
     public override ModPlayer Clone(Player newEntity)
     {
@@ -51,9 +51,11 @@ public sealed class CAPlayer : ModPlayer
         clone.Debuff_DimensionalTorn = Debuff_DimensionalTorn;
         clone.DownedBossCalamity = DownedBossCalamity;
         clone.DownedBossAnomaly = DownedBossAnomaly;
-        clone.LastYharimsGift = LastYharimsGift;
+
         clone.YharimsGift = YharimsGift;
-        clone.YharimsGiftBuff = YharimsGiftBuff;
+        clone.YharimsGift_Blessing = YharimsGift_Blessing;
+        Array.Copy(YharimsGift_Change, clone.YharimsGift_Change, YharimsGift_Change.Length);
+        clone.YharimsGift_Last = YharimsGift_Last;
 
         return clone;
     }
@@ -70,7 +72,7 @@ public sealed class CAPlayer : ModPlayer
     {
         DownedBossCalamity.SaveData(tag, "PlayerDownedBossCalamity");
         DownedBossAnomaly.SaveData(tag, "PlayerDownedBossAnomaly");
-        tag["YharimsGiftBuff"] = (int)YharimsGiftBuff;
+        tag["YharimsGiftBuff"] = (int)YharimsGift_Blessing;
 
         base.SaveData(tag);
     }
@@ -79,7 +81,7 @@ public sealed class CAPlayer : ModPlayer
     {
         DownedBossCalamity.LoadData(tag, "PlayerDownedBossCalamity");
         DownedBossAnomaly.LoadData(tag, "PlayerDownedBossAnomaly");
-        YharimsGiftBuff = tag.TryGet("YharimsGiftBuff", out int yharimsGiftBuff) ? (YharimsGift_CurrentBlessing)yharimsGiftBuff : YharimsGift_CurrentBlessing.None;
+        YharimsGift_Blessing = tag.TryGet("YharimsGiftBuff", out int yharimsGiftBuff) ? (YharimsGift_CurrentBlessing)yharimsGiftBuff : YharimsGift_CurrentBlessing.None;
 
         base.LoadData(tag);
     }

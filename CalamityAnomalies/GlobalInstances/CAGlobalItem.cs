@@ -7,8 +7,8 @@ public sealed class CAGlobalItem : GlobalItem
     private const int dataSlot = 64;
     private const int dataSlot2 = 32;
 
-    public Union32[] Data { get; } = new Union32[dataSlot];
-    public Union64[] Data2 { get; } = new Union64[dataSlot2];
+    public readonly Union32[] Data = new Union32[dataSlot];
+    public readonly Union64[] Data2 = new Union64[dataSlot2];
 
     public CAItemTooltipModifier TooltipModifier { get; internal set; } = null;
 

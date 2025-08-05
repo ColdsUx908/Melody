@@ -7,14 +7,14 @@ public sealed class CAGlobalProjectile : GlobalProjectile
     private const int AISlot = 33;
     private const int AISlot2 = 17;
 
-    public Union32[] AnomalyAI32 { get; } = new Union32[AISlot];
-    public Union64[] AnomalyAI64 { get; } = new Union64[AISlot2];
+    public readonly Union32[] AnomalyAI32 = new Union32[AISlot];
+    public readonly Union64[] AnomalyAI64 = new Union64[AISlot2];
 
     public ref Bits32 AIChanged32 => ref AnomalyAI32[^1].bits;
     public ref Bits64 AIChanged64 => ref AnomalyAI64[^1].bits;
 
-    private Union32[] InternalAnomalyAI32 { get; } = new Union32[AISlot];
-    private Union64[] InternalAnomalyAI64 { get; } = new Union64[AISlot2];
+    private readonly Union32[] InternalAnomalyAI32 = new Union32[AISlot];
+    private readonly Union64[] InternalAnomalyAI64 = new Union64[AISlot2];
 
     private ref Bits32 InternalAIChanged32 => ref InternalAnomalyAI32[^1].bits;
     private ref Bits64 InternalAIChanged64 => ref InternalAnomalyAI64[^1].bits;

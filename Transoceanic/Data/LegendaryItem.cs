@@ -2,7 +2,7 @@
 
 public abstract class LegendaryItem : ModItem
 {
-    public bool HasPower { get; set; } = false;
+    public bool HasPower = false;
 
     public virtual void SetPhase(Player player) { }
 

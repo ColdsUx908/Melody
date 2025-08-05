@@ -23,7 +23,7 @@ public sealed class ElementalGauntlet_Tweak : CAItemTweak<ElementalGauntlet>, IL
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
         AnomalyItem.TooltipModifier
-            .ModifyWithCATweakColor(1, l => l.Text = this.GetTextValueWithPrefix("Tooltip1"))
-            .ModifyWithCATweakColor(3, l => l.Text = this.GetTextValueWithPrefix("Tooltip3"));
+            .ModifyWithCATweakColorDefault(this, 1)
+            .ModifyWithCATweakColorDefault(this, 3);
     }
 }

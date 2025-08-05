@@ -1,4 +1,5 @@
-﻿using CalamityMod.Dusts;
+﻿using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Dusts;
 using CalamityMod.Items.Weapons.Melee;
 using CalamityMod.Projectiles.Melee;
 using static CalamityMod.Items.Weapons.Melee.Exoblade;
@@ -11,6 +12,7 @@ namespace CalamityAnomalies.Tweaks._5_2_PostYharon;
  * 攻击速度提升15%。
  * 使用时间调整至10（原灾厄：49）（避免一些奇怪的卡手）。
  * 剑气额外更新提升至2（原灾厄：1），伤害倍率提升至0.4（原灾厄：0.35），追踪开始时间延迟降低至12（原灾厄：24），追踪距离提升至3200（原灾厄：1600），可穿墙追踪。
+ * 修复了剑气斩切的伤害丢失问题。
  * 冲刺后可进行强化左键攻击的时间提升至60（原灾厄：37），冲刺冷却调整至45（原灾厄：60）。
  * 冲刺命中时产生斩击的伤害倍率提升至2.2（原灾厄：1.75）。
  * 强化左键攻击大小乘数提升至2（原灾厄：1.5），命中时产生爆炸的伤害倍率提升至2.2（原灾厄：1.8），剑气命中时会产生伤害倍率为1的爆炸。
@@ -19,6 +21,11 @@ namespace CalamityAnomalies.Tweaks._5_2_PostYharon;
  * 强化左键攻击大小乘数提升至4，挥砍时生成6道产生爆炸的剑气，再以随机形式生成18道（四种形式均分80%概率）或36道（两种形式均分20%概率）不产生爆炸的剑气，爆炸倍率提升至1.5。
  * 在愚人节期间，强化剑气伤害x3，大小x1.5，速度x1.2。
  */
+
+public static class Exoblade_Handler
+{
+    public static bool IsGod(Player player) => player.name == "神光";
+}
 
 public sealed class Exoblade_Tweak : CAItemTweak<Exoblade>, ILocalizationPrefix
 {
@@ -44,7 +51,7 @@ public sealed class Exoblade_Tweak : CAItemTweak<Exoblade>, ILocalizationPrefix
 
     public override void UpdateInventory(Player player)
     {
-        BigSlashUpscaleFactor = player.name == "神光" ? 4f : 2f;
+        BigSlashUpscaleFactor = Exoblade_Handler.IsGod(player) ? 4f : 2f;
         ItemID.Sets.ItemsThatAllowRepeatedRightClick[ApplyingType] = Projectile.ActiveProjectiles.Any(p => p.Owner == player && p.ModProjectile is ExobladeProj);
     }
 
@@ -56,14 +63,17 @@ public sealed class Exoblade_Tweak : CAItemTweak<Exoblade>, ILocalizationPrefix
 
 public sealed class ExobladeProj_Detour : CAModProjectileDetour<ExobladeProj>
 {
-    private const float BladeLength = 180f;
+    public const float BladeLength = 180f;
 
     public delegate void Orig_DoBehavior_Swinging(ExobladeProj self);
 
     public static void Detour_DoBehavior_Swinging(Orig_DoBehavior_Swinging orig, ExobladeProj self)
     {
         Projectile projectile = self.Projectile;
-        bool god = projectile.Owner.name == "神光";
+        bool god = Exoblade_Handler.IsGod(projectile.Owner);
+
+        if (self.Timer == 0)
+            projectile.ai[2] = 0f;
 
         int newSwingTime = (int)(self.SwingTime * 0.85f);
         if (projectile.timeLeft > newSwingTime)
@@ -138,7 +148,7 @@ public sealed class ExobladeProj_Detour : CAModProjectileDetour<ExobladeProj>
                         {
                             case 0 or 1:
                                 Projectile.RotatedProj<Exobeam>(12, TOMathHelper.PiOver6, projectile.GetSource_FromAI(), projectile.Owner.Center, boltVelocity, boltDamage, projectile.knockBack / 3f, projectile.owner, AprilFoolProj);
-                                Projectile.RotatedProj<Exobeam>(6, TOMathHelper.PiOver3, projectile.GetSource_FromAI(), projectile.Owner.Center, boltVelocity * 0.55f, boltDamage, projectile.knockBack / 3f, projectile.owner, AprilFoolProj);
+                                Projectile.RotatedProj<Exobeam>(6, TOMathHelper.PiOver3, projectile.GetSource_FromAI(), projectile.Owner.Center, boltVelocity.RotatedBy(TOMathHelper.PiOver12) * 0.55f, boltDamage, projectile.knockBack / 3f, projectile.owner, AprilFoolProj);
                                 break;
                             case 2 or 3:
                                 for (int i = 0; i < 6; i++)
@@ -261,4 +271,17 @@ public sealed class Exobeam_Tweak : CAProjectileTweak<Exobeam>
             Projectile.NewProjectileAction<Exoboom>(Projectile.GetSource_FromAI(), target.Center, Vector2.Zero, (int)(Projectile.damage * ratio), 0f, Projectile.owner);
         }
     }
+}
+
+public sealed class ExobeamSlash_Tweak : CAProjectileTweak<ExobeamSlash>
+{
+    public override void SetDefaults()
+    {
+        Projectile.localNPCHitCooldown = -1;
+    }
+}
+
+public sealed class ExobeamSlash_Detour : CAModProjectileDetour<ExobeamSlash>
+{
+    public override bool? Detour_Colliding(Orig_Colliding orig, ExobeamSlash self, Rectangle projHitbox, Rectangle targetHitbox) => CalamityUtils.CircularHitboxCollision(self.Projectile.Center, 32f, targetHitbox);
 }

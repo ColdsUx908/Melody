@@ -9,13 +9,13 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
     /// 模长。
     /// <br/>非负。
     /// </summary>
-    public float Radius { get; }
+    public readonly float Radius;
 
     /// <summary>
     /// 角度。
     /// <br/>范围为 [0, 2π)。
     /// </summary>
-    public float Angle { get; }
+    public readonly float Angle;
 
     /// <summary>
     /// 角度（角度制）值。
@@ -204,7 +204,7 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
         };
     }
 
-    public override bool Equals(object obj) => obj is PolarVector2 other && Equals(other);
+    public override bool Equals([NotNullWhen(true)] object obj) => obj is PolarVector2 other && Equals(other);
 
     public bool Equals(PolarVector2 other) => Radius == other.Radius && Angle == other.Angle;
 
