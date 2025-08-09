@@ -124,7 +124,7 @@ public class DetourMethodToAttribute<T> : DetourMethodToAttribute
 /// 用于标记由Detour类特性修饰的类中的某个方法，使自动应用逻辑不涉及该方法。
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-public class NotDetourMethodAttribute : Attribute { }
+public class NotDetourMethodAttribute : Attribute;
 
 /// <summary>
 /// 用于实现自定义的Detour逻辑。

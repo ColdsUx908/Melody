@@ -15,17 +15,17 @@ public sealed class TOWorld : ModSystem
 
     public static float GeneralMinutes => GeneralSeconds / 60f;
 
-    public static TerrariaTimer GameTimer { get; internal set; } = default;
+    public static TerrariaTimer GameTimer { get; internal set; }
 
-    public static double Time24Hour { get; internal set; } = 0.0;
+    public static double Time24Hour { get; internal set; }
 
-    public static TerrariaTime TerrariaTime { get; internal set; } = default;
+    public static TerrariaTime TerrariaTime { get; internal set; }
 
-    public static bool TrueMasterMode { get; internal set; } = false;
+    public static bool TrueMasterMode { get; internal set; }
 
     public static bool MasterMode => TrueMasterMode || JourneyMasterMode;
 
-    public static bool JourneyMasterMode { get; internal set; } = false;
+    public static bool JourneyMasterMode { get; internal set; }
 
     public static bool TrueLegedaryMode => Main.getGoodWorld && TrueMasterMode;
 
@@ -33,7 +33,7 @@ public sealed class TOWorld : ModSystem
 
     public static List<NPC> BossList { get; internal set; } = [];
 
-    public static bool BossActive { get; internal set; } = false;
+    public static bool BossActive { get; internal set; }
 
     public override void PreUpdateEntities()
     {

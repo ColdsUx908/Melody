@@ -17,8 +17,7 @@ public partial class ItemTooltipModifier
     {
         Tooltips = tooltips;
         _tooltip0 = tooltips.FindFirstTerrariaTooltipIndex();
-        _tooltipLast = tooltips.FindLastTerrariaTooltipIndex(out int num);
-        _tooltipMax = num;
+        _tooltipLast = tooltips.FindLastTerrariaTooltipIndex(out _tooltipMax);
     }
 
     public virtual ItemTooltipModifier Modify(int num, Action<TooltipLine> action)

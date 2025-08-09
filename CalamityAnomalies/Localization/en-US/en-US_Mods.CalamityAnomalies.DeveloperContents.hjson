@@ -1,10 +1,3 @@
-Permafrost: {
-	Spawn: Permafrost has awoken!
-	Welcome1: ""
-	Welcome2: ""
-	Beginning: ""
-}
-
 AscendantWings: {
 	DisplayName: Ascendant Wings
 	Tooltip:
@@ -13,4 +6,18 @@ AscendantWings: {
 		Created from the feathers of a golden eagle struck by lightning on a stormy night
 		They can carry you to any height with a single flap
 		'''
+}
+
+ColdheartIcicle: {
+	DisplayName: Coldsheart Icicle
+	Tooltip: ""
+}
+
+ColdheartIcicleProj.DisplayName: Coldheart Icicle Proj
+
+Permafrost: {
+	Spawn: Permafrost has awoken!
+	Welcome1: ""
+	Welcome2: ""
+	Beginning: ""
 }

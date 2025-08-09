@@ -256,7 +256,7 @@ public sealed class Exobeam_Tweak : CAProjectileTweak<Exobeam>
 
         Projectile.scale = Utils.GetLerpValue(0f, 0.1f, Projectile.timeLeft / 600f, true);
 
-        if (Projectile.FinalExtraUpdate())
+        if (Projectile.IsFinalUpdate)
             ModProjectile.Time++;
 
         return false;

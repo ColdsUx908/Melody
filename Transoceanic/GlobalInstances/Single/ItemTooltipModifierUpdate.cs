@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.GlobalInstances.Behaviors.Items;
+﻿namespace Transoceanic.GlobalInstances.Single;
 
 public sealed class ItemTooltipModifierUpdate : TOGlobalItemBehavior
 {

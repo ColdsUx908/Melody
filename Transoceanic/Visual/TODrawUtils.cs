@@ -10,7 +10,7 @@ public static class TODrawUtils
 
     /// <summary>
     /// 在物品栏中绘制特定大小的物品贴图，不受物品栏自动缩放限制。
-    /// 在 <see cref="ModItem.PreDrawInInventory(SpriteBatch, Vector2, Rectangle, Color, Color, Vector2, float)"/> 方法中使用。
+    /// <br/>在 <see cref="ModItem.PreDrawInInventory(SpriteBatch, Vector2, Rectangle, Color, Color, Vector2, float)"/> 中使用。
     /// </summary>
     public static void DrawInventoryCustomSize(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Vector2 origin,
         Texture2D texture, float wantedScale = 1f, Vector2 drawOffset = default)
@@ -21,11 +21,11 @@ public static class TODrawUtils
     {
         if (borderWidth > 0f)
         {
-            Color realColor = color with { A = 0 };
+            color.A = 0;
             for (int i = 0; i < way; i++)
             {
                 Vector2 offset = new PolarVector2(borderWidth, MathHelper.TwoPi / way * i);
-                spriteBatch.Draw(texture, baseDrawPosition + offset, sourceRectangle, realColor, rotation, origin, scale, spriteEffects, layerDepth);
+                spriteBatch.Draw(texture, baseDrawPosition + offset, sourceRectangle, color, rotation, origin, scale, spriteEffects, layerDepth);
             }
         }
     }

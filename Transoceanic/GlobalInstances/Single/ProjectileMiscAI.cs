@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.GlobalInstances.Behaviors.Projectiles;
+﻿namespace Transoceanic.GlobalInstances.Single;
 
 public sealed class ProjectileMiscAI : TOGlobalProjectileBehavior
 {

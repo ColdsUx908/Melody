@@ -8,7 +8,7 @@ TweakIdentifier: Modified by Calamity Anomalies
 
 		SoaringInsignia: {
 			Tooltip0: Increases wing flight time by 1.3x
-			Tooltip1: Increases movement speed by 1.15x, jump speed by 36% and acceleration by 1.35x
+			Tooltip1: Increases movement speed by 1.15x, jump speed by 36% and acceleration by 1.3x
 		}
 	}
 }
@@ -33,7 +33,7 @@ TweakIdentifier: Modified by Calamity Anomalies
 			BlessingTooltip2: '''"Into the Sky"'''
 		}
 
-		ReaperToothNecklace.Tooltip1: Increases armor penetration by 50
+		ReaperToothNecklace.Tooltip1: Increases armor penetration by 75
 	}
 }
 

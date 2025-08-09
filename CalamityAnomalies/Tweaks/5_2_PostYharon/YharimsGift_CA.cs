@@ -12,9 +12,9 @@ public enum YharimsGift_CurrentBlessing
 
 public static class YharimsGift_Handler
 {
-    internal static readonly ChargingEnergyParticleSet _enchantmentEnergyParticles = new(-1, 5, Color.Orange, Color.White, 0.04f, 32f);
+    public static readonly ChargingEnergyParticleSet _enchantmentEnergyParticles = new(-1, 5, GiftColor, Color.White, 0.04f, 32f);
 
-    internal static readonly int _totalBlessings = Enum.GetValues<YharimsGift_CurrentBlessing>().Length;
+    public static readonly int _totalBlessings = Enum.GetValues<YharimsGift_CurrentBlessing>().Length;
 
     public const string LocalizationPrefix = CAMain.TweakLocalizationPrefix + "5.2.YharimsGift.";
 
@@ -57,8 +57,6 @@ public static class YharimsGift_Handler
         CAPlayer anomalyPlayer = Main.LocalPlayer.Anomaly();
         if (anomalyPlayer.YharimsGift && CurrentBlessingType == item.type)
         {
-            _enchantmentEnergyParticles.EdgeColor = GiftColor;
-            _enchantmentEnergyParticles.CenterColor = Color.White;
             _enchantmentEnergyParticles.InterpolationSpeed = MathHelper.Lerp(0.065f, 0.1f, TOMathHelper.GetTimeSin(0.5f, 0.7f, TOMathHelper.PiOver3, true));
             _enchantmentEnergyParticles.DrawSet(position + Main.screenPosition);
         }
@@ -69,8 +67,7 @@ public static class YharimsGift_Handler
             int index = GetBlessingIndex(item.type);
             if (index != 0)
             {
-                anomalyPlayer.YharimsGift_Change[index]._lastOn = Math.Max(anomalyPlayer.YharimsGift_Change[index]._lastOn, 1);
-                int buffTimer = anomalyPlayer.YharimsGift_Change[index].GetValue(TOWorld.GameTimer.TotalTicks, 40);
+                int buffTimer = anomalyPlayer.YharimsGift_Change[index].GetValue(TOWorld.GameTimer.TotalTicks, 40, true);
                 int timer = TOMathHelper.Min(blessingOcean.GetEquippedTimer(40), giftOcean.GetEquippedTimer(40), buffTimer);
                 item.DrawInventoryWithBorder(spriteBatch, position, frame, origin, scale, 24, (TOMathHelper.GetTimeSin(0.3f, 0.7f, TOMathHelper.PiOver12, true) + 2.8f) * timer / 40f, GiftColor2);
             }
@@ -102,7 +99,7 @@ public sealed class YharimsGift_Tweak : CAItemTweak<YharimsGift>, ILocalizationP
     }
 }
 
-public sealed class YharimsGift_Player : CAPlayerBehavior, ILocalizationPrefix
+public sealed class YharimsGift_Player : CAPlayerBehavior2, ILocalizationPrefix
 {
     public string LocalizationPrefix => CAMain.TweakLocalizationPrefix + "5.2.YharimsGift.";
 
@@ -110,16 +107,19 @@ public sealed class YharimsGift_Player : CAPlayerBehavior, ILocalizationPrefix
     {
         if (CAKeybinds.ChangeYharimsGiftBuff.JustPressed)
         {
-            CAPlayer amomalyPlayer = Player.Anomaly();
-            amomalyPlayer.YharimsGift_Blessing = (YharimsGift_CurrentBlessing)(((int)AnomalyPlayer.YharimsGift_Blessing + 1) % YharimsGift_Handler._totalBlessings);
+            AnomalyPlayer.YharimsGift_Blessing = (YharimsGift_CurrentBlessing)(((int)AnomalyPlayer.YharimsGift_Blessing + 1) % YharimsGift_Handler._totalBlessings);
             for (int i = 0; i < YharimsGift_Handler._totalBlessings; i++)
             {
                 if (i == (int)AnomalyPlayer.YharimsGift_Blessing)
-                    AnomalyPlayer.YharimsGift_Change[i]._lastOn = TOWorld.GameTimer.TotalTicks;
+                    AnomalyPlayer.YharimsGift_Change[i].LastOn = TOWorld.GameTimer.TotalTicks;
                 else
-                    AnomalyPlayer.YharimsGift_Change[i]._lastOff = TOWorld.GameTimer.TotalTicks;
+                    AnomalyPlayer.YharimsGift_Change[i].LastOff = TOWorld.GameTimer.TotalTicks;
             }
             TOLocalizationUtils.ChatLocalizedTextFormat(LocalizationPrefix + "BlessingChange", Main.LocalPlayer, Color.Gold, YharimsGift_Handler.BlessingName);
         }
     }
+
+    public override void SaveData(TagCompound tag) => tag["YharimsGift_Blessing"] = (int)AnomalyPlayer.YharimsGift_Blessing;
+
+    public override void LoadData(TagCompound tag) => AnomalyPlayer.YharimsGift_Blessing = tag.TryGet("YharimsGift_Blessing", out int yharimsGiftBuff) ? (YharimsGift_CurrentBlessing)yharimsGiftBuff : YharimsGift_CurrentBlessing.None;
 }

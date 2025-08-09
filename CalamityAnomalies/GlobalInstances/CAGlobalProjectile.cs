@@ -127,7 +127,7 @@ public sealed class CAGlobalProjectile : GlobalProjectile
     }
 
     #region 额外数据
-    public bool NeverTrippy
+    public bool ShouldRunAnomalyAI
     {
         get => InternalAnomalyAI32[0].bits[0];
         set
@@ -135,19 +135,6 @@ public sealed class CAGlobalProjectile : GlobalProjectile
             if (InternalAnomalyAI32[0].bits[0] != value)
             {
                 InternalAnomalyAI32[0].bits[0] = value;
-                InternalAIChanged32[0] = true;
-            }
-        }
-    }
-
-    public bool ShouldRunAnomalyAI
-    {
-        get => InternalAnomalyAI32[0].bits[1];
-        set
-        {
-            if (InternalAnomalyAI32[0].bits[1] != value)
-            {
-                InternalAnomalyAI32[0].bits[1] = value;
                 InternalAIChanged32[0] = true;
             }
         }

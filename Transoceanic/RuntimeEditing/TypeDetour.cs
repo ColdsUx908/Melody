@@ -5862,7 +5862,11 @@ internal sealed class TypeDetourUpdateReminder : IResourceLoader
     void IResourceLoader.PostSetupContent()
     {
         bool hasWarn = false;
-        List<DetourTypeContainer> typesToVerify =
+
+        StringBuilder builder = new();
+        builder.AppendLine("Update Required: TypeDetour.cs");
+
+        foreach (DetourTypeContainer item in (ReadOnlySpan<DetourTypeContainer>)
         [
             new(typeof(ModType), typeof(ModTypeDetour<>)),
             new(typeof(ModAccessorySlot), typeof(ModAccessorySlotDetour<>)),
@@ -5904,7 +5908,6 @@ internal sealed class TypeDetourUpdateReminder : IResourceLoader
             new(typeof(ModWall), typeof(ModWallDetour<>)),
             new(typeof(ModWaterfallStyle), typeof(ModWaterfallStyleDetour<>)),
             new(typeof(ModWaterStyle), typeof(ModWaterStyleDetour<>)),
-
             new(typeof(GlobalType<,>), typeof(GlobalTypeDetour<,,>)),
             new(typeof(GlobalBlockType), typeof(GlobalBlockTypeDetour<>)),
             new(typeof(GlobalBossBar), typeof(GlobalBossBarDetour<>)),
@@ -5917,15 +5920,9 @@ internal sealed class TypeDetourUpdateReminder : IResourceLoader
             new(typeof(GlobalPylon), typeof(GlobalPylonDetour<>)),
             new(typeof(GlobalTile), typeof(GlobalTileDetour<>)),
             new(typeof(GlobalWall), typeof(GlobalWallDetour<>)),
-
             new(typeof(GameEffect), typeof(GameEffectDetour<>)),
             new(typeof(CustomSky), typeof(CustomSkyDetour<>))
-        ];
-
-        StringBuilder builder = new();
-        builder.AppendLine("Update Required: TypeDetour.cs");
-
-        foreach (DetourTypeContainer item in typesToVerify)
+        ])
         {
             (List<string> sourceMissing, List<string> targetMissing) = item.CompareVirtualMethods(DetourMatch);
             if (sourceMissing.Count > 0)

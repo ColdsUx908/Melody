@@ -33,22 +33,21 @@ public sealed class CAPlayer : ModPlayer
 {
     //数据变量按字母顺序排列
 
-    public bool Debuff_DimensionalTorn { get; internal set; } = false;
+    public bool Debuff_DimensionalRend;
 
     public PlayerDownedBossCalamity DownedBossCalamity = new();
     public PlayerDownedBossCalamity DownedBossAnomaly = new();
 
-
-    public GuaranteedBoolean YharimsGift = new();
-    public YharimsGift_CurrentBlessing YharimsGift_Blessing { get; internal set; } = YharimsGift_CurrentBlessing.None;
+    public GuaranteedBoolean YharimsGift;
+    public YharimsGift_CurrentBlessing YharimsGift_Blessing = YharimsGift_CurrentBlessing.None;
     public readonly SmoothInt[] YharimsGift_Change = new SmoothInt[YharimsGift_Handler._totalBlessings];
-    public Item YharimsGift_Last = null;
+    public Item YharimsGift_Last;
 
     public override ModPlayer Clone(Player newEntity)
     {
         CAPlayer clone = (CAPlayer)base.Clone(newEntity);
 
-        clone.Debuff_DimensionalTorn = Debuff_DimensionalTorn;
+        clone.Debuff_DimensionalRend = Debuff_DimensionalRend;
         clone.DownedBossCalamity = DownedBossCalamity;
         clone.DownedBossAnomaly = DownedBossAnomaly;
 
@@ -62,61 +61,43 @@ public sealed class CAPlayer : ModPlayer
 
     public override void ResetEffects()
     {
-        Debuff_DimensionalTorn = false;
+        Debuff_DimensionalRend = false;
         YharimsGift.Value = false;
 
         base.ResetEffects();
-    }
-
-    public override void SaveData(TagCompound tag)
-    {
-        DownedBossCalamity.SaveData(tag, "PlayerDownedBossCalamity");
-        DownedBossAnomaly.SaveData(tag, "PlayerDownedBossAnomaly");
-        tag["YharimsGiftBuff"] = (int)YharimsGift_Blessing;
-
-        base.SaveData(tag);
-    }
-
-    public override void LoadData(TagCompound tag)
-    {
-        DownedBossCalamity.LoadData(tag, "PlayerDownedBossCalamity");
-        DownedBossAnomaly.LoadData(tag, "PlayerDownedBossAnomaly");
-        YharimsGift_Blessing = tag.TryGet("YharimsGiftBuff", out int yharimsGiftBuff) ? (YharimsGift_CurrentBlessing)yharimsGiftBuff : YharimsGift_CurrentBlessing.None;
-
-        base.LoadData(tag);
     }
 }
 
 public class PlayerDownedBossCalamity : PlayerDownedBoss
 {
-    public bool DesertScourge { get; set; } = false;
-    public bool Crabulon { get; set; } = false;
-    public bool EvilBoss2 { get; set; } = false;
-    public bool HiveMind { get; set; } = false;
-    public bool Perforator { get; set; } = false;
-    public bool SlimeGod { get; set; } = false;
-    public bool Cryogen { get; set; } = false;
-    public bool AquaticScourge { get; set; } = false;
-    public bool BrimstoneElemental { get; set; } = false;
-    public bool CalamitasClone { get; set; } = false;
-    public bool Leviathan { get; set; } = false;
-    public bool AstrumAureus { get; set; } = false;
-    public bool Goliath { get; set; } = false;
-    public bool Ravager { get; set; } = false;
-    public bool AstrumDeus { get; set; } = false;
-    public bool Guardians { get; set; } = false;
-    public bool Dragonfolly { get; set; } = false;
-    public bool Providence { get; set; } = false;
-    public bool CeaselessVoid { get; set; } = false;
-    public bool StormWeaver { get; set; } = false;
-    public bool Signus { get; set; } = false;
-    public bool Polterghast { get; set; } = false;
-    public bool BommerDuke { get; set; } = false;
-    public bool DoG { get; set; } = false;
-    public bool Yharon { get; set; } = false;
-    public bool Ares { get; set; } = false;
-    public bool Thanatos { get; set; } = false;
-    public bool ArtemisAndApollo { get; set; } = false;
+    public bool DesertScourge { get; set; }
+    public bool Crabulon { get; set; }
+    public bool EvilBoss2 { get; set; }
+    public bool HiveMind { get; set; }
+    public bool Perforator { get; set; }
+    public bool SlimeGod { get; set; }
+    public bool Cryogen { get; set; }
+    public bool AquaticScourge { get; set; }
+    public bool BrimstoneElemental { get; set; }
+    public bool CalamitasClone { get; set; }
+    public bool Leviathan { get; set; }
+    public bool AstrumAureus { get; set; }
+    public bool Goliath { get; set; }
+    public bool Ravager { get; set; }
+    public bool AstrumDeus { get; set; }
+    public bool Guardians { get; set; }
+    public bool Dragonfolly { get; set; }
+    public bool Providence { get; set; }
+    public bool CeaselessVoid { get; set; }
+    public bool StormWeaver { get; set; }
+    public bool Signus { get; set; }
+    public bool Polterghast { get; set; }
+    public bool BommerDuke { get; set; }
+    public bool DoG { get; set; }
+    public bool Yharon { get; set; }
+    public bool Ares { get; set; }
+    public bool Thanatos { get; set; }
+    public bool ArtemisAndApollo { get; set; }
     public bool ExoMechs
     {
         get;
@@ -130,7 +111,7 @@ public class PlayerDownedBossCalamity : PlayerDownedBoss
                     Focus = true;
             }
         }
-    } = false;
+    }
     public bool Calamitas
     {
         get;
@@ -144,37 +125,37 @@ public class PlayerDownedBossCalamity : PlayerDownedBoss
                     Focus = true;
             }
         }
-    } = false;
+    }
     /// <summary>
     /// 单锁（击败星流巨械和灾厄之一）。
     /// </summary>
-    public bool LastBoss { get; set; } = false;
+    public bool LastBoss { get; set; }
     /// <summary>
     /// 万物的焦点。
     /// </summary>
-    public bool Focus { get; set; } = false;
-    public bool PrimordialWyrm { get; set; } = false;
+    public bool Focus { get; set; }
+    public bool PrimordialWyrm { get; set; }
 
-    public bool GreatSandShark { get; set; } = false;
-    public bool GiantClam { get; set; } = false;
-    public bool GiantClamHardmode { get; set; } = false;
+    public bool GreatSandShark { get; set; }
+    public bool GiantClam { get; set; }
+    public bool GiantClamHardmode { get; set; }
     /// <summary>
     /// 峭咽潭。
     /// </summary>
-    public bool CragmawMire { get; set; } = false;
+    public bool CragmawMire { get; set; }
     /// <summary>
     /// 渊海狂鲨。
     /// </summary>
-    public bool Mauler { get; set; } = false;
+    public bool Mauler { get; set; }
     /// <summary>
     /// 辐核骇兽。
     /// </summary>
-    public bool NuclearTerror { get; set; } = false;
+    public bool NuclearTerror { get; set; }
 
-    public bool EoCAcidRain { get; set; } = false;
-    public bool AquaticScourgeAcidRain { get; set; } = false;
+    public bool EoCAcidRain { get; set; }
+    public bool AquaticScourgeAcidRain { get; set; }
 
-    public bool BossRush { get; set; } = false;
+    public bool BossRush { get; set; }
 
     /// <summary>
     /// 使玩家跟随世界Boss击败状态。

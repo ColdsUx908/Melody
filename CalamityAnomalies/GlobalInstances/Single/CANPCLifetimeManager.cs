@@ -1,6 +1,6 @@
-﻿namespace CalamityAnomalies.GlobalInstances.Behaviors.NPCs;
+﻿namespace CalamityAnomalies.GlobalInstances.Single;
 
-public sealed class CANPCLifetimeManager : CAGlobalNPCBehavior
+public sealed class CANPCLifetimeManager : CAGlobalNPCBehavior2
 {
     public override decimal Priority => 100m;
 

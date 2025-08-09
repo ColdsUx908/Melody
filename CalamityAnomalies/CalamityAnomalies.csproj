@@ -17,9 +17,6 @@
 	  </Reference>
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="GlobalInstances\Behaviors\Items\" />
-	  <Folder Include="GlobalInstances\Behaviors\Players\" />
-	  <Folder Include="GlobalInstances\Behaviors\Projectiles\" />
 	  <Folder Include="Tweaks\1_1_Beginning\" />
 	  <Folder Include="Tweaks\3_3_PostCultist\" />
 	  <Folder Include="Tweaks\4_2_PostProvidence\" />

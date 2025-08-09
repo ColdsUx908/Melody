@@ -38,6 +38,9 @@ public sealed class ModDOTHandler : IResourceLoader
             ExternalDOTSet[type] = (hasBuffPlayer, hasBuffNPC, damagePlayer, damageNPC, damageValue);
     }
 
+    public static void RegisterDOT<T>(Predicate<Player> hasBuffPlayer, Predicate<NPC> hasBuffNPC, Func<Player, float> damagePlayer = null, Func<NPC, float> damageNPC = null, Func<NPC, int> damageValue = null, bool cover = true) where T : ModBuff =>
+        RegisterDOT(ModContent.BuffType<T>(), hasBuffPlayer, hasBuffNPC, damagePlayer, damageNPC, damageValue, cover);
+
     void IResourceLoader.PostSetupContent() => ModDOTSet.AddRange(TOReflectionUtils.GetTypeInstancesDerivedFrom<ModDOT>());
 
     void IResourceLoader.OnModUnload()

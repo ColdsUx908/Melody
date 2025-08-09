@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.GlobalInstances.Behaviors.NPCs;
+﻿namespace Transoceanic.GlobalInstances.Single;
 
 public sealed class NPCLifeTimeManager : TOGlobalNPCBehavior
 {

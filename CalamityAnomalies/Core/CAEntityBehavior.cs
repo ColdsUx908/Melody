@@ -5,13 +5,35 @@ public abstract class CAPlayerBehavior : PlayerBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
+    public CAPlayer AnomalyPlayer
+    {
+        get
+        {
+            if (_shouldConnect)
+            {
+                Connect(_entity);
+                _shouldConnect = false;
+            }
+            return field;
+        }
+        protected set;
+    }
 
-    public CAPlayer AnomalyPlayer { get; protected set; } = null;
+    public CalamityPlayer CalamityPlayer
+    {
+        get
+        {
+            if (_shouldConnect)
+            {
+                Connect(_entity);
+                _shouldConnect = false;
+            }
+            return field;
+        }
+        protected set;
+    }
 
-    public CalamityPlayer CalamityPlayer { get; protected set; } = null;
-
-    public override void Connect(Player player)
+    protected override void Connect(Player player)
     {
         base.Connect(player);
         AnomalyPlayer = player.Anomaly();
@@ -22,8 +44,6 @@ public abstract class CAPlayerBehavior : PlayerBehavior
 public abstract class CAGlobalNPCBehavior : GlobalNPCBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
-
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 
     /// <summary>
     /// 在更新灾厄的Boss血条之前调用。
@@ -55,14 +75,30 @@ public abstract class CAGlobalNPCBehavior : GlobalNPCBehavior
 public abstract class CAGlobalProjectileBehavior : GlobalProjectileBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
-
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 
 public abstract class CAGlobalItemBehavior : GlobalItemBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
+}
 
+public abstract class CAPlayerBehavior2 : CAPlayerBehavior
+{
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
+}
+
+public abstract class CAGlobalNPCBehavior2 : CAGlobalNPCBehavior
+{
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
+}
+
+public abstract class CAGlobalProjectileBehavior2 : CAGlobalProjectileBehavior
+{
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
+}
+
+public abstract class CAGlobalItemBehavior2 : CAGlobalItemBehavior
+{
     public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 #endregion General Behavior
@@ -80,13 +116,35 @@ public abstract class CASingleNPCBehavior : SingleNPCBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
+    public CAGlobalNPC AnomalyNPC
+    {
+        get
+        {
+            if (_shouldConnect)
+            {
+                Connect(_entity);
+                _shouldConnect = false;
+            }
+            return field;
+        }
+        protected set;
+    }
 
-    public CAGlobalNPC AnomalyNPC { get; protected set; } = null;
+    public CalamityGlobalNPC CalamityNPC
+    {
+        get
+        {
+            if (_shouldConnect)
+            {
+                Connect(_entity);
+                _shouldConnect = false;
+            }
+            return field;
+        }
+        protected set;
+    }
 
-    public CalamityGlobalNPC CalamityNPC { get; protected set; } = null;
-
-    public override void Connect(NPC npc)
+    protected override void Connect(NPC npc)
     {
         base.Connect(npc);
         AnomalyNPC = npc.Anomaly();
@@ -130,11 +188,23 @@ public abstract class CASingleNPCBehavior<T> : CASingleNPCBehavior where T : Mod
 {
     public static readonly Type Type = typeof(T);
 
-    public T ModNPC { get; protected set; } = null;
+    public T ModNPC
+    {
+        get
+        {
+            if (_shouldConnect)
+            {
+                Connect(_entity);
+                _shouldConnect = false;
+            }
+            return field;
+        }
+        protected set;
+    }
 
     public override int ApplyingType => ModContent.NPCType<T>();
 
-    public override void Connect(NPC npc)
+    protected override void Connect(NPC npc)
     {
         base.Connect(npc);
         ModNPC = npc.GetModNPC<T>();
@@ -145,24 +215,28 @@ public abstract class AnomalyNPCBehavior : CASingleNPCBehavior
 {
     public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => base.ShouldProcess && CAWorld.Anomaly && AnomalyNPC.ShouldRunAnomalyAI;
+    public override bool ShouldProcess => CAWorld.Anomaly && AnomalyNPC.ShouldRunAnomalyAI;
 }
 
 public abstract class AnomalyNPCBehavior<T> : CASingleNPCBehavior<T> where T : ModNPC
 {
     public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => base.ShouldProcess && CAWorld.Anomaly && AnomalyNPC.ShouldRunAnomalyAI;
+    public override bool ShouldProcess => CAWorld.Anomaly && AnomalyNPC.ShouldRunAnomalyAI;
 }
 
 public abstract class CANPCTweak : CASingleNPCBehavior
 {
     public override decimal Priority => 5m;
+
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 
 public abstract class CANPCTweak<T> : CASingleNPCBehavior<T> where T : ModNPC
 {
     public override decimal Priority => 5m;
+
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 #endregion NPC
 
@@ -178,13 +252,35 @@ public abstract class CASingleProjectileBehavior : SingleProjectileBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
+    public CAGlobalProjectile AnomalyProjectile
+    {
+        get
+        {
+            if (_shouldConnect)
+            {
+                Connect(_entity);
+                _shouldConnect = false;
+            }
+            return field;
+        }
+        protected set;
+    }
 
-    public CAGlobalProjectile AnomalyProjectile { get; protected set; } = null;
+    public CalamityGlobalProjectile CalamityProjectile
+    {
+        get
+        {
+            if (_shouldConnect)
+            {
+                Connect(_entity);
+                _shouldConnect = false;
+            }
+            return field;
+        }
+        protected set;
+    }
 
-    public CalamityGlobalProjectile CalamityProjectile { get; protected set; } = null;
-
-    public override void Connect(Projectile projectile)
+    protected override void Connect(Projectile projectile)
     {
         base.Connect(projectile);
         AnomalyProjectile = projectile.Anomaly();
@@ -210,11 +306,23 @@ public abstract class CASingleProjectileBehavior<T> : CASingleProjectileBehavior
 {
     public static readonly Type Type = typeof(T);
 
-    public T ModProjectile { get; protected set; } = null;
+    public T ModProjectile
+    {
+        get
+        {
+            if (_shouldConnect)
+            {
+                Connect(_entity);
+                _shouldConnect = false;
+            }
+            return field;
+        }
+        protected set;
+    }
 
     public override int ApplyingType => ModContent.ProjectileType<T>();
 
-    public override void Connect(Projectile projectile)
+    protected override void Connect(Projectile projectile)
     {
         base.Connect(projectile);
         ModProjectile = projectile.GetModProjectile<T>();
@@ -225,24 +333,28 @@ public abstract class AnomalyProjectileBehavior : CASingleProjectileBehavior
 {
     public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => base.ShouldProcess && CAWorld.Anomaly && AnomalyProjectile.ShouldRunAnomalyAI;
+    public override bool ShouldProcess => CAWorld.Anomaly && AnomalyProjectile.ShouldRunAnomalyAI;
 }
 
 public abstract class AnomalyProjecileBehavior<T> : CASingleProjectileBehavior<T> where T : ModProjectile
 {
     public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => base.ShouldProcess && CAWorld.Anomaly && AnomalyProjectile.ShouldRunAnomalyAI;
+    public override bool ShouldProcess => CAWorld.Anomaly && AnomalyProjectile.ShouldRunAnomalyAI;
 }
 
 public abstract class CAProjectileTweak : CASingleProjectileBehavior
 {
     public override decimal Priority => 5m;
+
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 
 public abstract class CAProjectileTweak<T> : CASingleProjectileBehavior<T> where T : ModProjectile
 {
     public override decimal Priority => 5m;
+
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 #endregion Projectile
 
@@ -251,13 +363,35 @@ public abstract class CASingleItemBehavior : SingleItemBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
+    public CAGlobalItem AnomalyItem
+    {
+        get
+        {
+            if (_shouldConnect)
+            {
+                Connect(_entity);
+                _shouldConnect = false;
+            }
+            return field;
+        }
+        protected set;
+    }
 
-    public CAGlobalItem AnomalyItem { get; protected set; } = null;
+    public CalamityGlobalItem CalamityItem
+    {
+        get
+        {
+            if (_shouldConnect)
+            {
+                Connect(_entity);
+                _shouldConnect = false;
+            }
+            return field;
+        }
+        protected set;
+    }
 
-    public CalamityGlobalItem CalamityItem { get; protected set; } = null;
-
-    public override void Connect(Item item)
+    protected override void Connect(Item item)
     {
         base.Connect(item);
         AnomalyItem = item.Anomaly();
@@ -286,11 +420,23 @@ public abstract class CASingleItemBehavior<T> : CASingleItemBehavior where T : M
 {
     public static readonly Type Type = typeof(T);
 
-    public T ModItem { get; protected set; } = null;
+    public T ModItem
+    {
+        get
+        {
+            if (_shouldConnect)
+            {
+                Connect(_entity);
+                _shouldConnect = false;
+            }
+            return field;
+        }
+        protected set;
+    }
 
     public override int ApplyingType => ModContent.ItemType<T>();
 
-    public override void Connect(Item item)
+    protected override void Connect(Item item)
     {
         base.Connect(item);
         ModItem = item.GetModItem<T>();
@@ -300,11 +446,15 @@ public abstract class CASingleItemBehavior<T> : CASingleItemBehavior where T : M
 public abstract class CAItemTweak : CASingleItemBehavior
 {
     public override decimal Priority => 5m;
+    
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 
 public abstract class CAItemTweak<T> : CASingleItemBehavior<T> where T : ModItem
 {
     public override decimal Priority => 5m;
+    
+    public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 #endregion Item
 #endregion Single Behavior
@@ -360,11 +510,11 @@ public sealed class CASingleItemBehaviorHandler : SingleItemBehaviorHandler<CASi
 
 public sealed class CASingleBehaviorHelper : IResourceLoader
 {
-    internal static readonly SingleEntityBehaviorSet<NPC, CASingleNPCBehavior> NPCBehaviors = [];
+    internal static readonly SingleEntityBehaviorSet<NPC, CASingleNPCBehavior> NPCBehaviors = new();
 
-    internal static readonly SingleEntityBehaviorSet<Projectile, CASingleProjectileBehavior> ProjectileBehaviors= [];
+    internal static readonly SingleEntityBehaviorSet<Projectile, CASingleProjectileBehavior> ProjectileBehaviors = new();
 
-    internal static readonly SingleEntityBehaviorSet<Item, CASingleItemBehavior> ItemBehaviors = [];
+    internal static readonly SingleEntityBehaviorSet<Item, CASingleItemBehavior> ItemBehaviors = new();
 
     void IResourceLoader.PostSetupContent()
     {
@@ -382,3 +532,65 @@ public sealed class CASingleBehaviorHelper : IResourceLoader
     }
 }
 #endregion Single Behavior Handler
+
+#region Detour
+public sealed class CalamityGlobalNPCBehaviorDetour : CACalamityGlobalNPCDetour
+{
+    public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalNPC self, NPC npc)
+    {
+        if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreAI)) &&
+            !npcBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.PreAI))
+            return true;
+
+        return orig(self, npc);
+    }
+
+    public override Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalNPC self, NPC npc, Color drawColor)
+    {
+        if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.GetAlpha)) &&
+            !npcBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.GetAlpha))
+            return null;
+
+        return orig(self, npc, drawColor);
+    }
+
+    public override bool Detour_PreDraw(Orig_PreDraw orig, CalamityGlobalNPC self, NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
+    {
+        if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreDraw))
+            && npcBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.PreDraw))
+            return true;
+
+        return orig(self, npc, spriteBatch, screenPos, drawColor);
+    }
+}
+
+public sealed class CalamityGlobalProjectileBehaviorDetour : CACalamityGlobalProjectileDetour
+{
+    public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalProjectile self, Projectile projectile)
+    {
+        if (projectile.TryGetBehavior(out CASingleProjectileBehavior projectileBehavior, nameof(CASingleProjectileBehavior.PreAI))
+            && !projectileBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalProjectile.PreAI))
+            return true;
+
+        return orig(self, projectile);
+    }
+
+    public override Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalProjectile self, Projectile projectile, Color lightColor)
+    {
+        if (projectile.TryGetBehavior(out CASingleProjectileBehavior projectileBehavior, nameof(CASingleProjectileBehavior.GetAlpha))
+            && !projectileBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalProjectile.GetAlpha))
+            return null;
+
+        return orig(self, projectile, lightColor);
+    }
+
+    public override bool Detour_PreDraw(Orig_PreDraw orig, CalamityGlobalProjectile self, Projectile projectile, ref Color lightColor)
+    {
+        if (projectile.TryGetBehavior(out CASingleProjectileBehavior projectileBehavior, nameof(CASingleProjectileBehavior.PreDraw))
+            && !projectileBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalProjectile.PreDraw))
+            return true;
+
+        return orig(self, projectile, ref lightColor);
+    }
+}
+#endregion Detour

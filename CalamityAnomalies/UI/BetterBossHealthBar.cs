@@ -226,9 +226,9 @@ public class BetterBossHPUI : BossHPUI
     // TODO 这个字典是未完成的。在未来的异象模式中，Boss生成时会绑定自己的所有体节NPC。
     public readonly Dictionary<long, NPC> CustomOneToMany = [];
 
-    public readonly bool HasSpecialLifeRequirement = false;
+    public readonly bool HasSpecialLifeRequirement;
 
-    public readonly NPCSpecialHPGetFunction HPGetFunction = null;
+    public readonly NPCSpecialHPGetFunction HPGetFunction;
 
     public bool Valid { get; private set; } = true;
 
@@ -242,8 +242,8 @@ public class BetterBossHPUI : BossHPUI
 
     public new int NPCType => NPC.type;
 
-    public new long CombinedNPCLife = 0L;
-    public new long CombinedNPCMaxLife = 0L;
+    public new long CombinedNPCLife;
+    public new long CombinedNPCMaxLife;
 
     public new bool NPCIsEnraged => Valid && NPC.active && (CalamityNPC.CurrentlyEnraged || (HasOneToMany && CustomOneToMany.Values.AsValueEnumerable().Any(n => n.Calamity().CurrentlyEnraged)));
 
@@ -251,9 +251,9 @@ public class BetterBossHPUI : BossHPUI
 
     public int Height { get; private set; } = 70;
 
-    public float AnimationCompletionRatio { get; private set; } = 0f;
+    public float AnimationCompletionRatio { get; private set; }
 
-    public float AnimationCompletionRatio2 { get; private set; } = 0f;
+    public float AnimationCompletionRatio2 { get; private set; }
 
     public BetterBossHPUI(NPC npc) : base(npc.whoAmI, null)
     {

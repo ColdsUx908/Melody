@@ -2,7 +2,7 @@
 
 public class CAItemTooltipModifier : ItemTooltipModifier
 {
-    private int _nextCATooltipNum = 0;
+    private int _nextCATooltipNum;
     private int _nextCATooltipIndex;
 
     public CAItemTooltipModifier(List<TooltipLine> tooltips) : base(tooltips) => _nextCATooltipIndex = _tooltipLast + 1;

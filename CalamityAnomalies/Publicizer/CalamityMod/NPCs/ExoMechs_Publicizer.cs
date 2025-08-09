@@ -401,6 +401,9 @@ public record ThanatosTail_Publicizer(ThanatosTail Source) : PublicizerBase<Than
         set => i_f_noContactDamageTimer.SetValue(Source, value);
     }
 
+    // defaultLifeRatio (const)
+    public const float defaultLifeRatio = 5f;
+
     // timeToOpenAndFireLasers (const)
     public const float timeToOpenAndFireLasers = 36f;
 

@@ -8,19 +8,16 @@ public class TOGlobalItem : GlobalItem
     {
         TOGlobalItem clone = (TOGlobalItem)base.Clone(from, to);
 
-        clone.InternalEquipped = InternalEquipped;
-        clone._lastEquippedTime = _lastEquippedTime;
-        clone._lastUnequippedTime = _lastUnequippedTime;
+        clone.Equip = Equip;
+        clone.Equip_Timer = Equip_Timer;
 
         return clone;
     }
 
-    public ItemTooltipDictionary TooltipDictionary { get; internal set; } = null;
+    public ItemTooltipDictionary TooltipDictionary { get; internal set; }
 
-    internal GuaranteedBoolean InternalEquipped = new();
-    internal SmoothInt Equip = new();
-    internal int _lastEquippedTime = -1;
-    internal int _lastUnequippedTime = -1;
+    internal GuaranteedBoolean Equip;
+    internal SmoothInt Equip_Timer;
 
     /// <summary>
     /// 获取一个物品的装备时长。
@@ -29,8 +26,5 @@ public class TOGlobalItem : GlobalItem
     /// <returns>装备时长。
     /// <br/>在物品装备时，返回值从0逐渐增加至max；未装备时，从max逐渐减少至0。
     /// </returns>
-    public int GetEquippedTimer(int max) => Equip.GetValue(TOWorld.GameTimer.TotalTicks, max);
-        //IsEquipped
-        //? Math.Clamp(TOWorld.GameTimer.TotalTicks - _lastEquippedTime, 0, max)
-        //: Math.Clamp(max - TOWorld.GameTimer.TotalTicks + _lastUnequippedTime, 0, max);
+    public int GetEquippedTimer(int max) => Equip_Timer.GetValue(TOWorld.GameTimer.TotalTicks, max);
 }

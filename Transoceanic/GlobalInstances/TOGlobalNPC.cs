@@ -10,7 +10,7 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
     /// </summary>
     private static long _identifierAllocator;
 
-    private long? _identifier = null;
+    private long? _identifier;
 
     /// <summary>
     /// NPC的标识符。

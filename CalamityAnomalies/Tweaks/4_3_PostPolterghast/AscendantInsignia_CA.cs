@@ -57,7 +57,7 @@ public sealed class AscendantInsignia_Tweak : CAItemTweak<AscendantInsignia>, IL
     }
 }
 
-public sealed class AscendantInsignia_Player : CAPlayerBehavior
+public sealed class AscendantInsignia_Player : CAPlayerBehavior2
 {
     public override void PostUpdateMiscEffects()
     {
@@ -72,10 +72,10 @@ public sealed class AscendantInsignia_Player : CAPlayerBehavior
                 if (CalamityPlayer.ascendantInsigniaBuffTime > 0)
                 {
                     Player.moveSpeed *= 7f / 6f;
-                    Player.jumpSpeedBoost += 2.4f;
+                    Player.jumpSpeedBoost += 6f;
                 }
                 if (CalamityPlayer.ascendantInsigniaCooldown is >= 1470 and < 1500)
-                    Player.moveSpeed *= 0.99f;
+                    Player.moveSpeed *= 0.985f;
             }
         }
     }

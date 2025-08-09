@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.GlobalInstances.Behaviors.Players;
+﻿namespace Transoceanic.GlobalInstances.Single;
 
 public sealed class PlayerWingTimeUpdate : TOPlayerBehavior
 {

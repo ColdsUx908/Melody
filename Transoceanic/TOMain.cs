@@ -39,19 +39,18 @@ using Transoceanic.RuntimeEditing;
 namespace Transoceanic;
 
 // Developed by ColdsUx
-// build: 2025.7.29
 
 public sealed class TOMain : Mod
 {
     internal static TOMain Instance { get; private set; }
 
-    internal static bool Loading { get; private set; } = false;
+    internal static bool Loading { get; private set; }
 
-    internal static bool Loaded { get; private set; } = false;
+    internal static bool Loaded { get; private set; }
 
-    internal static bool Unloading { get; private set; } = false;
+    internal static bool Unloading { get; private set; }
 
-    internal static bool Unloaded { get; private set; } = false;
+    internal static bool Unloaded { get; private set; }
 
     public override void Load()
     {
@@ -62,7 +61,7 @@ public sealed class TOMain : Mod
             TOWorld.GameTimer = 0;
 
             foreach (ITOLoader loader in
-                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(TOMain.Assembly).AsValueEnumerable()
+                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(Assembly).AsValueEnumerable()
                 orderby pair.type.GetMethod(nameof(ITOLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                 select pair.instance)
             {
@@ -124,11 +123,11 @@ public sealed class TOMain : Mod
 
     public static bool DEBUG { get; internal set; } =
 #if DEBUG
-        true
+        true;
 #else
-        false
+        false;
 #endif
-        ;
+
 
     private const string DEBUGPlayerName = "~ColdsUx";
 
@@ -147,13 +146,13 @@ public sealed class TOMain : Mod
                 throw new InvalidOperationException("SyncEnabled cannot be set to false after it has been set to true, unless unloading.");
             field = value;
         }
-    } = false;
+    }
 
     public static Assembly Assembly => field ??= Instance.Code;
 
     public static readonly Assembly TerrariaAssembly = typeof(Main).Assembly;
 
-    public static readonly Type[] TerrariaTypes = TerrariaAssembly.GetTypes();
+    public static readonly Dictionary<string, Type[]> TerrariaTypes = TerrariaAssembly.GetTypes().GroupBy(t => t.Name).ToDictionary(g => g.Key, g => g.ToArray());
 
     #region Constant
     public const string ModLocalizationPrefix = "Mods.Transoceanic.";

@@ -155,7 +155,7 @@ public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizati
     }
 }
 
-public sealed class AnomalyModePlayerSync : CAPlayerBehavior
+public sealed class AnomalyModePlayerSync : CAPlayerBehavior2
 {
     public override decimal Priority => 100m;
 

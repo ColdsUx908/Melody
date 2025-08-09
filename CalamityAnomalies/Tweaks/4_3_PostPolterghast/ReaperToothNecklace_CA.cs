@@ -8,7 +8,7 @@ public sealed class ReaperToothNecklace_CA : CAItemTweak<ReaperToothNecklace>, I
 
     public override void UpdateAccessory(Player player, bool hideVisual)
     {
-        player.GetArmorPenetration<GenericDamageClass>() += 35;
+        player.GetArmorPenetration<GenericDamageClass>() += 60;
     }
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)

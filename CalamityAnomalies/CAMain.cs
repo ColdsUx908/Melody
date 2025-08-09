@@ -47,13 +47,13 @@ public sealed class CAMain : Mod, IResourceLoader
 {
     internal static CAMain Instance { get; private set; }
 
-    internal static bool Loading { get; private set; } = false;
+    internal static bool Loading { get; private set; }
 
-    internal static bool Loaded { get; private set; } = false;
+    internal static bool Loaded { get; private set; }
 
-    internal static bool Unloading { get; private set; } = false;
+    internal static bool Unloading { get; private set; }
 
-    internal static bool Unloaded { get; private set; } = false;
+    internal static bool Unloaded { get; private set; }
 
     public override void Load()
     {
@@ -63,7 +63,7 @@ public sealed class CAMain : Mod, IResourceLoader
             Instance = this;
 
             foreach (ICALoader loader in
-                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(CAMain.Assembly).AsValueEnumerable()
+                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(Assembly).AsValueEnumerable()
                 orderby pair.type.GetMethod(nameof(ICALoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                 select pair.instance)
             {

@@ -22,12 +22,13 @@ public sealed class SoaringInsignia_Tweak : CAItemTweak, ILocalizationPrefix
     }
 }
 
-public sealed class SoaringInsignia_Player : CAPlayerBehavior
+public sealed class SoaringInsignia_Player : CAPlayerBehavior2
 {
     public override void PostUpdateMiscEffects()
     {
         if (Player.empressBrooch)
         {
+            Player.jumpSpeedBoost += 1.3f;
             Player.moveSpeed -= 0.1f;
             if (!CalamityPlayer.ascendantInsignia)
                 Player.moveSpeed *= 1.1f;

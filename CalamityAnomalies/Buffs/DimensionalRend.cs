@@ -1,10 +1,10 @@
 ﻿namespace CalamityAnomalies.Buffs;
 
-public sealed class DimensionalTorn : CalamityModDOT
+public sealed class DimensionalRend : CalamityModDOT
 {
-    public override bool HasBuff(Player player) => player.Anomaly().Debuff_DimensionalTorn;
+    public override bool HasBuff(Player player) => player.Anomaly().Debuff_DimensionalRend;
 
-    public override bool HasBuff(NPC npc) => npc.Anomaly().Debuff_DimensionalTorn > 0;
+    public override bool HasBuff(NPC npc) => npc.Anomaly().Debuff_DimensionalRend > 0;
 
     public override float GetDamageCalamity(Player player) => Interpolation(player) * 10f;
 
@@ -12,14 +12,14 @@ public sealed class DimensionalTorn : CalamityModDOT
 
     public override int GetDamageValue(NPC npc) => (int)(Interpolation(npc) * 400f);
 
-    public override void Update(Player player, ref int buffIndex) => player.Anomaly().Debuff_DimensionalTorn = true;
+    public override void Update(Player player, ref int buffIndex) => player.Anomaly().Debuff_DimensionalRend = true;
 
     public override void Update(NPC npc, ref int buffIndex)
     {
         CAGlobalNPC anomalyNPC = npc.Anomaly();
         int buffTime = npc.buffTime[buffIndex];
-        if (anomalyNPC.Debuff_DimensionalTorn < buffTime)
-            anomalyNPC.Debuff_DimensionalTorn = buffTime;
+        if (anomalyNPC.Debuff_DimensionalRend < buffTime)
+            anomalyNPC.Debuff_DimensionalRend = buffTime;
         npc.DelBuff(buffIndex--);
     }
 
@@ -35,22 +35,22 @@ public sealed class DimensionalTorn : CalamityModDOT
     }
 }
 
-public sealed class DimensionalTorn_Player : CAPlayerBehavior
+public sealed class DimensionalRend_Player : CAPlayerBehavior
 {
     public override void ModifyHurt(ref Player.HurtModifiers modifiers)
     {
-        if (AnomalyPlayer.Debuff_DimensionalTorn)
-            modifiers.FinalDamage *= DimensionalTorn.Interpolation(Player) * 0.15f + 1f;
+        if (AnomalyPlayer.Debuff_DimensionalRend)
+            modifiers.FinalDamage *= DimensionalRend.Interpolation(Player) * 0.15f + 1f;
     }
 }
 
-public sealed class DimensionalTorn_GlobalNPC : CAGlobalNPCBehavior
+public sealed class DimensionalRend_GlobalNPC : CAGlobalNPCBehavior
 {
-    public override void PostAI(NPC npc) => npc.Anomaly().Debuff_DimensionalTorn--;
+    public override void PostAI(NPC npc) => npc.Anomaly().Debuff_DimensionalRend--;
 
     public override void ModifyIncomingHit(NPC npc, ref NPC.HitModifiers modifiers)
     {
-        if (npc.Anomaly().Debuff_DimensionalTorn > 0)
-            modifiers.FinalDamage *= DimensionalTorn.Interpolation(npc) * 0.15f + 1f;
+        if (npc.Anomaly().Debuff_DimensionalRend > 0)
+            modifiers.FinalDamage *= DimensionalRend.Interpolation(npc) * 0.15f + 1f;
     }
 }

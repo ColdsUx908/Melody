@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using Terraria.GameContent.Bestiary;
+﻿using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
 using Transoceanic.RuntimeEditing;
@@ -12,10 +11,13 @@ namespace Transoceanic.GlobalInstances;
 /// <br/>在 <see cref="SimpleEntityBehaviorSet{TEntity, TBehavior}.Initialize(IEnumerable{TBehavior})"/> 逻辑中，具有此特性的类会无条件捕获几乎所有方法。
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, Inherited = true)]
-public sealed class CriticalBehaviorAttribute : Attribute { }
+public sealed class CriticalBehaviorAttribute : Attribute;
 
 public abstract class EntityBehavior<TEntity> where TEntity : Entity
 {
+    protected internal TEntity _entity;
+    protected internal bool _shouldConnect;
+
     public abstract Mod Mod { get; }
 
     /// <summary>
@@ -28,7 +30,7 @@ public abstract class EntityBehavior<TEntity> where TEntity : Entity
     /// <summary>
     /// 将指定实体连接到Behavior实例。
     /// </summary>
-    public virtual void Connect(TEntity entity) { }
+    protected virtual void Connect(TEntity entity) { }
 
     /// <summary>
     /// Allows you to modify the properties after initial loading has completed.
@@ -36,7 +38,7 @@ public abstract class EntityBehavior<TEntity> where TEntity : Entity
     public virtual void SetStaticDefaults() { }
 }
 
-public abstract class GeneralEntityBehavior<TEntity> : EntityBehavior<TEntity> where TEntity : Entity { }
+public abstract class GeneralEntityBehavior<TEntity> : EntityBehavior<TEntity> where TEntity : Entity;
 
 public abstract class GlobalEntityBehavior<TEntity> : GeneralEntityBehavior<TEntity> where TEntity : Entity
 {
@@ -45,7 +47,7 @@ public abstract class GlobalEntityBehavior<TEntity> : GeneralEntityBehavior<TEnt
     /// 此方法不应被调用，调用时抛出异常。
     /// </summary>
     /// <exception cref="NotSupportedException"></exception>
-    public sealed override void Connect(TEntity entity) => throw new NotSupportedException();
+    protected sealed override void Connect(TEntity entity) => throw new NotSupportedException();
 }
 
 public abstract class SingleEntityBehavior<TEntity> : EntityBehavior<TEntity> where TEntity : Entity
@@ -53,11 +55,11 @@ public abstract class SingleEntityBehavior<TEntity> : EntityBehavior<TEntity> wh
     public abstract int ApplyingType { get; }
 }
 
-public class SimpleEntityBehaviorSet<TEntity, TBehavior> : IEnumerable<TBehavior>
+public class SimpleEntityBehaviorSet<TEntity, TBehavior>
     where TEntity : Entity
     where TBehavior : EntityBehavior<TEntity>
 {
-    protected readonly Dictionary<string, List<TBehavior>> _data = [];
+    protected internal readonly Dictionary<string, List<TBehavior>> _data = [];
 
     public void Clear()
     {
@@ -90,7 +92,8 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior> : IEnumerable<TBehavior
         {
             foreach (TBehavior behavior in behaviors)
             {
-                behavior.Connect(entity);
+                behavior._entity = entity;
+                behavior._shouldConnect = true;
                 if (behavior.ShouldProcess)
                     yield return behavior;
             }
@@ -117,7 +120,8 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior> : IEnumerable<TBehavior
             {
                 if (behavior is T typedBehavior)
                 {
-                    typedBehavior.Connect(entity);
+                    behavior._entity = entity;
+                    behavior._shouldConnect = true;
                     if (typedBehavior.ShouldProcess)
                         yield return typedBehavior;
                 }
@@ -145,17 +149,6 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior> : IEnumerable<TBehavior
         foreach (string methodName in _data.Keys)
             _data[methodName] = [.. _data[methodName].Distinct().OrderByDescending(b => b.Priority)];
     }
-
-    public IEnumerator<TBehavior> GetEnumerator()
-    {
-        foreach (var behaviors in _data.Values)
-        {
-            foreach (var behavior in behaviors)
-                yield return behavior;
-        }
-    }
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
 public class GeneralEntityBehaviorSet<TEntity, TBehavior> : SimpleEntityBehaviorSet<TEntity, TBehavior> where TEntity : Entity
@@ -167,11 +160,11 @@ public class GlobalEntityBehaviorSet<TEntity, TBehavior> : GeneralEntityBehavior
     where TBehavior : GeneralEntityBehavior<TEntity>
 { }
 
-public class SingleEntityBehaviorSet<TEntity, TBehavior> : IEnumerable<TBehavior>
+public class SingleEntityBehaviorSet<TEntity, TBehavior>
     where TEntity : Entity
     where TBehavior : SingleEntityBehavior<TEntity>
 {
-    private readonly Dictionary<int, SimpleEntityBehaviorSet<TEntity, TBehavior>> _data = [];
+    protected internal readonly Dictionary<int, SimpleEntityBehaviorSet<TEntity, TBehavior>> _data = [];
 
     /// <summary>
     /// 尝试获取指定实体的行为实例。
@@ -187,7 +180,8 @@ public class SingleEntityBehaviorSet<TEntity, TBehavior> : IEnumerable<TBehavior
         {
             foreach (TBehavior temp in set.GetBehaviors(methodName))
             {
-                temp.Connect(entity);
+                temp._entity = entity;
+                temp._shouldConnect = true;
                 if (temp.ShouldProcess)
                 {
                     behavior = temp;
@@ -209,7 +203,7 @@ public class SingleEntityBehaviorSet<TEntity, TBehavior> : IEnumerable<TBehavior
     {
         foreach (IGrouping<int, TBehavior> group in (IEnumerable<IGrouping<int, TBehavior>>)behaviors.GroupBy(b => b.ApplyingType))
         {
-            _data[group.Key] = [];
+            _data[group.Key] = new();
             _data[group.Key].Initialize(group);
         }
     }
@@ -220,30 +214,30 @@ public class SingleEntityBehaviorSet<TEntity, TBehavior> : IEnumerable<TBehavior
             set.Clear();
         _data.Clear();
     }
-
-    public IEnumerator<TBehavior> GetEnumerator()
-    {
-        foreach (var behaviors in _data.Values)
-        {
-            foreach (TBehavior behavior in behaviors)
-                yield return behavior;
-        }
-    }
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 #endregion Base
 
 #region General Behavior
 public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
 {
-    public Player Player { get; protected set; } = null;
+    public Player Player => _entity;
 
-    public TOPlayer OceanPlayer { get; protected set; } = null;
-
-    public override void Connect(Player player)
+    public TOPlayer OceanPlayer
     {
-        Player = player;
+        get
+        {
+            if (_shouldConnect)
+            {
+                Connect(_entity);
+                _shouldConnect = false;
+            }
+            return field;
+        }
+        protected set;
+    }
+
+    protected override void Connect(Player player)
+    {
         OceanPlayer = player.Ocean();
     }
 
@@ -3374,15 +3368,26 @@ public abstract class TOGlobalItemBehavior : GlobalItemBehavior
 #region Single Behavior
 public abstract class SingleNPCBehavior : SingleEntityBehavior<NPC>
 {
-    public NPC NPC { get; protected set; } = null;
+    public NPC NPC => _entity;
 
-    public TOGlobalNPC OceanNPC { get; protected set; } = null;
+    public TOGlobalNPC OceanNPC
+    {
+        get
+        {
+            if (_shouldConnect)
+            {
+                Connect(_entity);
+                _shouldConnect = false;
+            }
+            return field;
+        }
+        protected set;
+    }
 
     public Player Target => Main.player[NPC.target];
 
-    public override void Connect(NPC npc)
+    protected override void Connect(NPC npc)
     {
-        NPC = npc;
         OceanNPC = npc.Ocean();
     }
 
@@ -3977,16 +3982,26 @@ public abstract class SingleNPCBehavior : SingleEntityBehavior<NPC>
 
 public abstract class SingleProjectileBehavior : SingleEntityBehavior<Projectile>
 {
-    public Projectile Projectile { get; protected set; } = null;
+    public Projectile Projectile => _entity;
 
-    public TOGlobalProjectile OceanProjectile { get; protected set; } = null;
-
-    public Player Owner { get; protected set; } = null;
-
-    public override void Connect(Projectile projectile)
+    public TOGlobalProjectile OceanProjectile
     {
-        Projectile = projectile;
-        Owner = projectile.Owner;
+        get
+        {
+            if (_shouldConnect)
+            {
+                Connect(_entity);
+                _shouldConnect = false;
+            }
+            return field;
+        }
+        protected set;
+    }
+
+    public Player Owner => Projectile.Owner;
+
+    protected override void Connect(Projectile projectile)
+    {
         OceanProjectile = projectile.Ocean();
     }
 
@@ -4239,13 +4254,24 @@ public abstract class SingleProjectileBehavior : SingleEntityBehavior<Projectile
 
 public abstract class SingleItemBehavior : SingleEntityBehavior<Item>
 {
-    public Item Item { get; protected set; } = null;
+    public Item Item => _entity;
 
-    public TOGlobalItem OceanItem { get; protected set; } = null;
-
-    public override void Connect(Item item)
+    public TOGlobalItem OceanItem
     {
-        Item = item;
+        get
+        {
+            if (_shouldConnect)
+            {
+                Connect(_entity);
+                _shouldConnect = false;
+            }
+            return field;
+        }
+        protected set;
+    }
+
+    protected override void Connect(Item item)
+    {
         OceanItem = item.Ocean();
     }
 
@@ -4858,8 +4884,11 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
     #region Defaults
     public override void SetStaticDefaults()
     {
-        foreach (TNPCBehavior npcBehavior in BehaviorSet)
-            npcBehavior.SetStaticDefaults();
+        foreach (SimpleEntityBehaviorSet<NPC, TNPCBehavior> simpleSet in BehaviorSet._data.Values)
+        {
+            foreach (TNPCBehavior npcBehavior in simpleSet.GetBehaviors())
+                npcBehavior.SetStaticDefaults();
+        }
     }
 
     public override void SetDefaults(NPC npc)
@@ -5439,8 +5468,11 @@ public abstract class SingleProjectileBehaviorHandler<TProjectileBehavior> : Glo
     #region Defaults
     public override void SetStaticDefaults()
     {
-        foreach (TProjectileBehavior projectileBehavior in BehaviorSet)
-            projectileBehavior.SetStaticDefaults();
+        foreach (SimpleEntityBehaviorSet<Projectile, TProjectileBehavior> simpleSet in BehaviorSet._data.Values)
+        {
+            foreach (TProjectileBehavior projectileBehavior in simpleSet.GetBehaviors())
+                projectileBehavior.SetStaticDefaults();
+        }
     }
 
     public override void SetDefaults(Projectile projectile)
@@ -5749,8 +5781,11 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
     #region Defaults
     public override void SetStaticDefaults()
     {
-        foreach (TItemBehavior itemBehavior in BehaviorSet)
-            itemBehavior.SetStaticDefaults();
+        foreach (SimpleEntityBehaviorSet<Item, TItemBehavior> simpleSet in BehaviorSet._data.Values)
+        {
+            foreach (TItemBehavior itemBehavior in simpleSet.GetBehaviors())
+                itemBehavior.SetStaticDefaults();
+        }
     }
 
     public override void SetDefaults(Item item)
@@ -5761,8 +5796,11 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
 
     public override void AddRecipes()
     {
-        foreach (TItemBehavior itemBehavior in BehaviorSet)
-            itemBehavior.AddRecipes();
+        foreach (SimpleEntityBehaviorSet<Item, TItemBehavior> simpleSet in BehaviorSet._data.Values)
+        {
+            foreach (TItemBehavior itemBehavior in simpleSet.GetBehaviors())
+                itemBehavior.AddRecipes();
+        }
     }
     #endregion Defaults
 
@@ -6445,7 +6483,7 @@ public sealed class PlayerBehaviorHandler : ModPlayer, IResourceLoader
 
     public override void SetStaticDefaults()
     {
-        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
+        foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors())
             behavior.SetStaticDefaults();
     }
 

@@ -107,6 +107,12 @@ public abstract class CalamityPlayerDetour : ModPlayerDetour<CalamityPlayer>
         TryApplyDetour(Detour_OtherBuffEffects);
     }
 }
+
+public abstract class CalamityGlobalNPCDetour : GlobalNPCDetour<CalamityGlobalNPC> { }
+
+public abstract class CalamityGlobalProjectileDetour : GlobalProjectileDetour<CalamityGlobalProjectile> { }
+
+public abstract class CalamityGlobalItemDetour : GlobalItemDetour<CalamityGlobalItem> { }
 #endregion Normal
 #endregion Calamity Detour
 
@@ -390,6 +396,21 @@ public abstract class CABaseLaserbeamProjectileDetour<T> : BaseLaserbeamProjecti
 }
 
 public abstract class CACalamityPlayerDetour : CalamityPlayerDetour
+{
+    public override bool ShouldApplyDetour => CAServerConfig.Instance.Contents;
+}
+
+public abstract class CACalamityGlobalNPCDetour : CalamityGlobalNPCDetour
+{
+    public override bool ShouldApplyDetour => CAServerConfig.Instance.Contents;
+}
+
+public abstract class CACalamityGlobalProjectileDetour : CalamityGlobalProjectileDetour
+{
+    public override bool ShouldApplyDetour => CAServerConfig.Instance.Contents;
+}
+
+public abstract class CACalamityGlobalItemDetour : CalamityGlobalItemDetour
 {
     public override bool ShouldApplyDetour => CAServerConfig.Instance.Contents;
 }

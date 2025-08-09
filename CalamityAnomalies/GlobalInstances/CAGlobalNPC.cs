@@ -141,7 +141,7 @@ public sealed class CAGlobalNPC : GlobalNPC, IResourceLoader
     }
 
     #region 额外数据
-    public bool NeverTrippy
+    public bool ShouldRunAnomalyAI
     {
         get => InternalAnomalyAI32[0].bits[0];
         set
@@ -149,19 +149,6 @@ public sealed class CAGlobalNPC : GlobalNPC, IResourceLoader
             if (InternalAnomalyAI32[0].bits[0] != value)
             {
                 InternalAnomalyAI32[0].bits[0] = value;
-                InternalAIChanged32[0] = true;
-            }
-        }
-    }
-
-    public bool ShouldRunAnomalyAI
-    {
-        get => InternalAnomalyAI32[0].bits[1];
-        set
-        {
-            if (InternalAnomalyAI32[0].bits[1] != value)
-            {
-                InternalAnomalyAI32[0].bits[1] = value;
                 InternalAIChanged32[0] = true;
             }
         }
@@ -221,7 +208,7 @@ public sealed class CAGlobalNPC : GlobalNPC, IResourceLoader
         }
     }
 
-    public int Debuff_DimensionalTorn
+    public int Debuff_DimensionalRend
     {
         get => InternalAnomalyAI32[5].i;
         set

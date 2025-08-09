@@ -1,4 +1,9 @@
 DimensionalTorn: {
-	DisplayName: Î¬¶ÈËºÁÑ
-	Description: ³¬Ô½¿Õ¼äÊø¸¿µÄ´ú¼Û£¬ÊÇÊ§È¥¶ÔÏÖÊµµÄ¿ØÖÆ
+	DisplayName: Î¬ï¿½ï¿½Ëºï¿½ï¿½
+	Description: ï¿½ï¿½Ô½ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä´ï¿½ï¿½Û£ï¿½ï¿½ï¿½Ê§È¥ï¿½ï¿½ï¿½ï¿½Êµï¿½Ä¿ï¿½ï¿½ï¿½
+}
+
+DimensionalRend: {
+	// DisplayName: Dimensional Rend
+	// Description: Mods.CalamityAnomalies.Buffs.DimensionalRend.Description
 }

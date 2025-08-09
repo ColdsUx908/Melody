@@ -265,6 +265,7 @@ dotnet_naming_style.以下划线开始的驼峰拼写法.word_separator =
 dotnet_naming_style.以下划线开始的驼峰拼写法.capitalization = camel_case
 csharp_style_prefer_unbound_generic_type_in_nameof = true:suggestion
 csharp_style_prefer_implicitly_typed_lambda_expression = true:suggestion
+dotnet_diagnostic.CA1805.severity = silent
 
 [*.{cs,vb}]
 end_of_line = crlf
@@ -278,7 +279,7 @@ dotnet_style_readonly_field = true:suggestion
 dotnet_style_parentheses_in_arithmetic_binary_operators = always_for_clarity:silent
 dotnet_style_parentheses_in_other_binary_operators = always_for_clarity:silent
 dotnet_style_parentheses_in_relational_binary_operators = always_for_clarity:silent
-dotnet_style_parentheses_in_other_operators = never_if_unnecessary:silent
+dotnet_style_parentheses_in_other_operators = always_for_clarity:silent
 dotnet_style_allow_multiple_blank_lines_experimental = true:silent
 dotnet_style_allow_statement_immediately_after_block_experimental = true:silent
 dotnet_style_coalesce_expression = true:suggestion
@@ -297,18 +298,19 @@ dotnet_style_prefer_compound_assignment = true:suggestion
 dotnet_style_prefer_simplified_interpolation = true:suggestion
 dotnet_style_prefer_collection_expression = when_types_loosely_match:suggestion
 dotnet_style_namespace_match_folder = true:suggestion
-dotnet_style_predefined_type_for_locals_parameters_members = true:silent
-dotnet_style_predefined_type_for_member_access = true:silent
+dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
+dotnet_style_predefined_type_for_member_access = true:suggestion
 tab_width = 4
 indent_size = 4
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
 
 # IDE0130: 命名空间与文件夹结构不匹配
 dotnet_diagnostic.IDE0130.severity = silent
-dotnet_diagnostic.CA1001.severity = suggestion
+dotnet_diagnostic.CA1001.severity = warning
 dotnet_diagnostic.CA1000.severity = silent
 dotnet_diagnostic.CA1036.severity = suggestion
 dotnet_diagnostic.CA1050.severity = warning
+dotnet_diagnostic.CA2211.severity = silent
 
 [*.vb]
 dotnet_diagnostic.CA1047.severity = warning

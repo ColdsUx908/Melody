@@ -1,13 +1,20 @@
 ﻿using CalamityMod.Events;
 using CalamityMod.NPCs.Providence;
 
-namespace CalamityAnomalies.GlobalInstances.Behaviors.NPCs;
+namespace CalamityAnomalies.GlobalInstances.Single;
 
-public sealed class CANPCDR : CAGlobalNPCBehavior, IResourceLoader
+public sealed class CANPCDR : CAGlobalNPCBehavior2, IResourceLoader
 {
+    public delegate void Orig_ApplyDR(CalamityGlobalNPC self, NPC npc, ref NPC.HitModifiers modifiers);
+
+    /// <summary>
+    /// 禁用灾厄的DR机制。
+    /// </summary>
+    public static void Detour_ApplyDR(Orig_ApplyDR orig, CalamityGlobalNPC self, NPC npc, ref NPC.HitModifiers modifiers) { }
+
     public delegate float Orig_DRMath(CalamityGlobalNPC self, NPC npc, float DR);
-    public static Orig_DRMath OrigMethod_CustomDRMath { get; private set; } = null;
-    public static Orig_DRMath OrigMethod_DefaultDRMath { get; private set; } = null;
+    public static Orig_DRMath OrigMethod_CustomDRMath { get; private set; }
+    public static Orig_DRMath OrigMethod_DefaultDRMath { get; private set; }
 
     public static float GetBaseDR(NPC npc)
     {
@@ -17,9 +24,6 @@ public sealed class CANPCDR : CAGlobalNPCBehavior, IResourceLoader
 
     public static float GetTimedDR(NPC npc, float baseDR)
     {
-        if (BossRushEvent.BossRushActive || CAWorld.Anomaly)
-            return 0f;
-
         float timedDR = 0f;
         CalamityGlobalNPC calamityNPC = npc.Calamity();
         int killTime = calamityNPC.KillTime;
@@ -63,6 +67,9 @@ public sealed class CANPCDR : CAGlobalNPCBehavior, IResourceLoader
 
     public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
     {
+        if (!CAServerConfig.Instance.Contents)
+            return;
+
         float baseDR = GetBaseDR(npc);
         StatModifier baseDRModifier = new();
         StatModifier standardDRModifier = new();
@@ -80,6 +87,8 @@ public sealed class CANPCDR : CAGlobalNPCBehavior, IResourceLoader
     void IResourceLoader.PostSetupContent()
     {
         Type type = typeof(CalamityGlobalNPC);
+        if (CAServerConfig.Instance.Contents)
+            TODetourUtils.Modify(type, "ApplyDR", Detour_ApplyDR);
         OrigMethod_CustomDRMath = type.GetMethod("CustomDRMath", TOReflectionUtils.UniversalBindingFlags).CreateDelegate<Orig_DRMath>();
         OrigMethod_DefaultDRMath = type.GetMethod("DefaultDRMath", TOReflectionUtils.UniversalBindingFlags).CreateDelegate<Orig_DRMath>();
     }

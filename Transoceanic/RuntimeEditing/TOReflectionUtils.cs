@@ -171,9 +171,18 @@ public static class TOReflectionUtils
         where attribute is not null
         select (method, attribute);
 
-    public static Type GetTerrariaType(string typeName) =>
-        TOMain.TerrariaTypes.FirstOrDefault(t => t.Name == typeName) ??
-        throw new ArgumentException($"Type '{typeName}' not found in Terraria types.", nameof(typeName));
+    public static Type GetTerrariaType(string typeName)
+    {
+        if (TOMain.TerrariaTypes.TryGetValue(typeName, out Type[] types))
+        {
+            if (types.Length == 1)
+                return types[0];
+            else
+                throw new ArgumentException($"More than one Terraria types '{typeName}' has been found.", nameof(typeName));
+        }
+        else
+            throw new ArgumentException($"Type '{typeName}' not found in Terraria types.", nameof(typeName));
+    }
 
     public static void SetStructField<T>(ref T target, FieldInfo field, object value) where T : struct
     {

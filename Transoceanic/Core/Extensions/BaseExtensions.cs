@@ -227,6 +227,12 @@ public static partial class TOExtensions
         public bool IsImplicitInterfaceImplementation => method.IsInterfaceImplementation && !method.Name.Contains('.');
     }
 
+    extension(Rectangle rect)
+    {
+        public bool Contains(Vector2 point) =>
+            point.X >= rect.Left && point.X <= rect.Right && point.Y >= rect.Top && point.Y <= rect.Bottom;
+    }
+
     extension(Regex regex)
     {
         public bool TryMatch(string input, [NotNullWhen(true)] out Match match)

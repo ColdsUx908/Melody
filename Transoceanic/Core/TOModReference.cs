@@ -22,12 +22,12 @@ public record TOModReferenceContainer
     /// <summary>
     /// Mod是否已加载。
     /// </summary>
-    public readonly bool IsLoaded = false;
+    public readonly bool IsLoaded;
 
     /// <summary>
     /// Mod实例。若 <see cref="IsLoaded"/> 为 <see langword="false"/>，值为 <see langword="null"/>。
     /// </summary>
-    public readonly Mod Mod = null;
+    public readonly Mod Mod;
 }
 
 public sealed class TOModReferences : IResourceLoader

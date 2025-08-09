@@ -3,21 +3,21 @@ namespace Transoceanic.GlobalInstances;
 
 public sealed class TOPlayer : ModPlayer, IResourceLoader
 {
-    public CommandCallInfo CommandCallInfo { get; internal set; } = null;
+    public CommandCallInfo CommandCallInfo { get; internal set; }
 
-    public int GameTime { get; internal set; } = 0;
+    public int GameTime { get; internal set; }
 
-    public bool IsHurt = false;
+    public bool IsHurt;
 
     /// <summary>
     /// 透支生命值。
     /// </summary>
-    public double OverdrawnLife = 0;
+    public double OverdrawnLife;
 
     /// <summary>
     /// 透支生命值的最大值，可超过玩家生命值，默认为零。
     /// </summary>
-    public double OverdrawnLifeLimit = 0;
+    public double OverdrawnLifeLimit;
 
     /// <summary>
     /// 透支生命值回复指数。
@@ -37,9 +37,9 @@ public sealed class TOPlayer : ModPlayer, IResourceLoader
     /// <summary>
     /// 回复透支生命值所需的最小未受击时间。
     /// </summary>
-    public int OverdrawnLifeRegenThreshold = 0;
+    public int OverdrawnLifeRegenThreshold;
 
-    public int TimeWithoutHurt = 0;
+    public int TimeWithoutHurt;
 
     /// <summary>
     /// 提升玩家翅膀飞行时间的乘区。

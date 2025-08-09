@@ -1,10 +1,3 @@
-Permafrost: {
-	Spawn: 至尊大法师，永冻已苏醒！
-	Welcome1: 感谢游玩Calamity Anomalies！
-	Welcome2: 现在你要面对的是，真正的最终挑战。
-	Beginning: 将你的真正实力展示在我面前！
-}
-
 AscendantWings: {
 	DisplayName: 上界之翼
 	Tooltip:
@@ -13,4 +6,18 @@ AscendantWings: {
 		雷鸣暴雪之夜，以雷击金雕之羽而成
 		抟扶摇。上九霄，弹指可至任意弦
 		'''
+}
+
+ColdheartIcicle: {
+	DisplayName: 寒心冰柱
+	Tooltip: ""
+}
+
+ColdheartIcicleProj.DisplayName: 寒心冰柱
+
+Permafrost: {
+	Spawn: 至尊大法师，永冻已苏醒！
+	Welcome1: 感谢游玩Calamity Anomalies！
+	Welcome2: 现在你要面对的是，真正的最终挑战。
+	Beginning: 将你的真正实力展示在我面前！
 }

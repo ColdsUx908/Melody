@@ -2,46 +2,46 @@
 
 public class PlayerDownedBoss
 {
-    public bool KingSlime { get; set; } = false;
-    public bool EyeOfCthulhu { get; set; } = false;
-    public bool EvilBoss { get; set; } = false;
-    public bool EaterOfWorld { get; set; } = false;
-    public bool BrainOfCthulhu { get; set; } = false;
-    public bool QueenBee { get; set; } = false;
-    public bool Skeletron { get; set; } = false;
-    public bool Deerclops { get; set; } = false;
-    public bool WallOfFlesh { get; set; } = false;
-    public bool DukeFishron { get; set; } = false;
-    public bool QueenSlime { get; set; } = false;
-    public bool Destroyer { get; set; } = false;
-    public bool Twins { get; set; } = false;
-    public bool SkeletronPrime { get; set; } = false;
-    public bool MechBossAny { get; set; } = false;
-    public bool MechBossAnyTwo { get; set; } = false;
-    public bool MechBossAll { get; set; } = false;
-    public bool Plantera { get; set; } = false;
-    public bool EmpressOfLight { get; set; } = false;
-    public bool Golem { get; set; } = false;
-    public bool LunaticCultist { get; set; } = false;
-    public bool MoonLord { get; set; } = false;
+    public bool KingSlime { get; set; }
+    public bool EyeOfCthulhu { get; set; }
+    public bool EvilBoss { get; set; }
+    public bool EaterOfWorld { get; set; }
+    public bool BrainOfCthulhu { get; set; }
+    public bool QueenBee { get; set; }
+    public bool Skeletron { get; set; }
+    public bool Deerclops { get; set; }
+    public bool WallOfFlesh { get; set; }
+    public bool DukeFishron { get; set; }
+    public bool QueenSlime { get; set; }
+    public bool Destroyer { get; set; }
+    public bool Twins { get; set; }
+    public bool SkeletronPrime { get; set; }
+    public bool MechBossAny { get; set; }
+    public bool MechBossAnyTwo { get; set; }
+    public bool MechBossAll { get; set; }
+    public bool Plantera { get; set; }
+    public bool EmpressOfLight { get; set; }
+    public bool Golem { get; set; }
+    public bool LunaticCultist { get; set; }
+    public bool MoonLord { get; set; }
 
-    public bool Goblins { get; set; } = false;
-    public bool Frost { get; set; } = false;
-    public bool Pirates { get; set; } = false;
-    public bool Martians { get; set; } = false;
+    public bool Goblins { get; set; }
+    public bool Frost { get; set; }
+    public bool Pirates { get; set; }
+    public bool Martians { get; set; }
 
-    public bool MourningWood { get; set; } = false;
-    public bool Pumpking { get; set; } = false;
-    public bool Everscream { get; set; } = false;
-    public bool SantaNK1 { get; set; } = false;
-    public bool IceQueen { get; set; } = false;
-    public bool Betsy { get; set; } = false;
-    public bool Dreadnautilus { get; set; } = false;
+    public bool MourningWood { get; set; }
+    public bool Pumpking { get; set; }
+    public bool Everscream { get; set; }
+    public bool SantaNK1 { get; set; }
+    public bool IceQueen { get; set; }
+    public bool Betsy { get; set; }
+    public bool Dreadnautilus { get; set; }
 
-    public bool SolarTower { get; set; } = false;
-    public bool VortexTower { get; set; } = false;
-    public bool NebulaTower { get; set; } = false;
-    public bool StardustTower { get; set; } = false;
+    public bool SolarTower { get; set; }
+    public bool VortexTower { get; set; }
+    public bool NebulaTower { get; set; }
+    public bool StardustTower { get; set; }
 
     public virtual void WorldPolluted()
     {

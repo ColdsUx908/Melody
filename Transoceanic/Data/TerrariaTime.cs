@@ -50,21 +50,21 @@ public readonly struct TerrariaTime : IEquatable<TerrariaTime>
             }
             if (minute is < 0 or >= 60)
             {
-                builder.Append((argumentInvalid ? ", " : "") + $"{nameof(minute)} : {minute}");
+                builder.Append((argumentInvalid ? ", " : "") + $"{nameof(minute)}: {minute}");
                 argumentInvalid = true;
             }
             if (second is < 0 or >= 60)
             {
-                builder.Append((argumentInvalid ? ", " : "") + $"{nameof(second)} : {second}");
+                builder.Append((argumentInvalid ? ", " : "") + $"{nameof(second)}: {second}");
                 argumentInvalid = true;
             }
 
             if (argumentInvalid)
-                throw new ArgumentException(builder.ToString());
+                throw new ArgumentOutOfRangeException(builder.ToString());
             else
                 Time = hour + minute / 60.0 + second / 3600.0;
         }
-        catch (ArgumentException e)
+        catch (ArgumentOutOfRangeException e)
         {
             TOLocalizationUtils.ChatDebugErrorMessage("TerrariaTime", Main.LocalPlayer, e.Message);
         }
@@ -117,7 +117,7 @@ public struct TerrariaTimer : IEquatable<TerrariaTimer>, IComparable<TerrariaTim
 {
     public int TotalTicks
     {
-        readonly get;
+        get;
         private set
         {
             if (value < 0)
