@@ -7,7 +7,7 @@ public static partial class TOMathHelper
     /// <br/>计算公式为：<c>C = 60f / 8f * 0.681818f</c>
     /// （一像素为 <c>1/8</c> 英尺）
     /// </summary>
-    private const float MphsPerPpt = 5.1136364f;
+    public const float MphsPerPpt = 5.1136364f;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Pixptick_To_Mph(float value) => value * MphsPerPpt;

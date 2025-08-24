@@ -40,17 +40,17 @@ public static class YharimsGift_Handler
 
     public static Color GiftColor2 => Color.Lerp(Color.OrangeRed, GiftColor, 0.5f);
 
-    public static void AddBlessingTooltip(Item item) => item.Anomaly().TooltipModifier.AddCATooltip(l =>
+    public static void AddBlessingTooltip() => CAItemTooltipModifier.Instance.AddCATooltip(l =>
     {
         l.Text = Language.GetTextValue(LocalizationPrefix + "BlessingTooltip");
         l.OverrideColor = GiftColor;
-    }, false);
+    });
 
-    public static void AddGoldTooltip(Item item, Action<TooltipLine> action) => item.Anomaly().TooltipModifier.AddCATooltip(l =>
+    public static void AddGoldTooltip(Action<TooltipLine> action) => CAItemTooltipModifier.Instance.AddCATooltip(l =>
     {
         l.OverrideColor = Color.Gold;
         action(l);
-    }, false);
+    });
 
     public static void DrawEnergyAndBorderBehindItem(Item item, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Vector2 origin, float scale)
     {
@@ -67,7 +67,7 @@ public static class YharimsGift_Handler
             int index = GetBlessingIndex(item.type);
             if (index != 0)
             {
-                int buffTimer = anomalyPlayer.YharimsGift_Change[index].GetValue(TOWorld.GameTimer.TotalTicks, 40, true);
+                int buffTimer = anomalyPlayer.YharimsGift_Change[index].GetValue(TOWorld.GameTimer.TotalTicks, 40, item.type == CurrentBlessingType);
                 int timer = TOMathHelper.Min(blessingOcean.GetEquippedTimer(40), giftOcean.GetEquippedTimer(40), buffTimer);
                 item.DrawInventoryWithBorder(spriteBatch, position, frame, origin, scale, 24, (TOMathHelper.GetTimeSin(0.3f, 0.7f, TOMathHelper.PiOver12, true) + 2.8f) * timer / 40f, GiftColor2);
             }
@@ -75,9 +75,11 @@ public static class YharimsGift_Handler
     }
 }
 
-public sealed class YharimsGift_Tweak : CAItemTweak<YharimsGift>, ILocalizationPrefix
+public sealed class YharimsGift_Tweak : CAItemTweak<YharimsGift>, ICATweakLocalizationPrefix
 {
-    public string LocalizationPrefix => CAMain.TweakLocalizationPrefix + "5.2.YharimsGift.";
+    CATweakPhase ICATweakLocalizationPrefix.Phase => CATweakPhase.PostYharon;
+
+    string ICATweakLocalizationPrefix.Name => "YharimsGift";
 
     public override void UpdateAccessory(Player player, bool hideVisual)
     {
@@ -89,19 +91,21 @@ public sealed class YharimsGift_Tweak : CAItemTweak<YharimsGift>, ILocalizationP
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
-        AnomalyItem.TooltipModifier
+        CAItemTooltipModifier.Instance
             .ClearAllCATooltips()
             .AddCATooltip(l =>
             {
                 l.Text = this.GetTextFormatWithPrefix("CATooltip0", YharimsGift_Handler.BlessingName);
                 l.OverrideColor = YharimsGift_Handler.GiftColor;
-            }, false);
+            });
     }
 }
 
-public sealed class YharimsGift_Player : CAPlayerBehavior2, ILocalizationPrefix
+public sealed class YharimsGift_Player : CAPlayerBehavior2, ICATweakLocalizationPrefix
 {
-    public string LocalizationPrefix => CAMain.TweakLocalizationPrefix + "5.2.YharimsGift.";
+    CATweakPhase ICATweakLocalizationPrefix.Phase => CATweakPhase.PostYharon;
+
+    string ICATweakLocalizationPrefix.Name => "YharimsGift";
 
     public override void ProcessTriggers(TriggersSet triggersSet)
     {
@@ -115,8 +119,13 @@ public sealed class YharimsGift_Player : CAPlayerBehavior2, ILocalizationPrefix
                 else
                     AnomalyPlayer.YharimsGift_Change[i].LastOff = TOWorld.GameTimer.TotalTicks;
             }
-            TOLocalizationUtils.ChatLocalizedTextFormat(LocalizationPrefix + "BlessingChange", Main.LocalPlayer, Color.Gold, YharimsGift_Handler.BlessingName);
+            TOLocalizationUtils.ChatLiteralText(this.GetTextFormatWithPrefix("BlessingChange", YharimsGift_Handler.BlessingName), Color.Gold, Main.LocalPlayer);
         }
+    }
+
+    public override void ResetEffects()
+    {
+        AnomalyPlayer.YharimsGift.Value = false;
     }
 
     public override void SaveData(TagCompound tag) => tag["YharimsGift_Blessing"] = (int)AnomalyPlayer.YharimsGift_Blessing;

@@ -32,6 +32,8 @@ namespace CalamityAnomalies.GlobalInstances;
 public sealed class CAPlayer : ModPlayer
 {
     //数据变量按字母顺序排列
+    public int Coldheart_Phase;
+    public int Coldheart_SubPhase;
 
     public bool Debuff_DimensionalRend;
 
@@ -46,6 +48,9 @@ public sealed class CAPlayer : ModPlayer
     public override ModPlayer Clone(Player newEntity)
     {
         CAPlayer clone = (CAPlayer)base.Clone(newEntity);
+
+        clone.Coldheart_Phase = Coldheart_Phase;
+        clone.Coldheart_SubPhase = Coldheart_SubPhase;
 
         clone.Debuff_DimensionalRend = Debuff_DimensionalRend;
         clone.DownedBossCalamity = DownedBossCalamity;
@@ -62,7 +67,6 @@ public sealed class CAPlayer : ModPlayer
     public override void ResetEffects()
     {
         Debuff_DimensionalRend = false;
-        YharimsGift.Value = false;
 
         base.ResetEffects();
     }

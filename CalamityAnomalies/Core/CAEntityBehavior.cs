@@ -1,44 +1,15 @@
-﻿namespace CalamityAnomalies.Core;
+﻿using CalamityAnomalies.GlobalInstances.Single;
+
+namespace CalamityAnomalies.Core;
 
 #region General Behavior
 public abstract class CAPlayerBehavior : PlayerBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public CAPlayer AnomalyPlayer
-    {
-        get
-        {
-            if (_shouldConnect)
-            {
-                Connect(_entity);
-                _shouldConnect = false;
-            }
-            return field;
-        }
-        protected set;
-    }
+    public CAPlayer AnomalyPlayer => _entity.Anomaly();
 
-    public CalamityPlayer CalamityPlayer
-    {
-        get
-        {
-            if (_shouldConnect)
-            {
-                Connect(_entity);
-                _shouldConnect = false;
-            }
-            return field;
-        }
-        protected set;
-    }
-
-    protected override void Connect(Player player)
-    {
-        base.Connect(player);
-        AnomalyPlayer = player.Anomaly();
-        CalamityPlayer = player.Calamity();
-    }
+    public CalamityPlayer CalamityPlayer => _entity.Calamity();
 }
 
 public abstract class CAGlobalNPCBehavior : GlobalNPCBehavior
@@ -75,11 +46,23 @@ public abstract class CAGlobalNPCBehavior : GlobalNPCBehavior
 public abstract class CAGlobalProjectileBehavior : GlobalProjectileBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
+
+    /// <summary>
+    /// 编辑受击NPC的DR。
+    /// </summary>
+    /// <param name="baseDR">由灾厄方法计算出的基础DR。</param>
+    public virtual void ModifyHitNPC_DR(Projectile projectile, NPC target, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
 }
 
 public abstract class CAGlobalItemBehavior : GlobalItemBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
+
+    /// <summary>
+    /// 编辑受击NPC的DR。
+    /// </summary>
+    /// <param name="baseDR">由灾厄方法计算出的基础DR。</param>
+    public virtual void ModifyHitNPC_DR(Item item, NPC target, Player player, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
 }
 
 public abstract class CAPlayerBehavior2 : CAPlayerBehavior
@@ -116,40 +99,9 @@ public abstract class CASingleNPCBehavior : SingleNPCBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public CAGlobalNPC AnomalyNPC
-    {
-        get
-        {
-            if (_shouldConnect)
-            {
-                Connect(_entity);
-                _shouldConnect = false;
-            }
-            return field;
-        }
-        protected set;
-    }
+    public CAGlobalNPC AnomalyNPC => _entity.Anomaly();
 
-    public CalamityGlobalNPC CalamityNPC
-    {
-        get
-        {
-            if (_shouldConnect)
-            {
-                Connect(_entity);
-                _shouldConnect = false;
-            }
-            return field;
-        }
-        protected set;
-    }
-
-    protected override void Connect(NPC npc)
-    {
-        base.Connect(npc);
-        AnomalyNPC = npc.Anomaly();
-        CalamityNPC = npc.Calamity();
-    }
+    public CalamityGlobalNPC CalamityNPC => _entity.Calamity();
 
     /// <summary>
     /// 是否允许灾厄的相关方法执行。
@@ -188,41 +140,23 @@ public abstract class CASingleNPCBehavior<T> : CASingleNPCBehavior where T : Mod
 {
     public static readonly Type Type = typeof(T);
 
-    public T ModNPC
-    {
-        get
-        {
-            if (_shouldConnect)
-            {
-                Connect(_entity);
-                _shouldConnect = false;
-            }
-            return field;
-        }
-        protected set;
-    }
+    public T ModNPC => _entity.GetModNPC<T>();
 
     public override int ApplyingType => ModContent.NPCType<T>();
-
-    protected override void Connect(NPC npc)
-    {
-        base.Connect(npc);
-        ModNPC = npc.GetModNPC<T>();
-    }
 }
 
 public abstract class AnomalyNPCBehavior : CASingleNPCBehavior
 {
     public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => CAWorld.Anomaly && AnomalyNPC.ShouldRunAnomalyAI;
+    public override bool ShouldProcess => CAWorld.Anomaly && (AnomalyNPC?.ShouldRunAnomalyAI ?? false);
 }
 
 public abstract class AnomalyNPCBehavior<T> : CASingleNPCBehavior<T> where T : ModNPC
 {
     public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => CAWorld.Anomaly && AnomalyNPC.ShouldRunAnomalyAI;
+    public override bool ShouldProcess => CAWorld.Anomaly && (AnomalyNPC?.ShouldRunAnomalyAI ?? false);
 }
 
 public abstract class CANPCTweak : CASingleNPCBehavior
@@ -252,40 +186,9 @@ public abstract class CASingleProjectileBehavior : SingleProjectileBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public CAGlobalProjectile AnomalyProjectile
-    {
-        get
-        {
-            if (_shouldConnect)
-            {
-                Connect(_entity);
-                _shouldConnect = false;
-            }
-            return field;
-        }
-        protected set;
-    }
+    public CAGlobalProjectile AnomalyProjectile => _entity.Anomaly();
 
-    public CalamityGlobalProjectile CalamityProjectile
-    {
-        get
-        {
-            if (_shouldConnect)
-            {
-                Connect(_entity);
-                _shouldConnect = false;
-            }
-            return field;
-        }
-        protected set;
-    }
-
-    protected override void Connect(Projectile projectile)
-    {
-        base.Connect(projectile);
-        AnomalyProjectile = projectile.Anomaly();
-        CalamityProjectile = projectile.Calamity();
-    }
+    public CalamityGlobalProjectile CalamityProjectile => _entity.Calamity();
 
     /// <summary>
     /// 是否允许灾厄的相关方法执行。
@@ -297,50 +200,30 @@ public abstract class CASingleProjectileBehavior : SingleProjectileBehavior
     /// 编辑受击NPC的DR。
     /// </summary>
     /// <param name="baseDR">由灾厄方法计算出的基础DR。</param>
-    public virtual void ModifyHitNPC_DR(NPC npc, ref NPC.HitModifiers modifiers, float baseDR,
-        ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier)
-    { }
+    public virtual void ModifyHitNPC_DR(NPC target, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
 }
 
 public abstract class CASingleProjectileBehavior<T> : CASingleProjectileBehavior where T : ModProjectile
 {
     public static readonly Type Type = typeof(T);
 
-    public T ModProjectile
-    {
-        get
-        {
-            if (_shouldConnect)
-            {
-                Connect(_entity);
-                _shouldConnect = false;
-            }
-            return field;
-        }
-        protected set;
-    }
+    public T ModProjectile => _entity.GetModProjectile<T>();
 
     public override int ApplyingType => ModContent.ProjectileType<T>();
-
-    protected override void Connect(Projectile projectile)
-    {
-        base.Connect(projectile);
-        ModProjectile = projectile.GetModProjectile<T>();
-    }
 }
 
 public abstract class AnomalyProjectileBehavior : CASingleProjectileBehavior
 {
     public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => CAWorld.Anomaly && AnomalyProjectile.ShouldRunAnomalyAI;
+    public override bool ShouldProcess => CAWorld.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
 }
 
 public abstract class AnomalyProjecileBehavior<T> : CASingleProjectileBehavior<T> where T : ModProjectile
 {
     public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => CAWorld.Anomaly && AnomalyProjectile.ShouldRunAnomalyAI;
+    public override bool ShouldProcess => CAWorld.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
 }
 
 public abstract class CAProjectileTweak : CASingleProjectileBehavior
@@ -363,55 +246,15 @@ public abstract class CASingleItemBehavior : SingleItemBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public CAGlobalItem AnomalyItem
-    {
-        get
-        {
-            if (_shouldConnect)
-            {
-                Connect(_entity);
-                _shouldConnect = false;
-            }
-            return field;
-        }
-        protected set;
-    }
+    public CAGlobalItem AnomalyItem => _entity.Anomaly();
 
-    public CalamityGlobalItem CalamityItem
-    {
-        get
-        {
-            if (_shouldConnect)
-            {
-                Connect(_entity);
-                _shouldConnect = false;
-            }
-            return field;
-        }
-        protected set;
-    }
-
-    protected override void Connect(Item item)
-    {
-        base.Connect(item);
-        AnomalyItem = item.Anomaly();
-        CalamityItem = item.Calamity();
-    }
+    public CalamityGlobalItem CalamityItem => _entity.Calamity();
 
     /// <summary>
     /// 编辑受击NPC的DR。
     /// </summary>
     /// <param name="baseDR">由灾厄方法计算出的基础DR。</param>
-    public virtual void ModifyHitNPC_DR(NPC npc, Player player, ref NPC.HitModifiers modifiers, float baseDR,
-        ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier)
-    { }
-
-    /// <summary>
-    /// <inheritdoc/><para/>
-    /// <see cref="CAGlobalItem.TooltipModifier"/> 在此方法前更新，可在 <see cref="AnomalyItem"/> 中使用。
-    /// </summary>
-    /// <param name="tooltips"></param>
-    public override void ModifyTooltips(List<TooltipLine> tooltips) => base.ModifyTooltips(tooltips);
+    public virtual void ModifyHitNPC_DR(NPC target, Player player, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
 
     public void ApplyCATweakColorToDamage() => OceanItem.TooltipDictionary.Modify(null, "Damage", l => l.OverrideColor = CAMain.GetGradientColor(0.25f));
 }
@@ -420,27 +263,9 @@ public abstract class CASingleItemBehavior<T> : CASingleItemBehavior where T : M
 {
     public static readonly Type Type = typeof(T);
 
-    public T ModItem
-    {
-        get
-        {
-            if (_shouldConnect)
-            {
-                Connect(_entity);
-                _shouldConnect = false;
-            }
-            return field;
-        }
-        protected set;
-    }
+    public T ModItem => _entity.GetModItem<T>();
 
     public override int ApplyingType => ModContent.ItemType<T>();
-
-    protected override void Connect(Item item)
-    {
-        base.Connect(item);
-        ModItem = item.GetModItem<T>();
-    }
 }
 
 public abstract class CAItemTweak : CASingleItemBehavior
@@ -494,16 +319,15 @@ public sealed class CASingleItemBehaviorHandler : SingleItemBehaviorHandler<CASi
 
     public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
     {
-        CAGlobalItem anomalyItem = item.Anomaly();
-        anomalyItem.TooltipModifier = new(tooltips);
         if (TryGetBehavior(item, out CASingleItemBehavior itemBehavior))
         {
+            CAItemTooltipModifier.Instance.Update(tooltips);
             itemBehavior.ModifyTooltips(tooltips);
-            anomalyItem.TooltipModifier.AddCATooltip(l =>
+            CAItemTooltipModifier.Instance.AddCATooltip(l =>
             {
                 l.Text = Language.GetTextValue(CAMain.TweakLocalizationPrefix + "TweakIdentifier");
                 l.OverrideColor = TOMain.CelestialColor;
-            }, false);
+            });
         }
     }
 }

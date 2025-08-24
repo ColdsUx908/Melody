@@ -8,4 +8,6 @@ public static class TONPCUtils
         NPCID.Spazmatism => !NPC.ActiveNPCs.Any(n => n.type == NPCID.Retinazer),
         _ => false
     };
+
+    public static bool DownedMechBossAll => NPC.downedMechBoss1 && NPC.downedMechBoss2 && NPC.downedMechBoss3;
 }

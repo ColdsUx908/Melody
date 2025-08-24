@@ -1,4 +1,9 @@
-﻿namespace CalamityAnomalies.Core;
+﻿using System.Diagnostics.CodeAnalysis;
+using CalamityAnomalies.Publicizer.CalamityMod;
+using CalamityMod.Particles;
+using Terraria.Graphics.Renderers;
+
+namespace CalamityAnomalies.Core;
 
 public static class CAUtils
 {
@@ -13,17 +18,32 @@ public static class CAUtils
 
     public static bool DownedEvilBossT2 => DownedBossSystem.downedHiveMind || DownedBossSystem.downedPerforator;
 
-    public static void LogILFailure(string name, string reason) => CAMain.Instance.Logger.Warn($"""IL edit "{name}" failed! {reason}""");
+    public static void ILFailure(string name, string reason, [DoesNotReturnIf(true)] bool exception = false)
+    {
+        string message = $"""IL edit "{name}" failed! {reason}""";
+        CAMain.Instance.Logger.Warn(message);
+        if (exception)
+            throw new InvalidOperationException(message);
+    }
 
-    public static TooltipLine CreateNewTooltipLine(int num, Action<TooltipLine> action, bool tweak)
+    public static TooltipLine CreateNewTooltipLine(int num, Action<TooltipLine> action)
     {
         TooltipLine newLine = new(CAMain.Instance, $"Tooltip{num}", "");
-        if (tweak)
-            newLine.OverrideColor = CAMain.GetGradientColor(0.25f);
-        action(newLine);
+        action?.Invoke(newLine);
         return newLine;
     }
 
-    public static Asset<Texture2D> RequestTexture(string path, AssetRequestMode mode = AssetRequestMode.AsyncLoad) =>
-        CAMain.Instance.Assets.Request<Texture2D>("Assets/Textures/" + path, mode);
+    public static Asset<Texture2D> RequestTexture(string suffix, AssetRequestMode mode = AssetRequestMode.AsyncLoad) =>
+        CAMain.Instance.Assets.Request<Texture2D>("Assets/Textures/" + suffix, mode);
+
+    public static bool Focus => DownedBossSystem.downedExoMechs && DownedBossSystem.downedCalamitas;
+
+    public static void ForceSpawnParticle(Particle particle)
+    {
+        if (!Main.gamePaused && !Main.dedServ && GeneralParticleHandler_Publicizer.particles is not null)
+        {
+            GeneralParticleHandler_Publicizer.particles.Add(particle);
+            particle.Type = GeneralParticleHandler_Publicizer.particleTypes[particle.GetType()];
+        }
+    }
 }

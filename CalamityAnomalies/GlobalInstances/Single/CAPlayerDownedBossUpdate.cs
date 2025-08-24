@@ -28,3 +28,12 @@ public sealed class CAPlayerDownedBossUpdate_GlobalNPC : CAGlobalNPCBehavior
             player.Anomaly().DownedBossCalamity.BossesOnKill(npc);
     }
 }
+
+public sealed class CAPlayerDownedBossUpdate_System : ModSystem
+{
+    public override void PostUpdateNPCs()
+    {
+        foreach (Player player in Player.ActivePlayers)
+            player.Anomaly().DownedBossCalamity.WorldPolluted();
+    }
+}

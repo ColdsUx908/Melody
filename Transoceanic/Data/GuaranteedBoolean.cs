@@ -9,13 +9,7 @@ public struct GuaranteedBoolean : IEquatable<GuaranteedBoolean>
     public bool Value
     {
         readonly get => _value > 0;
-        set
-        {
-            if (value)
-                _value = Math.Clamp(_value + 2, 0, 2);
-            else
-                _value = Math.Clamp(_value - 1, 0, 2);
-        }
+        set => _value = Math.Clamp(_value + (value ? 2 : -1), 0, 2);
     }
 
     public static implicit operator bool(GuaranteedBoolean guaranteedBoolean) => guaranteedBoolean.Value;

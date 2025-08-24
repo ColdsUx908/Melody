@@ -9,9 +9,11 @@ namespace CalamityAnomalies.Tweaks._5_1_PostDoG;
  * 近战暴击率提升10%（原灾厄：5%）。
  */
 
-public sealed class ElementalGauntlet_Tweak : CAItemTweak<ElementalGauntlet>, ILocalizationPrefix
+public sealed class ElementalGauntlet_Tweak : CAItemTweak<ElementalGauntlet>, ICATweakLocalizationPrefix
 {
-    public string LocalizationPrefix => CAMain.TweakLocalizationPrefix + "5.1.ElementalGauntlet.";
+    CATweakPhase ICATweakLocalizationPrefix.Phase => CATweakPhase.PostDoG;
+
+    string ICATweakLocalizationPrefix.Name => "ElementalGauntlet";
 
     public override void UpdateAccessory(Player player, bool hideVisual)
     {
@@ -22,7 +24,7 @@ public sealed class ElementalGauntlet_Tweak : CAItemTweak<ElementalGauntlet>, IL
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
-        AnomalyItem.TooltipModifier
+        CAItemTooltipModifier.Instance
             .ModifyWithCATweakColorDefault(this, 1)
             .ModifyWithCATweakColorDefault(this, 3);
     }

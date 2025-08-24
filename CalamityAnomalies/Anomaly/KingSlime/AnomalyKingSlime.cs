@@ -5,7 +5,7 @@ namespace CalamityAnomalies.Anomaly.KingSlime;
 public class AnomalyKingSlime : AnomalyNPCBehavior
 {
     #region 枚举、数值、属性、AI状态
-    public enum AttackType
+    public enum Behavior
     {
         Despawn = -1,
 
@@ -38,105 +38,75 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
     /// </summary>
     public int CurrentPhase
     {
-        get => AnomalyNPC.AnomalyAI32[0].i;
-        set
-        {
-            if (AnomalyNPC.AnomalyAI32[0].i != value)
-            {
-                AnomalyNPC.AnomalyAI32[0].i = value;
-                AnomalyNPC.AIChanged32[0] = true;
-            }
-        }
+        get => (int)NPC.ai[0];
+        set => NPC.ai[0] = value;
     }
 
-    public AttackType CurrentAttack
+    public Behavior CurrentBehavior
     {
-        get => (AttackType)AnomalyNPC.AnomalyAI32[1].i;
-        set
-        {
-            int temp = (int)value;
-            if (AnomalyNPC.AnomalyAI32[1].i != temp)
-            {
-                AnomalyNPC.AnomalyAI32[1].i = temp;
-                AnomalyNPC.AIChanged32[1] = true;
-            }
-        }
+        get => (Behavior)(int)NPC.ai[1];
+        set => NPC.ai[1] = (int)value;
     }
 
     public int CurrentAttackPhase
     {
-        get => AnomalyNPC.AnomalyAI32[2].i;
-        set
-        {
-            if (AnomalyNPC.AnomalyAI32[2].i != value)
-            {
-                AnomalyNPC.AnomalyAI32[2].i = value;
-                AnomalyNPC.AIChanged32[2] = true;
-            }
-        }
-    }
-
-    public bool JewelEmeraldSpawned
-    {
-        get => AnomalyNPC.AnomalyAI32[3].bits[0];
-        set
-        {
-            if (AnomalyNPC.AnomalyAI32[3].bits[0] != value)
-            {
-                AnomalyNPC.AnomalyAI32[3].bits[0] = value;
-                AnomalyNPC.AIChanged32[3] = true;
-            }
-        }
-    }
-
-    public bool JewelRubySpawned
-    {
-        get => AnomalyNPC.AnomalyAI32[3].bits[1];
-        set
-        {
-            if (AnomalyNPC.AnomalyAI32[3].bits[1] != value)
-            {
-                AnomalyNPC.AnomalyAI32[3].bits[1] = value;
-                AnomalyNPC.AIChanged32[3] = true;
-            }
-        }
-    }
-
-    public bool JewelSapphireSpawned
-    {
-        get => AnomalyNPC.AnomalyAI32[3].bits[2];
-        set
-        {
-            if (AnomalyNPC.AnomalyAI32[3].bits[2] != value)
-            {
-                AnomalyNPC.AnomalyAI32[3].bits[2] = value;
-                AnomalyNPC.AIChanged32[3] = true;
-            }
-        }
+        get => (int)NPC.ai[2];
+        set => NPC.ai[2] = value;
     }
 
     public int LastSpawnSlimeLife
     {
-        get => AnomalyNPC.AnomalyAI32[4].i;
-        set
-        {
-            if (AnomalyNPC.AnomalyAI32[4].i != value)
-            {
-                AnomalyNPC.AnomalyAI32[4].i = value;
-                AnomalyNPC.AIChanged32[4] = true;
-            }
-        }
+        get => (int)NPC.ai[3];
+        set => NPC.ai[3] = value;
     }
 
     public float TeleportTimer
     {
-        get => AnomalyNPC.AnomalyAI32[5].f;
+        get => NPC.localAI[0];
+        set => NPC.localAI[0] = value;
+    }
+
+    public int SmallJumpCounter
+    {
+        get => (int)NPC.localAI[1];
+        set => NPC.localAI[1] = value;
+    }
+
+    public int ChangedVelocityDirectionDuringJump
+    {
+        get => (int)NPC.localAI[2];
+        set => NPC.localAI[2] = value;
+    }
+
+    public float TeleportScaleMultiplier
+    {
+        get => NPC.localAI[3];
+        set => NPC.localAI[3] = value;
+    }
+
+    public float DespawnScaleMultiplier
+    {
+        get => CalamityNPC.newAI[0];
         set
         {
-            if (AnomalyNPC.AnomalyAI32[5].f != value)
+            if (CalamityNPC.newAI[0] != value)
             {
-                AnomalyNPC.AnomalyAI32[5].f = value;
-                AnomalyNPC.AIChanged32[5] = true;
+                CalamityNPC.newAI[0] = value;
+                NPC.SyncExtraAI();
+            }
+        }
+    }
+
+    #region 宝石
+    public bool JewelEmeraldSpawned
+    {
+        get => AnomalyNPC.AnomalyAI32[0].bits[0];
+        set
+        {
+            if (AnomalyNPC.AnomalyAI32[0].bits[0] != value)
+            {
+                AnomalyNPC.AnomalyAI32[0].bits[0] = value;
+                AnomalyNPC.AIChanged32[0] = true;
             }
         }
     }
@@ -145,115 +115,89 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
     /// 王冠绿宝石实例。
     /// <br/>在 <see cref="SetDefaults"/> 中初始化为 <see cref="TOMain.DummyNPC"/>。
     /// </summary>
-    public NPC JewelEmerald
+    public unsafe NPC JewelEmerald
     {
-        get => Main.npc[AnomalyNPC.AnomalyAI32[6].i];
+        get => Main.npc[AnomalyNPC.AnomalyAI32[1].bytes[0]];
         set
         {
-            int temp = value.whoAmI;
-            if (AnomalyNPC.AnomalyAI32[6].i != temp)
+            byte temp = (byte)value.whoAmI;
+            if (AnomalyNPC.AnomalyAI32[1].bytes[0] != temp)
             {
-                AnomalyNPC.AnomalyAI32[6].i = temp;
-                AnomalyNPC.AIChanged32[6] = true;
+                AnomalyNPC.AnomalyAI32[1].bytes[0] = temp;
+                AnomalyNPC.AIChanged32[1] = true;
             }
         }
     }
 
     public bool JewelEmeraldAlive => JewelEmerald.active && JewelEmerald.ModNPC is KingSlimeJewelEmerald && JewelEmerald.Ocean().Master == NPC.whoAmI;
 
+    public bool JewelRubySpawned
+    {
+        get => AnomalyNPC.AnomalyAI32[0].bits[1];
+        set
+        {
+            if (AnomalyNPC.AnomalyAI32[0].bits[1] != value)
+            {
+                AnomalyNPC.AnomalyAI32[0].bits[1] = value;
+                AnomalyNPC.AIChanged32[0] = true;
+            }
+        }
+    }
+
     /// <summary>
     /// 王冠红宝石实例。
     /// <br/>在 <see cref="SetDefaults"/> 中初始化为 <see cref="TOMain.DummyNPC"/>。
     /// </summary>
-    public NPC JewelRuby
+    public unsafe NPC JewelRuby
     {
-        get => Main.npc[AnomalyNPC.AnomalyAI32[7].i];
+        get => Main.npc[AnomalyNPC.AnomalyAI32[1].bytes[1]];
         set
         {
-            int temp = value.whoAmI;
-            if (AnomalyNPC.AnomalyAI32[7].i != temp)
+            byte temp = (byte)value.whoAmI;
+            if (AnomalyNPC.AnomalyAI32[1].bytes[1] != temp)
             {
-                AnomalyNPC.AnomalyAI32[7].i = temp;
-                AnomalyNPC.AIChanged32[7] = true;
+                AnomalyNPC.AnomalyAI32[1].bytes[1] = temp;
+                AnomalyNPC.AIChanged32[1] = true;
             }
         }
     }
 
     public bool JewelRubyAlive => JewelRuby.active && JewelRuby.ModNPC is KingSlimeJewelRuby && JewelRuby.Ocean().Master == NPC.whoAmI;
 
+    public bool JewelSapphireSpawned
+    {
+        get => AnomalyNPC.AnomalyAI32[0].bits[2];
+        set
+        {
+            if (AnomalyNPC.AnomalyAI32[0].bits[2] != value)
+            {
+                AnomalyNPC.AnomalyAI32[0].bits[2] = value;
+                AnomalyNPC.AIChanged32[0] = true;
+            }
+        }
+    }
+
     /// <summary>
     /// 王冠蓝宝石实例。
     /// <br/>在 <see cref="SetDefaults"/> 中初始化为 <see cref="TOMain.DummyNPC"/>。
     /// </summary>
-    public NPC JewelSapphire
+    public unsafe NPC JewelSapphire
     {
-        get => Main.npc[AnomalyNPC.AnomalyAI32[8].i];
+        get => Main.npc[AnomalyNPC.AnomalyAI32[1].bytes[2]];
         set
         {
-            int temp = value.whoAmI;
-            if (AnomalyNPC.AnomalyAI32[8].i != temp)
+            byte temp = (byte)value.whoAmI;
+            if (AnomalyNPC.AnomalyAI32[1].bytes[2] != temp)
             {
-                AnomalyNPC.AnomalyAI32[8].i = temp;
-                AnomalyNPC.AIChanged32[8] = true;
+                AnomalyNPC.AnomalyAI32[1].bytes[2] = temp;
+                AnomalyNPC.AIChanged32[1] = true;
             }
         }
     }
 
     public bool JewelSapphireAlive => JewelSapphire.active && JewelSapphire.ModNPC is KingSlimeJewelSapphire && JewelSapphire.Ocean().Master == NPC.whoAmI;
 
-    public int SmallJumpCounter
-    {
-        get => AnomalyNPC.AnomalyAI32[9].i;
-        set
-        {
-            if (AnomalyNPC.AnomalyAI32[9].i != value)
-            {
-                AnomalyNPC.AnomalyAI32[9].i = value;
-                AnomalyNPC.AIChanged32[9] = true;
-            }
-        }
-    }
-
-    public int ChangedVelocityDirectionDuringJump
-    {
-        get => AnomalyNPC.AnomalyAI32[10].i;
-        set
-        {
-            if (AnomalyNPC.AnomalyAI32[10].i != value)
-            {
-                AnomalyNPC.AnomalyAI32[10].i = value;
-                AnomalyNPC.AIChanged32[10] = true;
-            }
-        }
-    }
-
-    public float TeleportScaleMultiplier
-    {
-        get => AnomalyNPC.AnomalyAI32[11].f;
-        set
-        {
-            float temp = Math.Clamp(value, 0.2f, 1f);
-            if (AnomalyNPC.AnomalyAI32[11].f != temp)
-            {
-                AnomalyNPC.AnomalyAI32[11].f = temp;
-                AnomalyNPC.AIChanged32[11] = true;
-            }
-        }
-    }
-
-    public float DespawnScaleMultiplier
-    {
-        get => AnomalyNPC.AnomalyAI32[12].f;
-        set
-        {
-            float temp = Math.Clamp(value, 0f, 1f);
-            if (AnomalyNPC.AnomalyAI32[12].f != temp)
-            {
-                AnomalyNPC.AnomalyAI32[12].f = temp;
-                AnomalyNPC.AIChanged32[12] = true;
-            }
-        }
-    }
+    #endregion 宝石
 
     public Vector2 TeleportDestination
     {
@@ -280,7 +224,6 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         _ => true,
     };
 
-    #region Defaults
     public override void SetDefaults()
     {
         if (CAWorld.AnomalyUltramundane)
@@ -296,16 +239,12 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         JewelRuby = NPC.DummyNPC;
         JewelSapphire = NPC.DummyNPC;
     }
-    #endregion Defaults
 
-    #region Lifetime
     public override bool CheckActive() => false;
-    #endregion Lifetime
 
-    #region AI
     public override bool PreAI()
     {
-        if (CurrentAttack == AttackType.Despawn || !NPC.TargetClosestIfInvalid(true, Data.DespawnDistance))
+        if (CurrentBehavior == Behavior.Despawn || !NPC.TargetClosestIfInvalid(true, Data.DespawnDistance))
         {
             Despawn();
             ChangeScale();
@@ -329,26 +268,26 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
                 }
                 else if (Timer1 > 600)
                 {
-                    CurrentAttack = AttackType.Despawn;
+                    CurrentBehavior = Behavior.Despawn;
                     Despawn();
                 }
                 break;
             case 1:
-                switch (CurrentAttack)
+                switch (CurrentBehavior)
                 {
-                    case AttackType.Despawn:
+                    case Behavior.Despawn:
                         Despawn();
                         ChangeScale();
                         return false;
-                    case AttackType.None:
+                    case Behavior.None:
                         SelectNextAttack();
                         break;
-                    case AttackType.NormalJump_Phase1:
-                    case AttackType.HighJump_Phase1:
-                    case AttackType.RapidJump_Phase1:
+                    case Behavior.NormalJump_Phase1:
+                    case Behavior.HighJump_Phase1:
+                    case Behavior.RapidJump_Phase1:
                         Jump();
                         break;
-                    case AttackType.Teleport_Phase1:
+                    case Behavior.Teleport_Phase1:
                         Teleport();
                         break;
                 }
@@ -363,359 +302,363 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
         NPC.netUpdate = true;
 
         return false;
-    }
 
-    public void SelectNextAttack(int initialAITimer1 = 0)
-    {
-        ChangedVelocityDirectionDuringJump = 0;
-        if (TeleportTimer > 1000f || !NPC.WithinRange(Target.Center, 3000f))
+
+        #region 行为函数
+        void SelectNextAttack(int initialAITimer1 = 0)
         {
-            CurrentAttack = AttackType.Teleport_Phase1;
-            TeleportTimer = 0f;
-        }
-        else
-        {
-            switch (SmallJumpCounter)
+            ChangedVelocityDirectionDuringJump = 0;
+            if (TeleportTimer > 1000f || !NPC.WithinRange(Target.Center, 3000f))
             {
-                case 3:
-                    CurrentAttack = AttackType.HighJump_Phase1;
-                    SmallJumpCounter = 0;
-                    break;
-                case 1 or 2 when OceanNPC.LifeRatio < 0.3f:
-                    CurrentAttack = AttackType.RapidJump_Phase1;
-                    break;
-                default:
-                    CurrentAttack = AttackType.NormalJump_Phase1;
-                    break;
+                CurrentBehavior = Behavior.Teleport_Phase1;
+                TeleportTimer = 0f;
             }
-        }
-        CurrentAttackPhase = 0;
-        Timer1 = initialAITimer1;
-    }
-
-    public bool StopHorizontalMovement()
-    {
-        switch (Math.Abs(NPC.velocity.X))
-        {
-            case < 0.1f:
-                NPC.velocity.X = 0f;
-                return true;
-            case > 0.2f:
-                NPC.velocity.X -= 0.15f * Math.Sign(NPC.velocity.X);
-                break;
-        }
-        NPC.velocity.X *= 0.85f;
-        return false;
-    }
-
-    public void MakeSlimeDust(int amount)
-    {
-        for (int i = 0; i < amount; i++)
-        {
-            Dust.NewDustAction(NPC.Center, NPC.width + 25, NPC.height,
-                JewelSapphireAlive ? DustID.GemSapphire : DustID.TintableDust, default, d =>
-                {
-                    d.alpha = 150;
-                    d.color = new(78, 136, 255, 80);
-                    d.noGravity = true;
-                    d.scale = TOMathHelper.ClampMap(Data.MinScale, Data.MaxScale, 2f, 5f, NPC.scale);
-                    d.velocity *= 0.5f;
-                });
-        }
-    }
-
-    public void Despawn()
-    {
-        StopHorizontalMovement(); //停止水平移动，避免奇怪的滑行现象
-        NPC.dontTakeDamage = true;
-        NPC.damage = 0;
-        DespawnScaleMultiplier *= 0.97f;
-        MakeSlimeDust((int)TOMathHelper.ClampMap(Data.MinScale, Data.MaxScale, 5f, 12.5f, NPC.scale));
-
-        if (NPC.scale < 0.2f) //体积足够小时执行脱战逻辑
-        {
-            NPC.active = false;
-            NPC.netUpdate = true;
-        }
-    }
-
-    public static void MakeJewelDust(NPC jewel, int amount)
-    {
-        short type = jewel.ModNPC switch
-        {
-            KingSlimeJewelEmerald => DustID.GemEmerald,
-            KingSlimeJewelRuby => DustID.GemRuby,
-            KingSlimeJewelSapphire => DustID.GemSapphire,
-            _ => -1
-        };
-        if (type < 0)
-            return;
-
-        for (int i = 0; i < amount; i++)
-        {
-            Dust.NewDustAction(jewel.Center, jewel.width * 3, jewel.height * 3, type, Vector2.Zero, d =>
+            else
             {
-                d.alpha = 100;
-                d.noGravity = true;
-                d.velocity *= Main.rand.NextVector2CircularEdge(5f, 5f) * Main.rand.NextFloat(1f, 2f);
-                if (Main.rand.NextBool())
+                switch (SmallJumpCounter)
                 {
-                    d.scale = 0.6f;
-                    d.fadeIn = 1f + Main.rand.Next(10) * 0.1f;
-                }
-                else
-                    d.scale = 2f;
-            });
-        }
-    }
-
-    public void ChangeScale() => NPC.BetterChangeScale(98, 92, MathHelper.Lerp(
-            Data.MaxScale,
-            Data.MinScale,
-            OceanNPC.LifeRatioReverse) * TeleportScaleMultiplier * DespawnScaleMultiplier);
-
-    public void TrySpawnMinions()
-    {
-        if (!TOWorld.GeneralClient)
-            return;
-
-        Vector2 spawnPosition = NPC.Top - new Vector2(0, NPC.height);
-
-        if (OceanNPC.LifeRatio < 0.8f && !JewelEmeraldSpawned)
-        {
-            SoundEngine.PlaySound(SoundID.Item38, spawnPosition);
-            NPC.NewNPCAction<KingSlimeJewelEmerald>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
-            {
-                n.Ocean().Master = NPC.whoAmI;
-                n.netUpdate = true;
-                MakeJewelDust(n, 50);
-                JewelEmerald = n;
-                JewelEmeraldSpawned = true;
-            });
-        }
-
-        if (OceanNPC.LifeRatio < 0.6f && !JewelRubySpawned)
-        {
-            SoundEngine.PlaySound(SoundID.Item38, spawnPosition);
-            NPC.NewNPCAction<KingSlimeJewelRuby>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
-            {
-                n.Ocean().Master = NPC.whoAmI;
-                n.netUpdate = true;
-                MakeJewelDust(n, 50);
-                JewelRuby = n;
-                JewelRubySpawned = true;
-            });
-        }
-
-        if (OceanNPC.LifeRatio < 1f / 3f && !JewelSapphireSpawned)
-        {
-            SoundEngine.PlaySound(SoundID.Item38, spawnPosition);
-            NPC.NewNPCAction<KingSlimeJewelSapphire>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
-            {
-                n.Ocean().Master = NPC.whoAmI;
-                n.netUpdate = true;
-                MakeJewelDust(n, 50);
-                JewelSapphire = n;
-                JewelSapphireSpawned = true;
-            });
-        }
-
-        float distance = (float)(LastSpawnSlimeLife - NPC.life) / NPC.lifeMax;
-        float distanceNeeded = Data.SpawnSlimeGateValue;
-        if (distance >= distanceNeeded)
-        {
-            LastSpawnSlimeLife = NPC.life;
-            int spawnAmount1 = Main.rand.Next(1, 3) + (int)Math.Pow(distance / distanceNeeded, Data.SpawnSlimePow);
-            int spawnAmount2 = CAWorld.AnomalyUltramundane ? Main.rand.Next(1, 2) : 0;
-
-            for (int i = 0; i < spawnAmount1; i++)
-            {
-                float minLowerLimit = i < 2 ? 0 : 5;
-                float maxLowerLimit = 7f;
-                int minTypeChoice = (int)MathHelper.Lerp(minLowerLimit, 7f, 1f - OceanNPC.LifeRatio);
-                int maxTypeChoice = (int)MathHelper.Lerp(maxLowerLimit, 9f, 1f - OceanNPC.LifeRatio);
-                int spawnType = Main.rand.Next(minTypeChoice, maxTypeChoice + 1) switch
-                {
-                    0 => NPCID.GreenSlime,
-                    1 => Main.raining ? NPCID.UmbrellaSlime : NPCID.BlueSlime,
-                    2 => NPCID.IceSlime,
-                    3 => NPCID.RedSlime,
-                    4 => NPCID.PurpleSlime,
-                    5 => NPCID.YellowSlime,
-                    6 => NPCID.SlimeSpiked,
-                    7 => NPCID.SpikedIceSlime,
-                    8 => NPCID.SpikedJungleSlime,
-                    _ => NPCID.SlimeSpiked,
-                };
-
-                SpawnSlimeCore(spawnType);
-            }
-
-            //生成彩虹史莱姆
-            for (int i = 0; i < spawnAmount2; i++)
-                SpawnSlimeCore(NPCID.RainbowSlime);
-
-            ///生成粉史莱姆
-            if (Main.rand.NextBool(4))
-                SpawnSlimeCore(NPCID.Pinky);
-        }
-    }
-
-    public void SpawnSlimeCore(int type)
-    {
-        int spawnZoneWidth = NPC.width - 32;
-        int spawnZoneHeight = NPC.height - 32;
-        Vector2 spawnPosition = new(NPC.position.X + Main.rand.Next(spawnZoneWidth), NPC.position.Y + Main.rand.Next(spawnZoneHeight));
-        Vector2 spawnVelocity = new(Main.rand.NextFloat(-1.5f, 1.5f), Main.rand.NextFloat(-3f, 3f));
-        NPC.NewNPCAction(NPC.GetSource_FromAI(), spawnPosition, type, action: n =>
-        {
-            n.velocity = spawnVelocity;
-            n.ai[0] = -1000 * Main.rand.Next(3);
-            n.Ocean().Master = NPC.whoAmI;
-        });
-    }
-
-    public void Jump()
-    {
-        switch (CurrentAttackPhase)
-        {
-            case 0: //延迟
-                Timer2++;
-                NPC.damage = 0;
-                NPC.netUpdate = true;
-                NPC.GravityMultiplier *= Timer2 > 25 && NPC.velocity.Y > 0f ? 1.25f : 1f;
-                NPC.MaxFallSpeedMultiplier *= Timer2 > 20 && NPC.velocity.Y > 0f ? 1.35f : 1f;
-                if (StopHorizontalMovement() && NPC.velocity.Y == 0f)
-                {
-                    Timer1++;
-                    int jumpDelay = (int)MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 20f : 27.5f, CAWorld.AnomalyUltramundane ? 15f : 20f, OceanNPC.LifeRatioReverse);
-                    if (Timer1 > jumpDelay)
-                    {
-                        CurrentAttackPhase = 1;
-                        Timer1 = 0;
-                    }
-                }
-                break;
-            case 1: //起跳
-                if (CurrentAttack != AttackType.HighJump_Phase1)
-                    SmallJumpCounter++;
-                NPC.damage = NPC.defDamage;
-                NPC.netUpdate = true;
-                NPC.velocity = Jump_VelocityInitial;
-                CurrentAttackPhase = 2;
-                break;
-            case 2: //上升
-            case 3: //下降
-                NPC.damage = NPC.defDamage;
-                if (CurrentAttack == AttackType.RapidJump_Phase1 || NPC.velocity.X * NPC.direction > 0.1f)
-                    NPC.velocity.X = Math.Min(Math.Abs(NPC.velocity.X) + Jump_VelocityXDelta, Jump_VelocityXLimit) * Math.Sign(NPC.velocity.X);
-                else
-                {
-                    NPC.velocity.X *= 0.93f;
-                    switch (Math.Abs(NPC.velocity.X))
-                    {
-                        case < 0.1f:
-                            ChangedVelocityDirectionDuringJump++;
-                            NPC.velocity.X += Jump_VelocityXDelta * NPC.direction;
-                            break;
-                        case > 0.25f:
-                            NPC.velocity.X -= 0.2f * Math.Sign(NPC.velocity.X);
-                            break;
-                    }
-                }
-                switch (CurrentAttackPhase)
-                {
-                    case 2:
-                        if (NPC.velocity.Y >= 0) //检测是否已过最高点
-                            CurrentAttackPhase = 3;
-                        break;
                     case 3:
-                        if (NPC.velocity.Y == 0f)
-                        {
-                            if (CurrentAttack == AttackType.HighJump_Phase1)
-                                TeleportTimer += 100f;
-                            SelectNextAttack(CurrentAttack == AttackType.RapidJump_Phase1 ? (int)MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 10 : 20, CAWorld.AnomalyUltramundane ? 7.5f : 12.5f, OceanNPC.LifeRatioReverse) : 0);
-                        }
-                        NPC.GravityMultiplier *= CurrentAttack switch
-                        {
-                            AttackType.HighJump_Phase1 => CAWorld.AnomalyUltramundane ? 1.5f : 1.25f,
-                            _ => 1f
-                        };
-                        NPC.MaxFallSpeedMultiplier *= CurrentAttack switch
-                        {
-                            AttackType.HighJump_Phase1 => CAWorld.AnomalyUltramundane ? 2.25f : 1.75f,
-                            _ => 1f
-                        };
+                        CurrentBehavior = Behavior.HighJump_Phase1;
+                        SmallJumpCounter = 0;
+                        break;
+                    case 1 or 2 when OceanNPC.LifeRatio < 0.3f:
+                        CurrentBehavior = Behavior.RapidJump_Phase1;
+                        break;
+                    default:
+                        CurrentBehavior = Behavior.NormalJump_Phase1;
                         break;
                 }
-                break;
+            }
+            CurrentAttackPhase = 0;
+            Timer1 = initialAITimer1;
         }
-    }
 
-    public Vector2 Jump_VelocityInitial => CurrentAttack switch
-    {
-        AttackType.NormalJump_Phase1 => new(
-            MathHelper.Lerp(5f, 7.5f, OceanNPC.LifeRatioReverse) * NPC.direction, -7.5f * (1f + Math.Min(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 800f, 0.75f))),
-        AttackType.HighJump_Phase1 => new(
-            MathHelper.Lerp(7.5f, 10f, OceanNPC.LifeRatioReverse) * NPC.direction, -10f * (1f + Math.Min(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 800f, 1.25f))),
-        AttackType.RapidJump_Phase1 => new(
-            MathHelper.Lerp(10f, 12.5f, OceanNPC.LifeRatioReverse) * NPC.direction, -5f),
-        _ => Vector2.Zero
-    };
-
-    public float Jump_VelocityXLimit => CurrentAttack switch
-    {
-        AttackType.RapidJump_Phase1 => 18f,
-        _ => ChangedVelocityDirectionDuringJump switch
+        bool StopHorizontalMovement()
         {
-            0 => 12.5f,
-            1 => 8f,
-            _ => 6.5f
+            switch (Math.Abs(NPC.velocity.X))
+            {
+                case < 0.1f:
+                    NPC.velocity.X = 0f;
+                    return true;
+                case > 0.2f:
+                    NPC.velocity.X -= 0.15f * Math.Sign(NPC.velocity.X);
+                    break;
+            }
+            NPC.velocity.X *= 0.85f;
+            return false;
         }
-    };
 
-    public float Jump_VelocityXDelta => CurrentAttack switch
-    {
-        AttackType.RapidJump_Phase1 => ChangedVelocityDirectionDuringJump switch
+        void MakeSlimeDust(int amount)
         {
-            0 => 0.8f,
-            1 => 0.55f,
-            _ => 0.35f
-        },
-        _ => ChangedVelocityDirectionDuringJump switch
-        {
-            0 => 0.5f,
-            1 => 0.4f,
-            _ => 0.25f
-        }
-    };
-
-    public void Teleport()
-    {
-        NPC.damage = 0;
-        switch (CurrentAttackPhase)
-        {
-            case 0: //寻的
-                Vector2? destination = null;
-                //Vector2 randomDefault = Main.rand.NextBool() ? Vector2.UnitX : -Vector2.UnitX;
-                Vector2 vectorAimedAheadOfTarget = Target.Center + new Vector2(MathF.Round(Target.velocity.X / 2f), 0f).ToCustomLength(800f);
-                Point predictiveTeleportPoint = vectorAimedAheadOfTarget.ToTileCoordinates();
-                predictiveTeleportPoint.X = Math.Clamp(predictiveTeleportPoint.X, 10, Main.maxTilesX - 10);
-                predictiveTeleportPoint.Y = Math.Clamp(predictiveTeleportPoint.Y, 10, Main.maxTilesY - 10);
-                int randomPredictiveTeleportOffset = 5;
-
-                for (int i = 0; i < 100; i++)
-                {
-                    int teleportTileX = Main.rand.Next(predictiveTeleportPoint.X - randomPredictiveTeleportOffset, predictiveTeleportPoint.X + randomPredictiveTeleportOffset + 1);
-                    int teleportTileY = Main.rand.Next(predictiveTeleportPoint.Y - randomPredictiveTeleportOffset, predictiveTeleportPoint.Y);
-                    Tile potentialTile = Main.tile[teleportTileX, teleportTileY];
-                    if (!potentialTile.HasUnactuatedTile)
+            for (int i = 0; i < amount; i++)
+            {
+                Dust.NewDustAction(NPC.Center, NPC.width + 25, NPC.height,
+                    JewelSapphireAlive ? DustID.GemSapphire : DustID.TintableDust, default, d =>
                     {
-                        if (potentialTile.LiquidType != LiquidID.Lava
-                            && Collision.CanHitLine(NPC.Center, 0, 0, predictiveTeleportPoint.ToVector2() * 16, 0, 0))
+                        d.alpha = 150;
+                        d.color = new(78, 136, 255, 80);
+                        d.noGravity = true;
+                        d.scale = TOMathHelper.Map(Data.MinScale, Data.MaxScale, 2f, 5f, NPC.scale, true);
+                        d.velocity *= 0.5f;
+                    });
+            }
+        }
+
+        void Despawn()
+        {
+            StopHorizontalMovement(); //停止水平移动，避免奇怪的滑行现象
+            NPC.dontTakeDamage = true;
+            NPC.damage = 0;
+            DespawnScaleMultiplier *= 0.97f;
+            MakeSlimeDust((int)TOMathHelper.Map(Data.MinScale, Data.MaxScale, 5f, 12.5f, NPC.scale, true));
+
+            if (NPC.scale < 0.2f) //体积足够小时执行脱战逻辑
+            {
+                NPC.active = false;
+                NPC.netUpdate = true;
+            }
+        }
+
+        static void MakeJewelDust(NPC jewel, int amount)
+        {
+            short type = jewel.ModNPC switch
+            {
+                KingSlimeJewelEmerald => DustID.GemEmerald,
+                KingSlimeJewelRuby => DustID.GemRuby,
+                KingSlimeJewelSapphire => DustID.GemSapphire,
+                _ => -1
+            };
+            if (type < 0)
+                return;
+
+            for (int i = 0; i < amount; i++)
+            {
+                Dust.NewDustAction(jewel.Center, jewel.width * 3, jewel.height * 3, type, Vector2.Zero, d =>
+                {
+                    d.alpha = 100;
+                    d.noGravity = true;
+                    d.velocity *= Main.rand.NextVector2CircularEdge(5f, 5f) * Main.rand.NextFloat(1f, 2f);
+                    if (Main.rand.NextBool())
+                    {
+                        d.scale = 0.6f;
+                        d.fadeIn = 1f + Main.rand.Next(10) * 0.1f;
+                    }
+                    else
+                        d.scale = 2f;
+                });
+            }
+        }
+
+        void ChangeScale() =>
+            NPC.BetterChangeScale(98, 92, MathHelper.Lerp(Data.MaxScale, Data.MinScale, OceanNPC.LifeRatioReverse) * TeleportScaleMultiplier * DespawnScaleMultiplier);
+
+        void TrySpawnMinions()
+        {
+            if (!TOWorld.GeneralClient)
+                return;
+
+            Vector2 spawnPosition = NPC.Top - new Vector2(0, NPC.height);
+
+            if (OceanNPC.LifeRatio < 0.8f && !JewelEmeraldSpawned)
+            {
+                NPC.NewNPCAction<KingSlimeJewelEmerald>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
+                {
+                    n.Ocean().Master = NPC.whoAmI;
+                    n.netUpdate = true;
+                    SoundEngine.PlaySound(SoundID.Item38, spawnPosition);
+                    MakeJewelDust(n, 50);
+                    JewelEmerald = n;
+                    JewelEmeraldSpawned = true;
+                });
+            }
+
+            if (OceanNPC.LifeRatio < 0.6f && !JewelRubySpawned)
+            {
+                NPC.NewNPCAction<KingSlimeJewelRuby>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
+                {
+                    n.Ocean().Master = NPC.whoAmI;
+                    n.netUpdate = true;
+                    SoundEngine.PlaySound(SoundID.Item38, spawnPosition);
+                    MakeJewelDust(n, 50);
+                    JewelRuby = n;
+                    JewelRubySpawned = true;
+                });
+            }
+
+            if (OceanNPC.LifeRatio < 1f / 3f && !JewelSapphireSpawned)
+            {
+                NPC.NewNPCAction<KingSlimeJewelSapphire>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
+                {
+                    n.Ocean().Master = NPC.whoAmI;
+                    n.netUpdate = true;
+                    SoundEngine.PlaySound(SoundID.Item38, spawnPosition);
+                    MakeJewelDust(n, 50);
+                    JewelSapphire = n;
+                    JewelSapphireSpawned = true;
+                });
+            }
+
+            float distance = (float)(LastSpawnSlimeLife - NPC.life) / NPC.lifeMax;
+            float distanceNeeded = Data.SpawnSlimeGateValue;
+            if (distance >= distanceNeeded)
+            {
+                LastSpawnSlimeLife = NPC.life;
+                int spawnAmount1 = Main.rand.Next(1, 3) + (int)Math.Pow(distance / distanceNeeded, Data.SpawnSlimePow);
+                int spawnAmount2 = CAWorld.AnomalyUltramundane ? Main.rand.Next(1, 2) : 0;
+
+                for (int i = 0; i < spawnAmount1; i++)
+                {
+                    int minTypeChoice = (int)MathHelper.Lerp(i < 2 ? 0 : 5, 7f, 1f - OceanNPC.LifeRatio);
+                    int maxTypeChoice = (int)MathHelper.Lerp((float)7f, 9f, 1f - OceanNPC.LifeRatio);
+                    int spawnType = Main.rand.Next(minTypeChoice, maxTypeChoice + 1) switch
+                    {
+                        0 => NPCID.GreenSlime,
+                        1 => Main.raining ? NPCID.UmbrellaSlime : NPCID.BlueSlime,
+                        2 => NPCID.IceSlime,
+                        3 => NPCID.RedSlime,
+                        4 => NPCID.PurpleSlime,
+                        5 => NPCID.YellowSlime,
+                        6 => NPCID.SlimeSpiked,
+                        7 => NPCID.SpikedIceSlime,
+                        8 => NPCID.SpikedJungleSlime,
+                        _ => NPCID.SlimeSpiked,
+                    };
+
+                    SpawnSlimeCore(spawnType);
+                }
+
+                //生成彩虹史莱姆
+                for (int i = 0; i < spawnAmount2; i++)
+                    SpawnSlimeCore(NPCID.RainbowSlime);
+
+                ///生成粉史莱姆
+                if (Main.rand.NextBool(4))
+                    SpawnSlimeCore(NPCID.Pinky);
+            }
+
+            void SpawnSlimeCore(int type)
+            {
+                int spawnZoneWidth = NPC.width - 32;
+                int spawnZoneHeight = NPC.height - 32;
+                Vector2 spawnPosition = new(NPC.position.X + Main.rand.NextFloat(spawnZoneWidth), NPC.position.Y + Main.rand.NextFloat(spawnZoneHeight));
+                NPC.NewNPCAction(NPC.GetSource_FromAI(), spawnPosition, type, action: n =>
+                {
+                    n.velocity = new Vector2(Main.rand.NextFloat(-1.5f, 1.5f), Main.rand.NextFloat(-3f, 3f));
+                    n.ai[0] = -1000 * Main.rand.Next(3);
+                    n.Ocean().Master = NPC.whoAmI;
+                });
+            }
+        }
+
+        void Jump()
+        {
+            switch (CurrentAttackPhase)
+            {
+                case 0: //静止一段时间后起跳
+                    Timer2++;
+                    NPC.damage = 0;
+                    NPC.netUpdate = true;
+                    NPC.GravityMultiplier *= Timer2 > 25 && NPC.velocity.Y > 0f ? 1.25f : 1f;
+                    NPC.MaxFallSpeedMultiplier *= Timer2 > 20 && NPC.velocity.Y > 0f ? 1.35f : 1f;
+                    if (StopHorizontalMovement() && NPC.velocity.Y == 0f)
+                    {
+                        Timer1++;
+                        int jumpDelay = (int)MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 20f : 27.5f, CAWorld.AnomalyUltramundane ? 15f : 20f, OceanNPC.LifeRatioReverse);
+                        if (Timer1 > jumpDelay)
                         {
-                            destination = new Vector2((teleportTileX + 0.5f) * 16f, (teleportTileY + 1f) * 16f);
-                            break; //在此处退出循环
+                            if (CurrentBehavior != Behavior.HighJump_Phase1)
+                                SmallJumpCounter++;
+                            NPC.damage = NPC.defDamage;
+                            NPC.netUpdate = true;
+                            NPC.velocity = GetInitialVelocity();
+                            CurrentAttackPhase = 1;
+                            Timer1 = 0;
+                        }
+                    }
+                    break;
+                case 1: //上升
+                case 2: //下降
+                    NPC.damage = NPC.defDamage;
+                    if (CurrentBehavior == Behavior.RapidJump_Phase1 || NPC.velocity.X * NPC.direction > 0.1f)
+                        NPC.velocity.X = Math.Min(Math.Abs(NPC.velocity.X) + GetDeltaVelocityX(), GetMaxVelocityX()) * Math.Sign(NPC.velocity.X);
+                    else
+                    {
+                        NPC.velocity.X *= 0.93f;
+                        switch (Math.Abs(NPC.velocity.X))
+                        {
+                            case < 0.1f:
+                                ChangedVelocityDirectionDuringJump++;
+                                NPC.velocity.X += GetDeltaVelocityX() * NPC.direction;
+                                break;
+                            case > 0.25f:
+                                NPC.velocity.X -= 0.2f * Math.Sign(NPC.velocity.X);
+                                break;
+                        }
+                    }
+                    switch (CurrentAttackPhase)
+                    {
+                        case 1:
+                            if (NPC.velocity.Y >= 0) //检测是否已过最高点
+                                CurrentAttackPhase = 2;
+                            break;
+                        case 2:
+                            if (NPC.velocity.Y == 0f)
+                            {
+                                TeleportTimer += CurrentBehavior == Behavior.HighJump_Phase1 ? 300f : 100f;
+                                SelectNextAttack(CurrentBehavior == Behavior.RapidJump_Phase1 ? (int)MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 10 : 20, CAWorld.AnomalyUltramundane ? 7.5f : 12.5f, OceanNPC.LifeRatioReverse) : 0);
+                            }
+                            else
+                            {
+                                NPC.GravityMultiplier *= CurrentBehavior switch
+                                {
+                                    Behavior.HighJump_Phase1 => CAWorld.AnomalyUltramundane ? 1.5f : 1.25f,
+                                    _ => 1f
+                                };
+                                NPC.MaxFallSpeedMultiplier *= CurrentBehavior switch
+                                {
+                                    Behavior.HighJump_Phase1 => CAWorld.AnomalyUltramundane ? 2.25f : 1.75f,
+                                    _ => 1f
+                                };
+                            }
+                            break;
+                    }
+                    break;
+            }
+
+            Vector2 GetInitialVelocity() => CurrentBehavior switch
+            {
+                Behavior.NormalJump_Phase1 => new(
+                    MathHelper.Lerp(5f, 7.5f, OceanNPC.LifeRatioReverse) * NPC.direction,
+                    -7.5f * (1f + Math.Clamp(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 800f, 0f, 0.75f))),
+                Behavior.HighJump_Phase1 => new(
+                    MathHelper.Lerp(7.5f, 10f, OceanNPC.LifeRatioReverse) * NPC.direction,
+                    -10f * (1f + Math.Clamp(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 800f, 0f, 1.25f))),
+                Behavior.RapidJump_Phase1 => new(
+                    MathHelper.Lerp(10f, 12.5f, OceanNPC.LifeRatioReverse) * NPC.direction,
+                    -5f),
+                _ => Vector2.Zero
+            };
+
+            float GetMaxVelocityX() => CurrentBehavior switch
+            {
+                Behavior.RapidJump_Phase1 => 18f,
+                _ => ChangedVelocityDirectionDuringJump switch
+                {
+                    0 => 12.5f,
+                    1 => 8f,
+                    _ => 6.5f
+                }
+            };
+
+            float GetDeltaVelocityX() => CurrentBehavior switch
+            {
+                Behavior.RapidJump_Phase1 => ChangedVelocityDirectionDuringJump switch
+                {
+                    0 => 0.8f,
+                    1 => 0.55f,
+                    _ => 0.35f
+                },
+                _ => ChangedVelocityDirectionDuringJump switch
+                {
+                    0 => 0.5f,
+                    1 => 0.4f,
+                    _ => 0.25f
+                }
+            };
+        }
+
+        void Teleport()
+        {
+            NPC.damage = 0;
+            switch (CurrentAttackPhase)
+            {
+                case 0: //寻的
+                    Vector2? destination = null;
+                    //Vector2 randomDefault = Main.rand.NextBool() ? Vector2.UnitX : -Vector2.UnitX;
+                    Vector2 vectorAimedAheadOfTarget = Target.Center + new Vector2(MathF.Round(Target.velocity.X / 2f), 0f).ToCustomLength(800f);
+                    Point predictiveTeleportPoint = vectorAimedAheadOfTarget.ToTileCoordinates();
+                    predictiveTeleportPoint.X = Math.Clamp(predictiveTeleportPoint.X, 10, Main.maxTilesX - 10);
+                    predictiveTeleportPoint.Y = Math.Clamp(predictiveTeleportPoint.Y, 10, Main.maxTilesY - 10);
+                    int randomPredictiveTeleportOffset = 5;
+
+                    for (int i = 0; i < 100; i++)
+                    {
+                        int teleportTileX = Main.rand.Next(predictiveTeleportPoint.X - randomPredictiveTeleportOffset, predictiveTeleportPoint.X + randomPredictiveTeleportOffset + 1);
+                        int teleportTileY = Main.rand.Next(predictiveTeleportPoint.Y - randomPredictiveTeleportOffset, predictiveTeleportPoint.Y);
+                        Tile potentialTile = Main.tile[teleportTileX, teleportTileY];
+                        if (!potentialTile.HasUnactuatedTile)
+                        {
+                            if (potentialTile.LiquidType != LiquidID.Lava
+                                && Collision.CanHitLine(NPC.Center, 0, 0, predictiveTeleportPoint.ToVector2() * 16, 0, 0))
+                            {
+                                destination = new Vector2((teleportTileX + 0.5f) * 16f, (teleportTileY + 1f) * 16f);
+                                break; //在此处退出循环
+                            }
+                            else
+                            {
+                                predictiveTeleportPoint.X += predictiveTeleportPoint.X < 0f ? 1 : -1;
+                                predictiveTeleportPoint.X = Math.Clamp(predictiveTeleportPoint.X, 10, Main.maxTilesX - 10);
+                            }
                         }
                         else
                         {
@@ -723,47 +666,43 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
                             predictiveTeleportPoint.X = Math.Clamp(predictiveTeleportPoint.X, 10, Main.maxTilesX - 10);
                         }
                     }
-                    else
-                    {
-                        predictiveTeleportPoint.X += predictiveTeleportPoint.X < 0f ? 1 : -1;
-                        predictiveTeleportPoint.X = Math.Clamp(predictiveTeleportPoint.X, 10, Main.maxTilesX - 10);
-                    }
-                }
 
-                TeleportDestination = destination ?? Target.Bottom;
-                CurrentAttackPhase = 1;
-                break;
-            case 1: //停止水平移动并缩小体型，满足条件时传送
-                MakeSlimeDust((int)TOMathHelper.ClampMap(Data.MinScale, Data.MaxScale, 5f, 12.5f, NPC.scale));
-                TeleportScaleMultiplier -= MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 0.016f : 0.013f, CAWorld.AnomalyUltramundane ? 0.02f : 0.015f, OceanNPC.LifeRatioReverse);
-                if (StopHorizontalMovement() && TeleportScaleMultiplier <= 0.2f)
-                {
-                    Gore.NewGoreAction(NPC.GetSource_FromAI(), NPC.Center + new Vector2(-40f, -NPC.height / 2f), NPC.velocity, GoreID.KingSlimeCrown, g => g.timeLeft += 180);
-                    NPC.Bottom = TeleportDestination;
-                    if (JewelSapphireAlive) //移动蓝宝石
+                    TeleportDestination = destination ?? Target.Bottom;
+                    CurrentAttackPhase = 1;
+                    break;
+                case 1: //停止水平移动并缩小体型，满足条件时传送
+                    MakeSlimeDust((int)TOMathHelper.Map(Data.MinScale, Data.MaxScale, 5f, 12.5f, NPC.scale, true));
+                    TeleportScaleMultiplier -= MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 0.016f : 0.013f, CAWorld.AnomalyUltramundane ? 0.02f : 0.015f, OceanNPC.LifeRatioReverse);
+                    if (StopHorizontalMovement() && TeleportScaleMultiplier <= 0.2f)
                     {
-                        JewelSapphire.Center = NPC.Center - new Vector2(0f, 200f);
-                        MakeJewelDust(JewelSapphire, 20);
+                        Gore.NewGoreAction(NPC.GetSource_FromAI(), NPC.Center + new Vector2(-40f, -NPC.height / 2f), NPC.velocity, GoreID.KingSlimeCrown, g => g.timeLeft += 180);
+                        NPC.Bottom = TeleportDestination;
+                        if (JewelSapphireAlive) //移动蓝宝石
+                        {
+                            JewelSapphire.Center = NPC.Center - new Vector2(0f, 200f);
+                            MakeJewelDust(JewelSapphire, 20);
+                        }
+                        CurrentAttackPhase = 2;
                     }
-                    CurrentAttackPhase = 2;
-                }
-                break;
-            case 2: //恢复体型，恢复完成后开始下一次攻击
-                TeleportScaleMultiplier += MathHelper.Lerp(0.03f, 0.05f, OceanNPC.LifeRatioReverse);
-                if (TeleportScaleMultiplier >= 1f)
-                    SelectNextAttack((int)MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 10 : 20, CAWorld.AnomalyUltramundane ? 5 : 12.5f, OceanNPC.LifeRatioReverse));
-                break;
+                    break;
+                case 2: //恢复体型，恢复完成后开始下一次攻击
+                    TeleportScaleMultiplier += MathHelper.Lerp(0.03f, 0.05f, OceanNPC.LifeRatioReverse);
+                    if (TeleportScaleMultiplier >= 1f)
+                    {
+                        TeleportScaleMultiplier = 1f;
+                        SelectNextAttack((int)MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 10 : 20, CAWorld.AnomalyUltramundane ? 5 : 12.5f, OceanNPC.LifeRatioReverse));
+                    }
+                    break;
+            }
         }
+        #endregion 行为函数
     }
-    #endregion AI
 
-    #region Draw
     public override Color? GetAlpha(Color drawColor)
     {
         if (JewelSapphireAlive)
-            return Color.Lerp(new Color(0, 0, 150, NPC.alpha), new Color(125, 125, 255, NPC.alpha), MathF.Sin(Main.GlobalTimeWrappedHourly) / 2f + 0.5f);
+            return Color.Lerp(new Color(0, 0, 150, NPC.alpha), new Color(125, 125, 255, NPC.alpha), TOMathHelper.GetTimeSin(0.5f, unsigned: true));
 
         return null;
     }
-    #endregion Draw
 }

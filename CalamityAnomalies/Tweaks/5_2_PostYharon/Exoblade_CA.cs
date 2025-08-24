@@ -27,9 +27,11 @@ public static class Exoblade_Handler
     public static bool IsGod(Player player) => player.name == "神光";
 }
 
-public sealed class Exoblade_Tweak : CAItemTweak<Exoblade>, ILocalizationPrefix
+public sealed class Exoblade_Tweak : CAItemTweak<Exoblade>, ICATweakLocalizationPrefix
 {
-    public string LocalizationPrefix => CAMain.TweakLocalizationPrefix + "5.2.Exoblade.";
+    CATweakPhase ICATweakLocalizationPrefix.Phase => CATweakPhase.PostYharon;
+
+    string ICATweakLocalizationPrefix.Name => "Exoblade";
 
     public override void SetStaticDefaults()
     {
@@ -52,7 +54,7 @@ public sealed class Exoblade_Tweak : CAItemTweak<Exoblade>, ILocalizationPrefix
     public override void UpdateInventory(Player player)
     {
         BigSlashUpscaleFactor = Exoblade_Handler.IsGod(player) ? 4f : 2f;
-        ItemID.Sets.ItemsThatAllowRepeatedRightClick[ApplyingType] = Projectile.ActiveProjectiles.Any(p => p.Owner == player && p.ModProjectile is ExobladeProj);
+        //ItemID.Sets.ItemsThatAllowRepeatedRightClick[ApplyingType] = Projectile.ActiveProjectiles.Any(p => p.Owner == player && p.ModProjectile is ExobladeProj);
     }
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
@@ -283,5 +285,5 @@ public sealed class ExobeamSlash_Tweak : CAProjectileTweak<ExobeamSlash>
 
 public sealed class ExobeamSlash_Detour : CAModProjectileDetour<ExobeamSlash>
 {
-    public override bool? Detour_Colliding(Orig_Colliding orig, ExobeamSlash self, Rectangle projHitbox, Rectangle targetHitbox) => CalamityUtils.CircularHitboxCollision(self.Projectile.Center, 32f, targetHitbox);
+    public override bool? Detour_Colliding(Orig_Colliding orig, ExobeamSlash self, Rectangle projHitbox, Rectangle targetHitbox) => TOCollisionUtils.AABBvCircularCollision(targetHitbox, self.Projectile.Center, 16f);
 }

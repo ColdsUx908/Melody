@@ -2,6 +2,12 @@
 
 public sealed class PlayerWingTimeUpdate : TOPlayerBehavior
 {
+    public override void ResetEffects()
+    {
+        for (int i = 0; i < OceanPlayer.WingTimeMaxMultipliers.Length; i++)
+            OceanPlayer.WingTimeMaxMultipliers[i] = AddableFloat.Zero;
+    }
+
     public override void PostUpdateMiscEffects()
     {
         if (Player.wingTimeMax > 0)

@@ -1,4 +1,5 @@
-﻿using CalamityMod.NPCs.SupremeCalamitas;
+﻿using CalamityAnomalies.Assets.Textures;
+using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.Systems;
 using CalamityMod.UI.ModeIndicator;
 using CalamityMod.World;
@@ -40,7 +41,7 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
 
     public AnomalyMode()
     {
-        Texture = AnomalyModeHandler._indicator;
+        Texture = CATextures._anomalyModeIndicator;
         DifficultyScale = 2.49147E23f;
         Name = this.GetTextWithPrefix("Anomaly");
         ShortDescription = this.GetTextWithPrefix("AnomalyShortInfo");
@@ -99,47 +100,46 @@ public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizati
             if (CAWorld.AnomalyUltramundane)
                 DisableUltra();
         }
-    }
 
-    private void DisableAnomaly()
-    {
-        if (TOWorld.GeneralClient)
-            TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyInvalid", Color.Red);
-        if (CAWorld.AnomalyUltramundane)
-            DisableUltra();
-        CAWorld.Anomaly = false;
-    }
+        void DisableAnomaly()
+        {
+            if (TOWorld.GeneralClient)
+                TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyInvalid", Color.Red);
+            if (CAWorld.AnomalyUltramundane)
+                DisableUltra();
+            CAWorld.Anomaly = false;
+        }
 
-    private void DisableUltra()
-    {
-        if (TOWorld.GeneralClient)
-            TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyUltramundaneDeactivate", Color.Red);
-        CAWorld.AnomalyUltramundane = false;
-    }
+        void DisableUltra()
+        {
+            if (TOWorld.GeneralClient)
+                TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyUltramundaneDeactivate", Color.Red);
+            CAWorld.AnomalyUltramundane = false;
+        }
 
-    private void EnableUltra()
-    {
-        if (TOWorld.GeneralClient)
-            TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyUltramundaneActivate", Color.Red);
-        CAWorld.AnomalyUltramundane = true;
-    }
+        void EnableUltra()
+        {
+            if (TOWorld.GeneralClient)
+                TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyUltramundaneActivate", Color.Red);
+            CAWorld.AnomalyUltramundane = true;
+        }
 
-    private void ZenithInfo()
-    {
-        if (TOWorld.GeneralClient)
-            TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyUltraInvalidZenith", CAMain.MainColor);
-        //SoundEngine.PlaySound();
-    }
+        void ZenithInfo()
+        {
+            if (TOWorld.GeneralClient)
+                TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyUltraInvalidZenith", CAMain.MainColor);
+            //SoundEngine.PlaySound();
+        }
 
-    private void NotLegendaryInfo()
-    {
-        if (TOWorld.GeneralClient)
-            TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyUltraInvalidNotLegendary", Color.Red);
+        void NotLegendaryInfo()
+        {
+            if (TOWorld.GeneralClient)
+                TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "AnomalyUltraInvalidNotLegendary", Color.Red);
+        }
     }
 
     void IResourceLoader.PostSetupContent()
     {
-        _indicator = CAUtils.RequestTexture("UI/AnomalyModeIndicator");
         if (CAServerConfig.Instance.Contents)
         {
             DifficultyModeSystem.Difficulties.Add(AnomalyMode.Instance = new());
@@ -149,8 +149,8 @@ public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizati
 
     void IResourceLoader.OnModUnload()
     {
-        DifficultyModeSystem.Difficulties.Remove(AnomalyMode.Instance);
-        DifficultyModeSystem.CalculateDifficultyData();
+        if (DifficultyModeSystem.Difficulties.Remove(AnomalyMode.Instance))
+            DifficultyModeSystem.CalculateDifficultyData();
         AnomalyMode.Instance = null;
     }
 }

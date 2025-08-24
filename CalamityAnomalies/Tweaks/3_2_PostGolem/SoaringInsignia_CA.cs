@@ -16,7 +16,7 @@ public sealed class SoaringInsignia_Tweak : CAItemTweak, ILocalizationPrefix
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
-        AnomalyItem.TooltipModifier
+        CAItemTooltipModifier.Instance
             .ModifyWithCATweakColorDefault(this, 0)
             .ModifyWithCATweakColorDefault(this, 1);
     }

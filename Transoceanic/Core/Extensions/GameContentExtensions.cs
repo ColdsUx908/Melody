@@ -1,5 +1,6 @@
 ﻿using Transoceanic.Publicizer.Terraria;
 using Transoceanic.RuntimeEditing;
+using Terraria.ID;
 
 namespace Transoceanic.Core.Extensions;
 
@@ -202,6 +203,28 @@ public static partial class TOExtensions
             _ => throw new ArgumentException("Unknown Entity", nameof(entity)),
         };
 
+        public bool Homing(Vector2 destination, float homingRatio = 1f, float sightAngle = MathHelper.TwoPi, bool keepVelocity = true, float? velocityOverride = null)
+        {
+            Vector2 distanceVector = destination - entity.Center;
+            float distance = distanceVector.Length();
+
+            if (sightAngle != MathHelper.TwoPi && Vector2.IncludedAngle(entity.velocity, distanceVector) > sightAngle / 2f)
+                return false;
+
+            float velocityLength = velocityOverride ?? entity.velocity.Length();
+            Vector2 distanceVector2 = distanceVector.ToCustomLength(velocityLength);
+            if (homingRatio == 1f)
+                entity.velocity = distance < velocityLength ? distanceVector : distanceVector2;
+            else
+            {
+                entity.velocity = Vector2.SmoothStep(entity.velocity, distanceVector2, homingRatio);
+                if (keepVelocity)
+                    entity.velocity.Modulus = velocityLength;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// 使实体追踪指定目标（反物理规则）。
         /// </summary>
@@ -211,33 +234,8 @@ public static partial class TOExtensions
         /// <param name="keepVelocity">是否在调整角度时保持速度大小不变。仅在追踪强度不为1时有效。</param>
         /// <remarks>须由具体实现决定目标锁定机制。</remarks>
         /// <returns>若追踪成功，true，否则，false。</returns>
-        public bool Homing<T>(T target, float homingRatio = 1f, float sightAngle = MathHelper.TwoPi, bool keepVelocity = true)
-            where T : Entity
-        {
-            if (target is not null && target.active)
-            {
-                Vector2 distanceVector = target.Center - entity.Center;
-                float distance = distanceVector.Length();
-
-                if (sightAngle != MathHelper.TwoPi && Vector2.IncludedAngle(entity.velocity, distanceVector) > sightAngle / 2f)
-                    return false;
-
-                float velocityLength = entity.velocity.Length();
-                Vector2 distanceVector2 = distanceVector.ToCustomLength(velocityLength);
-                if (homingRatio == 1f)
-                    entity.velocity = distance < velocityLength ? distanceVector : distanceVector2;
-                else
-                {
-                    entity.velocity = Vector2.SmoothStep(entity.velocity, distanceVector2, homingRatio);
-                    if (keepVelocity)
-                        entity.velocity.Modulus = velocityLength;
-                }
-
-                return true;
-            }
-            else
-                return false;
-        }
+        public bool Homing<T>(T target, float homingRatio = 1f, float sightAngle = MathHelper.TwoPi, bool keepVelocity = true, float? velocityOverride = null) where T : Entity =>
+            target is not null && target.active && entity.Homing(target.Center, homingRatio, sightAngle, keepVelocity, velocityOverride);
     }
 
     extension(Gore)
@@ -296,18 +294,48 @@ public static partial class TOExtensions
 
     extension(Item item)
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TOGlobalItem Ocean() => item.GetGlobalItem<TOGlobalItem>();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetModItem<T>() where T : ModItem => item.ModItem as T;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetModItemThrow<T>() where T : ModItem => item.GetModItem<T>()
             ?? throw new ArgumentException($"Item {item.Name} ({item.type}) does not have a ModItem of type {typeof(T).FullName}.", nameof(item));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetModItem<T>([NotNullWhen(true)] out T result) where T : ModItem => (result = item.GetModItem<T>()) is not null;
 
         public void DrawInventoryWithBorder(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Vector2 origin, float scale,
             int way, float borderWidth, Color borderColor) =>
             TODrawUtils.DrawBorderTexture(spriteBatch, TextureAssets.Item[item.type].Value, position, frame, borderColor, 0f, origin, scale, way: way, borderWidth: borderWidth);
+    }
+
+    extension(Item)
+    {
+        public static Item Create(int type)
+        {
+            Item item = new();
+            item.SetDefaults(type);
+            return item;
+        }
+
+        public static Item Create<T>() where T : ModItem => Create(ModContent.ItemType<T>());
+
+        public static Item Create(int type, Action<Item> action)
+        {
+            Item item = Create(type);
+            action?.Invoke(item);
+            return item;
+        }
+
+        public static Item Create<T>(Action<Item> action) where T : ModItem
+        {
+            Item item = Create<T>();
+            action?.Invoke(item);
+            return item;
+        }
     }
 
     extension(Language)
@@ -386,13 +414,17 @@ public static partial class TOExtensions
 
     extension(NPC npc)
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TOGlobalNPC Ocean() => npc.GetGlobalNPC<TOGlobalNPC>();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetModNPC<T>() where T : ModNPC => npc.ModNPC as T;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetModNPCThrow<T>() where T : ModNPC => npc.GetModNPC<T>()
             ?? throw new ArgumentException($"NPC {npc.FullName} ({npc.type}) does not have a ModNPC of type {typeof(T).FullName}.", nameof(npc));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetModNPC<T>([NotNullWhen(true)] out T result) where T : ModNPC => (result = npc.GetModNPC<T>()) is not null;
 
         public bool TOFriendly => npc.active && (npc.friendly || npc.townNPC || npc.lifeMax <= 5);
@@ -411,11 +443,13 @@ public static partial class TOExtensions
 
         public bool Twins => npc.type is NPCID.Retinazer or NPCID.Spazmatism;
 
-        public bool SkeletronPrimeHand => npc.type is >= 128 and <= 131; //机械炮：128，机械锯：129，机械钳：130，机械：131
+        public bool SkeletronPrimeHand => npc.type is >= 128 and <= 131; //机械炮，机械锯，机械钳，机械激光
 
         public bool GolemFist => npc.type is NPCID.GolemFistLeft or NPCID.GolemFistRight;
 
-        public bool CultistDragon => npc.type is >= 454 and <= 459; //幻影龙头部：454，幻影龙身体1：455，幻影龙身体2：456，幻影龙身体3：457，幻影龙身体4：458，幻影龙尾部：459
+        public bool CultistDragon => npc.type is >= 454 and <= 459; //幻影龙头部，幻影龙身体1，幻影龙身体2，幻影龙身体3，幻影龙身体4，幻影龙尾部
+
+        public bool FrostMoonEnemy => npc.type is >= 338 and <= 352; //僵尸精灵，胡子僵尸精灵，女孩僵尸精灵, 礼物宝箱怪, 姜饼人，雪兽，常绿尖叫怪，冰雪女王，圣诞坦克，精灵直升机，胡桃夹士，旋转胡桃夹士，精灵弓箭手，坎卜斯，雪花怪
 
         public int TargetDirection => Math.Sign((npc.HasNPCTarget ? Main.projectile[npc.target - 300] : (Entity)Main.player[npc.target]).Center.X - npc.Center.X) switch
         {
@@ -625,11 +659,16 @@ public static partial class TOExtensions
     {
         public void SetInstantKillBetter(NPC target) => modifiers.FinalDamage += target.lifeMax;
 
+        /// <summary>
+        /// 将暴击字段设为 <see langword="true"/>。
+        /// <br/>不同于 <see cref="NPC.HitModifiers.SetCrit"/>，即使 <see cref="NPC.HitModifiers.DisableCrit"/> 已被调用，该方法仍会生效。
+        /// </summary>
         public void ForceCrit() => TOReflectionUtils.SetStructField(ref modifiers, NPC_HitModifiers_Publicizer.i_f__critOverride, true);
     }
 
     extension(Player player)
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TOPlayer Ocean() => player.GetModPlayer<TOPlayer>();
 
         public bool Alive => player.active && !player.dead && !player.ghost;
@@ -666,15 +705,19 @@ public static partial class TOExtensions
 
     extension(Projectile projectile)
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TOGlobalProjectile Ocean() => projectile.GetGlobalProjectile<TOGlobalProjectile>();
 
         public Player Owner => Main.player[projectile.owner];
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetModProjectile<T>() where T : ModProjectile => projectile.ModProjectile as T;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetModProjectileThrow<T>() where T : ModProjectile => projectile.GetModProjectile<T>()
             ?? throw new ArgumentException($"Projectile {projectile.Name} ({projectile.type}) does not have a ModProjectile of type {typeof(T).FullName}.", nameof(projectile));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetModProjectile<T>([NotNullWhen(true)] out T result) where T : ModProjectile => (result = projectile.GetModProjectile<T>()) is not null;
 
         public bool OnOwnerClient => projectile.owner == Main.myPlayer;

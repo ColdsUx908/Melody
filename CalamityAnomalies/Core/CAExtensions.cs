@@ -17,15 +17,19 @@ public static class CAExtensions
 {
     extension(Item item)
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public CAGlobalItem Anomaly() => item.GetGlobalItem<CAGlobalItem>();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetBehavior(out CASingleItemBehavior itemBehavior, [CallerMemberName] string methodName = null!) => CASingleBehaviorHelper.ItemBehaviors.TryGetBehavior(item, methodName, out itemBehavior);
     }
 
     extension(NPC npc)
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public CAGlobalNPC Anomaly() => npc.GetGlobalNPC<CAGlobalNPC>();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetBehavior(out CASingleNPCBehavior npcBehavior, [CallerMemberName] string methodName = null!) => CASingleBehaviorHelper.NPCBehaviors.TryGetBehavior(npc, methodName, out npcBehavior);
 
         public bool DesertScourge => npc.ModNPC is DesertScourgeHead or DesertScourgeBody or DesertScourgeTail;
@@ -67,13 +71,16 @@ public static class CAExtensions
 
     extension(Player player)
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public CAPlayer Anomaly() => player.GetModPlayer<CAPlayer>();
     }
 
     extension(Projectile projectile)
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public CAGlobalProjectile Anomaly() => projectile.GetGlobalProjectile<CAGlobalProjectile>();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetBehavior(out CASingleProjectileBehavior projectileBehavior, [CallerMemberName] string methodName = null!) => CASingleBehaviorHelper.ProjectileBehaviors.TryGetBehavior(projectile, methodName, out projectileBehavior);
     }
 }

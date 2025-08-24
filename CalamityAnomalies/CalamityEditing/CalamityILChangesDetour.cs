@@ -12,12 +12,12 @@ public sealed class CalamityILChangesDetour : ICALoader
 
         if (!cursor.TryGotoNext(MoveType.After, i => i.MatchLdfld<Player>("empressBrooch")))
         {
-            CAUtils.LogILFailure("Run Acceleration Nerf Balance", "Could not locate the Soaring Insignia bool.");
+            CAUtils.ILFailure("Run Acceleration Nerf Balance", "Could not locate the Soaring Insignia bool.");
             return;
         }
         if (!cursor.TryGotoNext(MoveType.Before, i => i.MatchLdcR4(1.1f))) //BalancingConstants.SoaringInsigniaRunAccelerationMultiplier
         {
-            CAUtils.LogILFailure("Run Acceleration Nerf Balance", "Could not locate the nerfed Soaring Insignia run acceleration multiplier.");
+            CAUtils.ILFailure("Run Acceleration Nerf Balance", "Could not locate the nerfed Soaring Insignia run acceleration multiplier.");
             return;
         }
         cursor.Next.Operand = 1.3f;

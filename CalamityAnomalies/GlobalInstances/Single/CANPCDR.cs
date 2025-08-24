@@ -35,13 +35,12 @@ public sealed class CANPCDR : CAGlobalNPCBehavior2, IResourceLoader
         if (killTime > 0 && aiTimer < killTime && !BossRushEvent.BossRushActive && (isNightProvidence || isDayEmpress))
         {
             const float tdrFactor = 10f;
-
             float extraDRLimit = (1f - baseDR) * tdrFactor / 2f;
-            float lifeRatio = (float)npc.life / npc.lifeMax;
-            float killTimeRatio = (float)aiTimer / killTime;
-            float extraDRRatio = Math.Max(1f - lifeRatio - killTimeRatio, 0f);
-
-            timedDR = extraDRLimit * extraDRRatio / (1 + extraDRRatio);
+            float lifeCompletion = npc.Ocean().LifeRatioReverse;
+            float timeCompletion = (float)aiTimer / killTime;
+            float timedDRStrength = lifeCompletion - timeCompletion;
+            if (timedDRStrength > 0f)
+                timedDR = extraDRLimit * timedDRStrength / (1 + timedDRStrength);
         }
 
         return timedDR;
@@ -55,33 +54,34 @@ public sealed class CANPCDR : CAGlobalNPCBehavior2, IResourceLoader
         StatModifier baseDRModifier = new();
         StatModifier standardDRModifier = new();
         StatModifier timedDRModifier = new();
+        foreach (CAGlobalItemBehavior behavior in GlobalItemBehaviorHandler.BehaviorSet.GetBehaviors<CAGlobalItemBehavior>(nameof(CAGlobalItemBehavior.ModifyHitNPC_DR)))
+            behavior.ModifyHitNPC_DR(item, npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (item.TryGetBehavior(out CASingleItemBehavior itemBehavior, nameof(CASingleItemBehavior.ModifyHitNPC_DR)))
             itemBehavior.ModifyHitNPC_DR(npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
+        if (item.ModItem is ICAModItem caModItem)
+            caModItem.ModifyHitNPC_DR(npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         baseDR = baseDRModifier.ApplyTo(baseDR);
         float standardDR = standardDRModifier.ApplyTo(baseDR);
         float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR));
         modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR, 0f, 1f);
-
-        base.ModifyHitByItem(npc, player, item, ref modifiers);
     }
 
     public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
     {
-        if (!CAServerConfig.Instance.Contents)
-            return;
-
         float baseDR = GetBaseDR(npc);
         StatModifier baseDRModifier = new();
         StatModifier standardDRModifier = new();
         StatModifier timedDRModifier = new();
+        foreach (CAGlobalProjectileBehavior behavior in GlobalProjectileBehaviorHandler.BehaviorSet.GetBehaviors<CAGlobalProjectileBehavior>(nameof(CAGlobalProjectileBehavior.ModifyHitNPC_DR)))
+            behavior.ModifyHitNPC_DR(projectile, npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (projectile.TryGetBehavior(out CASingleProjectileBehavior projectileBehavior, nameof(CASingleProjectileBehavior.ModifyHitNPC_DR)))
             projectileBehavior.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
+        if (projectile.ModProjectile is ICAModProjectile caModProjectile)
+            caModProjectile.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         baseDR = baseDRModifier.ApplyTo(baseDR);
         float standardDR = standardDRModifier.ApplyTo(baseDR);
         float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR));
         modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR, 0f, 1f);
-
-        base.ModifyHitByProjectile(npc, projectile, ref modifiers);
     }
 
     void IResourceLoader.PostSetupContent()

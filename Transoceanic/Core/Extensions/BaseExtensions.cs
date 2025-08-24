@@ -79,7 +79,7 @@ public static partial class TOExtensions
                         return colors[0];
                     if (ratio >= 1f)
                         return colors[^1];
-                    (int index, float localRatio) = TOMathHelper.SplitFloat(Math.Clamp(ratio * (colors.Count - 1), 0f, colors.Count - 1));
+                    (int index, float localRatio) = TOMathHelper.SplitFloat(ratio * (colors.Count - 1));
                     return Color.Lerp(colors[index], colors[index + 1], localRatio);
             }
         }

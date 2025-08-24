@@ -2,9 +2,11 @@
 
 namespace CalamityAnomalies.Tweaks._4_3_PostPolterghast;
 
-public sealed class ReaperToothNecklace_CA : CAItemTweak<ReaperToothNecklace>, ILocalizationPrefix
+public sealed class ReaperToothNecklace_CA : CAItemTweak<ReaperToothNecklace>, ICATweakLocalizationPrefix
 {
-    public string LocalizationPrefix => CAMain.TweakLocalizationPrefix + "4.3.ReaperToothNecklace.";
+    CATweakPhase ICATweakLocalizationPrefix.Phase => CATweakPhase.PostPolterghast;
+
+    string ICATweakLocalizationPrefix.Name => "ReaperToothNecklace";
 
     public override void UpdateAccessory(Player player, bool hideVisual)
     {
@@ -13,6 +15,7 @@ public sealed class ReaperToothNecklace_CA : CAItemTweak<ReaperToothNecklace>, I
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
-        AnomalyItem.TooltipModifier.ModifyWithCATweakColorDefault(this, 1);
+        CAItemTooltipModifier.Instance
+            .ModifyWithCATweakColorDefault(this, 1);
     }
 }

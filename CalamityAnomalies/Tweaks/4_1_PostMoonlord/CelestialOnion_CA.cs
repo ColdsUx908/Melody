@@ -1,6 +1,6 @@
 ﻿using CalamityMod.Items.PermanentBoosters;
 
-namespace CalamityAnomalies.Tweaks._4_1_PostML;
+namespace CalamityAnomalies.Tweaks._4_1_PostMoonlord;
 
 /* 天体洋葱
  * 
@@ -13,7 +13,7 @@ public sealed class CelestialOnion_Tweak : CAItemTweak<CelestialOnion>, ILocaliz
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
-        AnomalyItem.TooltipModifier
+        CAItemTooltipModifier.Instance
             .ModifyWithCATweakColorDefault(this, 1);
     }
 }

@@ -1,8 +1,15 @@
 ﻿namespace CalamityAnomalies.GlobalInstances.Single;
 
-public sealed class CANPCLifetimeManager : CAGlobalNPCBehavior2
+public sealed class CANPCLifetimeManager : CAGlobalNPCBehavior
 {
-    public override decimal Priority => 100m;
+    public override decimal Priority => 500m;
+
+    public override void SetDefaults(NPC npc)
+    {
+        CAGlobalNPC anomalyNPC = npc.Anomaly();
+
+        anomalyNPC.ShouldRunAnomalyAI = true;
+    }
 
     public override bool PreAI(NPC npc)
     {

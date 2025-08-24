@@ -1,4 +1,5 @@
-﻿
+﻿using Transoceanic.GlobalInstances.Single;
+
 namespace Transoceanic.GlobalInstances;
 
 public sealed class TOPlayer : ModPlayer, IResourceLoader
@@ -9,10 +10,19 @@ public sealed class TOPlayer : ModPlayer, IResourceLoader
 
     public bool IsHurt;
 
+    /*
     /// <summary>
     /// 透支生命值。
     /// </summary>
-    public double OverdrawnLife;
+    public double OverdrawnLife
+    {
+        get;
+        set
+        {
+            if ((field = Math.Max(value, 0)) > Player.statLife)
+                PlayerOverdrawnLife.KillPlayer(Player);
+        }
+    }
 
     /// <summary>
     /// 透支生命值的最大值，可超过玩家生命值，默认为零。
@@ -20,24 +30,25 @@ public sealed class TOPlayer : ModPlayer, IResourceLoader
     public double OverdrawnLifeLimit;
 
     /// <summary>
-    /// 透支生命值回复指数。
+    /// 透支生命值回复指数，默认为2。
     /// </summary>
     public double OverdrawnLifeRegenExponent = 2;
 
     /// <summary>
-    /// 每帧回复透支生命值的最大值。
+    /// 每帧回复透支生命值的最大值，默认为0.5。
     /// </summary>
     public double OverdrawnLifeRegenLimit = 0.5;
 
     /// <summary>
-    /// 透支生命值回复乘数。
+    /// 透支生命值回复乘数，默认为1。
     /// </summary>
     public double OverdrawnLifeRegenMult = 1;
 
     /// <summary>
-    /// 回复透支生命值所需的最小未受击时间。
+    /// 回复透支生命值所需的最小未受击时间，默认为600。
     /// </summary>
-    public int OverdrawnLifeRegenThreshold;
+    public int OverdrawnLifeRegenThreshold = 600;
+    */
 
     public int TimeWithoutHurt;
 
@@ -54,21 +65,17 @@ public sealed class TOPlayer : ModPlayer, IResourceLoader
         clone.CommandCallInfo = CommandCallInfo;
         clone.GameTime = GameTime;
         clone.IsHurt = IsHurt;
+        /*
         clone.OverdrawnLife = OverdrawnLife;
         clone.OverdrawnLifeLimit = OverdrawnLifeLimit;
         clone.OverdrawnLifeRegenExponent = OverdrawnLifeRegenExponent;
         clone.OverdrawnLifeRegenLimit = OverdrawnLifeRegenLimit;
         clone.OverdrawnLifeRegenMult = OverdrawnLifeRegenMult;
         clone.OverdrawnLifeRegenThreshold = OverdrawnLifeRegenThreshold;
+        */
         clone.TimeWithoutHurt = TimeWithoutHurt;
         Array.Copy(WingTimeMaxMultipliers, clone.WingTimeMaxMultipliers, WingTimeMaxMultipliers.Length);
 
         return clone;
-    }
-
-    public override void ResetEffects()
-    {
-        for (int i = 0; i < WingTimeMaxMultipliers.Length; i++)
-            WingTimeMaxMultipliers[i] = AddableFloat.Zero;
     }
 }

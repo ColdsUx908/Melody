@@ -21,9 +21,11 @@ namespace CalamityAnomalies.Tweaks._4_3_PostPolterghast;
  *   跳跃速度再增加120%。
  */
 
-public sealed class AscendantInsignia_Tweak : CAItemTweak<AscendantInsignia>, ILocalizationPrefix
+public sealed class AscendantInsignia_Tweak : CAItemTweak<AscendantInsignia>, ICATweakLocalizationPrefix
 {
-    public string LocalizationPrefix => CAMain.TweakLocalizationPrefix + "4.3.AscendantInsignia.";
+    CATweakPhase ICATweakLocalizationPrefix.Phase => CATweakPhase.PostPolterghast;
+
+    string ICATweakLocalizationPrefix.Name => "AscendantInsignia";
 
     public static bool HasYharimsGiftBuff
     {
@@ -42,17 +44,17 @@ public sealed class AscendantInsignia_Tweak : CAItemTweak<AscendantInsignia>, IL
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
-        AnomalyItem.TooltipModifier
+        CAItemTooltipModifier.Instance
             .ModifyWithCATweakColorDefault(this, 0)
             .ModifyWithCATweakColorDefault(this, 1)
             .ModifyWithCATweakColorDefault(this, 3);
         if (HasYharimsGiftBuff)
         {
-            AnomalyItem.TooltipModifier.ClearAllCATooltips();
-            YharimsGift_Handler.AddBlessingTooltip(Item);
-            YharimsGift_Handler.AddGoldTooltip(Item, l => l.Text = this.GetTextFormatWithPrefix("BlessingTooltip0"));
-            YharimsGift_Handler.AddGoldTooltip(Item, l => l.Text = this.GetTextFormatWithPrefix("BlessingTooltip1"));
-            YharimsGift_Handler.AddGoldTooltip(Item, l => l.Text = this.GetTextFormatWithPrefix("BlessingTooltip2"));
+            CAItemTooltipModifier.Instance.ClearAllCATooltips();
+            YharimsGift_Handler.AddBlessingTooltip();
+            YharimsGift_Handler.AddGoldTooltip(l => l.Text = this.GetTextFormatWithPrefix("BlessingTooltip0"));
+            YharimsGift_Handler.AddGoldTooltip(l => l.Text = this.GetTextFormatWithPrefix("BlessingTooltip1"));
+            YharimsGift_Handler.AddGoldTooltip(l => l.Text = this.GetTextFormatWithPrefix("BlessingTooltip2"));
         }
     }
 }

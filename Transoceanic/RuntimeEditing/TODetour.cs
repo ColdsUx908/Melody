@@ -82,11 +82,11 @@ public class DetourClassToAttribute<T> : DetourClassToAttribute where T : class
 /// 用于标记包含Detour方法的类。
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-public class MultiDetourClassToAttribute : Attribute
+public class DetourClassTo_MultiSourceAttribute : Attribute
 {
     public readonly Type[] SourceTypes;
 
-    public MultiDetourClassToAttribute(params Type[] sourceTypes)
+    public DetourClassTo_MultiSourceAttribute(params Type[] sourceTypes)
     {
         ArgumentException.ThrowIfNullOrEmptyOrAnyNull(sourceTypes);
         SourceTypes = sourceTypes;
@@ -257,12 +257,9 @@ public sealed class TODetourHelper : IResourceLoader
         Detours.Clear();
 
         foreach ((Type type, DetourClassToAttribute attribute) in TOReflectionUtils.GetTypesWithAttribute<DetourClassToAttribute>())
-        {
-            Type sourceType = attribute.SourceType;
-            TODetourUtils.ApplyAllStaticMethodDetoursOfType(type, sourceType);
-        }
+            TODetourUtils.ApplyAllStaticMethodDetoursOfType(type, attribute.SourceType);
 
-        foreach ((Type type, MultiDetourClassToAttribute attribute) in TOReflectionUtils.GetTypesWithAttribute<MultiDetourClassToAttribute>())
+        foreach ((Type type, DetourClassTo_MultiSourceAttribute attribute) in TOReflectionUtils.GetTypesWithAttribute<DetourClassTo_MultiSourceAttribute>())
         {
             Type[] sourceTypes = attribute.SourceTypes;
             foreach (MethodInfo detour in type.GetRealMethods(TOReflectionUtils.StaticBindingFlags))

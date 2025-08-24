@@ -128,5 +128,9 @@ public sealed class CAMain : Mod, IResourceLoader
 
     public const string CalamityModLocalizationPrefix = "Mods.CalamityMod.";
 
+    public const string CalamityInvisibleProj = "CalamityMod/Projectiles/InvisibleProj";
+
+    public const string CATexturePath = "CalamityAnomalies/Assets/Textures/";
+
     public static readonly Color AnomalyUltramundaneColor = new(0xE8, 0x97, 0xFF);
 }

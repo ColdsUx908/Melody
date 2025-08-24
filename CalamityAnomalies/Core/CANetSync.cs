@@ -8,7 +8,7 @@ public static class CANetSync
         public const byte SyncAnomalyModeFromServer = 1;
     }
 
-    public static ModPacket GetCAPacket() => CAMain.Instance.GetPacket();
+    internal static ModPacket GetCAPacket() => CAMain.Instance.GetPacket();
 
     public static void SyncAnomalyMode(int ignoreClient = -1)
     {

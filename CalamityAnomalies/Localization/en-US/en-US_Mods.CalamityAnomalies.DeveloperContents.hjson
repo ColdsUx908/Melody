@@ -9,11 +9,14 @@ AscendantWings: {
 }
 
 ColdheartIcicle: {
-	DisplayName: Coldsheart Icicle
+	DisplayName: Coldheart Icicle
 	Tooltip: ""
 }
 
-ColdheartIcicleProj.DisplayName: Coldheart Icicle Proj
+ColdheartIcicleDream.DisplayName: Coldheart Icicle Dream
+ColdheartIcicleIceRain.DisplayName: Coldheart Icicle Ice Rain
+ColdheartIcicleProj.DisplayName: Coldheart Icicle
+ColdheartIcicleSnowflake.DisplayName: Coldheart Icicle Snowflake
 
 Permafrost: {
 	Spawn: Permafrost has awoken!

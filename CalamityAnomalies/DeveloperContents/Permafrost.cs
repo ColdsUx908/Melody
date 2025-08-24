@@ -428,13 +428,14 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
 
     public override bool PreDrawCalBossBar(BetterBossHPUI newBar, SpriteBatch spriteBatch, ref int x, ref int y)
     {
+        TOGlobalNPC oceanNPC = OceanNPC;
         newBar.DrawMainBar(spriteBatch, x, y);
         newBar.DrawComboBar(spriteBatch, x, y);
         newBar.DrawSeperatorBar(spriteBatch, x, y, Data.BlueColor * newBar.AnimationCompletionRatio2);
         newBar.DrawNPCName(spriteBatch, x, y, null,
             Data.BlueColor * newBar.AnimationCompletionRatio2,
             Data.NameColor * newBar.AnimationCompletionRatio2,
-            Math.Clamp(OceanNPC.ActiveTime, 0f, 360f) / 240f + TOMathHelper.GetTimeSin(0.5f, 1f, TOMathHelper.PiOver3, true) + OceanNPC.LifeRatioReverse / 2f);
+            Math.Clamp(oceanNPC.ActiveTime, 0f, 360f) / 240f + TOMathHelper.GetTimeSin(0.5f, 1f, TOMathHelper.PiOver3, true) + oceanNPC.LifeRatioReverse / 2f);
         newBar.DrawBigLifeText(spriteBatch, x, y);
         newBar.DrawExtraSmallText(spriteBatch, x, y);
 

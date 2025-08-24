@@ -27,7 +27,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
         public const int Phase2InvincibilityTime = 900;
     }
 
-    public Yharon_Publicizer YharonPublicizer { get; private set; }
+    public Yharon_Publicizer YharonPublicizer;
 
 #pragma warning disable IDE1006
     public Rectangle safeBox
@@ -120,12 +120,6 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
     }
     #endregion 数据、属性
 
-    protected override void Connect(NPC npc)
-    {
-        base.Connect(npc);
-        YharonPublicizer = new(ModNPC);
-    }
-
     #region Active
     public override bool CheckDead()
     {
@@ -145,6 +139,8 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
 
     public override bool PreAI()
     {
+        YharonPublicizer = new(ModNPC);
+
         if (CalamityConfig.Instance.BossesStopWeather)
             CalamityMod_.StopRain();
 

@@ -2,18 +2,27 @@
 
 public partial class ItemTooltipModifier
 {
-    protected readonly int _tooltip0;
-    protected readonly int _tooltipLast;
-    protected readonly int _tooltipMax;
+    public static readonly ItemTooltipModifier Instance = new();
 
-    public readonly List<TooltipLine> Tooltips;
+    protected int _tooltip0;
+    protected int _tooltipLast;
+    protected int _tooltipMax;
+
+    public List<TooltipLine> Tooltips;
 
     public static readonly Regex _tooltipRegex = GetTooltipRegex();
 
     [GeneratedRegex("""^Tooltip(\d+)$""")]
     private static partial Regex GetTooltipRegex();
 
-    public ItemTooltipModifier(List<TooltipLine> tooltips)
+    public virtual ItemTooltipModifier Update(List<TooltipLine> tooltips)
+    {
+        if (Tooltips != tooltips)
+            UpdateInner(tooltips);
+        return this;
+    }
+
+    protected virtual void UpdateInner(List<TooltipLine> tooltips)
     {
         Tooltips = tooltips;
         _tooltip0 = tooltips.FindFirstTerrariaTooltipIndex();

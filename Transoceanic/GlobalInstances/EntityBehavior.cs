@@ -16,7 +16,6 @@ public sealed class CriticalBehaviorAttribute : Attribute;
 public abstract class EntityBehavior<TEntity> where TEntity : Entity
 {
     protected internal TEntity _entity;
-    protected internal bool _shouldConnect;
 
     public abstract Mod Mod { get; }
 
@@ -28,11 +27,6 @@ public abstract class EntityBehavior<TEntity> where TEntity : Entity
     public virtual bool ShouldProcess => true;
 
     /// <summary>
-    /// 将指定实体连接到Behavior实例。
-    /// </summary>
-    protected virtual void Connect(TEntity entity) { }
-
-    /// <summary>
     /// Allows you to modify the properties after initial loading has completed.
     /// </summary>
     public virtual void SetStaticDefaults() { }
@@ -40,15 +34,7 @@ public abstract class EntityBehavior<TEntity> where TEntity : Entity
 
 public abstract class GeneralEntityBehavior<TEntity> : EntityBehavior<TEntity> where TEntity : Entity;
 
-public abstract class GlobalEntityBehavior<TEntity> : GeneralEntityBehavior<TEntity> where TEntity : Entity
-{
-    /// <summary>
-    /// <inheritdoc/><para/>
-    /// 此方法不应被调用，调用时抛出异常。
-    /// </summary>
-    /// <exception cref="NotSupportedException"></exception>
-    protected sealed override void Connect(TEntity entity) => throw new NotSupportedException();
-}
+public abstract class GlobalEntityBehavior<TEntity> : GeneralEntityBehavior<TEntity> where TEntity : Entity;
 
 public abstract class SingleEntityBehavior<TEntity> : EntityBehavior<TEntity> where TEntity : Entity
 {
@@ -93,7 +79,6 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
             foreach (TBehavior behavior in behaviors)
             {
                 behavior._entity = entity;
-                behavior._shouldConnect = true;
                 if (behavior.ShouldProcess)
                     yield return behavior;
             }
@@ -121,12 +106,28 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
                 if (behavior is T typedBehavior)
                 {
                     behavior._entity = entity;
-                    behavior._shouldConnect = true;
                     if (typedBehavior.ShouldProcess)
                         yield return typedBehavior;
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// 按照 <see cref="EntityBehavior{TEntity}.Priority"/> 降序寻找通过 <see cref="SingleEntityBehavior{TEntity}.ShouldProcess"/> 检测且实现了指定方法的Override实例。
+    /// </summary>
+    public TBehavior GetFirstBehavior(TEntity entity, [CallerMemberName] string methodName = null!)
+    {
+        if (_data.TryGetValue(methodName, out List<TBehavior> behaviors))
+        {
+            foreach (TBehavior behavior in behaviors)
+            {
+                behavior._entity = entity;
+                if (behavior.ShouldProcess)
+                    return behavior;
+            }
+        }
+        return null;
     }
 
     internal void Initialize(IEnumerable<TBehavior> behaviors)
@@ -167,31 +168,10 @@ public class SingleEntityBehaviorSet<TEntity, TBehavior>
     protected internal readonly Dictionary<int, SimpleEntityBehaviorSet<TEntity, TBehavior>> _data = [];
 
     /// <summary>
-    /// 尝试获取指定实体的行为实例。
-    /// <br/>按照 <see cref="EntityBehavior{TEntity}.Priority"/> 降序寻找通过 <see cref="SingleEntityBehavior{TEntity}.ShouldProcess"/> 检测的实现了指定方法的Override实例。
+    /// 按照 <see cref="EntityBehavior{TEntity}.Priority"/> 降序寻找通过 <see cref="SingleEntityBehavior{TEntity}.ShouldProcess"/> 检测且实现了指定方法的Override实例。
     /// </summary>
-    /// <param name="entity"></param>
-    /// <param name="methodName"></param>
-    /// <param name="behavior"></param>
-    /// <returns></returns>
-    public bool TryGetBehavior(TEntity entity, string methodName, [NotNullWhen(true)] out TBehavior behavior)
-    {
-        if (_data.TryGetValue(entity.EntityType, out SimpleEntityBehaviorSet<TEntity, TBehavior> set))
-        {
-            foreach (TBehavior temp in set.GetBehaviors(methodName))
-            {
-                temp._entity = entity;
-                temp._shouldConnect = true;
-                if (temp.ShouldProcess)
-                {
-                    behavior = temp;
-                    return true;
-                }
-            }
-        }
-        behavior = null;
-        return false;
-    }
+    public bool TryGetBehavior(TEntity entity, string methodName, [NotNullWhen(true)] out TBehavior behavior) =>
+        (behavior = _data.TryGetValue(entity.EntityType, out SimpleEntityBehaviorSet<TEntity, TBehavior> set) ? set.GetFirstBehavior(entity, methodName) : null) is not null;
 
     public void FillSet() => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>());
 
@@ -222,24 +202,7 @@ public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
 {
     public Player Player => _entity;
 
-    public TOPlayer OceanPlayer
-    {
-        get
-        {
-            if (_shouldConnect)
-            {
-                Connect(_entity);
-                _shouldConnect = false;
-            }
-            return field;
-        }
-        protected set;
-    }
-
-    protected override void Connect(Player player)
-    {
-        OceanPlayer = player.Ocean();
-    }
+    public TOPlayer OceanPlayer => _entity.Ocean();
 
     #region 虚成员
     /// <summary>
@@ -3370,26 +3333,9 @@ public abstract class SingleNPCBehavior : SingleEntityBehavior<NPC>
 {
     public NPC NPC => _entity;
 
-    public TOGlobalNPC OceanNPC
-    {
-        get
-        {
-            if (_shouldConnect)
-            {
-                Connect(_entity);
-                _shouldConnect = false;
-            }
-            return field;
-        }
-        protected set;
-    }
+    public TOGlobalNPC OceanNPC => _entity.Ocean();
 
     public Player Target => Main.player[NPC.target];
-
-    protected override void Connect(NPC npc)
-    {
-        OceanNPC = npc.Ocean();
-    }
 
     public int Timer1
     {
@@ -3984,26 +3930,9 @@ public abstract class SingleProjectileBehavior : SingleEntityBehavior<Projectile
 {
     public Projectile Projectile => _entity;
 
-    public TOGlobalProjectile OceanProjectile
-    {
-        get
-        {
-            if (_shouldConnect)
-            {
-                Connect(_entity);
-                _shouldConnect = false;
-            }
-            return field;
-        }
-        protected set;
-    }
+    public TOGlobalProjectile OceanProjectile => _entity.Ocean();
 
     public Player Owner => Projectile.Owner;
-
-    protected override void Connect(Projectile projectile)
-    {
-        OceanProjectile = projectile.Ocean();
-    }
 
     #region 虚成员
     #region Defaults
@@ -4256,24 +4185,7 @@ public abstract class SingleItemBehavior : SingleEntityBehavior<Item>
 {
     public Item Item => _entity;
 
-    public TOGlobalItem OceanItem
-    {
-        get
-        {
-            if (_shouldConnect)
-            {
-                Connect(_entity);
-                _shouldConnect = false;
-            }
-            return field;
-        }
-        protected set;
-    }
-
-    protected override void Connect(Item item)
-    {
-        OceanItem = item.Ocean();
-    }
+    public TOGlobalItem OceanItem => _entity.Ocean();
 
     #region 虚成员
     #region Defaults
