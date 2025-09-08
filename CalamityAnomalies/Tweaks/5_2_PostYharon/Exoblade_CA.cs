@@ -1,6 +1,7 @@
 ﻿using CalamityMod.Dusts;
 using CalamityMod.Items.Weapons.Melee;
 using CalamityMod.Projectiles.Melee;
+using Transoceanic.Maths.Geometry;
 using Transoceanic.Maths.Geometry.Collision;
 using static CalamityMod.Items.Weapons.Melee.Exoblade;
 
