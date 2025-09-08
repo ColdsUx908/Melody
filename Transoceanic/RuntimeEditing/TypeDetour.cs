@@ -1618,6 +1618,9 @@ public abstract class ModNPCDetour<T> : ModTypeDetour<T> where T : ModNPC
     public delegate void Orig_ModifyHoverBoundingBox(T self, ref Rectangle boundingBox);
     public virtual void Detour_ModifyHoverBoundingBox(Orig_ModifyHoverBoundingBox orig, T self, ref Rectangle boundingBox) => orig(self, ref boundingBox);
 
+    public delegate bool Orig_PreHoverInteract(T self, bool mouseIntersects);
+    public virtual bool Detour_PreHoverInteract(Orig_ModifyHoverBoundingBox orig, T self, bool mouseIntersects) => true;
+
     // SetNPCNameList
     public delegate List<string> Orig_SetNPCNameList(T self);
     public virtual List<string> Detour_SetNPCNameList(Orig_SetNPCNameList orig, T self) => orig(self);
@@ -1935,6 +1938,7 @@ public abstract class ModNPCDetour<T> : ModTypeDetour<T> where T : ModNPC
         TryApplyDetour(Detour_SetBestiary);
         TryApplyDetour(Detour_ModifyTypeName);
         TryApplyDetour(Detour_ModifyHoverBoundingBox);
+        TryApplyDetour(Detour_PreHoverInteract);
         TryApplyDetour(Detour_SetNPCNameList);
         TryApplyDetour(Detour_TownNPCProfile);
         TryApplyDetour(Detour_ResetEffects);
@@ -4940,6 +4944,9 @@ public abstract class GlobalNPCDetour<T> : GlobalTypeDetour<NPC, GlobalNPC, T> w
     public delegate void Orig_ModifyHoverBoundingBox(T self, NPC npc, ref Rectangle boundingBox);
     public virtual void Detour_ModifyHoverBoundingBox(Orig_ModifyHoverBoundingBox orig, T self, NPC npc, ref Rectangle boundingBox) => orig(self, npc, ref boundingBox);
 
+    public delegate bool Orig_PreHoverInteract(T self, NPC npc, bool mouseIntersects);
+    public virtual bool Detour_PreHoverInteract(Orig_ModifyHoverBoundingBox orig, T self, NPC npc, bool mouseIntersects) => true;
+
     // ModifyTownNPCProfile
     public delegate ITownNPCProfile Orig_ModifyTownNPCProfile(T self, NPC npc);
     public virtual ITownNPCProfile Detour_ModifyTownNPCProfile(Orig_ModifyTownNPCProfile orig, T self, NPC npc) => orig(self, npc);
@@ -5257,6 +5264,7 @@ public abstract class GlobalNPCDetour<T> : GlobalTypeDetour<NPC, GlobalNPC, T> w
         TryApplyDetour(Detour_SetBestiary);
         TryApplyDetour(Detour_ModifyTypeName);
         TryApplyDetour(Detour_ModifyHoverBoundingBox);
+        TryApplyDetour(Detour_PreHoverInteract);
         TryApplyDetour(Detour_ModifyTownNPCProfile);
         TryApplyDetour(Detour_ModifyNPCNameList);
         TryApplyDetour(Detour_ResetEffects);
