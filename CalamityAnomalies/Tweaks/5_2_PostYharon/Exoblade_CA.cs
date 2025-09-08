@@ -2,6 +2,7 @@
 using CalamityMod.Dusts;
 using CalamityMod.Items.Weapons.Melee;
 using CalamityMod.Projectiles.Melee;
+using Transoceanic.Maths.Geometry.Collision;
 using static CalamityMod.Items.Weapons.Melee.Exoblade;
 
 namespace CalamityAnomalies.Tweaks._5_2_PostYharon;
@@ -285,5 +286,6 @@ public sealed class ExobeamSlash_Tweak : CAProjectileTweak<ExobeamSlash>
 
 public sealed class ExobeamSlash_Detour : CAModProjectileDetour<ExobeamSlash>
 {
-    public override bool? Detour_Colliding(Orig_Colliding orig, ExobeamSlash self, Rectangle projHitbox, Rectangle targetHitbox) => TOCollisionUtils.AABBvCircularCollision(targetHitbox, self.Projectile.Center, 16f);
+    public override bool? Detour_Colliding(Orig_Colliding orig, ExobeamSlash self, Rectangle projHitbox, Rectangle targetHitbox) =>
+        CollisionHelper.Collides(new Circle(self.Projectile.Center, 16f), targetHitbox);
 }

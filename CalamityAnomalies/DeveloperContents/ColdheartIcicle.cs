@@ -8,20 +8,13 @@ using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework.Input;
 using Terraria.GameContent.ItemDropRules;
+using Transoceanic.Maths.Geometry.Collision;
 
 namespace CalamityAnomalies.DeveloperContents;
 
 #region 物品
 public sealed class ColdheartIcicle : ModItem
 {
-    public const bool CELESS_DEV =
-#if CELESS_DEV
-        true
-#else
-        false
-#endif
-        ;
-
     #region Static
     public const int SpriteWidth = 24;
     public const string TexturePath = "CalamityMod/Items/ColdheartIcicle";
@@ -165,7 +158,8 @@ public sealed class ColdheartIcicle : ModItem
 
     public override bool CanUseItem(Player player)
     {
-        if (CELESS_DEV && IsDream(player))
+#if CELESS_DEV
+        if (IsDream(player))
         {
             if (player.ownedProjectileCounts[ModContent.ProjectileType<ColdheartIcicleDream>()] < 1)
             {
@@ -174,6 +168,7 @@ public sealed class ColdheartIcicle : ModItem
                     p.Center = player.Center;
                     p.SetVelocityandRotation(Vector2.Zero);
                     ColdheartIcicleDream modP = p.GetModProjectile<ColdheartIcicleDream>();
+                    modP.Target = player;
                     modP.Behavior = player.altFunctionUse == 2 ? ColdheartIcicleDream.BehaviorType.SetOut : ColdheartIcicleDream.BehaviorType.Dream;
                 });
             }
@@ -181,6 +176,9 @@ public sealed class ColdheartIcicle : ModItem
         }
         else
             return true;
+#else
+        return true;
+#endif
     }
 
     public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
@@ -243,18 +241,15 @@ public sealed class ColdheartIcicle : ModItem
 
     public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
     {
-        if (!IsDream(player))
+        Projectile.NewProjectileAction<ColdheartIcicleProj>(source, position, velocity, damage, knockback, player.whoAmI, p =>
         {
-            Projectile.NewProjectileAction<ColdheartIcicleProj>(source, position, velocity, damage, knockback, player.whoAmI, p =>
-            {
-                ColdheartIcicleProj modP = p.GetModProjectile<ColdheartIcicleProj>();
-                modP.IsRightClick = player.altFunctionUse == 2;
-                modP.Phase = Phase;
-                modP.SubPhase = SubPhase;
-            });
-            if (player.altFunctionUse == 2)
-                Projectile.NewProjectileAction<ColdheartIcicleSnowflake>(source, player.Center, velocity.ToCustomLength(3f), damage, 0f, player.whoAmI, p => p.VelocityToRotation());
-        }
+            ColdheartIcicleProj modP = p.GetModProjectile<ColdheartIcicleProj>();
+            modP.IsRightClick = player.altFunctionUse == 2;
+            modP.Phase = Phase;
+            modP.SubPhase = SubPhase;
+        });
+        if (player.altFunctionUse == 2)
+            Projectile.NewProjectileAction<ColdheartIcicleSnowflake>(source, player.Center, velocity.ToCustomLength(3f), damage, 0f, player.whoAmI, p => p.VelocityToRotation());
         return false;
     }
 
@@ -358,12 +353,8 @@ public sealed class ColdheartIcicleProj : BaseShortswordProjectile, ICAModProjec
         TOCombatTextUtils.ChangeHitNPCText(t => t.color = Color.Cyan);
     }
 
-    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
-    {
-        Vector2 center = Projectile.Center;
-        Vector2 direction = (center - Owner.MountedCenter).SafelyNormalized;
-        return TOCollisionUtils.AABBvWideLineCollision(targetHitbox, center - direction * 8.5f, center + direction * 17f, 4f);
-    }
+    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) =>
+        CollisionHelper.Collides(new RotatedRectangle(FloatRectangle.FromInnerPoint(Projectile.Center, 9f, 17.5f, 2.25f, 2.25f), Projectile.rotation), targetHitbox);
 
     public override void SendExtraAI(BinaryWriter writer)
     {
@@ -385,9 +376,41 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
     public static Asset<Texture2D> _orbTex;
     public static Texture2D OrbTex => _orbTex?.Value;
 
-    public const int LifeTime = 35;
-    public const int LifeTimeDream = 100;
-    public const int LifeTimeDream2 = 120;
+    public int Timer
+    {
+        get => (int)Projectile.ai[1];
+        set => Projectile.ai[1] = value;
+    }
+
+    public int Timer2
+    {
+        get => (int)Projectile.ai[2];
+        set => Projectile.ai[2] = value;
+    }
+
+    public int TargetIndex = -1;
+    public Entity Target
+    {
+        get => TargetIndex switch
+        {
+            >= 300 => Main.npc[TargetIndex - 300],
+            >= 0 => Main.player[TargetIndex],
+            _ => Projectile.Owner
+        };
+        set
+        {
+            if (value is NPC npc)
+                TargetIndex = npc.whoAmI + 300;
+            else if (value is Player player)
+                TargetIndex = player.whoAmI;
+            else
+                TargetIndex = -1;
+        }
+    }
+
+#if CELESS_DEV
+    public const int LifeTime = 100;
+    public const int LifeTime2 = 120;
 
     public enum BehaviorType
     {
@@ -406,12 +429,6 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
     {
         get => (BehaviorType)(int)Projectile.ai[0];
         set => Projectile.ai[0] = (int)value;
-    }
-
-    public int Timer
-    {
-        get => (int)Projectile.ai[1];
-        set => Projectile.ai[1] = value;
     }
 
     public float RealRotation
@@ -438,6 +455,9 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
     #region 启程
     public int SetOutPhase = 1;
     #endregion 启程
+#else
+    public const int LifeTime = 50;
+#endif
 
     public override string Texture => CAMain.CalamityInvisibleProj;
 
@@ -480,9 +500,11 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
 
     public override bool PreDraw(ref Color lightColor)
     {
+#if CELESS_DEV
         switch (Behavior)
         {
             case BehaviorType.Normal:
+                NormalPreDraw();
                 return false;
             case BehaviorType.Dream:
                 Main.Rasterizer.ScissorTestEnable = true;
@@ -494,12 +516,12 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
                     Vector2 origin = OrbTex.Size() * 0.5f;
                     for (int j = 0; j < 6; j++)
                     {
-                        int localTimer = Timer > 2000 ? (2200 - Timer) / 2 : Math.Min(Timer - LifeTimeDream2 * j - 235, LifeTimeDream);
+                        int localTimer = Timer > 2000 ? (2200 - Timer) / 2 : Math.Min(Timer - LifeTime2 * j - 235, LifeTime);
                         for (int i = 0; i <= localTimer * 10; i++)
                         {
                             float a = scale * EllipseData.AMultiplier; //椭圆半长轴
                             float b = scale * EllipseData.BMultiplier; //椭圆半短轴
-                            float amount = i * 1.83f / (LifeTimeDream * 10);
+                            float amount = i * 1.83f / (LifeTime * 10);
                             if (amount > 1f)
                             {
                                 float multiplier = MathHelper.Lerp(0.4f, 1f, 2f - amount);
@@ -520,39 +542,58 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
                 ColdheartIcicleSnowflake.DrawSnowflake(Projectile.Center, Projectile.scale, RealRotation);
                 return false;
             default:
-                return true;
+                return false;
+        }
+#else
+        NormalPreDraw();
+        return false;
+#endif
+        void NormalPreDraw()
+        {
+            Main.Rasterizer.ScissorTestEnable = true;
+            Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
+            Main.instance.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
+            if (Timer < 300)
+            {
+                float scale = 40f; //圆心半径
+                Vector2 origin = OrbTex.Size() * 0.5f;
+                for (int j = 0; j < 6; j++)
+                {
+                    int localTimer = Timer2 > 0 ? (100 - Timer2) / 2 : Math.Min(Timer - j * 10, LifeTime);
+                    for (int i = 0; i <= localTimer * 10; i++)
+                    {
+                        float a = scale * EllipseData.AMultiplier; //椭圆半长轴
+                        float b = scale * EllipseData.BMultiplier; //椭圆半短轴
+                        float amount = i * 1.83f / (LifeTime * 10);
+                        if (amount > 1f)
+                        {
+                            float multiplier = MathHelper.Lerp(0.4f, 1f, 2f - amount);
+                            a *= multiplier;
+                            b *= multiplier;
+                        }
+                        float angle = TOMathHelper.PiOver6 + TOMathHelper.PiOver3 * (j - 2);
+                        Vector2 circleCenter = Projectile.Center + new PolarVector2(scale, angle);
+                        (float sin, float cos) = MathF.SinCos(MathHelper.Lerp(-EllipseData.MaxAngleOffset, EllipseData.MaxAngleOffset, amount));
+                        Vector2 position = circleCenter + new Vector2(a * cos, b * sin).RotatedBy(angle);
+                        Main.spriteBatch.Draw(OrbTex, position - Main.screenPosition, null, Color.White with { A = 0 }, 0f, origin, 0.3f * TOMathHelper.Map(0f, 1.83f, 0.4f, 1.2f, amount), SpriteEffects.None, 0f);
+                    }
+                }
+            }
         }
     }
 
     public override void AI()
     {
         Timer++;
-
+#if CELESS_DEV
         switch (Behavior)
         {
             case BehaviorType.Normal:
-                float scale = 32f; //圆心半径
-                float a = scale * EllipseData.AMultiplier; //椭圆半长轴
-                float b = scale * EllipseData.BMultiplier; //椭圆半短轴
-                float amount = Timer * 1.83f / LifeTime;
-                if (amount > 1f)
-                {
-                    float multiplier = MathHelper.Lerp(0.4f, 1f, 2f - amount);
-                    a *= multiplier;
-                    b *= multiplier;
-                }
-                for (int i = 0; i < 6; i++)
-                {
-                    float angle = Projectile.rotation + TOMathHelper.PiOver3 * i;
-                    Vector2 circleCenter = Projectile.Center + new PolarVector2(scale, angle);
-                    (float sin, float cos) = MathF.SinCos(MathHelper.Lerp(-EllipseData.MaxAngleOffset, EllipseData.MaxAngleOffset, amount));
-                    Vector2 position = circleCenter + new Vector2(a * cos, b * sin).RotatedBy(angle);
-                    GeneralParticleHandler.SpawnParticle(new ColdheartIcicleGlowOrbParticle(position, Vector2.Zero, 0f, LifeTime - Timer / Projectile.MaxUpdates + 10, 0.7f, 0.5f, Color.White, needed: true));
-                }
+                NormalAI();
                 break;
             case BehaviorType.Dream:
                 Projectile.Center = Projectile.Owner.Center;
-                Projectile.timeLeft = LifeTimeDream;
+                Projectile.timeLeft = LifeTime;
                 float ratio = Timer > 2398 ? (2598 - Timer) / 200f : Math.Clamp(Timer / 240f, 0f, 1f);
                 float interpolation = ratio * (2 - ratio);
                 if (Main.rand.NextProbability(ratio * 0.8f))
@@ -561,7 +602,7 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
                 SnowflakeRotation += 0.03f * interpolation * interpolation;
                 if (!ShouldStopRotating)
                 {
-                    Projectile.rotation += TOMathHelper.PiOver3 / LifeTimeDream2 * interpolation;
+                    Projectile.rotation += TOMathHelper.PiOver3 / LifeTime2 * interpolation;
                     if (RealRotation > MathHelper.TwoPi - MathHelper.PiOver4)
                         Projectile.rotation -= TOMathHelper.PiOver3 / 130f * (float)TOMathHelper.Map(MathHelper.TwoPi + MathHelper.PiOver4, MathHelper.TwoPi + MathHelper.PiOver2, 0f, 1f, Projectile.rotation);
                     if (RealRotation > MathHelper.TwoPi)
@@ -578,9 +619,9 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
                 const int DepartY = 7720;
                 const int DestinationX = 46816;
                 const int DestinationY = 7312;
-                Vector2 depart = new Vector2(DepartX, DepartY);
-                Vector2 destination = new Vector2(DestinationX, DestinationY);
-                Projectile.timeLeft = LifeTimeDream;
+                Vector2 depart = new(DepartX, DepartY);
+                Vector2 destination = new(DestinationX, DestinationY);
+                Projectile.timeLeft = LifeTime;
                 float interpolation3 = 1f;
                 float interpolation4 = 1f;
                 switch (SetOutPhase)
@@ -635,7 +676,7 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
                         {
                             for (int i = 0; i < 2000; i++)
                                 GeneralParticleHandler.SpawnParticle(new ColdheartIcicleGlowOrbParticle(Projectile.Owner.Center + new Vector2(Main.rand.NextFloat(-1600f, 1600f), -1300f - Main.rand.NextFloat(3700f)), Main.rand.NextVector2Circular(8f, 6f), Main.rand.NextFloat(0.25f, 0.7f), Main.rand.Next(370, 660), 0.8f, Main.rand.NextFloat(0.4f, 0.7f), Color.White, needed: true));
-                        }  
+                        }
                         if (Timer > 700)
                             Projectile.Kill();
                         break;
@@ -643,6 +684,18 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
                 Projectile.scale = 0.7f * interpolation3;
                 Projectile.rotation += MathHelper.Lerp(0.0025f, 0.03f, interpolation4);
                 break;
+        }
+#else
+        NormalAI();
+#endif
+        void NormalAI()
+        {
+            Projectile.Center = Target.Center;
+            Projectile.timeLeft = LifeTime;
+            if (!Target.active || (Target is NPC npc && npc.life <= 0) || (Target is Player player && (player.dead || player.ghost)) || Timer2 > 0)
+                Timer2++;
+            if (Timer2 >= 100)
+                Projectile.Kill();
         }
     }
 
@@ -654,18 +707,22 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
 
     public override void SendExtraAI(BinaryWriter writer)
     {
+#if CELESS_DEV
         writer.Write(SnowflakeScale);
         writer.Write(SnowflakeRotation);
         writer.Write(ShouldStopRotating);
         writer.Write(SetOutPhase);
+#endif
     }
 
     public override void ReceiveExtraAI(BinaryReader reader)
     {
+#if CELESS_DEV
         SnowflakeScale = reader.ReadSingle();
         SnowflakeRotation = reader.ReadSingle();
         ShouldStopRotating = reader.ReadBoolean();
         SetOutPhase = reader.ReadInt32();
+#endif
     }
 
     void IResourceLoader.PostSetupContent() => _orbTex = CalamityMod_Publicizer.Instance.Assets.Request<Texture2D>("Particles/GlowOrbParticle");
@@ -722,9 +779,9 @@ public sealed class ColdheartIcicleSnowflake : ModProjectile, ICAModProjectile
         Lighting.AddLight(Projectile.Center, Color.White.ToVector3());
 
         Timer++;
-        float ratio = Timer <= 15 ? Timer / 15f : Timer >= LeftTime - 25 ? (LeftTime - Timer) / 25f : 1f;
+        float ratio = Timer <= 10 ? Timer / 10f : Timer >= LeftTime - 25 ? (LeftTime - Timer) / 25f : 1f;
         float interpolation = ratio * (2 - ratio);
-        Projectile.velocity.Modulus = TOMathHelper.Map(0, LeftTime, 28f, 35f, Timer) * interpolation;
+        Projectile.velocity.Modulus = TOMathHelper.Map(0, LeftTime, 18f, 30f, Timer) * interpolation;
         Projectile.scale = 0.5f * interpolation;
         Projectile.rotation += 0.05f * interpolation;
         GeneralParticleHandler.SpawnParticle(new ColdheartIcicleGlowOrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(4f, 4f), Main.rand.NextFloat(0.8f, 1.3f), Main.rand.Next(40, 75), 0.8f, Main.rand.NextFloat(0.35f, 0.6f), Color.White, needed: true));
@@ -741,7 +798,8 @@ public sealed class ColdheartIcicleSnowflake : ModProjectile, ICAModProjectile
     {
     }
 
-    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => TOCollisionUtils.AABBvCircularCollision(targetHitbox, Projectile.Center, 64f * Projectile.scale);
+    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) =>
+        CollisionHelper.Collides(new Circle(Projectile.Center, 64f * Projectile.scale), targetHitbox);
 
     public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
     {
@@ -758,10 +816,17 @@ public sealed class ColdheartIcicleSnowflake : ModProjectile, ICAModProjectile
     {
         SoundEngine.PlaySound(SoundID.Item30, Projectile.Center);
         TOCombatTextUtils.ChangeHitNPCText(t => t.color = TOMain.CelestialColor);
+        foreach (Projectile p in Projectile.ActiveProjectiles)
+        {
+            if (p.ModProjectile is ColdheartIcicleDream dream && dream.Target == target)
+                return;
+        }
         Projectile.NewProjectileAction<ColdheartIcicleDream>(Projectile.GetSource_OnHit(target), target.Center, Vector2.Zero, 0, 0, Projectile.owner, p =>
         {
             p.Center = target.Center;
             p.rotation = Projectile.rotation;
+            ColdheartIcicleDream modP = p.GetModProjectile<ColdheartIcicleDream>();
+            modP.Target = target;
         });
     }
 
@@ -771,12 +836,31 @@ public sealed class ColdheartIcicleSnowflake : ModProjectile, ICAModProjectile
 
     public override void OnHitPlayer(Player target, Player.HurtInfo info)
     {
+        foreach (Projectile p in Projectile.ActiveProjectiles)
+        {
+            if (p.ModProjectile is ColdheartIcicleDream dream && dream.Target == target)
+                return;
+        }
         SoundEngine.PlaySound(SoundID.Item30, Projectile.Center);
         Projectile.NewProjectileAction<ColdheartIcicleDream>(Projectile.GetSource_OnHit(target), target.Center, Vector2.Zero, 0, 0, Projectile.owner, p =>
         {
             p.Center = target.Center;
             p.ai[1] = Projectile.rotation;
+            ColdheartIcicleDream modP = p.GetModProjectile<ColdheartIcicleDream>();
+            modP.Target = target;
         });
+    }
+}
+
+public sealed class ColdheartIcicleSnowFlake_GlobalNPC : CAGlobalNPCBehavior
+{
+    public override void OnKill(NPC npc)
+    {
+        foreach (Projectile p in Projectile.ActiveProjectiles)
+        {
+            if (p.ModProjectile is ColdheartIcicleDream dream && dream.Target == npc)
+                dream.Timer2++;
+        }
     }
 }
 
@@ -846,7 +930,7 @@ public sealed class ColdheartIcicle_Starter : CAPlayerBehavior
     public override IEnumerable<Item> AddStartingItems(bool mediumCoreDeath)
     {
         if (!mediumCoreDeath && ColdheartIcicle.IsLegendOwner(Player))
-            yield return Item.Create<ColdheartIcicle>();
+            yield return Item.CreateItem<ColdheartIcicle>();
     }
 }
 #endregion 获取

@@ -100,15 +100,9 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
         }
     }
 
-    void ITOLoader.Load()
-    {
-        _identifierAllocator = 0;
-    }
+    void ITOLoader.Load() => _identifierAllocator = 0;
 
-    void ITOLoader.Unload()
-    {
-        _identifierAllocator = 0;
-    }
+    void ITOLoader.Unload() => _identifierAllocator = 0;
     #endregion Data
 
     #region 额外数据

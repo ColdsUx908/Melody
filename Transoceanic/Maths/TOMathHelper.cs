@@ -1,7 +1,42 @@
-﻿namespace Transoceanic.Maths;
+﻿using System.Numerics;
+
+namespace Transoceanic.Maths;
 
 public static partial class TOMathHelper
 {
+    public static T Min<T>(T value, params ReadOnlySpan<T> values) where T : INumber<T>
+    {
+        foreach (T temp in values)
+        {
+            if (temp < value)
+                value = temp;
+        }
+        return value;
+    }
+
+    public static T Max<T>(T value, params ReadOnlySpan<T> values) where T : INumber<T>
+    {
+        foreach (T temp in values)
+        {
+            if (temp > value)
+                value = temp;
+        }
+        return value;
+    }
+
+    public static (T min, T max) MinMax<T>(T value, params ReadOnlySpan<T> values) where T : INumber<T>
+    {
+        T min = value, max = value;
+        foreach (T temp in values)
+        {
+            if (temp < min)
+                min = temp;
+            if (temp > max)
+                max = temp;
+        }
+        return (min, max);
+    }
+
     /// <summary>
     /// 生成一个形如 <c>y = A * sin(</c>ω<c>t + </c>φ<c>)</c> 的正弦波。其中 <c>t</c> 随游戏内时间变化，单位是秒。
     /// </summary>

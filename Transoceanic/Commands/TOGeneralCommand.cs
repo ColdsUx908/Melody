@@ -101,10 +101,7 @@ public sealed class TOCommandHelper : IResourceLoader, ILocalizationPrefix
         }
     }
 
-    void IResourceLoader.OnModUnload()
-    {
-        CommandSet.Clear();
-    }
+    void IResourceLoader.OnModUnload() => CommandSet.Clear();
 
     public void TryExecute(CommandCaller caller, string command, CommandType commandType, string[] args)
     {

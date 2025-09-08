@@ -1,6 +1,5 @@
 ﻿using Transoceanic.Publicizer.Terraria;
 using Transoceanic.RuntimeEditing;
-using Terraria.ID;
 
 namespace Transoceanic.Core.Extensions;
 
@@ -314,25 +313,25 @@ public static partial class TOExtensions
 
     extension(Item)
     {
-        public static Item Create(int type)
+        public static Item CreateItem(int type)
         {
             Item item = new();
             item.SetDefaults(type);
             return item;
         }
 
-        public static Item Create<T>() where T : ModItem => Create(ModContent.ItemType<T>());
+        public static Item CreateItem<T>() where T : ModItem => CreateItem(ModContent.ItemType<T>());
 
-        public static Item Create(int type, Action<Item> action)
+        public static Item CreateItem(int type, Action<Item> action)
         {
-            Item item = Create(type);
+            Item item = CreateItem(type);
             action?.Invoke(item);
             return item;
         }
 
-        public static Item Create<T>(Action<Item> action) where T : ModItem
+        public static Item CreateItem<T>(Action<Item> action) where T : ModItem
         {
-            Item item = Create<T>();
+            Item item = CreateItem<T>();
             action?.Invoke(item);
             return item;
         }
@@ -341,6 +340,67 @@ public static partial class TOExtensions
     extension(Language)
     {
         public static string GetTextFormat(string key, params object[] args) => Language.GetText(key).Format(args);
+    }
+
+    extension(LineSegment line)
+    {
+        public Vector2 Value => line.End - line.Start;
+
+        public float Length => Vector2.Distance(line.Start, line.End);
+
+        public float Rotation => line.Value.ToRotation();
+
+        public Vector2 Direction => line.Value.SafelyNormalized;
+
+        public Vector2 Midpoint => (line.Start + line.End) / 2;
+    }
+
+    extension(LineSegment)
+    {
+        public static bool Intersects(LineSegment a, LineSegment b)
+        {
+            // 计算四个方向向量
+            Vector2 p = a.Start;
+            Vector2 q = b.Start;
+            Vector2 r = a.End - a.Start;
+            Vector2 s = b.End - b.Start;
+
+            // 计算叉积
+            float rxs = Vector2.Cross(r, s);
+            float qpxr = Vector2.Cross(q - p, r);
+
+            // 如果两个线段平行
+            if (rxs == 0)
+            {
+                // 如果平行且共线，检查是否重叠
+                if (qpxr == 0)
+                {
+                    // 检查投影是否重叠
+                    float t0 = Vector2.Dot(q - p, r) / Vector2.Dot(r, r);
+                    float t1 = t0 + Vector2.Dot(s, r) / Vector2.Dot(r, r);
+
+                    // 确保t0 < t1
+                    if (t0 > t1)
+                        Utils.Swap(ref t0, ref t1);
+
+                    // 检查是否有重叠部分
+                    if (t0 <= 1 && t1 >= 0)
+                        return t0 < 1 && t1 > 0;
+                }
+
+                return false;
+            }
+
+            // 计算参数t和u
+            float t = Vector2.Cross(q - p, s) / rxs;
+            float u = Vector2.Cross(q - p, r) / rxs;
+
+            // 检查参数是否在有效范围内
+            if (t >= 0 && t <= 1 && u >= 0 && u <= 1)
+                return true;
+
+            return false;
+        }
     }
 
     extension(List<TooltipLine> tooltips)
@@ -581,6 +641,29 @@ public static partial class TOExtensions
 
         public static TOIterator<NPC> Bosses => TOIteratorFactory.NewActiveNPCIterator(n => n.TOBoss);
 
+        public static NPC CreateNPC(int type)
+        {
+            NPC npc = new();
+            npc.SetDefaults(type);
+            return npc;
+        }
+
+        public static NPC CreateNPC<T>() where T : ModNPC => CreateNPC(ModContent.NPCType<T>());
+
+        public static NPC CreateNPC(int type, Action<NPC> action)
+        {
+            NPC npc = CreateNPC(type);
+            action?.Invoke(npc);
+            return npc;
+        }
+
+        public static NPC CreateNPC<T>(Action<NPC> action) where T : ModNPC
+        {
+            NPC npc = CreateNPC<T>();
+            action?.Invoke(npc);
+            return npc;
+        }
+
         public static void SpawnOnPlayer<T>(int plr) where T : ModNPC => NPC.SpawnOnPlayer(plr, ModContent.NPCType<T>());
 
         /// <summary>
@@ -753,6 +836,29 @@ public static partial class TOExtensions
         public static Projectile DummyProjectile => Main.projectile[Main.maxProjectiles];
 
         public static TOIterator<Projectile> ActiveProjectiles => TOIteratorFactory.NewActiveProjectileIterator();
+
+        public static Projectile CreateProjectile(int type)
+        {
+            Projectile projectile = new();
+            projectile.SetDefaults(type);
+            return projectile;
+        }
+
+        public static Projectile CreateProjectile<T>() where T : ModProjectile => CreateProjectile(ModContent.ProjectileType<T>());
+
+        public static Projectile CreateProjectile(int type, Action<Projectile> action)
+        {
+            Projectile projectile = CreateProjectile(type);
+            action?.Invoke(projectile);
+            return projectile;
+        }
+
+        public static Projectile CreateProjectile<T>(Action<Projectile> action) where T : ModProjectile
+        {
+            Projectile projectile = CreateProjectile<T>();
+            action?.Invoke(projectile);
+            return projectile;
+        }
 
         /// <summary>
         /// 生成一个新的Projectile，并在生成后执行一个Action。
