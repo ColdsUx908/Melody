@@ -35,7 +35,7 @@ public abstract class TypeDetour : ITODetourProvider
 
 public abstract class TypeDetour<T> : TypeDetour
 {
-    public static readonly Type SourceType =  typeof(T);
+    public static readonly Type SourceType = typeof(T);
 
     /// <summary>
     /// 尝试将指定的Detour应用到 <see cref="T"/> 类型。
@@ -5874,7 +5874,7 @@ internal sealed class TypeDetourUpdateReminder : IResourceLoader
         StringBuilder builder = new();
         builder.AppendLine("Update Required: TypeDetour.cs");
 
-        foreach (DetourTypeContainer item in (ReadOnlySpan<DetourTypeContainer>)
+        ReadOnlySpan<DetourTypeContainer> typesToCheck =
         [
             new(typeof(ModType), typeof(ModTypeDetour<>)),
             new(typeof(ModAccessorySlot), typeof(ModAccessorySlotDetour<>)),
@@ -5930,18 +5930,19 @@ internal sealed class TypeDetourUpdateReminder : IResourceLoader
             new(typeof(GlobalWall), typeof(GlobalWallDetour<>)),
             new(typeof(GameEffect), typeof(GameEffectDetour<>)),
             new(typeof(CustomSky), typeof(CustomSkyDetour<>))
-        ])
+        ];
+        foreach (DetourTypeContainer container in typesToCheck)
         {
-            (List<string> sourceMissing, List<string> targetMissing) = item.CompareVirtualMethods(DetourMatch);
+            (List<string> sourceMissing, List<string> targetMissing) = container.CompareVirtualMethods(DetourMatch);
             if (sourceMissing.Count > 0)
             {
                 hasWarn = true;
-                builder.AppendLine(new string(' ', 3) + $"[{item.Target.RealName}] Source Type Method Missing: " + string.Join(", ", sourceMissing));
+                builder.AppendLine(new string(' ', 3) + $"[{container.Target.RealName}] Source Type Method Missing: " + string.Join(", ", sourceMissing));
             }
             if (targetMissing.Count > 0)
             {
                 hasWarn = true;
-                builder.AppendLine(new string(' ', 3) + $"[{item.Target.RealName}] Target Type Method Missing: " + string.Join(", ", targetMissing));
+                builder.AppendLine(new string(' ', 3) + $"[{container.Target.RealName}] Target Type Method Missing: " + string.Join(", ", targetMissing));
             }
         }
 

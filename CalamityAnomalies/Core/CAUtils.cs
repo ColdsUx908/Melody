@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using CalamityAnomalies.Publicizer.CalamityMod;
 using CalamityMod.Particles;
-using Terraria.Graphics.Renderers;
 
 namespace CalamityAnomalies.Core;
 

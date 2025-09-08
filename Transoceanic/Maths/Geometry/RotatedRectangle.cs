@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Maths.Geometry.Collision;
+﻿using Transoceanic.Maths.Geometry.Collision;
+
+namespace Transoceanic.Maths.Geometry;
 
 public struct RotatedRectangle : IEquatable<RotatedRectangle>,
     ICollidableWithRectangle,

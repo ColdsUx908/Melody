@@ -1,6 +1,4 @@
-﻿using Transoceanic.GlobalInstances.Single;
-
-namespace Transoceanic.GlobalInstances;
+﻿namespace Transoceanic.GlobalInstances;
 
 public sealed class TOPlayer : ModPlayer, IResourceLoader
 {

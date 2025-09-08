@@ -8,6 +8,7 @@ using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework.Input;
 using Terraria.GameContent.ItemDropRules;
+using Transoceanic.Maths.Geometry;
 using Transoceanic.Maths.Geometry.Collision;
 
 namespace CalamityAnomalies.DeveloperContents;

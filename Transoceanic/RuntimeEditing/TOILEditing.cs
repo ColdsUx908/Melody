@@ -35,7 +35,7 @@ public class ILEditingMethodToAttribute<T> : DetourMethodToAttribute
 
 public sealed class TOILEditingHelper : IResourceLoader
 {
-   
+
     internal static readonly List<ILHook> Manipulators = [];
 
     void IResourceLoader.PostSetupContent()

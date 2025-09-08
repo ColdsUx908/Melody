@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CalamityMod.Particles;
+﻿using CalamityMod.Particles;
 using Transoceanic.Publicizer;
 
 namespace CalamityAnomalies.Publicizer.CalamityMod;

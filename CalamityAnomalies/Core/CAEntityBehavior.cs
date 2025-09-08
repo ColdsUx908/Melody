@@ -1,6 +1,4 @@
-﻿using CalamityAnomalies.GlobalInstances.Single;
-
-namespace CalamityAnomalies.Core;
+﻿namespace CalamityAnomalies.Core;
 
 #region General Behavior
 public abstract class CAPlayerBehavior : PlayerBehavior
@@ -271,14 +269,14 @@ public abstract class CASingleItemBehavior<T> : CASingleItemBehavior where T : M
 public abstract class CAItemTweak : CASingleItemBehavior
 {
     public override decimal Priority => 5m;
-    
+
     public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 
 public abstract class CAItemTweak<T> : CASingleItemBehavior<T> where T : ModItem
 {
     public override decimal Priority => 5m;
-    
+
     public override bool ShouldProcess => CAServerConfig.Instance.Contents;
 }
 #endregion Item

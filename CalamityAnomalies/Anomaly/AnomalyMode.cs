@@ -1,7 +1,6 @@
 ﻿using CalamityAnomalies.Assets.Textures;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.Systems;
-using CalamityMod.UI.ModeIndicator;
 using CalamityMod.World;
 
 namespace CalamityAnomalies.Anomaly;
@@ -161,4 +160,3 @@ public sealed class AnomalyModePlayerSync : CAPlayerBehavior2
 
     public override void OnEnterWorld() => CANetSync.SyncAnomalyModeFromServer();
 }
-
