@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.Maths.Geometry;
+﻿namespace Transoceanic.Data.Geometry;
 
 public struct Line
 {

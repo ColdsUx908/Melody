@@ -17,6 +17,8 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 {
     public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "UI.BetterBossHealthBar";
 
+    public static readonly HashSet<int> _exclusiveNPCTypes = [];
+
     public delegate bool BetterOverridingNameFunction(BetterBossHPUI bar, [NotNullWhen(true)] out string overridingName);
     public delegate bool BetterLifeFunction(BetterBossHPUI bar);
     public delegate bool BetterSmallTextFunction(BetterBossHPUI bar, [NotNullWhen(true)] out string text, out bool disableOrig);
@@ -28,9 +30,11 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
     public static DynamicSpriteFont MouseFont => FontAssets.MouseText?.Value;
     public static DynamicSpriteFont ItemStackFont => FontAssets.ItemStack?.Value;
 
-    private static readonly Dictionary<long, BetterBossHPUI> _trackingBars = [];
-    private const int MaxBars = 6;
-    private const int MaxActiveBars = 4;
+    public static readonly Dictionary<long, BetterBossHPUI> CurrentBars = [];
+    public const int MaxBars = 6;
+    public const int MaxActiveBars = 4;
+
+    private HashSet<long> _validIdentifiers = [];
 
     public override void Detour_Draw(Orig_Draw orig, BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info)
     {
@@ -41,7 +45,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
         int activeCount = 0;
 
         foreach (BetterBossHPUI newBar in
-            from pair in _trackingBars.AsValueEnumerable()
+            from pair in CurrentBars.AsValueEnumerable()
             let newBar = pair.Value
             orderby newBar.Valid descending, pair.Key ascending
             select newBar)
@@ -57,30 +61,30 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 
     public override void Detour_Update(Orig_Update orig, BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info)
     {
-        HashSet<long> validIdentifiers = [];
-
         foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(n => !BossExclusionList.Contains(n.type)))
         {
             long fromNPC = npc.Ocean().Identifier;
-            if (_trackingBars.ContainsKey(fromNPC))
-                validIdentifiers.Add(fromNPC);
-            else if (_trackingBars.Count < MaxBars && (
-                (npc.IsABoss() && !(npc.type is NPCID.EaterofWorldsBody or NPCID.EaterofWorldsTail || npc.ModNPC is Artemis)) || MinibossHPBarList.Contains(npc.type) || npc.Calamity().CanHaveBossHealthBar))
-            {
-                _trackingBars.Add(fromNPC, new BetterBossHPUI(npc));
-            }
+            if (CurrentBars.ContainsKey(fromNPC))
+                _validIdentifiers.Add(fromNPC);
+            else if (CurrentBars.Count < MaxBars && ((npc.IsABoss() && !_exclusiveNPCTypes.Contains(npc.type)) || MinibossHPBarList.Contains(npc.type) || npc.Calamity().CanHaveBossHealthBar))
+                CurrentBars.Add(fromNPC, new BetterBossHPUI(npc));
+            _validIdentifiers.Clear();
         }
 
-        foreach ((long identifier, BetterBossHPUI newBar) in _trackingBars)
+        foreach ((long identifier, BetterBossHPUI newBar) in CurrentBars)
         {
-            newBar.Update(validIdentifiers.Contains(identifier));
+            newBar.Update(_validIdentifiers.Contains(identifier));
             if (newBar.CloseAnimationTimer >= 120)
-                _trackingBars.Remove(identifier);
+                CurrentBars.Remove(identifier);
         }
     }
 
     void IResourceLoader.PostSetupContent()
     {
+        _exclusiveNPCTypes.Add(NPCID.EaterofWorldsBody);
+        _exclusiveNPCTypes.Add(NPCID.EaterofWorldsTail);
+        _exclusiveNPCTypes.Add(ModContent.NPCType<Artemis>());
+
         MinibossHPBarList.Add(NPCID.LunarTowerVortex);
         MinibossHPBarList.Add(NPCID.LunarTowerStardust);
         MinibossHPBarList.Add(NPCID.LunarTowerNebula);
@@ -196,14 +200,15 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 
     void IResourceLoader.OnModUnload()
     {
+        _exclusiveNPCTypes.Clear();
         _overridingNameFunctions.Clear();
         _lifeFunctions.Clear();
         _smallTextFunctions.Clear();
     }
 
-    void IResourceLoader.OnWorldLoad() => _trackingBars.Clear();
+    void IResourceLoader.OnWorldLoad() => CurrentBars.Clear();
 
-    void IResourceLoader.OnWorldUnload() => _trackingBars.Clear();
+    void IResourceLoader.OnWorldUnload() => CurrentBars.Clear();
 }
 
 /// <summary>
@@ -394,6 +399,11 @@ public class BetterBossHPUI : BossHPUI
     {
         bool result = true;
         bool hasSingle = false;
+        if (NPC.ModNPC is ICAModNPC caNPC)
+        {
+            result &= caNPC.PreUpdateCalBossBar(this);
+            hasSingle = true;
+        }
         if (NPC.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreUpdateCalBossBar)))
         {
             result &= npcBehavior.PreUpdateCalBossBar(this);
@@ -407,8 +417,16 @@ public class BetterBossHPUI : BossHPUI
     protected void PostUpdate()
     {
         bool hasSingle = false;
+        if (NPC.ModNPC is ICAModNPC caNPC)
+        {
+            caNPC.PostUpdateCalBossBar(this);
+            hasSingle = true;
+        }
         if (NPC.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PostUpdateCalBossBar)))
+        {
             npcBehavior.PostUpdateCalBossBar(this);
+            hasSingle = true;
+        }
         foreach (CAGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.GetBehaviors<CAGlobalNPCBehavior>(nameof(CAGlobalNPCBehavior.PostUpdateCalBossBar)))
             anomalyGNPCBehavior.PostUpdateCalBossBar(NPC, this, hasSingle);
     }
@@ -455,6 +473,11 @@ public class BetterBossHPUI : BossHPUI
     {
         bool result = true;
         bool hasSingle = false;
+        if (NPC.ModNPC is ICAModNPC caNPC)
+        {
+            result &= caNPC.PreDrawCalBossBar(this, spriteBatch, ref x, ref y);
+            hasSingle = true;
+        }
         if (NPC.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreDrawCalBossBar)))
         {
             result &= npcBehavior.PreDrawCalBossBar(this, spriteBatch, ref x, ref y);
@@ -468,6 +491,11 @@ public class BetterBossHPUI : BossHPUI
     protected void PostDraw(SpriteBatch spriteBatch, int x, int y)
     {
         bool hasSingle = false;
+        if (NPC.ModNPC is ICAModNPC caNPC)
+        {
+            caNPC.PostDrawCalBossBar(this, spriteBatch, x, y);
+            hasSingle = true;
+        }
         if (NPC.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PostDrawCalBossBar)))
         {
             npcBehavior.PostDrawCalBossBar(this, spriteBatch, x, y);

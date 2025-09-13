@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.RuntimeEditing;
+﻿namespace Transoceanic.Core.Utilities;
 
 public static class TOReflectionUtils
 {

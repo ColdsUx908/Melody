@@ -1,5 +1,6 @@
-﻿using Transoceanic.Publicizer.Terraria;
-using Transoceanic.RuntimeEditing;
+﻿using Terraria.GameContent.ItemDropRules;
+using Transoceanic.Core.Utilities;
+using Transoceanic.Data.Publicizer.Terraria;
 
 namespace Transoceanic.Core.Extensions;
 
@@ -337,6 +338,12 @@ public static partial class TOExtensions
         }
     }
 
+    extension(ItemDropRule)
+    {
+        public static IItemDropRule ByCustomCondition(Func<DropAttemptInfo, bool> canDrop, Func<bool> canShowItemDropInUI, Func<string> getConditionDescription, int itemId, int chanceDenominator = 1, int minimumDropped = 1, int maximumDropped = 1, int chanceNumerator = 1) =>
+            ItemDropRule.ByCondition(new CustomDropRuleCondition(canDrop, canShowItemDropInUI, getConditionDescription), itemId, chanceDenominator, minimumDropped, maximumDropped, chanceNumerator);
+    }
+
     extension(Language)
     {
         public static string GetTextFormat(string key, params object[] args) => Language.GetText(key).Format(args);
@@ -350,7 +357,7 @@ public static partial class TOExtensions
 
         public float Rotation => line.Value.ToRotation();
 
-        public Vector2 Direction => line.Value.SafelyNormalized;
+        public Vector2 Direction => line.Value.SafeNormalize();
 
         public Vector2 Midpoint => (line.Start + line.End) / 2;
     }

@@ -1,6 +1,6 @@
-﻿using Transoceanic.Maths.Geometry.Collision;
+﻿using Transoceanic.Core.Utilities;
 
-namespace Transoceanic.Maths.Geometry;
+namespace Transoceanic.Data.Geometry;
 
 public struct RotatedRectangle : IEquatable<RotatedRectangle>,
     ICollidableWithRectangle,
@@ -14,7 +14,7 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>,
     public RotatedRectangle(FloatRectangle source, float rotation)
     {
         Source = source;
-        Rotation = rotation;
+        Rotation = TOMathHelper.NormalizeAngle(rotation);
     }
 
     public RotatedRectangle(Vector2 center, float width, float height, float rotation) : this(Rectangle.FromCenter(center, width, height), rotation) { }
@@ -26,13 +26,49 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>,
     public readonly Vector2 BottomLeft => Source.BottomLeft.RotatedBy(Rotation, Center);
     public readonly Vector2 BottomRight => Source.BottomRight.RotatedBy(Rotation, Center);
 
-    public readonly LineSegment TopSide => new(TopLeft, TopRight);
+    public readonly LineSegment TopSide
+    {
+        get
+        {
+            Vector2 center = Center;
+            Vector2 widthRotated = new Vector2(Source.Width / 2, 0f).RotatedBy(Rotation);
+            Vector2 heightRotated = new Vector2(0f, Source.Height / 2).RotatedBy(Rotation);
+            return new(center - widthRotated - heightRotated, center + widthRotated - heightRotated);
+        }
+    }
 
-    public readonly LineSegment BottomSide => new(BottomLeft, BottomRight);
+    public readonly LineSegment BottomSide
+    {
+        get
+        {
+            Vector2 center = Center;
+            Vector2 widthRotated = new Vector2(Source.Width / 2, 0f).RotatedBy(Rotation);
+            Vector2 heightRotated = new Vector2(0f, Source.Height / 2).RotatedBy(Rotation);
+            return new(center - widthRotated + heightRotated, center + widthRotated + heightRotated);
+        }
+    }
 
-    public readonly LineSegment LeftSide => new(TopLeft, BottomLeft);
+    public readonly LineSegment LeftSide
+    {
+        get
+        {
+            Vector2 center = Center;
+            Vector2 widthRotated = new Vector2(Source.Width / 2, 0f).RotatedBy(Rotation);
+            Vector2 heightRotated = new Vector2(0f, Source.Height / 2).RotatedBy(Rotation);
+            return new(center - widthRotated - heightRotated, center - widthRotated + heightRotated);
+        }
+    }
 
-    public readonly LineSegment RightSide => new(BottomLeft, BottomRight);
+    public readonly LineSegment RightSide
+    {
+        get
+        {
+            Vector2 center = Center;
+            Vector2 widthRotated = new Vector2(Source.Width / 2, 0f).RotatedBy(Rotation);
+            Vector2 heightRotated = new Vector2(0f, Source.Height / 2).RotatedBy(Rotation);
+            return new(center + widthRotated - heightRotated, center + widthRotated + heightRotated);
+        }
+    }
 
     public readonly (Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight) Vertices
     {

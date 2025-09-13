@@ -3,7 +3,7 @@ using CalamityMod.NPCs.ExoMechs.Ares;
 using CalamityMod.NPCs.ExoMechs.Artemis;
 using CalamityMod.NPCs.ExoMechs.Thanatos;
 using CalamityMod.Projectiles.Boss;
-using Transoceanic.Publicizer;
+using Transoceanic.Data.Publicizer;
 
 namespace CalamityAnomalies.Publicizer.CalamityMod.NPCs;
 

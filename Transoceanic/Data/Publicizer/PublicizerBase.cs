@@ -1,6 +1,6 @@
-﻿using Transoceanic.RuntimeEditing;
+﻿using Transoceanic.Core.Utilities;
 
-namespace Transoceanic.Publicizer;
+namespace Transoceanic.Data.Publicizer;
 
 public interface IPublicizer
 {

@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.Maths;
+﻿namespace Transoceanic.Data;
 
 /// <summary>
 /// 表示一个数学区间。

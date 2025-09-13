@@ -1,6 +1,4 @@
-﻿using Transoceanic.Maths.Geometry.Collision;
-
-namespace Transoceanic.Maths.Geometry;
+﻿namespace Transoceanic.Data.Geometry;
 
 public struct FloatRectangle : IEquatable<FloatRectangle>,
     ICollidableWithRectangle,

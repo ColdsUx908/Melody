@@ -1,6 +1,6 @@
-﻿namespace Transoceanic.Maths;
+﻿namespace Transoceanic.Core.Utilities;
 
-public static class BitOperation
+public static class TOBitUtils
 {
     public static bool GetBit(sbyte number, int bitPosition)
     {

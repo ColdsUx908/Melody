@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Data;
+﻿using Transoceanic.Core.Utilities;
+
+namespace Transoceanic.Data;
 
 public struct Bits32
 {
@@ -8,7 +10,7 @@ public struct Bits32
 
     public bool this[int index]
     {
-        readonly get => BitOperation.GetBit(_value, index);
-        set => _value = BitOperation.SetBit(_value, index, value);
+        readonly get => TOBitUtils.GetBit(_value, index);
+        set => _value = TOBitUtils.SetBit(_value, index, value);
     }
 }

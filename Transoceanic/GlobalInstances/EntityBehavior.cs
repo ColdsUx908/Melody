@@ -1,7 +1,7 @@
 ﻿using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
-using Transoceanic.RuntimeEditing;
+using Transoceanic.Core.Utilities;
 
 namespace Transoceanic.GlobalInstances;
 

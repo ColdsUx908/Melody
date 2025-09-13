@@ -1,5 +1,5 @@
 ﻿using CalamityMod.NPCs.Signus;
-using Transoceanic.Publicizer;
+using Transoceanic.Data.Publicizer;
 
 namespace CalamityAnomalies.Publicizer.CalamityMod.NPCs;
 #pragma warning disable IDE1006

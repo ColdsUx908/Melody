@@ -6,11 +6,11 @@ public sealed class DimensionalRend : CalamityModDOT
 
     public override bool HasBuff(NPC npc) => npc.Anomaly().Debuff_DimensionalRend > 0;
 
-    public override float GetDamageCalamity(Player player) => Interpolation(player) * 10f;
+    public override float GetDamageCalamity(Player player) => GetVelocityInterpolation(player) * 10f;
 
-    public override float GetDamage(NPC npc) => Interpolation(npc) * 1000f;
+    public override float GetDamage(NPC npc) => GetVelocityInterpolation(npc) * 1000f;
 
-    public override int GetDamageValue(NPC npc) => (int)(Interpolation(npc) * 400f);
+    public override int GetDamageValue(NPC npc) => (int)(GetVelocityInterpolation(npc) * 400f);
 
     public override void Update(Player player, ref int buffIndex) => player.Anomaly().Debuff_DimensionalRend = true;
 
@@ -28,11 +28,7 @@ public sealed class DimensionalRend : CalamityModDOT
     /// <br/>在实体速度为25（127mph）时达到最大值1。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float Interpolation(Entity entity)
-    {
-        float velocityLength = Math.Clamp(entity.velocity.Length(), 0f, 25f);
-        return velocityLength * (velocityLength * -0.0016f + 0.08f); //y = -0.0016x^2 + 0.08x
-    }
+    public static float GetVelocityInterpolation(Entity entity) => TOMathHelper.ParabolicInterpolation(Math.Clamp(entity.velocity.Length() / 25f, 0f, 1f));
 }
 
 public sealed class DimensionalRend_Player : CAPlayerBehavior
@@ -40,7 +36,7 @@ public sealed class DimensionalRend_Player : CAPlayerBehavior
     public override void ModifyHurt(ref Player.HurtModifiers modifiers)
     {
         if (AnomalyPlayer.Debuff_DimensionalRend)
-            modifiers.FinalDamage *= DimensionalRend.Interpolation(Player) * 0.15f + 1f;
+            modifiers.FinalDamage *= DimensionalRend.GetVelocityInterpolation(Player) * 0.15f + 1f;
     }
 }
 
@@ -51,6 +47,6 @@ public sealed class DimensionalRend_GlobalNPC : CAGlobalNPCBehavior
     public override void ModifyIncomingHit(NPC npc, ref NPC.HitModifiers modifiers)
     {
         if (npc.Anomaly().Debuff_DimensionalRend > 0)
-            modifiers.FinalDamage *= DimensionalRend.Interpolation(npc) * 0.15f + 1f;
+            modifiers.FinalDamage *= DimensionalRend.GetVelocityInterpolation(npc) * 0.15f + 1f;
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using Transoceanic.Publicizer;
+using Transoceanic.Data.Publicizer;
 
 namespace CalamityAnomalies.Publicizer.CalamityMod;
 

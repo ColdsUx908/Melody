@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Data;
+﻿using Transoceanic.Core.Utilities;
+
+namespace Transoceanic.Data;
 
 /// <summary>
 /// 二维极坐标向量 (ρ, θ)。
@@ -47,13 +49,7 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
                 < 0f => throw new ArgumentOutOfRangeException(nameof(radius), radius, "Radius negative"),
                 _ => throw new NotFiniteNumberException("Radius not finite.")
             };
-            float temp = angle % MathHelper.TwoPi;
-            Angle = temp switch
-            {
-                _ when Radius == 0f => 0f, //极径为零时设置角度为零
-                < 0 => temp + MathHelper.TwoPi,
-                _ => temp
-            };
+            Angle = radius == 0f ? 0f : TOMathHelper.NormalizeAngle(angle); //零向量的角度强制为0
         }
         catch (Exception e)
         {

@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.Publicizer.Terraria;
+﻿namespace Transoceanic.Data.Publicizer.Terraria;
 
 #pragma warning disable IDE1006
 

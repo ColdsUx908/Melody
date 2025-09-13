@@ -1,9 +1,45 @@
 ﻿using System.Numerics;
 
-namespace Transoceanic.Maths;
+namespace Transoceanic.Core.Utilities;
 
-public static partial class TOMathHelper
+public static class TOMathHelper
 {
+    public const float PiOver8 = MathHelper.Pi / 8f;
+
+    public const float PiOver3 = MathHelper.Pi / 3f;
+
+    public const float PiOver6 = MathHelper.Pi / 6f;
+
+    public const float PiOver12 = MathHelper.Pi / 12f;
+
+    public const float PiOver30 = MathHelper.Pi / 30f;
+
+    /// <summary>
+    /// 将像素每帧转换为英里每小时的转换因子。
+    /// <br/>计算公式为：<c>C = 60f / 8f * 0.681818f</c>
+    /// （一像素为 <c>1/8</c> 英尺）
+    /// </summary>
+    public const float MphsPerPpt = 5.1136364f;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Pixptick_To_Mph(float value) => value * MphsPerPpt;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Mph_To_Pixptick(float value) => value / MphsPerPpt;
+
+    public static float NormalizeAngle(float angle)
+    {
+        float temp = angle % MathHelper.TwoPi;
+        return temp switch
+        {
+            < 0 => temp + MathHelper.TwoPi,
+            _ => temp
+        };
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float ParabolicInterpolation(float ratio) => ratio * (2f - ratio);
+
     public static T Min<T>(T value, params ReadOnlySpan<T> values) where T : INumber<T>
     {
         foreach (T temp in values)

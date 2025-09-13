@@ -4,6 +4,8 @@ public static partial class TOExtensions
 {
     extension(ILocalizationPrefix localizationPrefixProvider)
     {
+        public string LocalizationPrefix => localizationPrefixProvider.LocalizationPrefix;
+
         public string GetKeyWithPrefix(string key) => localizationPrefixProvider.LocalizationPrefix + key;
 
         public LocalizedText GetTextWithPrefix(string key) => Language.GetText(localizationPrefixProvider.GetKeyWithPrefix(key));

@@ -1,5 +1,5 @@
 ﻿using CalamityMod.NPCs.HiveMind;
-using Transoceanic.Publicizer;
+using Transoceanic.Data.Publicizer;
 
 namespace CalamityAnomalies.Publicizer.CalamityMod.NPCs;
 

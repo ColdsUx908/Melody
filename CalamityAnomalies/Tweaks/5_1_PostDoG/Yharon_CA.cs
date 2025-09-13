@@ -1110,7 +1110,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
 
             if (NPC.ai[2] % flareDustSpawnDivisor2 == 0f && TOWorld.GeneralClient)
             {
-                Projectile.NewProjectileAction<FlareDust2>(NPC.GetSource_FromAI(), fromMouth, NPC.velocity.SafelyNormalized, NPC.GetProjectileDamage<FlareDust2>(), 0f, Main.myPlayer, p =>
+                Projectile.NewProjectileAction<FlareDust2>(NPC.GetSource_FromAI(), fromMouth, NPC.velocity.SafeNormalize(), NPC.GetProjectileDamage<FlareDust2>(), 0f, Main.myPlayer, p =>
                 {
                     p.ai[0] = 12f;
                     p.ai[1] = 1.1f;
@@ -1508,7 +1508,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
 
             if (NPC.ai[2] % flareDustSpawnDivisor2 == 0f && TOWorld.GeneralClient)
             {
-                Projectile.NewProjectileAction<FlareDust2>(NPC.GetSource_FromAI(), fromMouth, NPC.velocity.SafelyNormalized, NPC.GetProjectileDamage<FlareDust2>(), 0f, Main.myPlayer, p =>
+                Projectile.NewProjectileAction<FlareDust2>(NPC.GetSource_FromAI(), fromMouth, NPC.velocity.SafeNormalize(), NPC.GetProjectileDamage<FlareDust2>(), 0f, Main.myPlayer, p =>
                 {
                     p.ai[0] = 15f;
                     p.ai[1] = 1.11f;
@@ -2196,7 +2196,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
             if (NPC.ai[1] >= fireballBreathTimer)
             {
                 if (NPC.ai[1] % (expertMode ? 6f : 8f) == 0f && TOWorld.GeneralClient)
-                    Projectile.NewProjectileAction<FlareDust2>(NPC.GetSource_FromAI(), NPC.Center + new Vector2(140f * NPC.direction, -20f).RotatedBy(NPC.rotation), NPC.velocity.SafelyNormalized, NPC.GetProjectileDamage<FlareDust2>(), 0f, Main.myPlayer);
+                    Projectile.NewProjectileAction<FlareDust2>(NPC.GetSource_FromAI(), NPC.Center + new Vector2(140f * NPC.direction, -20f).RotatedBy(NPC.rotation), NPC.velocity.SafeNormalize(), NPC.GetProjectileDamage<FlareDust2>(), 0f, Main.myPlayer);
 
                 if (Math.Abs(targetData.Center.X - NPC.Center.X) > 700f && Math.Abs(NPC.velocity.X) < chargeSpeed)
                     NPC.velocity.X += Math.Sign(NPC.velocity.X) * 0.5f;

@@ -1,5 +1,5 @@
 ﻿using CalamityMod.NPCs.StormWeaver;
-using Transoceanic.Publicizer;
+using Transoceanic.Data.Publicizer;
 
 namespace CalamityAnomalies.Publicizer.CalamityMod.NPCs;
 

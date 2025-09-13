@@ -1,6 +1,6 @@
-﻿using Transoceanic.RuntimeEditing;
+﻿using Transoceanic.Core.Utilities;
 
-namespace Transoceanic.Publicizer.Terraria.ModLoader.UI;
+namespace Transoceanic.Data.Publicizer.Terraria.ModLoader.UI;
 
 #pragma warning disable IDE1006
 public record UIModItem_Publicizer : IPublicizer

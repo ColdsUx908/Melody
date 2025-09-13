@@ -41,7 +41,7 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
     public AnomalyMode()
     {
         Texture = CATextures._anomalyModeIndicator;
-        DifficultyScale = 2.49147E23f;
+        DifficultyScale = 10000f;
         Name = this.GetTextWithPrefix("Anomaly");
         ShortDescription = this.GetTextWithPrefix("AnomalyShortInfo");
         ActivationTextKey = LocalizationPrefix + "AnomalyActivate";
@@ -53,10 +53,6 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
 
 public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizationPrefix
 {
-    internal static Asset<Texture2D> _indicator;
-
-    public static Texture2D Indicator => _indicator?.Value;
-
     public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "UI.AnomalyMode.";
 
     public override void PreUpdateWorld()

@@ -1,5 +1,6 @@
 ﻿using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
+using Transoceanic.Core.Utilities;
 
 namespace Transoceanic.RuntimeEditing;
 

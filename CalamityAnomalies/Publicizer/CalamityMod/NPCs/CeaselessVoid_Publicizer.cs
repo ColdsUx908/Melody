@@ -1,5 +1,5 @@
 ﻿using CalamityMod.NPCs.CeaselessVoid;
-using Transoceanic.Publicizer;
+using Transoceanic.Data.Publicizer;
 
 namespace CalamityAnomalies.Publicizer.CalamityMod.NPCs;
 

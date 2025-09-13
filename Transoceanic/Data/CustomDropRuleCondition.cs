@@ -16,8 +16,6 @@ public sealed class CustomDropRuleCondition : IItemDropRuleCondition
     }
 
     public bool CanDrop(DropAttemptInfo info) => _canDrop?.Invoke(info) ?? false;
-
     public bool CanShowItemDropInUI() => _canShowItemDropInUI?.Invoke() ?? false;
-
     public string GetConditionDescription() => _getConditionDescription?.Invoke() ?? "";
 }

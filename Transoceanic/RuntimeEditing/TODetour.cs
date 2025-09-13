@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.ComponentModel;
 using MonoMod.RuntimeDetour;
+using Transoceanic.Core.Utilities;
 
 namespace Transoceanic.RuntimeEditing;
 

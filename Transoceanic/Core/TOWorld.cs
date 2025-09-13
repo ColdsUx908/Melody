@@ -1,5 +1,5 @@
 ﻿using Terraria.GameContent.Creative;
-using Transoceanic.Publicizer.Terraria;
+using Transoceanic.Data.Publicizer.Terraria;
 
 namespace Transoceanic.Core;
 

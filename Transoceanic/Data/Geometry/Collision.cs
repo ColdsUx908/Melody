@@ -1,15 +1,15 @@
-﻿namespace Transoceanic.Maths.Geometry.Collision;
+﻿namespace Transoceanic.Data.Geometry;
 
 public interface ICollidableWithRectangle
 {
-    public bool Collides(Rectangle other);
+    public abstract bool Collides(Rectangle other);
 }
 
 public interface ICollidable<TSelf, TOther>
     where TSelf : ICollidable<TSelf, TOther>
     where TOther : ICollidable<TOther, TSelf>
 {
-    public bool Collides(TOther other);
+    public abstract bool Collides(TOther other);
 }
 
 public static class CollisionHelper

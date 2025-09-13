@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Data;
+﻿using Transoceanic.Core.Utilities;
+
+namespace Transoceanic.Data;
 
 public class PlayerDownedBoss
 {

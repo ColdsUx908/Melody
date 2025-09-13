@@ -12,6 +12,7 @@ using Terraria.Graphics.Effects;
 using Terraria.Map;
 using Terraria.UI;
 using Terraria.WorldBuilding;
+using Transoceanic.Core.Utilities;
 
 namespace Transoceanic.RuntimeEditing;
 

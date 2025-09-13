@@ -1,8 +1,7 @@
 ﻿using CalamityMod.Dusts;
 using CalamityMod.Items.Weapons.Melee;
 using CalamityMod.Projectiles.Melee;
-using Transoceanic.Maths.Geometry;
-using Transoceanic.Maths.Geometry.Collision;
+using Transoceanic.Data.Geometry;
 using static CalamityMod.Items.Weapons.Melee.Exoblade;
 
 namespace CalamityAnomalies.Tweaks._5_2_PostYharon;

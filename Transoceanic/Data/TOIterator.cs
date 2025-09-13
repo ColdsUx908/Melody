@@ -1,10 +1,10 @@
-﻿namespace Transoceanic.Core;
+﻿namespace Transoceanic.Data;
 
 /// <summary>
 /// 对象迭代器。
 /// <para/>示例：
 /// <code>
-/// foreach (NPC kingSlime in TOIteratorFactory.NewActiveIterator(n => n.type = NPCID.KingSlime)) //也可以使用预定义的NPC.ActiveNPCs_TO
+/// foreach (NPC kingSlime in TOIteratorFactory.NewActiveIterator(n => n.type = NPCID.KingSlime))
 /// {
 ///     //代码
 /// }
@@ -110,7 +110,7 @@ public readonly ref struct TOIterator<T> where T : class
 
     public List<T> ToList() => [.. this];
 
-    public T[] ToArray() => [.. ToList()];
+    public T[] ToArray() => [.. this];
 
     public bool TryGetFirst(out T found) => (found = this[0]) is not null;
 
@@ -253,7 +253,7 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
 
     public List<T> ToList() => [.. this];
 
-    public T[] ToArray() => [.. ToList()];
+    public T[] ToArray() => [.. this];
 
     public bool TryGetFirst(out T found) => (found = this[0]) is not null;
 }

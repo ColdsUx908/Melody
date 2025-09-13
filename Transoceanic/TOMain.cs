@@ -31,10 +31,9 @@ global using Transoceanic.Core.Extensions;
 global using Transoceanic.Data;
 global using Transoceanic.GlobalInstances;
 global using Transoceanic.Localization;
-global using Transoceanic.Maths;
 global using Transoceanic.Visual;
 global using ZLinq;
-using Transoceanic.RuntimeEditing;
+using Transoceanic.Core.Utilities;
 
 namespace Transoceanic;
 

@@ -1,4 +1,4 @@
-﻿//#define CELESS_DEV
+﻿#define CELESS_DEV
 
 using CalamityAnomalies.Assets.Textures;
 using CalamityAnomalies.Items;
@@ -8,8 +8,7 @@ using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework.Input;
 using Terraria.GameContent.ItemDropRules;
-using Transoceanic.Maths.Geometry;
-using Transoceanic.Maths.Geometry.Collision;
+using Transoceanic.Data.Geometry;
 
 namespace CalamityAnomalies.DeveloperContents;
 
@@ -292,6 +291,7 @@ public sealed class ColdheartIcicleProj : BaseShortswordProjectile, ICAModProjec
     {
         Projectile.width = 34;
         Projectile.height = 12;
+        Projectile.netImportant = true;
         Projectile.friendly = true;
         Projectile.penetrate = -1;
         Projectile.tileCollide = false;
@@ -468,6 +468,7 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
     {
         Projectile.width = 16;
         Projectile.height = 16;
+        Projectile.netImportant = true;
         Projectile.scale = 1f;
         Projectile.friendly = true;
         Projectile.tileCollide = false;
@@ -595,9 +596,8 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
             case BehaviorType.Dream:
                 Projectile.Center = Projectile.Owner.Center;
                 Projectile.timeLeft = LifeTime;
-                float ratio = Timer > 2398 ? (2598 - Timer) / 200f : Math.Clamp(Timer / 240f, 0f, 1f);
-                float interpolation = ratio * (2 - ratio);
-                if (Main.rand.NextProbability(ratio * 0.8f))
+                float interpolation = TOMathHelper.ParabolicInterpolation(Timer > 2398 ? (2598 - Timer) / 200f : Math.Clamp(Timer / 240f, 0f, 1f));
+                if (Main.rand.NextProbability((float)(Timer > 2398 ? (2598 - Timer) / 200f : Math.Clamp(Timer / 240f, 0f, 1f)) * 0.8f))
                     GeneralParticleHandler.SpawnParticle(new ColdheartIcicleGlowOrbParticle(SnowflakeCenter, Main.rand.NextVector2Circular(6f, 4f), Main.rand.NextFloat(0.9f, 1.4f), Main.rand.Next(40, 75), 0.8f, Main.rand.NextFloat(0.4f, 0.7f), Color.White, needed: true));
                 SnowflakeScale = 0.7f * interpolation;
                 SnowflakeRotation += 0.03f * interpolation * interpolation;
@@ -664,15 +664,9 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
                         break;
                     case 4:
                         if (Timer > 200)
-                        {
-                            float ratio3 = (700 - Timer) / 500f;
-                            interpolation3 = ratio3 * (2f - ratio3);
-                        }
+                            interpolation3 = TOMathHelper.ParabolicInterpolation((float)((700 - Timer) / 500f));
                         if (Timer > 100)
-                        {
-                            float ratio4 = (700 - Timer) / 600f;
-                            interpolation4 = ratio4 * (2f - ratio4);
-                        }
+                            interpolation4 = TOMathHelper.ParabolicInterpolation((float)((700 - Timer) / 600f));
                         if (Timer == 500)
                         {
                             for (int i = 0; i < 2000; i++)
@@ -747,6 +741,7 @@ public sealed class ColdheartIcicleSnowflake : ModProjectile, ICAModProjectile
     {
         Projectile.width = 80;
         Projectile.height = 80;
+        Projectile.netImportant = true;
         Projectile.scale = 0.5f;
         Projectile.friendly = true;
         Projectile.tileCollide = false;
@@ -780,8 +775,7 @@ public sealed class ColdheartIcicleSnowflake : ModProjectile, ICAModProjectile
         Lighting.AddLight(Projectile.Center, Color.White.ToVector3());
 
         Timer++;
-        float ratio = Timer <= 10 ? Timer / 10f : Timer >= LeftTime - 25 ? (LeftTime - Timer) / 25f : 1f;
-        float interpolation = ratio * (2 - ratio);
+        float interpolation = TOMathHelper.ParabolicInterpolation(Timer <= 10 ? Timer / 10f : Timer >= LeftTime - 25 ? (LeftTime - Timer) / 25f : 1f);
         Projectile.velocity.Modulus = TOMathHelper.Map(0, LeftTime, 18f, 30f, Timer) * interpolation;
         Projectile.scale = 0.5f * interpolation;
         Projectile.rotation += 0.05f * interpolation;
@@ -892,8 +886,7 @@ public sealed class ColdheartIcicleGlowOrbParticle : GlowOrbParticle
     {
         if (LifetimeCompletion > LifeEndRatio)
         {
-            float lifetimeLeft = 1f - (LifetimeCompletion - LifeEndRatio) / (1f - LifeEndRatio);
-            float interpolation = lifetimeLeft * (2f - lifetimeLeft);
+            float interpolation = TOMathHelper.ParabolicInterpolation(1f - (LifetimeCompletion - LifeEndRatio) / (1f - LifeEndRatio));
             fadeOut = interpolation;
             Scale = InitialScale * interpolation;
         }
@@ -913,8 +906,8 @@ public sealed class ColdheartIcicle_Loot : CAGlobalNPCBehavior
 
     public override void ModifyGlobalLoot(GlobalLoot globalLoot)
     {
-        globalLoot.Add(ItemDropRule.ByCondition(new CustomDropRuleCondition(i => !i.IsInSimulation && i.npc.value > 0f && i.player.ZoneSnow && !Main.snowMoon), ModContent.ItemType<ColdheartIcicle>(), 400000));
-        globalLoot.Add(ItemDropRule.ByCondition(new CustomDropRuleCondition(i => !i.IsInSimulation && i.npc.FrostMoonEnemy && Main.snowMoon), ModContent.ItemType<ColdheartIcicle>(), 20000));
+        globalLoot.Add(ItemDropRule.ByCustomCondition(i => !i.IsInSimulation && i.npc.value > 0f && i.player.ZoneSnow && !Main.snowMoon, null, null, ModContent.ItemType<ColdheartIcicle>(), 400000));
+        globalLoot.Add(ItemDropRule.ByCustomCondition(i => !i.IsInSimulation && i.npc.FrostMoonEnemy && Main.snowMoon, null, null, ModContent.ItemType<ColdheartIcicle>(), 20000));
     }
 
     public override void ModifyNPCLoot(NPC npc, NPCLoot npcLoot)
