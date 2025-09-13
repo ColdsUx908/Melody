@@ -596,7 +596,7 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
             case BehaviorType.Dream:
                 Projectile.Center = Projectile.Owner.Center;
                 Projectile.timeLeft = LifeTime;
-                float interpolation = TOMathHelper.ParabolicInterpolation(Timer > 2398 ? (2598 - Timer) / 200f : Math.Clamp(Timer / 240f, 0f, 1f));
+                float interpolation = TOMathHelper.LagrangeInterpolation(Timer > 2398 ? (2598 - Timer) / 200f : Math.Clamp(Timer / 240f, 0f, 1f));
                 if (Main.rand.NextProbability((float)(Timer > 2398 ? (2598 - Timer) / 200f : Math.Clamp(Timer / 240f, 0f, 1f)) * 0.8f))
                     GeneralParticleHandler.SpawnParticle(new ColdheartIcicleGlowOrbParticle(SnowflakeCenter, Main.rand.NextVector2Circular(6f, 4f), Main.rand.NextFloat(0.9f, 1.4f), Main.rand.Next(40, 75), 0.8f, Main.rand.NextFloat(0.4f, 0.7f), Color.White, needed: true));
                 SnowflakeScale = 0.7f * interpolation;
@@ -664,9 +664,9 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
                         break;
                     case 4:
                         if (Timer > 200)
-                            interpolation3 = TOMathHelper.ParabolicInterpolation((float)((700 - Timer) / 500f));
+                            interpolation3 = TOMathHelper.LagrangeInterpolation((float)((700 - Timer) / 500f));
                         if (Timer > 100)
-                            interpolation4 = TOMathHelper.ParabolicInterpolation((float)((700 - Timer) / 600f));
+                            interpolation4 = TOMathHelper.LagrangeInterpolation((float)((700 - Timer) / 600f));
                         if (Timer == 500)
                         {
                             for (int i = 0; i < 2000; i++)
@@ -775,7 +775,7 @@ public sealed class ColdheartIcicleSnowflake : ModProjectile, ICAModProjectile
         Lighting.AddLight(Projectile.Center, Color.White.ToVector3());
 
         Timer++;
-        float interpolation = TOMathHelper.ParabolicInterpolation(Timer <= 10 ? Timer / 10f : Timer >= LeftTime - 25 ? (LeftTime - Timer) / 25f : 1f);
+        float interpolation = TOMathHelper.LagrangeInterpolation(Timer <= 10 ? Timer / 10f : Timer >= LeftTime - 25 ? (LeftTime - Timer) / 25f : 1f);
         Projectile.velocity.Modulus = TOMathHelper.Map(0, LeftTime, 18f, 30f, Timer) * interpolation;
         Projectile.scale = 0.5f * interpolation;
         Projectile.rotation += 0.05f * interpolation;
@@ -886,7 +886,7 @@ public sealed class ColdheartIcicleGlowOrbParticle : GlowOrbParticle
     {
         if (LifetimeCompletion > LifeEndRatio)
         {
-            float interpolation = TOMathHelper.ParabolicInterpolation(1f - (LifetimeCompletion - LifeEndRatio) / (1f - LifeEndRatio));
+            float interpolation = TOMathHelper.LagrangeInterpolation(1f - (LifetimeCompletion - LifeEndRatio) / (1f - LifeEndRatio));
             fadeOut = interpolation;
             Scale = InitialScale * interpolation;
         }

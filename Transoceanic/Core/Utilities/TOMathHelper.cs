@@ -38,7 +38,7 @@ public static class TOMathHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float ParabolicInterpolation(float ratio) => ratio * (2f - ratio);
+    public static float LagrangeInterpolation(float ratio) => ratio * (2f - ratio);
 
     public static T Min<T>(T value, params ReadOnlySpan<T> values) where T : INumber<T>
     {

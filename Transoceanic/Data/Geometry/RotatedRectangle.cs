@@ -31,8 +31,9 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>,
         get
         {
             Vector2 center = Center;
-            Vector2 widthRotated = new Vector2(Source.Width / 2, 0f).RotatedBy(Rotation);
-            Vector2 heightRotated = new Vector2(0f, Source.Height / 2).RotatedBy(Rotation);
+            (float sin, float cos) = MathF.SinCos(Rotation);
+            Vector2 widthRotated = new Vector2(cos, sin) * (Source.Width / 2f);
+            Vector2 heightRotated = new Vector2(-sin, cos) * (Source.Height / 2f);
             return new(center - widthRotated - heightRotated, center + widthRotated - heightRotated);
         }
     }
@@ -42,8 +43,9 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>,
         get
         {
             Vector2 center = Center;
-            Vector2 widthRotated = new Vector2(Source.Width / 2, 0f).RotatedBy(Rotation);
-            Vector2 heightRotated = new Vector2(0f, Source.Height / 2).RotatedBy(Rotation);
+            (float sin, float cos) = MathF.SinCos(Rotation);
+            Vector2 widthRotated = new Vector2(cos, sin) * (Source.Width / 2f);
+            Vector2 heightRotated = new Vector2(-sin, cos) * (Source.Height / 2f);
             return new(center - widthRotated + heightRotated, center + widthRotated + heightRotated);
         }
     }
@@ -53,8 +55,9 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>,
         get
         {
             Vector2 center = Center;
-            Vector2 widthRotated = new Vector2(Source.Width / 2, 0f).RotatedBy(Rotation);
-            Vector2 heightRotated = new Vector2(0f, Source.Height / 2).RotatedBy(Rotation);
+            (float sin, float cos) = MathF.SinCos(Rotation);
+            Vector2 widthRotated = new Vector2(cos, sin) * (Source.Width / 2f);
+            Vector2 heightRotated = new Vector2(-sin, cos) * (Source.Height / 2f);
             return new(center - widthRotated - heightRotated, center - widthRotated + heightRotated);
         }
     }
@@ -64,8 +67,9 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>,
         get
         {
             Vector2 center = Center;
-            Vector2 widthRotated = new Vector2(Source.Width / 2, 0f).RotatedBy(Rotation);
-            Vector2 heightRotated = new Vector2(0f, Source.Height / 2).RotatedBy(Rotation);
+            (float sin, float cos) = MathF.SinCos(Rotation);
+            Vector2 widthRotated = new Vector2(cos, sin) * (Source.Width / 2f);
+            Vector2 heightRotated = new Vector2(-sin, cos) * (Source.Height / 2f);
             return new(center + widthRotated - heightRotated, center + widthRotated + heightRotated);
         }
     }
@@ -75,8 +79,9 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>,
         get
         {
             Vector2 center = Center;
-            Vector2 widthRotated = new Vector2(Source.Width / 2, 0f).RotatedBy(Rotation);
-            Vector2 heightRotated = new Vector2(0f, Source.Height / 2).RotatedBy(Rotation);
+            (float sin, float cos) = MathF.SinCos(Rotation);
+            Vector2 widthRotated = new Vector2(cos, sin) * (Source.Width / 2f);
+            Vector2 heightRotated = new Vector2(-sin, cos) * (Source.Height / 2f);
             return (center - widthRotated - heightRotated, center + widthRotated - heightRotated, center - widthRotated + heightRotated, center + widthRotated + heightRotated);
         }
     }
