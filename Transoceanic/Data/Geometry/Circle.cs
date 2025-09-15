@@ -17,14 +17,13 @@ public struct Circle : IEquatable<Circle>,
 
     public Circle(float x, float y, float radius) : this(new Vector2(x, y), radius) { }
 
-    public override readonly bool Equals(object obj) => obj is Circle other && Equals(other);
-
     public readonly bool Equals(Circle other) => Center == other.Center && Radius == other.Radius;
+    public override readonly bool Equals([NotNullWhen(true)] object obj) => obj is Circle other && Equals(other);
     public static bool operator ==(Circle left, Circle right) => left.Equals(right);
     public static bool operator !=(Circle left, Circle right) => !(left == right);
     public override readonly int GetHashCode() => HashCode.Combine(Center, Radius);
 
-    public override readonly string ToString() => $"Circle {{Center:{Center} Radius:{Radius}}}";
+    public override readonly string ToString() => $"Circle {{ Center: {Center}, Radius: {Radius} }}";
 
     public readonly bool Collides(Rectangle other) => Collides((FloatRectangle)other);
     public readonly bool Collides(Circle other) => Vector2.Distance(Center, other.Center) <= Radius + other.Radius;

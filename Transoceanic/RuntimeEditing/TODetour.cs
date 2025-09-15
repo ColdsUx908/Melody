@@ -186,7 +186,7 @@ public sealed class TODetourHelper : IResourceLoader
             return false;
         }
 
-        public void RemoveAll(Predicate<Hook> match)
+        public void RemoveAll(Func<Hook, bool> match)
         {
             ArgumentNullException.ThrowIfNull(match);
             foreach ((Type sourceType, Dictionary<MethodBase, List<Hook>> methodHooks) in _data)

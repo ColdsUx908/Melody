@@ -301,8 +301,7 @@ public static partial class TOExtensions
         public T GetModItem<T>() where T : ModItem => item.ModItem as T;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetModItemThrow<T>() where T : ModItem => item.GetModItem<T>()
-            ?? throw new ArgumentException($"Item {item.Name} ({item.type}) does not have a ModItem of type {typeof(T).FullName}.", nameof(item));
+        public T GetModItemThrow<T>() where T : ModItem => item.GetModItem<T>() ?? throw new ArgumentException($"Item {item.Name} ({item.type}) does not have a ModItem of type {typeof(T).FullName}.", nameof(item));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetModItem<T>([NotNullWhen(true)] out T result) where T : ModItem => (result = item.GetModItem<T>()) is not null;
@@ -314,6 +313,8 @@ public static partial class TOExtensions
 
     extension(Item)
     {
+        public static TOIterator<Item> ActiveItems => TOIteratorFactory.NewItemIterator(IteratorMatches.Item_IsActive);
+
         public static Item CreateItem(int type)
         {
             Item item = new();
@@ -438,14 +439,14 @@ public static partial class TOExtensions
             return -1;
         }
 
-        public void ModifyTooltip(Predicate<TooltipLine> predicate, Action<TooltipLine> action)
+        public void ModifyTooltip(Func<TooltipLine, bool> match, Action<TooltipLine> action)
         {
-            ArgumentNullException.ThrowIfNull(predicate);
+            ArgumentNullException.ThrowIfNull(match);
             ArgumentNullException.ThrowIfNull(action);
             for (int i = 0; i < tooltips.Count; i++)
             {
                 TooltipLine line = tooltips[i];
-                if (predicate(line))
+                if (match(line))
                 {
                     action(line);
                     return;
@@ -488,21 +489,20 @@ public static partial class TOExtensions
         public T GetModNPC<T>() where T : ModNPC => npc.ModNPC as T;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetModNPCThrow<T>() where T : ModNPC => npc.GetModNPC<T>()
-            ?? throw new ArgumentException($"NPC {npc.FullName} ({npc.type}) does not have a ModNPC of type {typeof(T).FullName}.", nameof(npc));
+        public T GetModNPCThrow<T>() where T : ModNPC => npc.GetModNPC<T>() ?? throw new ArgumentException($"NPC {npc.FullName} ({npc.type}) does not have a ModNPC of type {typeof(T).FullName}.", nameof(npc));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetModNPC<T>([NotNullWhen(true)] out T result) where T : ModNPC => (result = npc.GetModNPC<T>()) is not null;
 
-        public bool TOFriendly => npc.active && (npc.friendly || npc.townNPC || npc.lifeMax <= 5);
+        public bool IsFriendly => npc.active && (npc.friendly || npc.townNPC || npc.lifeMax <= 5);
 
-        public bool Enemy => !npc.friendly && npc.lifeMax >= 5;
+        public bool IsEnemy => npc.active && (!npc.friendly && npc.lifeMax >= 5);
 
         /// <summary>
         /// 检查NPC是否为Boss。
         /// </summary>
         /// <returns></returns>
-        public bool TOBoss => npc.boss || npc.EoW || npc.type == NPCID.WallofFleshEye;
+        public bool IsBossEnemy => npc.active && (npc.boss || npc.EoW || npc.type == NPCID.WallofFleshEye);
 
         public bool EoW => npc.type is NPCID.EaterofWorldsHead or NPCID.EaterofWorldsBody or NPCID.EaterofWorldsTail;
 
@@ -642,11 +642,11 @@ public static partial class TOExtensions
             return false;
         }
 
-        public static TOIterator<NPC> ActiveNPCs => TOIteratorFactory.NewActiveNPCIterator();
+        public static TOIterator<NPC> ActiveNPCs => TOIteratorFactory.NewNPCIterator(IteratorMatches.NPC_IsActive);
 
-        public static TOIterator<NPC> Enemies => TOIteratorFactory.NewActiveNPCIterator(n => n.Enemy);
+        public static TOIterator<NPC> Enemies => TOIteratorFactory.NewNPCIterator(IteratorMatches.NPC_IsEnemy);
 
-        public static TOIterator<NPC> Bosses => TOIteratorFactory.NewActiveNPCIterator(n => n.TOBoss);
+        public static TOIterator<NPC> Bosses => TOIteratorFactory.NewNPCIterator(IteratorMatches.NPC_IsBossEnemy);
 
         public static NPC CreateNPC(int type)
         {
@@ -763,7 +763,7 @@ public static partial class TOExtensions
 
         public bool Alive => player.active && !player.dead && !player.ghost;
 
-        public bool PvP => player.Alive && player.hostile;
+        public bool IsPvP => player.Alive && player.hostile;
 
         public bool IsTeammateOf(Player other) => player.Alive && player.team != 0 && player.team == other.team;
 
@@ -786,9 +786,9 @@ public static partial class TOExtensions
     {
         public static Player Server => Main.player[Main.maxPlayers];
 
-        public static TOIterator<Player> ActivePlayers => TOIteratorFactory.NewActivePlayerIterator();
+        public static TOIterator<Player> ActivePlayers => TOIteratorFactory.NewPlayerIterator(IteratorMatches.Player_IsActive);
 
-        public static TOIterator<Player> PVPPlayers => TOIteratorFactory.NewPlayerIterator(p => p.PvP);
+        public static TOIterator<Player> PVPPlayers => TOIteratorFactory.NewPlayerIterator(IteratorMatches.Player_IsPVP);
 
         public static int ActivePlayerCount => Main.netMode == NetmodeID.SinglePlayer ? 1 : Main.CurrentFrameFlags.ActivePlayersCount;
     }
@@ -804,8 +804,7 @@ public static partial class TOExtensions
         public T GetModProjectile<T>() where T : ModProjectile => projectile.ModProjectile as T;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetModProjectileThrow<T>() where T : ModProjectile => projectile.GetModProjectile<T>()
-            ?? throw new ArgumentException($"Projectile {projectile.Name} ({projectile.type}) does not have a ModProjectile of type {typeof(T).FullName}.", nameof(projectile));
+        public T GetModProjectileThrow<T>() where T : ModProjectile => projectile.GetModProjectile<T>() ?? throw new ArgumentException($"Projectile {projectile.Name} ({projectile.type}) does not have a ModProjectile of type {typeof(T).FullName}.", nameof(projectile));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetModProjectile<T>([NotNullWhen(true)] out T result) where T : ModProjectile => (result = projectile.GetModProjectile<T>()) is not null;
@@ -842,7 +841,7 @@ public static partial class TOExtensions
     {
         public static Projectile DummyProjectile => Main.projectile[Main.maxProjectiles];
 
-        public static TOIterator<Projectile> ActiveProjectiles => TOIteratorFactory.NewActiveProjectileIterator();
+        public static TOIterator<Projectile> ActiveProjectiles => TOIteratorFactory.NewProjectileIterator(IteratorMatches.Projectile_IsActive);
 
         public static Projectile CreateProjectile(int type)
         {

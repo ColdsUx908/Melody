@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Anomaly.KingSlime;
 
 public class AnomalyKingSlimeJewelEmerald : AnomalyNPCBehavior<KingSlimeJewelEmerald>
 {
-    #region 枚举、数值、属性
+    #region 数据
     public enum Behavior
     {
         Despawn = -1,
@@ -33,7 +33,7 @@ public class AnomalyKingSlimeJewelEmerald : AnomalyNPCBehavior<KingSlimeJewelEme
         get => (int)NPC.ai[1];
         set => NPC.ai[1] = value;
     }
-    #endregion 枚举、数值、属性
+    #endregion 数据
 
     public override bool PreAI()
     {

@@ -14,13 +14,9 @@ public struct GuaranteedBoolean : IEquatable<GuaranteedBoolean>
 
     public static implicit operator bool(GuaranteedBoolean guaranteedBoolean) => guaranteedBoolean.Value;
 
-    public override readonly int GetHashCode() => _value.GetHashCode();
-
     public readonly bool Equals(GuaranteedBoolean other) => _value == other._value;
-
     public override readonly bool Equals([NotNullWhen(true)] object obj) => obj is GuaranteedBoolean other && Equals(other);
-
     public static bool operator ==(GuaranteedBoolean left, GuaranteedBoolean right) => left.Equals(right);
-
     public static bool operator !=(GuaranteedBoolean left, GuaranteedBoolean right) => !(left == right);
+    public override readonly int GetHashCode() => _value.GetHashCode();
 }

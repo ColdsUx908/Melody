@@ -3,7 +3,7 @@
 /// <summary>
 /// 运动学工具类。
 /// </summary>
-public static class TOKinematicUtils
+public static class TOKinematicHelper
 {
     /// <summary>
     /// 获取NPC目标。
@@ -33,7 +33,7 @@ public static class TOKinematicUtils
                             target = npc;
                             continue;
                         }
-                        switch (hasPriority, npc.TOBoss)
+                        switch (hasPriority, npc.IsBossEnemy)
                         {
                             case (true, false):
                                 break;
@@ -54,7 +54,7 @@ public static class TOKinematicUtils
                             ignoreTiles ? n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared
                             : n => n.CanBeChasedBy() && Vector2.DistanceSquared(origin, n.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, n.Center, 1, 1)))
                     {
-                        if (target is null || npc.lifeMax < target.lifeMax)
+                        if (target is null || npc.lifeMax > target.lifeMax)
                             target = npc;
                     }
                 }
@@ -72,7 +72,7 @@ public static class TOKinematicUtils
                             target = npc;
                             continue;
                         }
-                        switch (hasPriority, npc.TOBoss)
+                        switch (hasPriority, npc.IsBossEnemy)
                         {
                             case (true, false):
                                 break;
@@ -98,6 +98,7 @@ public static class TOKinematicUtils
                     }
                 }
                 return target;
+            case PriorityType.Closest:
             default:
                 float distanceTemp1 = 0f;
                 float distanceTemp2 = maxDistanceToCheckSquared;
@@ -114,7 +115,7 @@ public static class TOKinematicUtils
                             distanceTemp2 = distanceTemp1;
                             continue;
                         }
-                        switch (hasPriority, npc.TOBoss)
+                        switch (hasPriority, npc.IsBossEnemy)
                         {
                             case (true, false):
                                 break;
@@ -147,7 +148,6 @@ public static class TOKinematicUtils
                 return target;
         }
     }
-
 
     /// <summary>
     /// 获取玩家目标。
@@ -188,6 +188,7 @@ public static class TOKinematicUtils
                         target = player;
                 }
                 return target;
+            case PriorityType.Closest:
             default:
                 float distanceTemp1 = 0f;
                 float distanceTemp2 = maxDistanceToCheckSquared;
@@ -229,8 +230,8 @@ public static class TOKinematicUtils
             case PriorityType.LifeMax:
                 foreach (Player player in
                     TOIteratorFactory.NewPlayerIterator(
-                        ignoreTiles ? p => p.PvP && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared
-                        : p => p.PvP && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1), owner))
+                        ignoreTiles ? p => p.IsPvP && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared
+                        : p => p.IsPvP && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1), owner))
                 {
                     if (target is null || player.statLifeMax2 > target.statLifeMax2)
                         target = player;
@@ -239,20 +240,21 @@ public static class TOKinematicUtils
             case PriorityType.Life:
                 foreach (Player player in
                     TOIteratorFactory.NewPlayerIterator(
-                        ignoreTiles ? p => p.PvP && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared
-                        : p => p.PvP && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1), owner))
+                        ignoreTiles ? p => p.IsPvP && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared
+                        : p => p.IsPvP && Vector2.DistanceSquared(origin, p.Center) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1), owner))
                 {
                     if (target is null || player.statLife > target.statLife)
                         target = player;
                 }
                 return target;
+            case PriorityType.Closest:
             default:
                 float distanceTemp1 = 0f;
                 float distanceTemp2 = maxDistanceToCheckSquared;
                 foreach (Player player in
                     TOIteratorFactory.NewPlayerIterator(
-                        ignoreTiles ? p => p.PvP && (distanceTemp1 = Vector2.DistanceSquared(origin, p.Center)) <= maxDistanceToCheckSquared
-                        : p => p.PvP && (distanceTemp1 = Vector2.DistanceSquared(origin, p.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1), owner))
+                        ignoreTiles ? p => p.IsPvP && (distanceTemp1 = Vector2.DistanceSquared(origin, p.Center)) <= maxDistanceToCheckSquared
+                        : p => p.IsPvP && (distanceTemp1 = Vector2.DistanceSquared(origin, p.Center)) <= maxDistanceToCheckSquared && Collision.CanHit(origin, 1, 1, p.Center, 1, 1), owner))
                 {
                     if (target is null || distanceTemp1 < distanceTemp2)
                     {

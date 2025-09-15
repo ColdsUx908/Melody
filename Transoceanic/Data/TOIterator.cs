@@ -13,12 +13,12 @@
 public readonly ref struct TOIterator<T> where T : class
 {
     private readonly ReadOnlySpan<T> _span;
-    private readonly Predicate<T> _predicate;
+    private readonly Func<T, bool> _match;
 
-    public TOIterator(ReadOnlySpan<T> span, Predicate<T> predicate)
+    public TOIterator(ReadOnlySpan<T> span, Func<T, bool> match)
     {
         _span = span;
-        _predicate = predicate;
+        _match = match;
     }
 
     public Enumerator GetEnumerator() => new(this);
@@ -26,12 +26,12 @@ public readonly ref struct TOIterator<T> where T : class
     public ref struct Enumerator
     {
         private ReadOnlySpan<T>.Enumerator _enumerator;
-        private readonly Predicate<T> _predicate;
+        private readonly Func<T, bool> _match;
 
         public Enumerator(TOIterator<T> iterator)
         {
             _enumerator = iterator._span.GetEnumerator();
-            _predicate = iterator._predicate;
+            _match = iterator._match;
         }
 
         public ref readonly T Current => ref _enumerator.Current;
@@ -41,7 +41,7 @@ public readonly ref struct TOIterator<T> where T : class
         {
             while (_enumerator.MoveNext())
             {
-                if (_predicate(Current))
+                if (_match(Current))
                     return true;
             }
             return false;
@@ -69,21 +69,21 @@ public readonly ref struct TOIterator<T> where T : class
         return false;
     }
 
-    public bool Any(Predicate<T> furtherPredicate)
+    public bool Any(Func<T, bool> furtherMatch)
     {
         foreach (T data in this)
         {
-            if (furtherPredicate(data))
+            if (furtherMatch(data))
                 return true;
         }
         return false;
     }
 
-    public bool All(Predicate<T> furtherPredicate)
+    public bool All(Func<T, bool> furtherMatch)
     {
         foreach (T data in this)
         {
-            if (!furtherPredicate(data))
+            if (!furtherMatch(data))
                 return false;
         }
         return true;
@@ -97,12 +97,12 @@ public readonly ref struct TOIterator<T> where T : class
         return count;
     }
 
-    public int Count(Predicate<T> furtherPredicate)
+    public int Count(Func<T, bool> furtherMatch)
     {
         int count = 0;
         foreach (T data in this)
         {
-            if (furtherPredicate(data))
+            if (furtherMatch(data))
                 count++;
         }
         return count;
@@ -114,11 +114,11 @@ public readonly ref struct TOIterator<T> where T : class
 
     public bool TryGetFirst(out T found) => (found = this[0]) is not null;
 
-    public bool TryGetFirst(Predicate<T> furtherPredicate, out T found)
+    public bool TryGetFirst(Func<T, bool> furtherMatch, out T found)
     {
         foreach (T data in this)
         {
-            if (furtherPredicate(data))
+            if (furtherMatch(data))
             {
                 found = data;
                 return true;
@@ -145,20 +145,20 @@ public readonly ref struct TOIterator<T> where T : class
 public readonly ref struct TOExclusiveIterator<T> where T : class
 {
     private readonly ReadOnlySpan<T> _span;
-    private readonly Predicate<T> _predicate;
+    private readonly Func<T, bool> _match;
     private readonly HashSet<T> _exclusions;
 
-    public TOExclusiveIterator(ReadOnlySpan<T> span, Predicate<T> predicate, HashSet<T> exceptions)
+    public TOExclusiveIterator(ReadOnlySpan<T> span, Func<T, bool> match, HashSet<T> exceptions)
     {
         _span = span;
-        _predicate = predicate;
+        _match = match;
         _exclusions = exceptions;
     }
 
-    public TOExclusiveIterator(ReadOnlySpan<T> span, Predicate<T> predicate, params ReadOnlySpan<T> exceptionIndexes)
+    public TOExclusiveIterator(ReadOnlySpan<T> span, Func<T, bool> match, params ReadOnlySpan<T> exceptionIndexes)
     {
         _span = span;
-        _predicate = predicate;
+        _match = match;
         _exclusions = [.. exceptionIndexes];
     }
 
@@ -167,13 +167,13 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
     public ref struct Enumerator
     {
         private ReadOnlySpan<T>.Enumerator _enumerator;
-        private readonly Predicate<T> _predicate;
+        private readonly Func<T, bool> _match;
         private readonly HashSet<T> _exceptions;
 
         public Enumerator(TOExclusiveIterator<T> iterator)
         {
             _enumerator = iterator._span.GetEnumerator();
-            _predicate = iterator._predicate;
+            _match = iterator._match;
             _exceptions = iterator._exclusions;
         }
 
@@ -184,7 +184,7 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
         {
             while (_enumerator.MoveNext())
             {
-                if (_predicate(Current) && !_exceptions.Contains(Current))
+                if (_match(Current) && !_exceptions.Contains(Current))
                     return true;
             }
             return false;
@@ -212,21 +212,21 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
         return false;
     }
 
-    public bool Any(Predicate<T> furtherPredicate)
+    public bool Any(Func<T, bool> furtherMatch)
     {
         foreach (T data in this)
         {
-            if (furtherPredicate(data))
+            if (furtherMatch(data))
                 return true;
         }
         return false;
     }
 
-    public bool All(Predicate<T> furtherPredicate)
+    public bool All(Func<T, bool> furtherMatch)
     {
         foreach (T data in this)
         {
-            if (!furtherPredicate(data))
+            if (!furtherMatch(data))
                 return false;
         }
         return true;
@@ -240,12 +240,12 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
         return count;
     }
 
-    public int Count(Predicate<T> furtherPredicate)
+    public int Count(Func<T, bool> furtherMatch)
     {
         int count = 0;
         foreach (T data in this)
         {
-            if (furtherPredicate(data))
+            if (furtherMatch(data))
                 count++;
         }
         return count;
@@ -274,45 +274,39 @@ public static class TOIteratorFactory
     public static ReadOnlySpan<Dust> DustSpan => Main.dust.AsSpan(0, Main.maxDust);
 
 
-    public static TOIterator<NPC> NewNPCIterator(Predicate<NPC> predicate) => new(NPCSpan, predicate);
+    public static TOIterator<NPC> NewNPCIterator(Func<NPC, bool> match) => new(NPCSpan, match);
 
-    public static TOExclusiveIterator<NPC> NewNPCIterator(Predicate<NPC> predicate, params ReadOnlySpan<NPC> exclusions) => new(NPCSpan, predicate, exclusions);
+    public static TOExclusiveIterator<NPC> NewNPCIterator(Func<NPC, bool> match, params HashSet<NPC> exclusions) => new(NPCSpan, match, exclusions);
 
-    public static TOIterator<NPC> NewActiveNPCIterator() => new(NPCSpan, n => n.active);
+    public static TOIterator<NPC> NewActiveNPCIterator(Func<NPC, bool> match) => new(NPCSpan, n => n.active && match(n));
 
-    public static TOIterator<NPC> NewActiveNPCIterator(Predicate<NPC> predicate) => new(NPCSpan, n => n.active && predicate(n));
+    public static TOExclusiveIterator<NPC> NewActiveNPCIterator(Func<NPC, bool> match, params HashSet<NPC> exclusions) => new(NPCSpan, n => n.active && match(n), exclusions);
 
-    public static TOExclusiveIterator<NPC> NewActiveNPCIterator(Predicate<NPC> predicate, params ReadOnlySpan<NPC> exclusions) => new(NPCSpan, n => n.active && predicate(n), exclusions);
+    public static TOIterator<Projectile> NewProjectileIterator(Func<Projectile, bool> match) => new(ProjectileSpan, match);
 
-    public static TOIterator<Projectile> NewProjectileIterator(Predicate<Projectile> predicate) => new(ProjectileSpan, predicate);
+    public static TOExclusiveIterator<Projectile> NewProjectileIterator(Func<Projectile, bool> match, params HashSet<Projectile> exclusions) => new(ProjectileSpan, match, exclusions);
 
-    public static TOExclusiveIterator<Projectile> NewProjectileIterator(Predicate<Projectile> predicate, params ReadOnlySpan<Projectile> exclusions) => new(ProjectileSpan, predicate, exclusions);
+    public static TOIterator<Projectile> NewActiveProjectileIterator(Func<Projectile, bool> match) => new(ProjectileSpan, p => p.active && match(p));
 
-    public static TOIterator<Projectile> NewActiveProjectileIterator() => new(ProjectileSpan, p => p.active);
+    public static TOExclusiveIterator<Projectile> NewActiveProjectileIterator(Func<Projectile, bool> match, params HashSet<Projectile> exclusions) => new(ProjectileSpan, p => p.active && match(p), exclusions);
 
-    public static TOIterator<Projectile> NewActiveProjectileIterator(Predicate<Projectile> predicate) => new(ProjectileSpan, p => p.active && predicate(p));
+    public static TOIterator<Player> NewPlayerIterator(Func<Player, bool> match) => new(PlayerSpan, match);
 
-    public static TOExclusiveIterator<Projectile> NewActiveProjectileIterator(Predicate<Projectile> predicate, params ReadOnlySpan<Projectile> exclusions) => new(ProjectileSpan, p => p.active && predicate(p), exclusions);
+    public static TOExclusiveIterator<Player> NewPlayerIterator(Func<Player, bool> match, params HashSet<Player> exclusions) => new(PlayerSpan, match, exclusions);
 
-    public static TOIterator<Player> NewPlayerIterator(Predicate<Player> predicate) => new(PlayerSpan, predicate);
+    public static TOIterator<Player> NewActivePlayerIterator(Func<Player, bool> match) => new(PlayerSpan, p => p.active && match(p));
 
-    public static TOExclusiveIterator<Player> NewPlayerIterator(Predicate<Player> predicate, params ReadOnlySpan<Player> exclusions) => new(PlayerSpan, predicate, exclusions);
+    public static TOExclusiveIterator<Player> NewActivePlayerIterator(Func<Player, bool> match, params HashSet<Player> exclusions) => new(PlayerSpan, p => p.active && match(p), exclusions);
 
-    public static TOIterator<Player> NewActivePlayerIterator() => new(PlayerSpan, p => p.active);
+    public static TOIterator<Dust> NewDustIterator(Func<Dust, bool> match) => new(DustSpan, match);
 
-    public static TOIterator<Player> NewActivePlayerIterator(Predicate<Player> predicate) => new(PlayerSpan, p => p.active && predicate(p));
+    public static TOExclusiveIterator<Dust> NewDustIterator(Func<Dust, bool> match, params HashSet<Dust> exclusions) => new(DustSpan, match, exclusions);
 
-    public static TOExclusiveIterator<Player> NewActivePlayerIterator(Predicate<Player> predicate, params ReadOnlySpan<Player> exclusions) => new(PlayerSpan, p => p.active && predicate(p), exclusions);
+    public static TOIterator<Item> NewItemIterator(Func<Item, bool> match) => new(ItemSpan, match);
 
-    public static TOIterator<Dust> NewDustIterator(Predicate<Dust> predicate) => new(DustSpan, predicate);
+    public static TOExclusiveIterator<Item> NewItemIterator(Func<Item, bool> match, params HashSet<Item> exclusions) => new(ItemSpan, match, exclusions);
 
-    public static TOExclusiveIterator<Dust> NewDustIterator(Predicate<Dust> predicate, params ReadOnlySpan<Dust> exclusions) => new(DustSpan, predicate, exclusions);
+    public static TOIterator<Item> NewActiveItemIterator(Func<Item, bool> match) => new(ItemSpan, i => i.active && match(i));
 
-    public static TOIterator<Item> NewItemIterator(Predicate<Item> predicate) => new(ItemSpan, predicate);
-
-    public static TOExclusiveIterator<Item> NewItemIterator(Predicate<Item> predicate, params ReadOnlySpan<Item> exclusions) => new(ItemSpan, predicate, exclusions);
-
-    public static TOIterator<Item> NewActiveItemIterator(Predicate<Item> predicate) => new(ItemSpan, i => i.active && predicate(i));
-
-    public static TOExclusiveIterator<Item> NewActiveItemIterator(Predicate<Item> predicate, params ReadOnlySpan<Item> exclusions) => new(ItemSpan, i => i.active && predicate(i), exclusions);
+    public static TOExclusiveIterator<Item> NewActiveItemIterator(Func<Item, bool> match, params HashSet<Item> exclusions) => new(ItemSpan, i => i.active && match(i), exclusions);
 }

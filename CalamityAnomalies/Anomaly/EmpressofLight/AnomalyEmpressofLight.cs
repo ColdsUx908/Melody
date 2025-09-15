@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Anomaly.EmpressofLight;
 
 public sealed class AnomalyEmpressofLight : AnomalyNPCBehavior
 {
-    #region 枚举、数值、AI状态
+    #region 数据
     public enum Behavior
     {
         Despawn = -1,
@@ -271,7 +271,7 @@ public sealed class AnomalyEmpressofLight : AnomalyNPCBehavior
                 NPC.ai[3] += value.ToInt() * 2f;
         }
     }
-    #endregion 枚举、数值、属性、AI状态
+    #endregion 数据
 
     public override int ApplyingType => NPCID.HallowBoss;
 

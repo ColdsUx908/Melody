@@ -24,9 +24,9 @@ public abstract class ModDOT : ModBuff
 public sealed class ModDOTHandler : IResourceLoader
 {
     internal static readonly List<ModDOT> ModDOTSet = [];
-    internal static readonly Dictionary<int, (Predicate<Player> hasBuffPlayer, Predicate<NPC> hasBuffNPC, Func<Player, float> damagePlayer, Func<NPC, float>, Func<NPC, int> damageValue)> ExternalDOTSet = [];
+    internal static readonly Dictionary<int, (Func<Player, bool> hasBuffPlayer, Func<NPC, bool> hasBuffNPC, Func<Player, float> damagePlayer, Func<NPC, float>, Func<NPC, int> damageValue)> ExternalDOTSet = [];
 
-    public static void RegisterDOT(int type, Predicate<Player> hasBuffPlayer, Predicate<NPC> hasBuffNPC, Func<Player, float> damagePlayer = null, Func<NPC, float> damageNPC = null, Func<NPC, int> damageValue = null, bool cover = true)
+    public static void RegisterDOT(int type, Func<Player, bool> hasBuffPlayer, Func<NPC, bool> hasBuffNPC, Func<Player, float> damagePlayer = null, Func<NPC, float> damageNPC = null, Func<NPC, int> damageValue = null, bool cover = true)
     {
         hasBuffPlayer ??= _ => false;
         hasBuffNPC ??= _ => false;
@@ -37,7 +37,7 @@ public sealed class ModDOTHandler : IResourceLoader
             ExternalDOTSet[type] = (hasBuffPlayer, hasBuffNPC, damagePlayer, damageNPC, damageValue);
     }
 
-    public static void RegisterDOT<T>(Predicate<Player> hasBuffPlayer, Predicate<NPC> hasBuffNPC, Func<Player, float> damagePlayer = null, Func<NPC, float> damageNPC = null, Func<NPC, int> damageValue = null, bool cover = true) where T : ModBuff =>
+    public static void RegisterDOT<T>(Func<Player, bool> hasBuffPlayer, Func<NPC, bool> hasBuffNPC, Func<Player, float> damagePlayer = null, Func<NPC, float> damageNPC = null, Func<NPC, int> damageValue = null, bool cover = true) where T : ModBuff =>
         RegisterDOT(ModContent.BuffType<T>(), hasBuffPlayer, hasBuffNPC, damagePlayer, damageNPC, damageValue, cover);
 
     void IResourceLoader.PostSetupContent() => ModDOTSet.AddRange(TOReflectionUtils.GetTypeInstancesDerivedFrom<ModDOT>());
@@ -59,7 +59,7 @@ public sealed class ModDOT_Player : TOPlayerBehavior
             if (dot.HasBuff(Player))
                 totalDOT += dot.GetDamage(Player);
         }
-        foreach ((Predicate<Player> hasBuffPlayer, _, Func<Player, float> damagePlayer, _, _) in ModDOTHandler.ExternalDOTSet.Values)
+        foreach ((Func<Player, bool> hasBuffPlayer, _, Func<Player, float> damagePlayer, _, _) in ModDOTHandler.ExternalDOTSet.Values)
         {
             if (hasBuffPlayer(Player))
                 totalDOT += damagePlayer(Player);
@@ -80,7 +80,7 @@ public sealed class ModDOT_GlobalNPC : TOGlobalNPCBehavior
             if (dot.HasBuff(npc))
                 ApplyDOT(dot.GetDamage(npc), dot.GetDamageValue(npc));
         }
-        foreach ((_, Predicate<NPC> hasBuffNPC, _, Func<NPC, float> damageNPC, Func<NPC, int> damageValue) in ModDOTHandler.ExternalDOTSet.Values)
+        foreach ((_, Func<NPC, bool> hasBuffNPC, _, Func<NPC, float> damageNPC, Func<NPC, int> damageValue) in ModDOTHandler.ExternalDOTSet.Values)
         {
             if (hasBuffNPC(npc))
                 ApplyDOT(damageNPC(npc), damageValue(npc));

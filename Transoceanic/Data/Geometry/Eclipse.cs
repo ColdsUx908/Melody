@@ -18,12 +18,8 @@ public struct Ellipse : IEquatable<Ellipse>
     }
 
     public readonly bool Equals(Ellipse other) => Center == other.Center && A == other.A && B == other.B && Rotation == other.Rotation;
-
-    public override readonly bool Equals(object obj) => obj is Ellipse other && Equals(other);
-
-    public override readonly int GetHashCode() => HashCode.Combine(Center, A, B, Rotation);
-
+    public override readonly bool Equals([NotNullWhen(true)] object obj) => obj is Ellipse other && Equals(other);
     public static bool operator ==(Ellipse left, Ellipse right) => left.Equals(right);
-
     public static bool operator !=(Ellipse left, Ellipse right) => !left.Equals(right);
+    public override readonly int GetHashCode() => HashCode.Combine(Center, A, B, Rotation);
 }

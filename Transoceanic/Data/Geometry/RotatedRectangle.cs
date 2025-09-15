@@ -97,13 +97,13 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>,
 
     public readonly bool Contains(Vector2 point) => Source.Contains(Center + (point - Center).RotatedBy(-Rotation));
 
-    public override readonly bool Equals(object obj) => obj is RotatedRectangle other && Equals(other);
-    public readonly bool Equals(RotatedRectangle other) => Source.Equals(other.Source) && Rotation == other.Rotation;
+    public readonly bool Equals(RotatedRectangle other) => Source == other.Source && Rotation == other.Rotation;
+    public override readonly bool Equals([NotNullWhen(true)] object obj) => obj is RotatedRectangle other && Equals(other);
     public static bool operator ==(RotatedRectangle left, RotatedRectangle right) => left.Equals(right);
     public static bool operator !=(RotatedRectangle left, RotatedRectangle right) => !(left == right);
     public override readonly int GetHashCode() => HashCode.Combine(Source, Rotation);
 
-    public override readonly string ToString() => $"RotatedRectangle {{Source: {Source}, Rotation: {Rotation}}}";
+    public override readonly string ToString() => $"RotatedRectangle {{ Source: {Source}, Rotation: {Rotation} }}";
 
     public static implicit operator RotatedRectangle(FloatRectangle rect) => new(rect, 0f);
 

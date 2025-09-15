@@ -17,7 +17,7 @@ public static class TOMathHelper
     /// <summary>
     /// 将像素每帧转换为英里每小时的转换因子。
     /// <br/>计算公式为：<c>C = 60f / 8f * 0.681818f</c>
-    /// （一像素为 <c>1/8</c> 英尺）
+    /// （一像素为 <c>1/8</c> 英尺）。
     /// </summary>
     public const float MphsPerPpt = 5.1136364f;
 
@@ -38,7 +38,7 @@ public static class TOMathHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float LagrangeInterpolation(float ratio) => ratio * (2f - ratio);
+    public static float ParabolicInterpolation(float ratio) => ratio * (2f - ratio);
 
     public static T Min<T>(T value, params ReadOnlySpan<T> values) where T : INumber<T>
     {

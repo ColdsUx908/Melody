@@ -36,13 +36,13 @@ public struct FloatRectangle : IEquatable<FloatRectangle>,
     public static FloatRectangle FromCenter(Vector2 center, float width, float height) => new(new Vector2(center.X - width / 2, center.Y - height / 2), width, height);
     public static FloatRectangle FromInnerPoint(Vector2 point, float left, float right, float top, float bottom) => new(new Vector2(point.X - left, point.Y - top), left + right, top + bottom);
 
-    public override readonly bool Equals(object obj) => obj is FloatRectangle other && Equals(other);
     public readonly bool Equals(FloatRectangle other) => Position == other.Position && Width == other.Width && Height == other.Height;
+    public override readonly bool Equals([NotNullWhen(true)] object obj) => obj is FloatRectangle other && Equals(other);
     public static bool operator ==(FloatRectangle left, FloatRectangle right) => left.Equals(right);
     public static bool operator !=(FloatRectangle left, FloatRectangle right) => !(left == right);
     public override readonly int GetHashCode() => HashCode.Combine(Position, Width, Height);
 
-    public override readonly string ToString() => $"FloatRectangle {{Position:{Position} Width:{Width} Height:{Height}}}";
+    public override readonly string ToString() => $"FloatRectangle {{ Position: {Position}, Width: {Width}, Height: {Height} }}";
 
     public static implicit operator FloatRectangle(Rectangle rect) => new(rect.X, rect.Y, rect.Width, rect.Height);
 

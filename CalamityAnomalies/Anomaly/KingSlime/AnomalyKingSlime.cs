@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Anomaly.KingSlime;
 
 public class AnomalyKingSlime : AnomalyNPCBehavior
 {
-    #region 枚举、数值、属性、AI状态
+    #region 数据
     public enum Behavior
     {
         Despawn = -1,
@@ -23,11 +23,11 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
     {
         public const float DespawnDistance = 5000f;
 
-        public static float MaxScale => CAWorld.AnomalyUltramundane ? 7.5f : 6f;
+        public static float MaxScale => CAWorld.AnomalyUltramundane ? 6f : 3f;
 
         public static float MinScale => 0.5f;
 
-        public static float SpawnSlimeGateValue => CAWorld.AnomalyUltramundane ? 0.025f : 0.03f;
+        public static float SpawnSlimeGateValue => CAWorld.AnomalyUltramundane ? 0.03f : 0.04f;
 
         public static float SpawnSlimePow => CAWorld.AnomalyUltramundane ? 0.5f : 0.3f;
 
@@ -213,7 +213,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
     }
 
 
-    #endregion 枚举、数值、属性、AI状态
+    #endregion 数据
 
     public override int ApplyingType => NPCID.KingSlime;
 
@@ -417,16 +417,11 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
             if (!TOWorld.GeneralClient)
                 return;
 
-            Vector2 spawnPosition = NPC.Top - new Vector2(0, NPC.height);
-
             if (OceanNPC.LifeRatio < 0.8f && !JewelEmeraldSpawned)
             {
-                NPC.NewNPCAction<KingSlimeJewelEmerald>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
+                NPC.NewNPCAction<KingSlimeJewelEmerald>(NPC.GetSource_FromAI(), GetSpawnPosition(), NPC.whoAmI, action: n =>
                 {
-                    n.Ocean().Master = NPC.whoAmI;
-                    n.netUpdate = true;
-                    SoundEngine.PlaySound(SoundID.Item38, spawnPosition);
-                    MakeJewelDust(n, 50);
+                    SpawnJewelAction(n);
                     JewelEmerald = n;
                     JewelEmeraldSpawned = true;
                 });
@@ -434,25 +429,19 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
 
             if (OceanNPC.LifeRatio < 0.6f && !JewelRubySpawned)
             {
-                NPC.NewNPCAction<KingSlimeJewelRuby>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
+                NPC.NewNPCAction<KingSlimeJewelRuby>(NPC.GetSource_FromAI(), GetSpawnPosition(), NPC.whoAmI, action: n =>
                 {
-                    n.Ocean().Master = NPC.whoAmI;
-                    n.netUpdate = true;
-                    SoundEngine.PlaySound(SoundID.Item38, spawnPosition);
-                    MakeJewelDust(n, 50);
+                    SpawnJewelAction(n);
                     JewelRuby = n;
                     JewelRubySpawned = true;
                 });
             }
 
-            if (OceanNPC.LifeRatio < 1f / 3f && !JewelSapphireSpawned)
+            if (OceanNPC.LifeRatio < 0.35f && !JewelSapphireSpawned)
             {
-                NPC.NewNPCAction<KingSlimeJewelSapphire>(NPC.GetSource_FromAI(), spawnPosition, NPC.whoAmI, action: n =>
+                NPC.NewNPCAction<KingSlimeJewelSapphire>(NPC.GetSource_FromAI(), GetSpawnPosition(), NPC.whoAmI, action: n =>
                 {
-                    n.Ocean().Master = NPC.whoAmI;
-                    n.netUpdate = true;
-                    SoundEngine.PlaySound(SoundID.Item38, spawnPosition);
-                    MakeJewelDust(n, 50);
+                    SpawnJewelAction(n);
                     JewelSapphire = n;
                     JewelSapphireSpawned = true;
                 });
@@ -463,13 +452,12 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
             if (distance >= distanceNeeded)
             {
                 LastSpawnSlimeLife = NPC.life;
-                int spawnAmount1 = Main.rand.Next(1, 3) + (int)Math.Pow(distance / distanceNeeded, Data.SpawnSlimePow);
-                int spawnAmount2 = CAWorld.AnomalyUltramundane ? Main.rand.Next(1, 2) : 0;
+                int spawnAmount1 = Main.rand.Next(1, 3) + Math.Clamp((int)Math.Pow(distance / distanceNeeded, Data.SpawnSlimePow), 0, 5);
 
                 for (int i = 0; i < spawnAmount1; i++)
                 {
-                    int minTypeChoice = (int)MathHelper.Lerp(i < 2 ? 0 : 5, 7f, 1f - OceanNPC.LifeRatio);
-                    int maxTypeChoice = (int)MathHelper.Lerp((float)7f, 9f, 1f - OceanNPC.LifeRatio);
+                    int minTypeChoice = (int)MathHelper.Lerp(i < 2 ? 0 : 5, 7f, OceanNPC.LifeRatioReverse);
+                    int maxTypeChoice = (int)MathHelper.Lerp(7f, 9f, OceanNPC.LifeRatioReverse);
                     int spawnType = Main.rand.Next(minTypeChoice, maxTypeChoice + 1) switch
                     {
                         0 => NPCID.GreenSlime,
@@ -487,20 +475,28 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
                     SpawnSlimeCore(spawnType);
                 }
 
-                //生成彩虹史莱姆
-                for (int i = 0; i < spawnAmount2; i++)
+                if (CAWorld.AnomalyUltramundane && Main.rand.NextProbability(0.6f)) //异象超凡模式下有60%概率生成一个彩虹史莱姆
                     SpawnSlimeCore(NPCID.RainbowSlime);
 
-                ///生成粉史莱姆
-                if (Main.rand.NextBool(4))
+                if (Main.rand.NextProbability(0.15f)) //15%概率生成一个粉史莱姆
                     SpawnSlimeCore(NPCID.Pinky);
+            }
+
+            Vector2 GetSpawnPosition() => NPC.Top - new Vector2(0, NPC.height);
+
+            void SpawnJewelAction(NPC n)
+            {
+                n.Ocean().Master = NPC.whoAmI;
+                n.netUpdate = true;
+                SoundEngine.PlaySound(SoundID.Item38, GetSpawnPosition());
+                MakeJewelDust(n, 50);
             }
 
             void SpawnSlimeCore(int type)
             {
-                int spawnZoneWidth = NPC.width - 32;
-                int spawnZoneHeight = NPC.height - 32;
-                Vector2 spawnPosition = new(NPC.position.X + Main.rand.NextFloat(spawnZoneWidth), NPC.position.Y + Main.rand.NextFloat(spawnZoneHeight));
+                float spawnZoneWidth = NPC.width / 2f - 16f;
+                float spawnZoneHeight = NPC.height - 32f;
+                Vector2 spawnPosition = new(NPC.Center.X + Main.rand.NextFloat(-spawnZoneWidth, spawnZoneWidth), NPC.Bottom.Y - Main.rand.NextFloat(spawnZoneHeight));
                 NPC.NewNPCAction(NPC.GetSource_FromAI(), spawnPosition, type, action: n =>
                 {
                     n.velocity = new Vector2(Main.rand.NextFloat(-1.5f, 1.5f), Main.rand.NextFloat(-3f, 3f));
@@ -539,11 +535,12 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
                 case 1: //上升
                 case 2: //下降
                     NPC.damage = NPC.defDamage;
-                    if (CurrentBehavior == Behavior.RapidJump_Phase1 || NPC.velocity.X * NPC.direction > 0.1f)
-                        NPC.velocity.X = Math.Min(Math.Abs(NPC.velocity.X) + GetDeltaVelocityX(), GetMaxVelocityX()) * Math.Sign(NPC.velocity.X);
-                    else
+                    bool rapidJump = CurrentBehavior == Behavior.RapidJump_Phase1;
+                    bool highJump = CurrentBehavior == Behavior.HighJump_Phase1;
+                    bool farAway = Math.Abs(NPC.Center.X - Target.Center.X) > (rapidJump ? 2000f : 1000f);
+                    if (NPC.velocity.X * NPC.direction <= 0.1f && farAway) //跳跃过度时调整水平速度
                     {
-                        NPC.velocity.X *= 0.93f;
+                        NPC.velocity.X *= rapidJump ? 0.99f : highJump ? 0.945f : 0.965f;
                         switch (Math.Abs(NPC.velocity.X))
                         {
                             case < 0.1f:
@@ -551,10 +548,12 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
                                 NPC.velocity.X += GetDeltaVelocityX() * NPC.direction;
                                 break;
                             case > 0.25f:
-                                NPC.velocity.X -= 0.2f * Math.Sign(NPC.velocity.X);
+                                NPC.velocity.X -= (rapidJump ? 0.005f : highJump ? 0.0125f : 0.0075f) * Math.Sign(NPC.velocity.X);
                                 break;
                         }
                     }
+                    else
+                        NPC.velocity.X = Math.Min(Math.Abs(NPC.velocity.X) + GetDeltaVelocityX(), GetMaxVelocityX()) * Math.Sign(NPC.velocity.X);
                     switch (CurrentAttackPhase)
                     {
                         case 1:
@@ -564,7 +563,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
                         case 2:
                             if (NPC.velocity.Y == 0f)
                             {
-                                TeleportTimer += CurrentBehavior == Behavior.HighJump_Phase1 ? 300f : 100f;
+                                TeleportTimer += highJump ? 300f : 100f;
                                 SelectNextAttack(CurrentBehavior == Behavior.RapidJump_Phase1 ? (int)MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 10 : 20, CAWorld.AnomalyUltramundane ? 7.5f : 12.5f, OceanNPC.LifeRatioReverse) : 0);
                             }
                             else
@@ -605,8 +604,8 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
                 _ => ChangedVelocityDirectionDuringJump switch
                 {
                     0 => 12.5f,
-                    1 => 8f,
-                    _ => 6.5f
+                    1 => 5f,
+                    _ => 1.5f
                 }
             };
 
@@ -615,14 +614,14 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
                 Behavior.RapidJump_Phase1 => ChangedVelocityDirectionDuringJump switch
                 {
                     0 => 0.8f,
-                    1 => 0.55f,
-                    _ => 0.35f
+                    1 => 0.4f,
+                    _ => 0.25f
                 },
                 _ => ChangedVelocityDirectionDuringJump switch
                 {
                     0 => 0.5f,
-                    1 => 0.4f,
-                    _ => 0.25f
+                    1 => 0.25f,
+                    _ => 0.15f
                 }
             };
         }
@@ -634,8 +633,8 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
             {
                 case 0: //寻的
                     Vector2? destination = null;
-                    //Vector2 randomDefault = Main.rand.NextBool() ? Vector2.UnitX : -Vector2.UnitX;
                     Vector2 vectorAimedAheadOfTarget = Target.Center + new Vector2(MathF.Round(Target.velocity.X / 2f), 0f).ToCustomLength(800f);
+                    //目标点
                     Point predictiveTeleportPoint = vectorAimedAheadOfTarget.ToTileCoordinates();
                     predictiveTeleportPoint.X = Math.Clamp(predictiveTeleportPoint.X, 10, Main.maxTilesX - 10);
                     predictiveTeleportPoint.Y = Math.Clamp(predictiveTeleportPoint.Y, 10, Main.maxTilesY - 10);
@@ -648,8 +647,7 @@ public class AnomalyKingSlime : AnomalyNPCBehavior
                         Tile potentialTile = Main.tile[teleportTileX, teleportTileY];
                         if (!potentialTile.HasUnactuatedTile)
                         {
-                            if (potentialTile.LiquidType != LiquidID.Lava
-                                && Collision.CanHitLine(NPC.Center, 0, 0, predictiveTeleportPoint.ToVector2() * 16, 0, 0))
+                            if (potentialTile.LiquidType != LiquidID.Lava && Collision.CanHitLine(NPC.Center, 0, 0, predictiveTeleportPoint.ToVector2() * 16, 0, 0))
                             {
                                 destination = new Vector2((teleportTileX + 0.5f) * 16f, (teleportTileY + 1f) * 16f);
                                 break; //在此处退出循环

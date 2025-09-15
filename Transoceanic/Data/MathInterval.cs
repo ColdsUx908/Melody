@@ -95,14 +95,10 @@ public struct MathInterval : IEquatable<MathInterval>
         && Right == other.Right
         && LeftInclusive == other.LeftInclusive
         && RightInclusive == other.RightInclusive;
-
-    public override readonly bool Equals(object obj) => obj is MathInterval other && Equals(other);
-
-    public override readonly int GetHashCode() => HashCode.Combine(Left, Right, LeftInclusive, RightInclusive);
-
+    public override readonly bool Equals([NotNullWhen(true)] object obj) => obj is MathInterval other && Equals(other);
     public static bool operator ==(MathInterval left, MathInterval right) => left.Equals(right);
-
     public static bool operator !=(MathInterval left, MathInterval right) => !(left == right);
+    public override readonly int GetHashCode() => HashCode.Combine(Left, Right, LeftInclusive, RightInclusive);
 
     /// <summary>
     /// 检查当前区间是否与另一个区间有重叠。

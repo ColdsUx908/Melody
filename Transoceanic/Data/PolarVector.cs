@@ -5,34 +5,50 @@ namespace Transoceanic.Data;
 /// <summary>
 /// 二维极坐标向量 (ρ, θ)。
 /// </summary>
-public readonly struct PolarVector2 : IEquatable<PolarVector2>
+public struct PolarVector2 : IEquatable<PolarVector2>
 {
     /// <summary>
     /// 模长。
     /// <br/>非负。
     /// </summary>
-    public readonly float Radius;
+    public float Radius;
 
     /// <summary>
     /// 角度。
     /// <br/>范围为 [0, 2π)。
     /// </summary>
-    public readonly float Angle;
+    public float Angle
+    {
+        get;
+        set => field = TOMathHelper.NormalizeAngle(value);
+    }
 
     /// <summary>
     /// 角度（角度制）值。
     /// </summary>
-    public float AngleInDegree => MathHelper.ToDegrees(Angle);
+    public float AngleInDegree
+    {
+        readonly get => MathHelper.ToDegrees(Angle);
+        set => Angle = MathHelper.ToRadians(value);
+    }
 
     /// <summary>
     /// 角度除以Pi的值。
     /// </summary>
-    public float AngleOverPi => Angle / MathHelper.Pi;
+    public float AngleOverPi
+    {
+        readonly get => Angle / MathHelper.Pi;
+        set => Angle = value * MathHelper.Pi;
+    }
 
     /// <summary>
     /// 角度除以2Pi的值。
     /// </summary>
-    public float AngleOverPeriod => Angle / MathHelper.TwoPi;
+    public float AngleOverPeriod
+    {
+        readonly get => Angle / MathHelper.TwoPi;
+        set => Angle = value * MathHelper.TwoPi;
+    }
 
     /// <summary>
     /// 构造一个极坐标向量 (ρ, θ)。
@@ -49,7 +65,7 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
                 < 0f => throw new ArgumentOutOfRangeException(nameof(radius), radius, "Radius negative"),
                 _ => throw new NotFiniteNumberException("Radius not finite.")
             };
-            Angle = radius == 0f ? 0f : TOMathHelper.NormalizeAngle(angle); //零向量的角度强制为0
+            Angle = radius == 0f ? 0f : angle; //零向量的角度强制为0
         }
         catch (Exception e)
         {
@@ -85,7 +101,7 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
     /// </summary>
     /// <param name="radius"></param>
     /// <param name="angle"></param>
-    public void Deconstruct(out float radius, out float angle) => (radius, angle) = (Radius, Angle);
+    public readonly void Deconstruct(out float radius, out float angle) => (radius, angle) = (Radius, Angle);
 
     /// <summary>
     /// 将直角向量转换为极坐标向量。
@@ -177,7 +193,7 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
         _ => a * (1 / b)
     };
 
-    public PolarVector2 RotatedBy(float offset) => new(Radius, Angle + offset);
+    public readonly PolarVector2 RotatedBy(float offset) => new(Radius, Angle + offset);
 
     /// <summary>
     /// 获取极坐标向量夹角。
@@ -200,21 +216,17 @@ public readonly struct PolarVector2 : IEquatable<PolarVector2>
         };
     }
 
-    public override bool Equals([NotNullWhen(true)] object obj) => obj is PolarVector2 other && Equals(other);
-
-    public bool Equals(PolarVector2 other) => Radius == other.Radius && Angle == other.Angle;
-
-    public override int GetHashCode() => HashCode.Combine(Radius, Angle);
-
+    public override readonly bool Equals([NotNullWhen(true)] object obj) => obj is PolarVector2 other && Equals(other);
+    public readonly bool Equals(PolarVector2 other) => Radius == other.Radius && Angle == other.Angle;
+    public override readonly int GetHashCode() => HashCode.Combine(Radius, Angle);
     public static bool operator ==(PolarVector2 left, PolarVector2 right) => left.Equals(right);
-
     public static bool operator !=(PolarVector2 left, PolarVector2 right) => !(left == right);
 
     /// <summary>
     /// 获取字符串表示形式。
     /// </summary>
     /// <returns></returns>
-    public override string ToString() => $"({Radius}, {Angle})";
+    public override readonly string ToString() => $"PolarVector2 {{ Radius: {Radius}, Angle: {Angle} }}";
 
     /// <summary>
     /// 极坐标向量点乘。

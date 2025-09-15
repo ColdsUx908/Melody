@@ -5839,13 +5839,17 @@ public abstract class CustomSkyDetour<T> : GameEffectDetour<T> where T : CustomS
     }
 }
 
-internal sealed class TypeDetourUpdateReminder : IResourceLoader
+internal sealed class TypeDetourUpdateReminder : IUpdateReminder
 {
-    private readonly record struct DetourTypeContainer(Type Source, Type Target, Predicate<MethodInfo> SourceIgnore = null, Predicate<MethodInfo> TargetIgnore = null)
+    private static bool DefaultDetourMatch(MethodInfo sourceMethod, MethodInfo targetMethod) => sourceMethod.Name == targetMethod.Name;
+    private static bool DetourMatch(MethodInfo sourceMethod, MethodInfo targetMethod) => TODetourUtils.EvaluateDetourName(targetMethod, out string sourceNameGot) && sourceNameGot == sourceMethod.Name;
+    private static bool ShouldMethodBeChecked(MethodInfo method) => method.IsRealVirtualOrAbstract && !method.IsGenericMethod && !method.HasAttribute<ObsoleteAttribute>() && method.CanBeAccessedOutsideAssembly;
+
+    private readonly record struct DetourTypeContainer(Type Source, Type Target, Func<MethodInfo, bool> SourceIgnore = null, Func<MethodInfo, bool> TargetIgnore = null)
     {
         public (List<string> sourceMissing, List<string> targetMissing) CompareVirtualMethods(Func<MethodInfo, MethodInfo, bool> match)
         {
-            match ??= (s, t) => s == t;
+            match ??= DefaultDetourMatch;
             List<string> sourceMissing = [];
             List<string> targetMissing = [];
             IEnumerable<MethodInfo> sourceMethods = Source.GetRealMethods(TOReflectionUtils.InstanceBindingFlags).Where(ShouldMethodBeChecked);
@@ -5868,7 +5872,7 @@ internal sealed class TypeDetourUpdateReminder : IResourceLoader
         }
     }
 
-    void IResourceLoader.PostSetupContent()
+    Action IUpdateReminder.RegisterUpdateReminder()
     {
         bool hasWarn = false;
 
@@ -5949,14 +5953,10 @@ internal sealed class TypeDetourUpdateReminder : IResourceLoader
 
         if (hasWarn)
         {
-            TOUpdateReminder.UpdateReminder += () => TOLocalizationUtils.ChatLiteralText("TypeDetour.cs", TOMain.TODebugWarnColor, Main.LocalPlayer);
             TOMain.Instance.Logger.Warn(builder.ToString());
+            return () => TOLocalizationUtils.ChatLiteralText("TypeDetour.cs", TOMain.TODebugWarnColor, Main.LocalPlayer);
         }
+        else
+            return null;
     }
-
-    private static bool DetourMatch(MethodInfo sourceMethod, MethodInfo targetMethod) =>
-        TODetourUtils.EvaluateDetourName(targetMethod, out string sourceNameGot) && sourceNameGot == sourceMethod.Name;
-
-    private static bool ShouldMethodBeChecked(MethodInfo method) =>
-        method.IsRealVirtualOrAbstract && !method.IsGenericMethod && !method.HasAttribute<ObsoleteAttribute>() && method.CanBeAccessedOutsideAssembly;
 }

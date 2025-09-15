@@ -1,6 +1,6 @@
 ﻿namespace Transoceanic.Data.Geometry;
 
-public struct Line
+public struct Line : IEquatable<Line>
 {
     public float A; // x 系数
     public float B; // y 系数
@@ -11,6 +11,19 @@ public struct Line
     /// </summary>
     public Line(float a, float b, float c)
     {
+        if (a == 0 && b == 0)
+            throw new ArgumentException("A and B cannot be both zero.");
+        if (a < 0)
+        {
+            a = -a;
+            b = -b;
+            c = -c;
+        }
+        else if (a == 0 && b < 0)
+        {
+            b = -b;
+            c = -c;
+        }
         A = a;
         B = b;
         C = c;
@@ -50,12 +63,18 @@ public struct Line
     public static Line FromNormalAndPoint(Vector2 normal, Vector2 point) =>
         // 法向量为(A, B)，点(x0, y0)满足 Ax0 + By0 + C = 0
         // 所以 C = - (A*x0 + B*y0)
-        new Line(normal.X, normal.Y, -Vector2.Dot(normal, point));
+        new(normal.X, normal.Y, -Vector2.Dot(normal, point));
 
     /// <summary>
     /// 从线段创建直线。
     /// </summary>
     public static Line FromSegment(LineSegment segment) => FromTwoPoints(segment.Start, segment.End);
+
+    public readonly Line Normalize()
+    {
+        float length = MathF.Sqrt(A * A + B * B);
+        return length > 0 ? new Line(A / length, B / length, C / length) : this;
+    }
 
     /// <summary>
     /// 获取直线的斜率（如果不是垂直线）。
@@ -126,34 +145,49 @@ public struct Line
     /// </summary>
     public readonly float DistanceToPoint(Vector2 point) => Math.Abs(A * point.X + B * point.Y + C) / (float)Math.Sqrt(A * A + B * B);
 
+    public readonly bool Equals(Line other)
+    {
+        Line thisNormalized = Normalize();
+        Line otherNormalized = other.Normalize();
+        return Math.Abs(thisNormalized.A - otherNormalized.A) < float.Epsilon
+            && Math.Abs(thisNormalized.B - otherNormalized.B) < float.Epsilon
+            && Math.Abs(thisNormalized.C - otherNormalized.C) < float.Epsilon;
+    }
+    public override readonly bool Equals([NotNullWhen(true)] object obj) => obj is Line other && Equals(other);
+    public static bool operator ==(Line left, Line right) => left.Equals(right);
+    public static bool operator !=(Line left, Line right) => !(left == right);
+    public override readonly int GetHashCode()
+    {
+        Line tempThis = Normalize();
+        return HashCode.Combine(tempThis.A, tempThis.B, tempThis.C);
+    }
+
     /// <summary>
-    /// 转换为字符串表示
+    /// 转换为字符串表示。
     /// </summary>
     public override readonly string ToString()
     {
-        string aStr = FormatCoefficient(A, "x");
-        string bStr = FormatCoefficient(B, "y");
-        string cStr = FormatConstant(C);
-
-        return $"{aStr}{bStr}{cStr} = 0";
-
-        static string FormatCoefficient(float coeff, string variable)
+        string a = A switch
         {
-            if (Math.Abs(coeff) == 0)
-                return "";
-
-            string sign = coeff < 0 ? "-" : "";
-            string absValue = Math.Abs(Math.Abs(coeff) - 1) < float.Epsilon ? "" : Math.Abs(coeff).ToString("0.##");
-
-            return $"{sign}{absValue}{variable}";
-        }
-
-        static string FormatConstant(float constant)
+            0 => "",
+            1f => "x",
+            -1f => "-x",
+            _ => $"{A:0.##}x",
+        };
+        string b = B switch
         {
-            if (Math.Abs(constant) == 0)
-                return "";
-
-            return constant < 0 ? $" - {Math.Abs(constant):0.##}" : $" + {constant:0.##}";
-        }
+            0 => "",
+            1f => a != "" ? " + y" : "y",
+            -1f => a != "" ? " - y" : "-y",
+            > 0 => a != "" ? $" + {B:0.##}y" : $"{B:0.##}y",
+            _ => a != "" ? $"- {-B:0.##}y" : $"{B:0.##}y",
+        };
+        string c = C switch
+        {
+            0 => a != "" && b != "" ? "0" : "",
+            > 0 => a != "" || b != "" ? $" + {C:0.##}" : $"{C:0.##}",
+            _ => a != "" || b != "" ? $" - {-C:0.##}" : $"{C:0.##}",
+        };
+        return $"Line {{ {a}{b}{c} = 0 }}";
     }
 }
