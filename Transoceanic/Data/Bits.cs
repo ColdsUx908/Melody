@@ -1,6 +1,4 @@
-﻿using Transoceanic.Core.Utilities;
-
-namespace Transoceanic.Data;
+﻿namespace Transoceanic.Data;
 
 public struct Bits32 : IEquatable<Bits32>
 {

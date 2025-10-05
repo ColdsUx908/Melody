@@ -253,8 +253,6 @@ public abstract class CASingleItemBehavior : SingleItemBehavior
     /// </summary>
     /// <param name="baseDR">由灾厄方法计算出的基础DR。</param>
     public virtual void ModifyHitNPC_DR(NPC target, Player player, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
-
-    public void ApplyCATweakColorToDamage() => OceanItem.TooltipDictionary.Modify(null, "Damage", l => l.OverrideColor = CAMain.GetGradientColor(0.25f));
 }
 
 public abstract class CASingleItemBehavior<T> : CASingleItemBehavior where T : ModItem
@@ -319,13 +317,8 @@ public sealed class CASingleItemBehaviorHandler : SingleItemBehaviorHandler<CASi
     {
         if (TryGetBehavior(item, out CASingleItemBehavior itemBehavior))
         {
-            CAItemTooltipModifier.Instance.Update(tooltips);
             itemBehavior.ModifyTooltips(tooltips);
-            CAItemTooltipModifier.Instance.AddCATooltip(l =>
-            {
-                l.Text = Language.GetTextValue(CAMain.TweakLocalizationPrefix + "TweakIdentifier");
-                l.OverrideColor = TOMain.CelestialColor;
-            });
+            new CAItemTooltipModifier(item, tooltips).AddCATooltip(Language.GetTextValue(CAMain.TweakLocalizationPrefix + "TweakIdentifier"), TOMain.CelestialColor);
         }
     }
 }

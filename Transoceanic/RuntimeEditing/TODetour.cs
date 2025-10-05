@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.ComponentModel;
 using MonoMod.RuntimeDetour;
-using Transoceanic.Core.Utilities;
 
 namespace Transoceanic.RuntimeEditing;
 
@@ -283,12 +282,19 @@ public static partial class TODetourUtils
     [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern = """^{0}(?<methodName>[\S]*?)(?:__[\S]*)?$""";
     [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern2 = """^{0}(?<typeName>[\S]*?)__(?<methodName>[\S]*?)(?:__[\S]*)?$""";
 
+    /// <summary>
+    /// 默认Detour方法名正则表达式。
+    /// </summary>
+    /// <inheritdoc cref = "GetDefaultDetourNameRegex" />
     private static readonly Regex _defaultDetourNameRegex = GetDefaultDetourNameRegex();
-    private static readonly Regex _defaultDetourNameRegex2 = GetDefaultDetourNameRegex2();
-
     [GeneratedRegex("""^Detour_(?<methodName>[\S]*?)(?:__[\S]*)?$""")]
     private static partial Regex GetDefaultDetourNameRegex();
 
+    /// <summary>
+    /// 默认Detour方法名（含类型）正则表达式。
+    /// </summary>
+    /// <inheritdoc cref = "GetDefaultDetourNameRegex2" />
+    private static readonly Regex _defaultDetourNameRegex2 = GetDefaultDetourNameRegex2();
     [GeneratedRegex("""^Detour_(?<typeName>[\S]*?)__(?<methodName>[\S]*?)(?:__[\S]*)?$""")]
     private static partial Regex GetDefaultDetourNameRegex2();
 

@@ -1,6 +1,4 @@
-﻿using Transoceanic.Core.Utilities;
-
-namespace Transoceanic.Data;
+﻿namespace Transoceanic.Data;
 
 public abstract class ModDOT : ModBuff
 {

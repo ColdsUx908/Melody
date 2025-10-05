@@ -29,13 +29,12 @@ global using Terraria.ModLoader.IO;
 global using Terraria.Utilities;
 global using Transoceanic;
 global using Transoceanic.Core;
-global using Transoceanic.Core.Extensions;
-global using Transoceanic.Core.Utilities;
 global using Transoceanic.Data;
+global using Transoceanic.Extensions;
 global using Transoceanic.GlobalInstances;
 global using Transoceanic.Localization;
 global using Transoceanic.RuntimeEditing;
-global using Transoceanic.Visual;
+global using Transoceanic.Utilities;
 global using ZLinq;
 global using CalamityMod_ = CalamityMod.CalamityMod;
 using CalamityAnomalies.ModCompatibility;
@@ -119,16 +118,13 @@ public sealed class CAMain : Mod, IResourceLoader
 
     public static readonly List<Color> ColorList = [MainColor, SecondaryColor, MainColor];
 
-    public static Color GetGradientColor(float ratio = 0.5f) => ColorList.LerpMany(TOMathHelper.GetTimeSin(ratio / 2f, unsigned: true));
+    public static Color GetGradientColor(float ratio = 0.5f) => Color.LerpMany(ColorList, TOMathHelper.GetTimeSin(ratio / 2f, unsigned: true));
 
     public const string ModLocalizationPrefix = "Mods.CalamityAnomalies.";
-
+    public const string AnomalyLocalizationPrefix = ModLocalizationPrefix + "Anomaly.";
     public const string TweakLocalizationPrefix = ModLocalizationPrefix + "Tweaks.";
-
     public const string CalamityModLocalizationPrefix = "Mods.CalamityMod.";
-
     public const string CalamityInvisibleProj = "CalamityMod/Projectiles/InvisibleProj";
-
     public const string CATexturePath = "CalamityAnomalies/Assets/Textures/";
 
     public static readonly Color AnomalyUltramundaneColor = new(0xE8, 0x97, 0xFF);

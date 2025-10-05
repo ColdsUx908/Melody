@@ -17,9 +17,9 @@ public sealed class TOWorld : ModSystem
 
     public static TerrariaTimer GameTimer { get; internal set; }
 
-    public static double Time24Hour { get; internal set; }
+    public static double Time24Hour => Main.dayTime ? 4.5 + Main.time / 3600.0 : (19.5 + Main.time / 3600.0) % 24.0;
 
-    public static TerrariaTime TerrariaTime { get; internal set; }
+    public static TerrariaTime TerrariaTime => new(Time24Hour, Main.GetMoonPhase());
 
     public static bool TrueMasterMode { get; internal set; }
 
@@ -38,8 +38,6 @@ public sealed class TOWorld : ModSystem
     public override void PreUpdateEntities()
     {
         GameTimer++;
-        Time24Hour = (Main.dayTime ? 4.5 : 19.5) + Main.time / 3600.0;
-        TerrariaTime = new(Time24Hour, Main.GetMoonPhase());
 
         GameModeData gameModeInfo = Main_Publicizer._currentGameModeInfo;
         TrueMasterMode = gameModeInfo.IsMasterMode;

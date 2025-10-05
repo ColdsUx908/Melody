@@ -4,6 +4,14 @@ public sealed class CAGlobalNPC : GlobalNPC, IResourceLoader
 {
     public override bool InstancePerEntity => true;
 
+#if DEBUG
+    /// <summary>
+    /// 调试用数据。
+    /// <br/>不同实体可能会有不同的用途。
+    /// </summary>
+    public readonly Union64 DebugData = new();
+#endif
+
     private const int AISlot = 33;
     private const int AISlot2 = 17;
     private const int AISlot3 = 132;

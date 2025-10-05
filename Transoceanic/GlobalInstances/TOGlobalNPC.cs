@@ -160,22 +160,29 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
 
     public float LifeRatioReverse => 1f - LifeRatio;
 
-    public int Master
+    public int MasterIndex
     {
         get => OceanAI32[4].i;
         set
         {
-            if (OceanAI32[4].i != value)
+            int temp = value >= 0 && value <= Main.maxNPCs ? value : Main.maxNPCs;
+            if (OceanAI32[4].i != temp)
             {
-                OceanAI32[4].i = value;
+                OceanAI32[4].i = temp;
                 AIChanged32[4] = true;
             }
         }
     }
 
+    public NPC Master
+    {
+        get => MasterIndex >= 0 && MasterIndex < Main.maxNPCs ? Main.npc[MasterIndex] : null;
+        set => MasterIndex = value?.whoAmI ?? Main.maxNPCs;
+    }
+
     public bool TryGetMaster(out NPC master)
     {
-        NPC temp = Main.npc[Master];
+        NPC temp = Main.npc[MasterIndex];
         if (temp.active)
         {
             master = temp;
@@ -187,7 +194,7 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
 
     public bool TryGetMaster(int masterType, out NPC master)
     {
-        NPC temp = Main.npc[Master];
+        NPC temp = Main.npc[MasterIndex];
         if (temp.active && temp.type == masterType)
         {
             master = temp;

@@ -361,6 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/TransoceanicHelper/*
+/CelessTest/*
 /Melody.sln
 /tModLoader.targets

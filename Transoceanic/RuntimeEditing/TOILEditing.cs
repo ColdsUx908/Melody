@@ -1,6 +1,5 @@
 ﻿using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
-using Transoceanic.Core.Utilities;
 
 namespace Transoceanic.RuntimeEditing;
 
@@ -14,7 +13,7 @@ public class CustomManipulatorPrefixAttribute : Attribute
 
 /// <summary>
 /// 用于标记不在IL编辑类中的方法是IL编辑方法。
-/// <br/>若目标类不是静态类，则建议使用 <see cref="DetourMethodToAttribute{T}"/>。
+/// <br/>若目标类不是静态类，则建议使用 <see cref="ILEditingMethodToAttribute{T}"/>。
 /// <remarks>注意：在IL编辑类中应用该特性会使IL编辑方法重复应用。</remarks>
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
@@ -29,7 +28,7 @@ public class ILEditingMethodToAttribute : Attribute
 /// 用于标记不在IL编辑中的方法是IL方法。
 /// <remarks>注意：在IL编辑类中应用该特性会使IL编辑方法重复应用，很可能会导致问题。</remarks>
 /// </summary>
-public class ILEditingMethodToAttribute<T> : DetourMethodToAttribute
+public class ILEditingMethodToAttribute<T> : ILEditingMethodToAttribute
 {
     public ILEditingMethodToAttribute() : base(typeof(T)) { }
 }
@@ -58,8 +57,11 @@ public static partial class TOILEditingUtils
 {
     [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern = """^{0}(?<methodName>[\S]*?)(?:__[\S]*)?$""";
 
+    /// <summary>
+    /// 默认IL编辑方法正则表达式。
+    /// </summary>
+    /// <inheritdoc cref = "GetDefaultManipulatorNameRegex" />
     private static readonly Regex _defaultManipulatorNameRegex = GetDefaultManipulatorNameRegex();
-
     [GeneratedRegex("""^IL_(?<methodName>[\S]*)$""")]
     private static partial Regex GetDefaultManipulatorNameRegex();
 
@@ -87,14 +89,16 @@ public static partial class TOILEditingUtils
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(manipMethod);
+        ILContext.Manipulator manipulator;
         try
         {
-            return CreateILHook(source, manipMethod.CreateDelegate<ILContext.Manipulator>(), manipMethod);
+            manipulator = manipMethod.CreateDelegate<ILContext.Manipulator>();
         }
         catch (ArgumentException e)
         {
             throw new ArgumentException("The provided method's signature is not compatible with the delegate type ILContext.Manipulator.", nameof(manipMethod), e);
         }
+        return CreateILHook(source, manipulator, manipMethod);
     }
 
     public static ILHook Modify(Type sourceType, string sourceName, ILContext.Manipulator manip) => Modify(sourceType.GetMethod(sourceName, TOReflectionUtils.UniversalBindingFlags), manip);

@@ -25,6 +25,10 @@ public static class CAUtils
             throw new InvalidOperationException(message);
     }
 
+    public static TooltipLine CreateNewTooltipLine(int num, string text) => new(CAMain.Instance, $"Tooltip{num}", text);
+
+    public static TooltipLine CreateNewTooltipLine(int num, string text, Color color) => new(CAMain.Instance, $"Tooltip{num}", text) { OverrideColor = color };
+
     public static TooltipLine CreateNewTooltipLine(int num, Action<TooltipLine> action)
     {
         TooltipLine newLine = new(CAMain.Instance, $"Tooltip{num}", "");

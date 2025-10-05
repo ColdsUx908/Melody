@@ -1,9 +1,4 @@
-DimensionalTorn: {
-	DisplayName: Dimensional Torn
-	Description: The cost of transcending the bounds of space is losing control over reality
-}
-
 DimensionalRend: {
 	DisplayName: Dimensional Rend
-	Description: Mods.CalamityAnomalies.Buffs.DimensionalRend.Description
+	Description: The cost of transcending the bounds of space is losing control over reality
 }

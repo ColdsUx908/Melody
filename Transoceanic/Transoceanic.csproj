@@ -17,6 +17,9 @@
 	  <DebugType>embedded</DebugType>
 	</PropertyGroup>
 	<ItemGroup>
+	  <None Remove="Utilities\xmdhclh2.i1j~" />
+	</ItemGroup>
+	<ItemGroup>
 	  <PackageReference Include="ZLinq" Version="1.4.9" />
 	</ItemGroup>
 

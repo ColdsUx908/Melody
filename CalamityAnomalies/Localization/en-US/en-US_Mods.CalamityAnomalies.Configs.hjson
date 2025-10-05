@@ -6,3 +6,12 @@ CAServerConfig: {
 		Tooltip: Enable or disable the content provided by the Calamity Anomalies mod.
 	}
 }
+
+CAClientConfig: {
+	DisplayName: Client Settings
+
+	AuxiliaryVisualEffects: {
+		Label: Auxiliary Visual Effects
+		Tooltip: Auxiliary visual effects that may help indicate certain behaviors or states of entities.
+	}
+}

@@ -221,4 +221,6 @@ public struct MathInterval : IEquatable<MathInterval>
     public static MathInterval PositiveReals => new(0, float.PositiveInfinity, false, false);
     public static MathInterval NegativeReals => new(float.NegativeInfinity, 0, false, false);
     public static MathInterval UnitInterval => new(0, 1, true, true);
+
+    public readonly float GetRandomValue(UnifiedRandom rand) => rand.NextFloat(Left, Right);
 }

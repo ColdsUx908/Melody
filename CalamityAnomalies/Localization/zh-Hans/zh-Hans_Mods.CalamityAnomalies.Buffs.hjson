@@ -1,9 +1,4 @@
-DimensionalTorn: {
-	DisplayName: ά��˺��
-	Description: ��Խ�ռ������Ĵ��ۣ���ʧȥ����ʵ�Ŀ���
-}
-
 DimensionalRend: {
-	// DisplayName: Dimensional Rend
-	// Description: Mods.CalamityAnomalies.Buffs.DimensionalRend.Description
+	DisplayName: 维度撕裂
+	Description: 失去对真实的控制，是超越空间界限的代价
 }

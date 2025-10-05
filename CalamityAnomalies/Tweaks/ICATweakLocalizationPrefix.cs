@@ -42,5 +42,5 @@ internal interface ICATweakLocalizationPrefix : ILocalizationPrefix
         CATweakPhase.PostYharon => "5.2.",
         CATweakPhase.Focus => "6.",
         _ => ""
-    } + Name + ".";
+    } + Name;
 }

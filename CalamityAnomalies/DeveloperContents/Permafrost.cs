@@ -56,7 +56,7 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
             Color.LightSkyBlue
         ];
 
-        public static Color NameColor => NameColors.LerpMany(TOMathHelper.GetTimeSin(0.5f, 0.6f, 0f, true));
+        public static Color NameColor => Color.LerpMany(NameColors, TOMathHelper.GetTimeSin(0.5f, 0.6f, 0f, true));
 
         public const float DespawnDistance = 15000f;
 
@@ -98,7 +98,7 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
 
     #endregion 枚举、数值、属性、AI状态
 
-    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "DeveloperContents.Permafrost.";
+    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "DeveloperContents.Permafrost";
 
     public override decimal Priority => 935m; //ICE
 
@@ -109,7 +109,6 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
         NPC.dontTakeDamage = true;
     }
 
-    #region AI
     public override bool PreAI()
     {
         StartUp();
@@ -122,250 +121,248 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
         }
 
         return false;
-    }
 
-    public void StartUp()
-    {
-        NPC.damage = 0;
-
-        ModNPC.FrameType = FrameAnimationType.UpwardDraft;
-        ModNPC.FrameChangeSpeed = 0.15f;
-
-        CalamityGlobalNPC.SCal = NPC.whoAmI;
-        ModNPC.HandleMusicVariables();
-
-        if (Main.slimeRain)
+        void StartUp()
         {
-            Main.StopSlimeRain(true);
-            CalamityNetcode.SyncWorld();
-        }
+            NPC.damage = 0;
 
-        if (CalamityConfig.Instance.BossesStopWeather)
-            CalamityMod_.StopRain();
+            ModNPC.FrameType = FrameAnimationType.UpwardDraft;
+            ModNPC.FrameChangeSpeed = 0.15f;
 
-        #region 目标与脱战
-        if (!NPC.TargetClosestIfInvalid(true, Data.DespawnDistance))
-        {
-            if (SoundEngine.TryGetActiveSound(ModNPC.BulletHellRumbleSlot, out ActiveSound rumbleSound) && rumbleSound.IsPlaying)
-                rumbleSound.Stop();
+            CalamityGlobalNPC.SCal = NPC.whoAmI;
+            ModNPC.HandleMusicVariables();
 
-            ModNPC.canDespawn = true;
-
-            NPC.Opacity = MathHelper.Lerp(NPC.Opacity, 0f, 0.065f);
-            NPC.velocity = Vector2.Lerp(Vector2.UnitY * -4f, Vector2.Zero, (float)Math.Sin(MathHelper.Pi * NPC.Opacity));
-            ModNPC.forcefieldOpacity = Utils.GetLerpValue(0.3f, 1f, NPC.Opacity, true);
-            if (NPC.alpha >= 230)
+            if (Main.slimeRain)
             {
-                if (DownedBossSystem.downedCalamitas)
-                {
-                    // Create a teleport line effect
-                    Dust.QuickDustLine(NPC.Center, ModNPC.initialRitualPosition, 500f, Color.Cyan);
-                    NPC.Center = ModNPC.initialRitualPosition;
-
-                    // Make the town NPC spawn.
-                    if (Main.netMode != NetmodeID.MultiplayerClient)
-                        NPC.NewNPCAction<DILF>(NPC.GetSource_FromAI(), NPC.Center + new Vector2(0f, 12f));
-                }
-
-                NPC.active = false;
-                NPC.netUpdate = true;
+                Main.StopSlimeRain(true);
+                CalamityNetcode.SyncWorld();
             }
 
-            for (int i = 0; i < MathHelper.Lerp(2f, 6f, 1f - NPC.Opacity); i++)
+            if (CalamityConfig.Instance.BossesStopWeather)
+                CalamityMod_.StopRain();
+
+            #region 目标与脱战
+            if (!NPC.TargetClosestIfInvalid(true, Data.DespawnDistance))
             {
-                Dust.NewDustPerfectAction(NPC.Center + Main.rand.NextVector2Square(-24f, 24f), DustID.BlueTorch, iceFire =>
+                if (SoundEngine.TryGetActiveSound(ModNPC.BulletHellRumbleSlot, out ActiveSound rumbleSound) && rumbleSound.IsPlaying)
+                    rumbleSound.Stop();
+
+                ModNPC.canDespawn = true;
+
+                NPC.Opacity = MathHelper.Lerp(NPC.Opacity, 0f, 0.065f);
+                NPC.velocity = Vector2.Lerp(Vector2.UnitY * -4f, Vector2.Zero, (float)Math.Sin(MathHelper.Pi * NPC.Opacity));
+                ModNPC.forcefieldOpacity = Utils.GetLerpValue(0.3f, 1f, NPC.Opacity, true);
+                if (NPC.alpha >= 230)
                 {
-                    iceFire.velocity = Vector2.UnitY * -Main.rand.NextFloat(2f, 3.25f);
-                    iceFire.color = Color.Cyan;
-                    iceFire.scale = Main.rand.NextFloat(0.95f, 1.15f);
-                    iceFire.noGravity = true;
-                });
-            }
-        }
-        else
-            ModNPC.canDespawn = false;
-        #endregion 目标与脱战
-
-        #region 判定方向
-        bool currentlyCharging = NPC.ai[1] == 2f;
-        if (!currentlyCharging && Math.Abs(Target.Center.X - NPC.Center.X) > 16f)
-            NPC.spriteDirection = (Target.Center.X < NPC.Center.X).ToDirectionInt();
-        #endregion 判定方向
-
-        #region 力场和护盾
-        // Shield effect rotation
-        ModNPC.rotateToPlayer = ModNPC.rotateToPlayer.AngleLerp((Target.Center - NPC.Center).SafeNormalize(Vector2.UnitY).ToRotation() + MathHelper.PiOver2, 0.04f);
-        ModNPC.rotateAwayPlayer = ModNPC.rotateAwayPlayer.AngleLerp((Target.Center - NPC.Center).SafeNormalize(Vector2.UnitY).ToRotation() - MathHelper.PiOver2, 0.04f);
-
-        if (ModNPC.hitTimer > 0)
-            ModNPC.hitTimer--;
-
-        if (NPC.dontTakeDamage && !ModNPC.hasDoneDeathAnim) // Dust visuals for shield when immune
-        {
-            Vector2 sustVel = new Vector2(-78 * Main.rand.NextFloat(0.95f, 1.05f), 0).RotatedBy(ModNPC.rotateToPlayer + MathHelper.PiOver2).RotatedByRandom(1.4);
-            Dust.NewDustPerfectAction(NPC.Center + sustVel, DustID.Sandnado, sust =>
-            {
-                sust.velocity = sustVel * Main.rand.NextFloat(0.001f, 0.03f);
-                sust.alpha = 200;
-                sust.color = Main.rand.NextBool(3) ? Color.Goldenrod : CAMain.AnomalyUltramundaneColor;
-                sust.scale = Main.rand.NextFloat(0.5f, 0.9f);
-                sust.noGravity = true;
-            });
-        }
-
-        Vector2 hitboxSize = new(ModNPC.forcefieldScale * 216f / 1.4142f);
-        hitboxSize = Vector2.Max(hitboxSize, new Vector2(42, 44));
-        if (NPC.Size != hitboxSize)
-            NPC.Size = hitboxSize;
-        bool shouldNotUseShield = ModNPC.bulletHellCounter2 % BulletHellDuration != 0 || ModNPC.attackCastDelay > 0
-            || NPC.ai[0] == 1f || NPC.ai[0] == 2f;
-
-        // Make the shield and forcefield fade away in SCal's acceptance phase.
-        if (OceanNPC.LifeRatio <= 0.01f && ModNPC.hasDoneDeathAnim)
-        {
-            ModNPC.shieldOpacity = MathHelper.Lerp(ModNPC.shieldOpacity, 0f, 0.08f);
-            ModNPC.forcefieldScale = MathHelper.Lerp(ModNPC.forcefieldScale, 0f, 0.08f);
-        }
-
-        // Summon a shield if the next attack will be a charge.
-        // Make it go away if certain triggers happen during this, such as a bullet hell starting, however.
-        else if ((ModNPC.willCharge && ModNPC.AttackCloseToBeingOver || NPC.ai[1] == 2f) && !shouldNotUseShield)
-        {
-            if (NPC.ai[1] != 2f)
-            {
-                float idealRotation = NPC.AngleTo(Target.Center);
-                float angularOffset = Math.Abs(MathHelper.WrapAngle(ModNPC.shieldRotation - idealRotation));
-
-                if (angularOffset > 0.04f)
-                {
-                    ModNPC.shieldRotation = ModNPC.shieldRotation.AngleLerp(idealRotation, 0.125f);
-                    ModNPC.shieldRotation = ModNPC.shieldRotation.AngleTowards(idealRotation, 0.18f);
-                }
-            }
-
-            // Shrink the force-field since it looks strange when charging.
-            ModNPC.forcefieldScale = MathHelper.Lerp(ModNPC.forcefieldScale, 0.45f, 0.08f);
-            ModNPC.shieldOpacity = MathHelper.Lerp(ModNPC.shieldOpacity, 1f, 0.08f);
-        }
-        // Make the shield disappear if it is no longer relevant and regenerate the forcefield.
-        else
-        {
-            ModNPC.shieldOpacity = MathHelper.Lerp(ModNPC.shieldOpacity, 0f, 0.08f);
-            ModNPC.forcefieldScale = MathHelper.Lerp(ModNPC.forcefieldScale, 1f, 0.08f);
-        }
-        #endregion 力场和护盾
-
-        #region 竞技场
-        if (!ModNPC.spawnArena && TOWorld.GeneralClient)
-        {
-            ModNPC.spawnX2 = ModNPC.spawnXReset2 = (int)NPC.Center.X + Data.ArenaSize * 8;
-            ModNPC.safeBox.X = ModNPC.spawnX = ModNPC.spawnXReset = (int)NPC.Center.X - Data.ArenaSize * 8;
-            ModNPC.safeBox.Y = ModNPC.spawnY = ModNPC.spawnYReset = (int)NPC.Center.Y - Data.ArenaSize * 8;
-            ModNPC.safeBox.Width = Data.ArenaSize * 16;
-            ModNPC.safeBox.Height = Data.ArenaSize * 16;
-            ModNPC.spawnYAdd = 100;
-
-            int safeBoxTilesX = (ModNPC.safeBox.X + ModNPC.safeBox.Width / 2) / 16;
-            int safeBoxTilesY = (ModNPC.safeBox.Y + ModNPC.safeBox.Height / 2) / 16;
-            int safeBoxTileWidth = Data.ArenaSize / 2 + 1;
-
-            int minX = safeBoxTilesX - safeBoxTileWidth;
-            int maxX = safeBoxTilesX + safeBoxTileWidth;
-            int minY = safeBoxTilesY - safeBoxTileWidth;
-            int maxY = safeBoxTilesY + safeBoxTileWidth;
-
-            Arena_TopLeft = new Point(minX, minY);
-
-            foreach ((Tile tile, int i, int j) in TOTileUtils.GetBorderTiles(minX, maxX, minY, maxY, 2))
-            {
-                if (!tile.HasTile)
-                {
-                    tile.SetTileType<ArenaTile>();
-                    tile.Get<TileWallWireStateData>().HasTile = true;
-                }
-
-                if (Main.dedServ)
-                    NetMessage.SendTileSquare(-1, i, j, 1, TileChangeType.None);
-                else
-                    WorldGen.SquareTileFrame(i, j, true);
-            }
-
-            ModNPC.spawnArena = true;
-        }
-        #endregion 竞技场
-
-        #region 激怒和伤害减免
-        if (ModNPC.spawnArena && !Target.Hitbox.Intersects(ModNPC.safeBox))
-        {
-            float projectileVelocityMultCap = !Target.Hitbox.Intersects(ModNPC.safeBox) && ModNPC.spawnArena ? 2f : 1.5f;
-            ModNPC.uDieLul = MathHelper.Clamp(ModNPC.uDieLul * 1.01f, 1f, projectileVelocityMultCap);
-            ModNPC.protectionBoost = !Target.Hitbox.Intersects(ModNPC.safeBox);
-        }
-        else
-        {
-            ModNPC.uDieLul = MathHelper.Clamp(ModNPC.uDieLul * 0.99f, 1f, 2f);
-            ModNPC.protectionBoost = false;
-        }
-        CalamityNPC.CurrentlyEnraged = !Target.Hitbox.Intersects(ModNPC.safeBox);
-
-        // Set DR to be 99% and unbreakable if enraged. Boost DR during the 5th attack.
-        if (ModNPC.protectionBoost && !ModNPC.gettingTired5)
-        {
-            CalamityNPC.DR = enragedDR;
-            CalamityNPC.unbreakableDR = true;
-        }
-        else
-        {
-            CalamityNPC.DR = normalDR;
-            CalamityNPC.unbreakableDR = false;
-            if (ModNPC.startFifthAttack)
-                CalamityNPC.DR *= 1.2f;
-        }
-        #endregion 激怒和伤害减免
-    }
-
-    public void Welcome()
-    {
-        NPC.dontTakeDamage = true;
-
-        switch (Timer1++)
-        {
-            case 180:
-                if (TOWorld.GeneralClient)
-                    TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "Welcome1", Color.LightCyan);
-                break;
-            case 300:
-                if (TOWorld.GeneralClient)
-                    TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "Welcome2", Color.LightCyan);
-                break;
-            case 480:
-                if (TOWorld.GeneralClient)
-                    TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "Beginning", Color.LightCyan);
-
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(NPC.Center, Vector2.Zero, Color.Cyan, new Vector2(1f), 0, 0.1f, 7f, 30));
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(NPC.Center, Vector2.Zero, CAMain.AnomalyUltramundaneColor * 0.8f, new Vector2(2f), 0, 0.05f, 6f, 36));
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(NPC.Center, Vector2.Zero, Color.LightCyan, new Vector2(1f), 0, 0.05f, 4f, 45));
-                for (int i = 0; i < 100; i++)
-                {
-                    Vector2 dustVel = new PolarVector2(15f, Main.rand.NextFloat(100f));
-                    Dust.NewDustPerfectAction(NPC.Center + dustVel * 3f, Main.rand.NextBool(4) ? DustID.BlueTorch : DustID.IceTorch, d =>
+                    if (DownedBossSystem.downedCalamitas)
                     {
-                        d.velocity = dustVel * Main.rand.NextFloat(0.3f, 1.3f);
-                        d.scale = Main.rand.NextFloat(2f, 3.2f);
-                        d.noGravity = true;
+                        // Create a teleport line effect
+                        Dust.QuickDustLine(NPC.Center, ModNPC.initialRitualPosition, 500f, Color.Cyan);
+                        NPC.Center = ModNPC.initialRitualPosition;
+
+                        // Make the town NPC spawn.
+                        if (Main.netMode != NetmodeID.MultiplayerClient)
+                            NPC.NewNPCAction<DILF>(NPC.GetSource_FromAI(), NPC.Center + new Vector2(0f, 12f));
+                    }
+
+                    NPC.active = false;
+                    NPC.netUpdate = true;
+                }
+
+                for (int i = 0; i < MathHelper.Lerp(2f, 6f, 1f - NPC.Opacity); i++)
+                {
+                    Dust.NewDustPerfectAction(NPC.Center + Main.rand.NextVector2Square(-24f, 24f), DustID.BlueTorch, iceFire =>
+                    {
+                        iceFire.velocity = Vector2.UnitY * -Main.rand.NextFloat(2f, 3.25f);
+                        iceFire.color = Color.Cyan;
+                        iceFire.scale = Main.rand.NextFloat(0.95f, 1.15f);
+                        iceFire.noGravity = true;
                     });
                 }
-                SoundEngine.PlaySound(BulletHellEndSound, NPC.Center);
-                SoundEngine.PlaySound(SoundID.DD2_DarkMageCastHeal, Target.Center);
+            }
+            else
+                ModNPC.canDespawn = false;
+            #endregion 目标与脱战
 
-                CurrentAttack = AttackType.NonSpell1;
-                Timer1 = 0;
-                break;
+            #region 判定方向
+            bool currentlyCharging = NPC.ai[1] == 2f;
+            if (!currentlyCharging && Math.Abs(Target.Center.X - NPC.Center.X) > 16f)
+                NPC.spriteDirection = (Target.Center.X < NPC.Center.X).ToDirectionInt();
+            #endregion 判定方向
+
+            #region 力场和护盾
+            // Shield effect rotation
+            ModNPC.rotateToPlayer = ModNPC.rotateToPlayer.AngleLerp((Target.Center - NPC.Center).SafeNormalize(Vector2.UnitY).ToRotation() + MathHelper.PiOver2, 0.04f);
+            ModNPC.rotateAwayPlayer = ModNPC.rotateAwayPlayer.AngleLerp((Target.Center - NPC.Center).SafeNormalize(Vector2.UnitY).ToRotation() - MathHelper.PiOver2, 0.04f);
+
+            if (ModNPC.hitTimer > 0)
+                ModNPC.hitTimer--;
+
+            if (NPC.dontTakeDamage && !ModNPC.hasDoneDeathAnim) // Dust visuals for shield when immune
+            {
+                Vector2 sustVel = new Vector2(-78 * Main.rand.NextFloat(0.95f, 1.05f), 0).RotatedBy(ModNPC.rotateToPlayer + MathHelper.PiOver2).RotatedByRandom(1.4);
+                Dust.NewDustPerfectAction(NPC.Center + sustVel, DustID.Sandnado, sust =>
+                {
+                    sust.velocity = sustVel * Main.rand.NextFloat(0.001f, 0.03f);
+                    sust.alpha = 200;
+                    sust.color = Main.rand.NextBool(3) ? Color.Goldenrod : CAMain.AnomalyUltramundaneColor;
+                    sust.scale = Main.rand.NextFloat(0.5f, 0.9f);
+                    sust.noGravity = true;
+                });
+            }
+
+            Vector2 hitboxSize = new(ModNPC.forcefieldScale * 216f / 1.4142f);
+            hitboxSize = Vector2.Max(hitboxSize, new Vector2(42, 44));
+            if (NPC.Size != hitboxSize)
+                NPC.Size = hitboxSize;
+            bool shouldNotUseShield = ModNPC.bulletHellCounter2 % BulletHellDuration != 0 || ModNPC.attackCastDelay > 0
+                || NPC.ai[0] == 1f || NPC.ai[0] == 2f;
+
+            // Make the shield and forcefield fade away in SCal's acceptance phase.
+            if (OceanNPC.LifeRatio <= 0.01f && ModNPC.hasDoneDeathAnim)
+            {
+                ModNPC.shieldOpacity = MathHelper.Lerp(ModNPC.shieldOpacity, 0f, 0.08f);
+                ModNPC.forcefieldScale = MathHelper.Lerp(ModNPC.forcefieldScale, 0f, 0.08f);
+            }
+
+            // Summon a shield if the next attack will be a charge.
+            // Make it go away if certain triggers happen during this, such as a bullet hell starting, however.
+            else if ((ModNPC.willCharge && ModNPC.AttackCloseToBeingOver || NPC.ai[1] == 2f) && !shouldNotUseShield)
+            {
+                if (NPC.ai[1] != 2f)
+                {
+                    float idealRotation = NPC.AngleTo(Target.Center);
+                    float angularOffset = Math.Abs(MathHelper.WrapAngle(ModNPC.shieldRotation - idealRotation));
+
+                    if (angularOffset > 0.04f)
+                    {
+                        ModNPC.shieldRotation = ModNPC.shieldRotation.AngleLerp(idealRotation, 0.125f);
+                        ModNPC.shieldRotation = ModNPC.shieldRotation.AngleTowards(idealRotation, 0.18f);
+                    }
+                }
+
+                // Shrink the force-field since it looks strange when charging.
+                ModNPC.forcefieldScale = MathHelper.Lerp(ModNPC.forcefieldScale, 0.45f, 0.08f);
+                ModNPC.shieldOpacity = MathHelper.Lerp(ModNPC.shieldOpacity, 1f, 0.08f);
+            }
+            // Make the shield disappear if it is no longer relevant and regenerate the forcefield.
+            else
+            {
+                ModNPC.shieldOpacity = MathHelper.Lerp(ModNPC.shieldOpacity, 0f, 0.08f);
+                ModNPC.forcefieldScale = MathHelper.Lerp(ModNPC.forcefieldScale, 1f, 0.08f);
+            }
+            #endregion 力场和护盾
+
+            #region 竞技场
+            if (!ModNPC.spawnArena && TOWorld.GeneralClient)
+            {
+                ModNPC.spawnX2 = ModNPC.spawnXReset2 = (int)NPC.Center.X + Data.ArenaSize * 8;
+                ModNPC.safeBox.X = ModNPC.spawnX = ModNPC.spawnXReset = (int)NPC.Center.X - Data.ArenaSize * 8;
+                ModNPC.safeBox.Y = ModNPC.spawnY = ModNPC.spawnYReset = (int)NPC.Center.Y - Data.ArenaSize * 8;
+                ModNPC.safeBox.Width = Data.ArenaSize * 16;
+                ModNPC.safeBox.Height = Data.ArenaSize * 16;
+                ModNPC.spawnYAdd = 100;
+
+                int safeBoxTilesX = (ModNPC.safeBox.X + ModNPC.safeBox.Width / 2) / 16;
+                int safeBoxTilesY = (ModNPC.safeBox.Y + ModNPC.safeBox.Height / 2) / 16;
+                int safeBoxTileWidth = Data.ArenaSize / 2 + 1;
+
+                int minX = safeBoxTilesX - safeBoxTileWidth;
+                int maxX = safeBoxTilesX + safeBoxTileWidth;
+                int minY = safeBoxTilesY - safeBoxTileWidth;
+                int maxY = safeBoxTilesY + safeBoxTileWidth;
+
+                Arena_TopLeft = new Point(minX, minY);
+
+                foreach ((Tile tile, int i, int j) in TOTileUtils.GetBorderTiles(minX, maxX, minY, maxY, 2))
+                {
+                    if (!tile.HasTile)
+                    {
+                        tile.SetTileType<ArenaTile>();
+                        tile.Get<TileWallWireStateData>().HasTile = true;
+                    }
+
+                    if (Main.dedServ)
+                        NetMessage.SendTileSquare(-1, i, j, 1, TileChangeType.None);
+                    else
+                        WorldGen.SquareTileFrame(i, j, true);
+                }
+
+                ModNPC.spawnArena = true;
+            }
+            #endregion 竞技场
+
+            #region 激怒和伤害减免
+            if (ModNPC.spawnArena && !Target.Hitbox.Intersects(ModNPC.safeBox))
+            {
+                float projectileVelocityMultCap = !Target.Hitbox.Intersects(ModNPC.safeBox) && ModNPC.spawnArena ? 2f : 1.5f;
+                ModNPC.uDieLul = MathHelper.Clamp(ModNPC.uDieLul * 1.01f, 1f, projectileVelocityMultCap);
+                ModNPC.protectionBoost = !Target.Hitbox.Intersects(ModNPC.safeBox);
+            }
+            else
+            {
+                ModNPC.uDieLul = MathHelper.Clamp(ModNPC.uDieLul * 0.99f, 1f, 2f);
+                ModNPC.protectionBoost = false;
+            }
+            CalamityNPC.CurrentlyEnraged = !Target.Hitbox.Intersects(ModNPC.safeBox);
+
+            // Set DR to be 99% and unbreakable if enraged. Boost DR during the 5th attack.
+            if (ModNPC.protectionBoost && !ModNPC.gettingTired5)
+            {
+                CalamityNPC.DR = enragedDR;
+                CalamityNPC.unbreakableDR = true;
+            }
+            else
+            {
+                CalamityNPC.DR = normalDR;
+                CalamityNPC.unbreakableDR = false;
+                if (ModNPC.startFifthAttack)
+                    CalamityNPC.DR *= 1.2f;
+            }
+            #endregion 激怒和伤害减免
+        }
+
+        void Welcome()
+        {
+            NPC.dontTakeDamage = true;
+
+            switch (Timer1++)
+            {
+                case 180:
+                    if (TOWorld.GeneralClient)
+                        TOLocalizationUtils.ChatLocalizedText(this, "Welcome1", Color.LightCyan);
+                    break;
+                case 300:
+                    if (TOWorld.GeneralClient)
+                        TOLocalizationUtils.ChatLocalizedText(this, "Welcome2", Color.LightCyan);
+                    break;
+                case 480:
+                    if (TOWorld.GeneralClient)
+                        TOLocalizationUtils.ChatLocalizedText(this, "Beginning", Color.LightCyan);
+
+                    GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(NPC.Center, Vector2.Zero, Color.Cyan, new Vector2(1f), 0, 0.1f, 7f, 30));
+                    GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(NPC.Center, Vector2.Zero, CAMain.AnomalyUltramundaneColor * 0.8f, new Vector2(2f), 0, 0.05f, 6f, 36));
+                    GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(NPC.Center, Vector2.Zero, Color.LightCyan, new Vector2(1f), 0, 0.05f, 4f, 45));
+                    for (int i = 0; i < 100; i++)
+                    {
+                        Vector2 dustVel = new PolarVector2(15f, Main.rand.NextFloat(100f));
+                        Dust.NewDustPerfectAction(NPC.Center + dustVel * 3f, Main.rand.NextBool(4) ? DustID.BlueTorch : DustID.IceTorch, d =>
+                        {
+                            d.velocity = dustVel * Main.rand.NextFloat(0.3f, 1.3f);
+                            d.scale = Main.rand.NextFloat(2f, 3.2f);
+                            d.noGravity = true;
+                        });
+                    }
+                    SoundEngine.PlaySound(BulletHellEndSound, NPC.Center);
+                    SoundEngine.PlaySound(SoundID.DD2_DarkMageCastHeal, Target.Center);
+
+                    CurrentAttack = AttackType.NonSpell1;
+                    Timer1 = 0;
+                    break;
+            }
         }
     }
-    #endregion AI
 
-    #region Draw
     public delegate void Orig_DrawForcefield(SupremeCalamitas self, SpriteBatch spriteBatch);
 
     [DetourMethodTo<SupremeCalamitas>]
@@ -441,12 +438,11 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
 
         return false;
     }
-    #endregion Draw
 }
 
 public sealed class PermafrostRitualDrama : CASingleProjectileBehavior<SCalRitualDrama>, ILocalizationPrefix
 {
-    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "DeveloperContents.Permafrost.";
+    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "DeveloperContents.Permafrost";
 
     public override decimal Priority => 935m; //ICE
 
@@ -487,7 +483,7 @@ public sealed class PermafrostRitualDrama : CASingleProjectileBehavior<SCalRitua
                 Vector2 spawnPosition = Projectile.Center - new Vector2(53f, 39f);
                 NPC.NewNPCAction<SupremeCalamitas>(NPC.GetBossSpawnSource(Player.FindClosest(spawnPosition, 1, 1)), spawnPosition, action: n =>
                 {
-                    TOLocalizationUtils.ChatLocalizedText(LocalizationPrefix + "Spawn", Color.Lerp(Color.Blue, Color.Cyan, 0.7f));
+                    TOLocalizationUtils.ChatLocalizedText(this, "Spawn", Color.Lerp(Color.Blue, Color.Cyan, 0.7f));
                     n.GetModNPC<SupremeCalamitas>().permafrost = true;
                 });
             }

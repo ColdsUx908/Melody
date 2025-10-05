@@ -1,6 +1,4 @@
-﻿using Transoceanic.Core.Utilities;
-
-namespace Transoceanic.Data.Publicizer;
+﻿namespace Transoceanic.Data.Publicizer;
 
 public interface IPublicizer
 {

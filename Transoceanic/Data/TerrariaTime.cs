@@ -1,6 +1,4 @@
-﻿using Transoceanic.Core.Utilities;
-
-namespace Transoceanic.Data;
+﻿namespace Transoceanic.Data;
 
 public readonly struct TerrariaTime : IEquatable<TerrariaTime>
 {
@@ -30,7 +28,7 @@ public readonly struct TerrariaTime : IEquatable<TerrariaTime>
     /// 秒数。
     /// <br/>范围为 [0, 60)。
     /// </summary>
-    public int Second => (int)(((Time - Minute) * 60.0 - Minute) * 60.0);
+    public int Second => (int)(((Time - Hour) * 60.0 - Minute) * 60.0);
 
     public TerrariaTime(double time, MoonPhase moonPhase = MoonPhase.Full)
     {
@@ -100,9 +98,9 @@ public readonly struct TerrariaTime : IEquatable<TerrariaTime>
 
     public static bool operator !=(TerrariaTime left, TerrariaTime right) => !(left == right);
 
-    public string TimeString => $"{Hour} : {Minute} : {Second}";
+    public string TimeString => $"{Hour:D2}:{Minute:D2}:{Second:D2}";
 
-    public override string ToString() => TimeString + $", {MoonPhase}";
+    public override string ToString() => $"{TimeString}, {MoonPhase}";
 
 
     public PolarVector2 HourHand => PolarVector2.UnitClocks[12].RotatedBy(TOMathHelper.PiOver6 * (float)Time);

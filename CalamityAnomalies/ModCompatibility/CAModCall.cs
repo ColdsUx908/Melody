@@ -13,12 +13,25 @@ public static class CAModCall
                 if (args.Length == 1 || args[1] is not string variable)
                     return null;
 
-                return variable.ToLower() switch
+                switch (variable.ToLower())
                 {
-                    "anomaly" => CAWorld.Anomaly,
-                    "anomalyultra" => CAWorld.AnomalyUltramundane,
-                    _ => null,
-                };
+                    case "anomaly":
+                        if (args.Length == 2)
+                            return CAWorld.Anomaly;
+                        else if (args[2] is bool newValue)
+                            return CAWorld.Anomaly = newValue;
+                        else
+                            return null;
+                    case "anomalyultra":
+                        if (args.Length == 2)
+                            return CAWorld.AnomalyUltramundane;
+                        else if (args[2] is bool newValue)
+                            return CAWorld.AnomalyUltramundane = newValue;
+                        else
+                            return null;
+                }
+
+                return null;
         }
 
         return null;

@@ -1,7 +1,6 @@
 ﻿using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
-using Transoceanic.Core.Utilities;
 
 namespace Transoceanic.GlobalInstances;
 
@@ -3335,7 +3334,7 @@ public abstract class SingleNPCBehavior : SingleEntityBehavior<NPC>
 
     public TOGlobalNPC OceanNPC => _entity.Ocean();
 
-    public Player Target => Main.player[NPC.target];
+    public Player Target => NPC.PlayerTarget;
 
     public int Timer1
     {

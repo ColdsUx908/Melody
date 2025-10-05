@@ -12,7 +12,6 @@ using Terraria.Graphics.Effects;
 using Terraria.Map;
 using Terraria.UI;
 using Terraria.WorldBuilding;
-using Transoceanic.Core.Utilities;
 
 namespace Transoceanic.RuntimeEditing;
 
@@ -3311,6 +3310,10 @@ public abstract class ModSystemDetour<T> : ModTypeDetour<T> where T : ModSystem
     public delegate void Orig_OnWorldLoad(T self);
     public virtual void Detour_OnWorldLoad(Orig_OnWorldLoad orig, T self) => orig(self);
 
+    // PostWorldLoad
+    public delegate void Orig_PostWorldLoad(T self);
+    public virtual void Detour_PostWorldLoad(Orig_PostWorldLoad orig, T self) => orig(self);
+
     // OnWorldUnload
     public delegate void Orig_OnWorldUnload(T self);
     public virtual void Detour_OnWorldUnload(Orig_OnWorldUnload orig, T self) => orig(self);
@@ -3531,6 +3534,7 @@ public abstract class ModSystemDetour<T> : ModTypeDetour<T> where T : ModSystem
         TryApplyDetour(Detour_PostSetupRecipes);
         TryApplyDetour(Detour_AddRecipeGroups);
         TryApplyDetour(Detour_OnWorldLoad);
+        TryApplyDetour(Detour_PostWorldLoad);
         TryApplyDetour(Detour_OnWorldUnload);
         TryApplyDetour(Detour_ClearWorld);
         TryApplyDetour(Detour_ModifyScreenPosition);
@@ -3781,6 +3785,10 @@ public abstract class ModTileDetour<T> : ModBlockTypeDetour<T> where T : ModTile
     public delegate bool Orig_CanReplace(T self, int i, int j, int tileTypeBeingPlaced);
     public virtual bool Detour_CanReplace(Orig_CanReplace orig, T self, int i, int j, int tileTypeBeingPlaced) => orig(self, i, j, tileTypeBeingPlaced);
 
+    // ReplaceTile
+    public delegate void Orig_ReplaceTile(T self, int i, int j, int targetType, int targetStyle);
+    public virtual void Detour_ReplaceTile(Orig_ReplaceTile orig, T self, int i, int j, int targetType, int targetStyle) => orig(self, i, j, targetType, targetStyle);
+
     // AdjustMultiTileVineParameters
     public delegate void Orig_AdjustMultiTileVineParameters(T self, int i, int j, ref float? overrideWindCycle, ref float windPushPowerX, ref float windPushPowerY, ref bool dontRotateTopTiles, ref float totalWindMultiplier, ref Texture2D glowTexture, ref Color glowColor);
     public virtual void Detour_AdjustMultiTileVineParameters(Orig_AdjustMultiTileVineParameters orig, T self, int i, int j, ref float? overrideWindCycle, ref float windPushPowerX, ref float windPushPowerY, ref bool dontRotateTopTiles, ref float totalWindMultiplier, ref Texture2D glowTexture, ref Color glowColor) => orig(self, i, j, ref overrideWindCycle, ref windPushPowerX, ref windPushPowerY, ref dontRotateTopTiles, ref totalWindMultiplier, ref glowTexture, ref glowColor);
@@ -3837,6 +3845,7 @@ public abstract class ModTileDetour<T> : ModBlockTypeDetour<T> where T : ModTile
         TryApplyDetour(Detour_LockChest);
         TryApplyDetour(Detour_DefaultContainerName);
         TryApplyDetour(Detour_CanReplace);
+        TryApplyDetour(Detour_ReplaceTile);
         TryApplyDetour(Detour_AdjustMultiTileVineParameters);
         TryApplyDetour(Detour_GetTileFlameData);
     }
@@ -5696,6 +5705,10 @@ public abstract class GlobalTileDetour<T> : GlobalBlockTypeDetour<T> where T : G
     public delegate bool Orig_CanReplace(T self, int i, int j, int type, int tileTypeBeingPlaced);
     public virtual bool Detour_CanReplace(Orig_CanReplace orig, T self, int i, int j, int type, int tileTypeBeingPlaced) => orig(self, i, j, type, tileTypeBeingPlaced);
 
+    // ReplaceTile
+    public delegate void Orig_ReplaceTile(T self, int i, int j, int targetType, int targetStyle);
+    public virtual void Detour_ReplaceTile(Orig_ReplaceTile orig, T self, int i, int j, int targetType, int targetStyle) => orig(self, i, j, targetType, targetStyle);
+
     // PostSetupTileMerge
     public delegate void Orig_PostSetupTileMerge(T self);
     public virtual void Detour_PostSetupTileMerge(Orig_PostSetupTileMerge orig, T self) => orig(self);
@@ -5739,6 +5752,7 @@ public abstract class GlobalTileDetour<T> : GlobalBlockTypeDetour<T> where T : G
         TryApplyDetour(Detour_FloorVisuals);
         TryApplyDetour(Detour_ChangeWaterfallStyle);
         TryApplyDetour(Detour_CanReplace);
+        TryApplyDetour(Detour_ReplaceTile);
         TryApplyDetour(Detour_PostSetupTileMerge);
         TryApplyDetour(Detour_PreShakeTree);
         TryApplyDetour(Detour_ShakeTree);

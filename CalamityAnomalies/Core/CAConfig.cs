@@ -13,7 +13,27 @@ public sealed class CAServerConfig : ModConfig
 
     public override void OnLoaded() => Instance = this;
 
+    /// <summary>
+    /// 是否启用模组内容。
+    /// </summary>
     [ReloadRequired]
     [DefaultValue(true)]
     public bool Contents;
+}
+
+public sealed class CAClientConfig : ModConfig
+{
+    public static CAClientConfig Instance { get; private set; }
+
+    public override ConfigScope Mode => ConfigScope.ClientSide;
+
+    public override bool AcceptClientChanges(ModConfig pendingConfig, int whoAmI, ref NetworkText message) => false;
+
+    public override void OnLoaded() => Instance = this;
+
+    /// <summary>
+    /// 辅助视觉效果。
+    /// </summary>
+    [DefaultValue(false)]
+    public bool AuxiliaryVisualEffects;
 }

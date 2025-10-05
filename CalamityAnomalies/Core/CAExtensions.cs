@@ -24,6 +24,11 @@ public static class CAExtensions
         public bool TryGetBehavior(out CASingleItemBehavior itemBehavior, [CallerMemberName] string methodName = null!) => CASingleBehaviorHelper.ItemBehaviors.TryGetBehavior(item, methodName, out itemBehavior);
     }
 
+    extension(ItemTooltipDictionary tooltipDictionary)
+    {
+        public void ApplyCATweakColorToDamage() => tooltipDictionary.Modify(null, "Damage", l => l.OverrideColor = CAMain.GetGradientColor(0.25f));
+    }
+
     extension(NPC npc)
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

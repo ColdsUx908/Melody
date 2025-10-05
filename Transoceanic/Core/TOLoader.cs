@@ -1,6 +1,4 @@
-﻿using Transoceanic.Core.Utilities;
-
-namespace Transoceanic.Core;
+﻿namespace Transoceanic.Core;
 
 public enum LoaderMethodType
 {

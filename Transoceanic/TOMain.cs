@@ -27,13 +27,12 @@ global using Terraria.ModLoader.IO;
 global using Terraria.Utilities;
 global using Transoceanic.Commands;
 global using Transoceanic.Core;
-global using Transoceanic.Core.Extensions;
 global using Transoceanic.Data;
+global using Transoceanic.Extensions;
 global using Transoceanic.GlobalInstances;
 global using Transoceanic.Localization;
-global using Transoceanic.Visual;
+global using Transoceanic.Utilities;
 global using ZLinq;
-using Transoceanic.Core.Utilities;
 
 namespace Transoceanic;
 
@@ -101,8 +100,6 @@ public sealed class TOMain : Mod
                 }
 
                 TOWorld.GameTimer = 0;
-                TOWorld.Time24Hour = 0.0;
-                TOWorld.TerrariaTime = default;
                 TOWorld.TrueMasterMode = false;
                 TOWorld.JourneyMasterMode = false;
                 TOWorld.BossList = [];

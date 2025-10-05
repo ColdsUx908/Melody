@@ -14,8 +14,6 @@ public class TOGlobalItem : GlobalItem
         return clone;
     }
 
-    public ItemTooltipDictionary TooltipDictionary { get; internal set; }
-
     internal GuaranteedBoolean Equip;
     internal SmoothInt Equip_Timer;
 

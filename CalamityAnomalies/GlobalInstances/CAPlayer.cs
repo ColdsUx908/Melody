@@ -1,4 +1,4 @@
-﻿using CalamityAnomalies.Tweaks._5_2_PostYharon;
+﻿using CalamityAnomalies.Tweaks;
 using CalamityMod.NPCs.Abyss;
 using CalamityMod.NPCs.AcidRain;
 using CalamityMod.NPCs.AquaticScourge;

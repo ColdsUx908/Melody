@@ -4,6 +4,14 @@ public sealed class CAGlobalItem : GlobalItem
 {
     public override bool InstancePerEntity => true;
 
+#if DEBUG
+    /// <summary>
+    /// 调试用数据。
+    /// <br/>不同实体可能会有不同的用途。
+    /// </summary>
+    public readonly Union64 DebugData = new();
+#endif
+
     private const int dataSlot = 64;
     private const int dataSlot2 = 32;
 

@@ -34,7 +34,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
     public const int MaxBars = 6;
     public const int MaxActiveBars = 4;
 
-    private HashSet<long> _validIdentifiers = [];
+    private static readonly HashSet<long> _validIdentifiers = [];
 
     public override void Detour_Draw(Orig_Draw orig, BossHealthBarManager self, SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info)
     {
@@ -61,6 +61,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 
     public override void Detour_Update(Orig_Update orig, BossHealthBarManager self, IBigProgressBar currentBar, ref BigProgressBarInfo info)
     {
+        _validIdentifiers.Clear();
         foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(n => !BossExclusionList.Contains(n.type)))
         {
             long fromNPC = npc.Ocean().Identifier;
@@ -68,7 +69,6 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
                 _validIdentifiers.Add(fromNPC);
             else if (CurrentBars.Count < MaxBars && ((npc.IsABoss() && !_exclusiveNPCTypes.Contains(npc.type)) || MinibossHPBarList.Contains(npc.type) || npc.Calamity().CanHaveBossHealthBar))
                 CurrentBars.Add(fromNPC, new BetterBossHPUI(npc));
-            _validIdentifiers.Clear();
         }
 
         foreach ((long identifier, BetterBossHPUI newBar) in CurrentBars)
@@ -448,14 +448,14 @@ public class BetterBossHPUI : BossHPUI
             DrawSeperatorBar(spriteBatch, x, y, seperatorColor);
 
             //为了避免NPC名称过长遮挡大生命值数字，二者的绘制顺序在此处被调换了，即先绘制NPC名称，再绘制大生命值数字。
-            Color? mainColor = AnomalyNPC.IsRunningAnomalyAI ? Color.Lerp(CAMain.GetGradientColor(0.25f), CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * cos * 0.8f) * AnimationCompletionRatio2
+            Color? mainColor = AnomalyNPC.IsRunningAnomalyAI ? Color.Lerp(CAMain.GetGradientColor(0.1f), CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * cos * 0.8f) * AnimationCompletionRatio2
                 : EnrageTimer > 0 ? Color.Red * 0.6f * AnimationCompletionRatio2
                 : IncreasingDefenseOrDRTimer > 0 ? Color.LightGray * 0.7f * AnimationCompletionRatio2
                 : null;
-            Color? borderColor = AnomalyNPC.IsRunningAnomalyAI ? Color.Lerp(CAMain.GetGradientColor(0.25f), CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin) * AnimationCompletionRatio2
+            Color? borderColor = AnomalyNPC.IsRunningAnomalyAI ? Color.Lerp(CAMain.GetGradientColor(0.1f), CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin) * AnimationCompletionRatio2
                 : EnrageTimer > 0 || IncreasingDefenseOrDRTimer > 0 ? Color.Black * 0.2f * AnimationCompletionRatio2
                 : null;
-            float borderWidth = AnomalyNPC.IsRunningAnomalyAI ? (Math.Clamp(AnomalyNPC.AnomalyAITimer / 80f, 0f, 1.5f) + TOMathHelper.GetTimeSin(1f, 1f, 0f, true) * Math.Clamp(AnomalyNPC.AnomalyAITimer / 80f, 0f, 1f))
+            float borderWidth = AnomalyNPC.IsRunningAnomalyAI ? (Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1.5f) + TOMathHelper.GetTimeSin(1f, 1f, 0f, true) * Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f))
                 : EnrageTimer > 0 ? (EnrageTimer / 80f + TOMathHelper.GetTimeSin(1f, 1f, 0f, true) * Math.Clamp(EnrageTimer / 80f, 0f, 1f))
                 : IncreasingDefenseOrDRTimer > 0 ? (IncreasingDefenseOrDRTimer / 80f + TOMathHelper.GetTimeSin(1f, 1f, 0f, true) * Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 1f))
                 : 0f;

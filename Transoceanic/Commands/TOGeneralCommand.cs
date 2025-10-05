@@ -1,6 +1,4 @@
-﻿using Transoceanic.Core.Utilities;
-
-namespace Transoceanic.Commands;
+﻿namespace Transoceanic.Commands;
 
 public abstract class TOCommand
 {
@@ -57,18 +55,18 @@ public sealed class TOGeneralChatCommand : ModCommand, ILocalizationPrefix
 
     public override string Command => "/chat"; //需要使用的指令是"//chat"（两个斜杠）
 
-    public string LocalizationPrefix => TOMain.ModLocalizationPrefix + "Commands.GeneralCommand.";
+    public string LocalizationPrefix => TOMain.ModLocalizationPrefix + "Commands.GeneralCommand";
 
     public override void Action(CommandCaller caller, string input, string[] args)
     {
         if (args.Length == 0 || string.IsNullOrEmpty(args[0]))
-            caller.ReplyLocalizedText(LocalizationPrefix + "Helper");
+            caller.Reply(this.GetTextValue("Helper"));
         switch (args[0].ToLower())
         {
             case "help":
             case "h":
             case "?":
-                caller.ReplyLocalizedText(LocalizationPrefix + "Helper");
+                caller.Reply(this.GetTextValue("Helper"));
                 break;
             case "redo":
                 CommandCallInfo commandCallInfo = caller.Player.Ocean().CommandCallInfo;
@@ -88,7 +86,7 @@ public sealed class TOCommandHelper : IResourceLoader, ILocalizationPrefix
 
     internal static readonly Dictionary<string, TOCommand> CommandSet = [];
 
-    public string LocalizationPrefix => TOMain.ModLocalizationPrefix + "Commands.GeneralCommand.";
+    public string LocalizationPrefix => TOMain.ModLocalizationPrefix + "Commands.GeneralCommand";
 
     void IResourceLoader.PostSetupContent()
     {
@@ -114,11 +112,11 @@ public sealed class TOCommandHelper : IResourceLoader, ILocalizationPrefix
             }
             catch (CommandArgumentException e)
             {
-                caller.ReplyLocalizedTextWith(LocalizationPrefix + "InvalidArguments", Color.Red, e);
+                caller.ReplyLocalizedTextFormat(this.GetTextValue("InvalidArguments"), Color.Red, e);
                 value.Help(caller, args);
             }
         }
         else
-            caller.ReplyLocalizedText(LocalizationPrefix + "Helper2");
+            caller.ReplyLocalizedText(this.GetTextValue("Helper2"));
     }
 }

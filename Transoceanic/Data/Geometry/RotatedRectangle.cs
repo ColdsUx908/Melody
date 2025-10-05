@@ -1,6 +1,4 @@
-﻿using Transoceanic.Core.Utilities;
-
-namespace Transoceanic.Data.Geometry;
+﻿namespace Transoceanic.Data.Geometry;
 
 public struct RotatedRectangle : IEquatable<RotatedRectangle>,
     ICollidableWithRectangle,

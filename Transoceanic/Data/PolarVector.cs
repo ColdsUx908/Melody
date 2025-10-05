@@ -1,6 +1,4 @@
-﻿using Transoceanic.Core.Utilities;
-
-namespace Transoceanic.Data;
+﻿namespace Transoceanic.Data;
 
 /// <summary>
 /// 二维极坐标向量 (ρ, θ)。
@@ -57,20 +55,13 @@ public struct PolarVector2 : IEquatable<PolarVector2>
     /// <param name="angle">θ。</param>
     public PolarVector2(float radius, float angle)
     {
-        try
+        Radius = radius switch
         {
-            Radius = radius switch
-            {
-                >= 0f => radius,
-                < 0f => throw new ArgumentOutOfRangeException(nameof(radius), radius, "Radius negative"),
-                _ => throw new NotFiniteNumberException("Radius not finite.")
-            };
-            Angle = radius == 0f ? 0f : angle; //零向量的角度强制为0
-        }
-        catch (Exception e)
-        {
-            TOLocalizationUtils.ChatDebugErrorMessage("PolarVector2", Main.LocalPlayer, e.Message);
-        }
+            >= 0f => radius,
+            < 0f => throw new ArgumentOutOfRangeException(nameof(radius), radius, "Radius is negative"),
+            _ => throw new NotFiniteNumberException("Radius is not finite.", radius)
+        };
+        Angle = radius == 0f ? 0f : angle; //零向量的角度强制为0
     }
 
     /// <summary>
