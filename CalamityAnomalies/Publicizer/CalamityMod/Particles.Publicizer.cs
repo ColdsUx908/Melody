@@ -9,7 +9,7 @@ public record GeneralParticleHandler_Publicizer : IPublicizer
     public static Type C_type => typeof(GeneralParticleHandler);
 
     // particles (static field)
-    public static readonly FieldInfo s_f_particles = C_type.GetField("particles", TOReflectionUtils.StaticBindingFlags);
+    public static readonly FieldInfo s_f_particles = PublicizerHelper.GetStaticField(C_type, "particles");
     public static List<Particle> particles
     {
         get => (List<Particle>)s_f_particles.GetValue(null);
@@ -17,7 +17,7 @@ public record GeneralParticleHandler_Publicizer : IPublicizer
     }
 
     // particlesToKill (static field)
-    public static readonly FieldInfo s_f_particlesToKill = C_type.GetField("particlesToKill", TOReflectionUtils.StaticBindingFlags);
+    public static readonly FieldInfo s_f_particlesToKill = PublicizerHelper.GetStaticField(C_type, "particlesToKill");
     public static List<Particle> particlesToKill
     {
         get => (List<Particle>)s_f_particlesToKill.GetValue(null);
@@ -25,7 +25,7 @@ public record GeneralParticleHandler_Publicizer : IPublicizer
     }
 
     // particleTypes (static field)
-    public static readonly FieldInfo s_f_particleTypes = C_type.GetField("particleTypes", TOReflectionUtils.StaticBindingFlags);
+    public static readonly FieldInfo s_f_particleTypes = PublicizerHelper.GetStaticField(C_type, "particleTypes");
     public static Dictionary<Type, int> particleTypes
     {
         get => (Dictionary<Type, int>)s_f_particleTypes.GetValue(null);
@@ -33,7 +33,7 @@ public record GeneralParticleHandler_Publicizer : IPublicizer
     }
 
     // particleTextures (static field)
-    public static readonly FieldInfo s_f_particleTextures = C_type.GetField("particleTextures", TOReflectionUtils.StaticBindingFlags);
+    public static readonly FieldInfo s_f_particleTextures = PublicizerHelper.GetStaticField(C_type, "particleTextures");
     public static Dictionary<int, Texture2D> particleTextures
     {
         get => (Dictionary<int, Texture2D>)s_f_particleTextures.GetValue(null);
@@ -41,7 +41,7 @@ public record GeneralParticleHandler_Publicizer : IPublicizer
     }
 
     // particleInstances (static field)
-    public static readonly FieldInfo s_f_particleInstances = C_type.GetField("particleInstances", TOReflectionUtils.StaticBindingFlags);
+    public static readonly FieldInfo s_f_particleInstances = PublicizerHelper.GetStaticField(C_type, "particleInstances");
     public static List<Particle> particleInstances
     {
         get => (List<Particle>)s_f_particleInstances.GetValue(null);
@@ -49,7 +49,7 @@ public record GeneralParticleHandler_Publicizer : IPublicizer
     }
 
     // batchedAlphaBlendParticles (static field)
-    public static readonly FieldInfo s_f_batchedAlphaBlendParticles = C_type.GetField("batchedAlphaBlendParticles", TOReflectionUtils.StaticBindingFlags);
+    public static readonly FieldInfo s_f_batchedAlphaBlendParticles = PublicizerHelper.GetStaticField(C_type, "batchedAlphaBlendParticles");
     public static List<Particle> batchedAlphaBlendParticles
     {
         get => (List<Particle>)s_f_batchedAlphaBlendParticles.GetValue(null);
@@ -57,7 +57,7 @@ public record GeneralParticleHandler_Publicizer : IPublicizer
     }
 
     // batchedNonPremultipliedParticles (static field)
-    public static readonly FieldInfo s_f_batchedNonPremultipliedParticles = C_type.GetField("batchedNonPremultipliedParticles", TOReflectionUtils.StaticBindingFlags);
+    public static readonly FieldInfo s_f_batchedNonPremultipliedParticles = PublicizerHelper.GetStaticField(C_type, "batchedNonPremultipliedParticles");
     public static List<Particle> batchedNonPremultipliedParticles
     {
         get => (List<Particle>)s_f_batchedNonPremultipliedParticles.GetValue(null);
@@ -65,7 +65,7 @@ public record GeneralParticleHandler_Publicizer : IPublicizer
     }
 
     // batchedAdditiveBlendParticles (static field)
-    public static readonly FieldInfo s_f_batchedAdditiveBlendParticles = C_type.GetField("batchedAdditiveBlendParticles", TOReflectionUtils.StaticBindingFlags);
+    public static readonly FieldInfo s_f_batchedAdditiveBlendParticles = PublicizerHelper.GetStaticField(C_type, "batchedAdditiveBlendParticles");
     public static List<Particle> batchedAdditiveBlendParticles
     {
         get => (List<Particle>)s_f_batchedAdditiveBlendParticles.GetValue(null);
@@ -73,7 +73,7 @@ public record GeneralParticleHandler_Publicizer : IPublicizer
     }
 
     // noteToEveryone (static field)
-    public static readonly FieldInfo s_f_noteToEveryone = C_type.GetField("noteToEveryone", TOReflectionUtils.StaticBindingFlags);
+    public static readonly FieldInfo s_f_noteToEveryone = PublicizerHelper.GetStaticField(C_type, "noteToEveryone");
     public static string noteToEveryone
     {
         get => (string)s_f_noteToEveryone.GetValue(null);
@@ -81,13 +81,13 @@ public record GeneralParticleHandler_Publicizer : IPublicizer
     }
 
     // Load (static method)
-    public static readonly MethodInfo s_m_Load = C_type.GetMethod("Load", TOReflectionUtils.StaticBindingFlags);
+    public static readonly MethodInfo s_m_Load = PublicizerHelper.GetStaticMethod(C_type, "Load");
     public delegate void Orig_Load();
     public static readonly Orig_Load s_d_Load = s_m_Load.CreateDelegate<Orig_Load>();
     public static void Load() => s_d_Load();
 
     // Unload (static method)
-    public static readonly MethodInfo s_m_Unload = C_type.GetMethod("Unload", TOReflectionUtils.StaticBindingFlags);
+    public static readonly MethodInfo s_m_Unload = PublicizerHelper.GetStaticMethod(C_type, "Unload");
     public delegate void Orig_Unload();
     public static readonly Orig_Unload s_d_Unload = s_m_Unload.CreateDelegate<Orig_Unload>();
     public static void Unload() => s_d_Unload();

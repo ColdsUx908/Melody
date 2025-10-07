@@ -82,47 +82,47 @@ public struct Line : IEquatable<Line>
     public readonly float Slope => -A / B;
 
     /// <summary>
-    /// 获取Y轴截距（如果不是垂直线）
+    /// 获取Y轴截距（如果不是垂直线）。
     /// </summary>
     public readonly float YIntercept => -C / B;
 
     /// <summary>
-    /// 获取X轴截距（如果不是水平线）
+    /// 获取X轴截距（如果不是水平线）。
     /// </summary>
     public readonly float XIntercept => -C / A;
 
     /// <summary>
-    /// 判断是否为水平线
+    /// 判断是否为水平线。
     /// </summary>
     public readonly bool IsHorizontal => Math.Abs(A) < float.Epsilon && Math.Abs(B) > float.Epsilon;
 
     /// <summary>
-    /// 判断是否为垂直线
+    /// 判断是否为垂直线。
     /// </summary>
     public readonly bool IsVertical => Math.Abs(B) < float.Epsilon && Math.Abs(A) > float.Epsilon;
 
     /// <summary>
-    /// 计算给定X坐标对应的Y值
+    /// 计算给定X坐标对应的Y值。
     /// </summary>
     public readonly float GetY(float x) => (-A * x - C) / B;
 
     /// <summary>
-    /// 计算给定Y坐标对应的X值
+    /// 计算给定Y坐标对应的X值。
     /// </summary>
     public readonly float GetX(float y) => (-B * y - C) / A;
 
     /// <summary>
-    /// 获取直线的法向量
+    /// 获取直线的法向量。
     /// </summary>
     public readonly Vector2 Normal => new(A, B);
 
     /// <summary>
-    /// 获取直线的方向向量
+    /// 获取直线的方向向量。
     /// </summary>
     public readonly Vector2 Direction => IsVertical ? new Vector2(0, 1) : IsHorizontal ? new Vector2(1, 0) : new Vector2(B, -A);
 
     /// <summary>
-    /// 获取与另一条直线的交点
+    /// 获取与另一条直线的交点。
     /// </summary>
     public readonly Vector2? Intersection(Line other)
     {

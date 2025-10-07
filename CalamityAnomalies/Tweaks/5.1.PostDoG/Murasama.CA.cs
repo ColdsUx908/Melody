@@ -440,7 +440,7 @@ public sealed class MurasamaSlash_Tweak : CAProjectileTweak<MurasamaSlash>
             case AureusSpawn:
             case Bumblefuck when CAWorld.PermaFrostActive || NPC.AnyNPCs(out _, out Yharon yharon) && new Yharon_Publicizer(yharon).startSecondAI:
             case Bumblefuck2:
-            case CeaselessVoid when target.Ocean().LifeRatio < 0.2f:
+            case CeaselessVoid when target.LifeRatio < 0.2f:
             case PhantomFuckYou:
                 modifiers.SetInstantKillBetter(target);
                 break;

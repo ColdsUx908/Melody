@@ -7,7 +7,7 @@ public sealed class NPCLifeTimeManager : TOGlobalNPCBehavior
     public override void SetDefaults(NPC npc)
     {
         TOGlobalNPC oceanNPC = npc.Ocean();
-        oceanNPC.MasterIndex = Main.maxNPCs;
+        oceanNPC.Master = null;
     }
 
     public override void OnSpawn(NPC npc, IEntitySource source)

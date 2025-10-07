@@ -62,8 +62,8 @@ public sealed class CAMain : Mod, IResourceLoader
 
             foreach (ICALoader loader in
                 from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(Assembly).AsValueEnumerable()
-                orderby pair.type.GetMethod(nameof(ICALoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
-                select pair.instance)
+                orderby pair.Type.GetMethod(nameof(ICALoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+                select pair.Instance)
             {
                 loader.Load();
             }
@@ -89,8 +89,8 @@ public sealed class CAMain : Mod, IResourceLoader
             {
                 foreach (ICALoader loader in (
                     from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ICALoader>(Assembly).AsValueEnumerable()
-                    orderby pair.type.GetMethod(nameof(ICALoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
-                    select pair.instance).Reverse())
+                    orderby pair.Type.GetMethod(nameof(ICALoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+                    select pair.Instance).Reverse())
                 {
                     loader.Unload();
                 }

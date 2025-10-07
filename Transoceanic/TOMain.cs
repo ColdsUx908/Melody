@@ -60,8 +60,8 @@ public sealed class TOMain : Mod
 
             foreach (ITOLoader loader in
                 from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(Assembly).AsValueEnumerable()
-                orderby pair.type.GetMethod(nameof(ITOLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
-                select pair.instance)
+                orderby pair.Type.GetMethod(nameof(ITOLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+                select pair.Instance)
             {
                 loader.Load();
             }

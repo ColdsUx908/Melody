@@ -72,7 +72,7 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>,
         }
     }
 
-    public readonly (Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight) Vertices
+    public readonly (Vector2 TopLeft, Vector2 TopRight, Vector2 BottomLeft, Vector2 BottomRight) Vertices
     {
         get
         {
@@ -84,7 +84,7 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>,
         }
     }
 
-    public readonly (LineSegment top, LineSegment bottom, LineSegment left, LineSegment right) Sides
+    public readonly (LineSegment Top, LineSegment Bottom, LineSegment Left, LineSegment Right) Sides
     {
         get
         {

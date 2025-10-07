@@ -496,89 +496,6 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
         public const float MaxAngleOffset = 1.3127555f;
     }
 
-    public override bool PreDraw(ref Color lightColor)
-    {
-#if CELESS_DEV
-        switch (Behavior)
-        {
-            case BehaviorType.Normal:
-                NormalPreDraw();
-                return false;
-            case BehaviorType.Dream:
-                Main.Rasterizer.ScissorTestEnable = true;
-                Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
-                Main.instance.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
-                if (Timer < 2200)
-                {
-                    float radius = 150f; //圆心半径
-                    for (int j = 0; j < 6; j++)
-                    {
-                        int localTimer = Timer > 2000 ? (2200 - Timer) / 2 : Math.Min(Timer - LifeTime2 * j - 235, LifeTime);
-                        for (int i = 0; i <= localTimer * 10; i++)
-                        {
-                            float a = radius * EllipseData.AMultiplier; //椭圆半长轴
-                            float b = radius * EllipseData.BMultiplier; //椭圆半短轴
-                            float amount = i * 1.83f / (LifeTime * 10);
-                            if (amount > 1f)
-                            {
-                                float multiplier = MathHelper.Lerp(0.4f, 1f, 2f - amount);
-                                a *= multiplier;
-                                b *= multiplier;
-                            }
-                            float angle = TOMathHelper.PiOver6 + TOMathHelper.PiOver3 * (j - 2);
-                            Vector2 circleCenter = Projectile.Center + new PolarVector2(radius, angle);
-                            (float sin, float cos) = MathF.SinCos(MathHelper.Lerp(-EllipseData.MaxAngleOffset, EllipseData.MaxAngleOffset, amount));
-                            Vector2 position = circleCenter + new Vector2(a * cos, b * sin).RotatedBy(angle);
-                            Main.spriteBatch.DrawFromCenter(CalamityTextureHandler.GlowOrbParticle, position - Main.screenPosition, Color.White with { A = 0 }, null, 0f, 0.5f * TOMathHelper.Map(0f, 1.83f, 0.4f, 1.2f, amount));
-                        }
-                    }
-                }
-                ColdheartIcicleSnowflake.DrawSnowflake(SnowflakeCenter, SnowflakeScale, SnowflakeRotation);
-                return false;
-            case BehaviorType.SetOut:
-                ColdheartIcicleSnowflake.DrawSnowflake(Projectile.Center, Projectile.scale, RealRotation);
-                return false;
-            default:
-                return false;
-        }
-#else
-        NormalPreDraw();
-        return false;
-#endif
-        void NormalPreDraw()
-        {
-            Main.Rasterizer.ScissorTestEnable = true;
-            Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
-            Main.instance.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
-            if (Timer < 300)
-            {
-                float radius = 40f; //圆心半径
-                Vector2 origin = CalamityTextureHandler.GlowOrbParticle.Size() * 0.5f;
-                for (int j = 0; j < 6; j++)
-                {
-                    int localTimer = Timer2 > 0 ? (100 - Timer2) / 2 : Math.Min(Timer - j * 10, LifeTime);
-                    for (int i = 0; i <= localTimer * 10; i++)
-                    {
-                        float a = radius * EllipseData.AMultiplier; //椭圆半长轴
-                        float b = radius * EllipseData.BMultiplier; //椭圆半短轴
-                        float amount = i * 1.83f / (LifeTime * 10);
-                        if (amount > 1f)
-                        {
-                            float multiplier = MathHelper.Lerp(0.4f, 1f, 2f - amount);
-                            a *= multiplier;
-                            b *= multiplier;
-                        }
-                        float angle = TOMathHelper.PiOver6 + TOMathHelper.PiOver3 * (j - 2);
-                        Vector2 circleCenter = Projectile.Center + new PolarVector2(radius, angle);
-                        (float sin, float cos) = MathF.SinCos(MathHelper.Lerp(-EllipseData.MaxAngleOffset, EllipseData.MaxAngleOffset, amount));
-                        Vector2 position = circleCenter + new Vector2(a * cos, b * sin).RotatedBy(angle);
-                        Main.spriteBatch.DrawFromCenter(CalamityTextureHandler.GlowOrbParticle, position - Main.screenPosition, Color.White with { A = 0 }, null, 0f, 0.3f * TOMathHelper.Map(0f, 1.83f, 0.4f, 1.2f, amount));
-                    }
-                }
-            }
-        }
-    }
-
     public override void AI()
     {
         Timer++;
@@ -689,6 +606,89 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
         }
     }
 
+    public override bool PreDraw(ref Color lightColor)
+    {
+#if CELESS_DEV
+        switch (Behavior)
+        {
+            case BehaviorType.Normal:
+                NormalPreDraw();
+                return false;
+            case BehaviorType.Dream:
+                Main.Rasterizer.ScissorTestEnable = true;
+                Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
+                Main.instance.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
+                if (Timer < 2200)
+                {
+                    float radius = 150f; //圆心半径
+                    for (int j = 0; j < 6; j++)
+                    {
+                        int localTimer = Timer > 2000 ? (2200 - Timer) / 2 : Math.Min(Timer - LifeTime2 * j - 235, LifeTime);
+                        for (int i = 0; i <= localTimer * 10; i++)
+                        {
+                            float a = radius * EllipseData.AMultiplier; //椭圆半长轴
+                            float b = radius * EllipseData.BMultiplier; //椭圆半短轴
+                            float amount = i * 1.83f / (LifeTime * 10);
+                            if (amount > 1f)
+                            {
+                                float multiplier = MathHelper.Lerp(0.4f, 1f, 2f - amount);
+                                a *= multiplier;
+                                b *= multiplier;
+                            }
+                            float angle = TOMathHelper.PiOver6 + TOMathHelper.PiOver3 * (j - 2);
+                            Vector2 circleCenter = Projectile.Center + new PolarVector2(radius, angle);
+                            (float sin, float cos) = MathF.SinCos(MathHelper.Lerp(-EllipseData.MaxAngleOffset, EllipseData.MaxAngleOffset, amount));
+                            Vector2 position = circleCenter + new Vector2(a * cos, b * sin).RotatedBy(angle);
+                            Main.spriteBatch.DrawFromCenter(CalamityTextureHandler.GlowOrbParticle, position - Main.screenPosition, Color.White with { A = 0 }, null, 0f, 0.5f * TOMathHelper.Map(0f, 1.83f, 0.4f, 1.2f, amount));
+                        }
+                    }
+                }
+                ColdheartIcicleSnowflake.DrawSnowflake(SnowflakeCenter, SnowflakeScale, SnowflakeRotation);
+                return false;
+            case BehaviorType.SetOut:
+                ColdheartIcicleSnowflake.DrawSnowflake(Projectile.Center, Projectile.scale, RealRotation);
+                return false;
+            default:
+                return false;
+        }
+#else
+        NormalPreDraw();
+        return false;
+#endif
+        void NormalPreDraw()
+        {
+            Main.Rasterizer.ScissorTestEnable = true;
+            Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
+            Main.instance.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
+            if (Timer < 300)
+            {
+                float radius = 40f; //圆心半径
+                Vector2 origin = CalamityTextureHandler.GlowOrbParticle.Size() * 0.5f;
+                for (int j = 0; j < 6; j++)
+                {
+                    int localTimer = Timer2 > 0 ? (100 - Timer2) / 2 : Math.Min(Timer - j * 10, LifeTime);
+                    for (int i = 0; i <= localTimer * 10; i++)
+                    {
+                        float a = radius * EllipseData.AMultiplier; //椭圆半长轴
+                        float b = radius * EllipseData.BMultiplier; //椭圆半短轴
+                        float amount = i * 1.83f / (LifeTime * 10);
+                        if (amount > 1f)
+                        {
+                            float multiplier = MathHelper.Lerp(0.4f, 1f, 2f - amount);
+                            a *= multiplier;
+                            b *= multiplier;
+                        }
+                        float angle = TOMathHelper.PiOver6 + TOMathHelper.PiOver3 * (j - 2);
+                        Vector2 circleCenter = Projectile.Center + new PolarVector2(radius, angle);
+                        (float sin, float cos) = MathF.SinCos(MathHelper.Lerp(-EllipseData.MaxAngleOffset, EllipseData.MaxAngleOffset, amount));
+                        Vector2 position = circleCenter + new Vector2(a * cos, b * sin).RotatedBy(angle);
+                        Main.spriteBatch.DrawFromCenter(CalamityTextureHandler.GlowOrbParticle, position - Main.screenPosition, Color.White with { A = 0 }, null, 0f, 0.3f * TOMathHelper.Map(0f, 1.83f, 0.4f, 1.2f, amount));
+                    }
+                }
+            }
+        }
+    }
+
     public override void OnKill(int timeLeft)
     {
     }
@@ -746,23 +746,6 @@ public sealed class ColdheartIcicleSnowflake : ModProjectile, ICAModProjectile
         Projectile.ArmorPenetration = 350258;
     }
 
-    public override bool PreDraw(ref Color lightColor)
-    {
-        DrawSnowflake(Projectile.Center, Projectile.scale, Projectile.rotation);
-        return false;
-    }
-
-    public static void DrawSnowflake(Vector2 center, float scale, float rotation)
-    {
-        Vector2 position = center - Main.screenPosition;
-        Vector2 origin = new(CATextures.Scale1.Width / 2f, CATextures.Scale1.Height);
-        for (int i = 0; i < 6; i++)
-        {
-            float angle = rotation + MathHelper.PiOver2 + TOMathHelper.PiOver3 * i;
-            Main.EntitySpriteDraw(CATextures.Scale1, position, null, Color.White, angle, origin, scale, SpriteEffects.None, 0f);
-        }
-    }
-
     public override void AI()
     {
         Lighting.AddLight(Projectile.Center, Color.White.ToVector3());
@@ -779,6 +762,23 @@ public sealed class ColdheartIcicleSnowflake : ModProjectile, ICAModProjectile
         {
             GeneralParticleHandler.SpawnParticle(new FadingGlowOrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(6f, 6f), Main.rand.NextFloat(0.8f, 1.3f), Main.rand.Next(40, 75), 0.8f, Main.rand.NextFloat(0.35f, 0.6f), Color.White, needed: true));
             GeneralParticleHandler.SpawnParticle(new FadingGlowOrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(7f, 7f), Main.rand.NextFloat(0.8f, 1.3f), Main.rand.Next(40, 75), 0.8f, Main.rand.NextFloat(0.35f, 0.6f), Color.White, needed: true));
+        }
+    }
+
+    public override bool PreDraw(ref Color lightColor)
+    {
+        DrawSnowflake(Projectile.Center, Projectile.scale, Projectile.rotation);
+        return false;
+    }
+
+    public static void DrawSnowflake(Vector2 center, float scale, float rotation)
+    {
+        Vector2 position = center - Main.screenPosition;
+        Vector2 origin = new(CATextures.Scale1.Width / 2f, CATextures.Scale1.Height);
+        for (int i = 0; i < 6; i++)
+        {
+            float angle = rotation + MathHelper.PiOver2 + TOMathHelper.PiOver3 * i;
+            Main.EntitySpriteDraw(CATextures.Scale1, position, null, Color.White, angle, origin, scale, SpriteEffects.None, 0f);
         }
     }
 

@@ -102,7 +102,7 @@ public static class TOReflectionUtils
     /// <typeparam name="T"></typeparam>
     /// <param name="assemblyToSearch"></param>
     /// <returns></returns>
-    public static IEnumerable<(Type type, T instance)> GetTypesAndInstancesDerivedFrom<T>(Assembly assemblyToSearch) =>
+    public static IEnumerable<(Type Type, T Instance)> GetTypesAndInstancesDerivedFrom<T>(Assembly assemblyToSearch) =>
         from type in AssemblyManager.GetLoadableTypes(assemblyToSearch)
         where type.IsAssignableTo(typeof(T)) && !type.IsAbstract
         select (type, (T)Activator.CreateInstance(type));

@@ -219,7 +219,7 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
                 || NPC.ai[0] == 1f || NPC.ai[0] == 2f;
 
             // Make the shield and forcefield fade away in SCal's acceptance phase.
-            if (OceanNPC.LifeRatio <= 0.01f && ModNPC.hasDoneDeathAnim)
+            if (NPC.LifeRatio <= 0.01f && ModNPC.hasDoneDeathAnim)
             {
                 ModNPC.shieldOpacity = MathHelper.Lerp(ModNPC.shieldOpacity, 0f, 0.08f);
                 ModNPC.forcefieldScale = MathHelper.Lerp(ModNPC.forcefieldScale, 0f, 0.08f);
@@ -376,7 +376,7 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
 
         spriteBatch.EnterShaderRegion();
 
-        float lifeRatio = self.NPC.Ocean().LifeRatio;
+        float lifeRatio = self.NPC.LifeRatio;
 
         if (lifeRatio < 0.05f)
             self.forcefieldOpacity = 0.75f;
@@ -425,14 +425,13 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
 
     public override bool PreDrawCalBossBar(BetterBossHPUI newBar, SpriteBatch spriteBatch, ref int x, ref int y)
     {
-        TOGlobalNPC oceanNPC = OceanNPC;
         newBar.DrawMainBar(spriteBatch, x, y);
         newBar.DrawComboBar(spriteBatch, x, y);
         newBar.DrawSeperatorBar(spriteBatch, x, y, Data.BlueColor * newBar.AnimationCompletionRatio2);
         newBar.DrawNPCName(spriteBatch, x, y, null,
             Data.BlueColor * newBar.AnimationCompletionRatio2,
             Data.NameColor * newBar.AnimationCompletionRatio2,
-            Math.Clamp(oceanNPC.ActiveTime, 0f, 360f) / 240f + TOMathHelper.GetTimeSin(0.5f, 1f, TOMathHelper.PiOver3, true) + oceanNPC.LifeRatioReverse / 2f);
+            Math.Clamp(OceanNPC.ActiveTime, 0f, 360f) / 240f + TOMathHelper.GetTimeSin(0.5f, 1f, TOMathHelper.PiOver3, true) + NPC.MissingLifeRatio / 2f);
         newBar.DrawBigLifeText(spriteBatch, x, y);
         newBar.DrawExtraSmallText(spriteBatch, x, y);
 

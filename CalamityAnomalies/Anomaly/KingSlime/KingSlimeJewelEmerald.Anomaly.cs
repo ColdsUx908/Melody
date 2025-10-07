@@ -137,13 +137,8 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
         float gateValue = Data.ChargePreparationTime - timeLeftGateValue;
         float ratio = CurrentAttack == Behavior.Charge && CurrentAttackPhase == 0 && Timer1 > gateValue ? (Timer1 - gateValue) / timeLeftGateValue : 0f;
         if (CAClientConfig.Instance.AuxiliaryVisualEffects && ratio > 0f)
-        {
-            float interpolation = TOMathHelper.ParabolicInterpolation(1f - ratio);
-            float interpolation2 = TOMathHelper.ParabolicInterpolation(Math.Clamp(1f - ratio, 0f, 0.2f) * 5f);
-            for (int i = 0; i < 300; i++)
-                spriteBatch.DrawFromCenter(CalamityTextureHandler.GlowOrbParticle, NPC.Center + new PolarVector2(interpolation * 100f, MathHelper.TwoPi / 200 * i) - screenPos, Color.RealGreen with { A = 0 } * ratio * 1.5f, null, 0f, 0.3f * interpolation2);
-        }
-        JewelHandler.DrawJewel(spriteBatch, screenPos, NPC, Main.zenithWorld ? Color.Purple : Color.RealGreen, Main.zenithWorld ? new Color(255, 175, 255) : new Color(175, 255, 175), ratio);
+            JewelHandler.DrawAttackEffect(spriteBatch, screenPos, NPC, ratio, 120f, 0.35f);
+        JewelHandler.DrawJewel(spriteBatch, screenPos, NPC, ratio);
         return false;
     }
 }

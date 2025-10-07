@@ -1,5 +1,4 @@
-﻿using CalamityAnomalies.Assets.Textures;
-using CalamityMod.NPCs.NormalNPCs;
+﻿using CalamityMod.NPCs.NormalNPCs;
 using CalamityMod.Projectiles.Boss;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
@@ -150,7 +149,7 @@ public sealed class KingSlimeJewelSapphire_Anomaly : AnomalyNPCBehavior<KingSlim
 
             Vector2 dustLineStart = NPC.Center;
             Vector2 dustLineEnd = otherJewel.Center;
-            Vector2 spinningpoint = new Vector2(0f, -1f).RotatedByRandom(MathHelper.Pi);
+            Vector2 spinningpoint = new Vector2(0f, -1f).RotatedByRandom();
             for (int i = 0; i < maxDustIterations; i++)
             {
                 if (i % dustDivisor == 0)
@@ -177,11 +176,11 @@ public sealed class KingSlimeJewelSapphire_Anomaly : AnomalyNPCBehavior<KingSlim
         void BuffedShoot_Emerald()
         {
             SoundEngine.PlaySound(SoundID.Item38, JewelEmerald.Center);
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 30; i++)
             {
-                JewelHandler.SpawnParticle(NPC, Main.rand.NextFloat(4f, 8f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
+                JewelHandler.SpawnParticle(JewelEmerald, Main.rand.NextFloat(4f, 8f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
                 if (Main.rand.NextProbability(0.6f))
-                    JewelHandler.SpawnParticle(JewelEmerald, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
+                    JewelHandler.SpawnParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
             }
             if (!TOWorld.GeneralClient)
                 return;
@@ -193,19 +192,28 @@ public sealed class KingSlimeJewelSapphire_Anomaly : AnomalyNPCBehavior<KingSlim
         void BuffedShoot_Ruby()
         {
             SoundEngine.PlaySound(SoundID.Item38, JewelRuby.Center);
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 30; i++)
             {
-                JewelHandler.SpawnParticle(NPC, Main.rand.NextFloat(4f, 8f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
+                JewelHandler.SpawnParticle(JewelRuby, Main.rand.NextFloat(4f, 8f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
                 if (Main.rand.NextProbability(0.6f))
-                    JewelHandler.SpawnParticle(JewelRuby, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
+                    JewelHandler.SpawnParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
             }
             if (!TOWorld.GeneralClient)
                 return;
 
             int type = Main.zenithWorld ? ModContent.ProjectileType<KingSlimeJewelEmeraldClone>() : ModContent.ProjectileType<JewelProjectile>();
             int damage = JewelRuby.GetProjectileDamage(type);
-            Projectile.RotatedProj(8, MathHelper.PiOver4, JewelRuby.GetSource_FromAI(), JewelRuby.Center, JewelRuby.GetVelocityTowards(JewelRuby.PlayerTarget, 18f), type, damage, 0f, Main.myPlayer);
-            Projectile.RotatedProj(3, TOMathHelper.PiOver3 * 2, JewelRuby.GetSource_FromAI(), JewelRuby.Center, JewelRuby.GetVelocityTowards(JewelRuby.PlayerTarget, 12f).RotatedByRandom(), type, damage, 0f, Main.myPlayer);
+            Projectile.RotatedProj(8, MathHelper.PiOver4, JewelRuby.GetSource_FromAI(), JewelRuby.Center, JewelRuby.GetVelocityTowards(JewelRuby.PlayerTarget, 18f), type, damage, 0f, Main.myPlayer, BuffedRubyProjectileAction);
+            Projectile.RotatedProj(3, TOMathHelper.PiOver3 * 2, JewelRuby.GetSource_FromAI(), JewelRuby.Center, JewelRuby.GetVelocityTowards(JewelRuby.PlayerTarget, 12f).RotatedByRandom(), type, damage, 0f, Main.myPlayer, BuffedRubyProjectileAction);
+
+            void BuffedRubyProjectileAction(Projectile p)
+            {
+                if (Main.zenithWorld)
+                {
+                    p.VelocityToRotation();
+                    p.timeLeft = (int)(p.timeLeft * 1.5f);
+                }
+            }
         }
     }
 
@@ -215,13 +223,8 @@ public sealed class KingSlimeJewelSapphire_Anomaly : AnomalyNPCBehavior<KingSlim
         float gateValue = Data.BuffedShootCooldownTime - timeLeftGateValue;
         float ratio = Timer1 > gateValue ? (Timer1 - gateValue) / timeLeftGateValue : 0f;
         if (CAClientConfig.Instance.AuxiliaryVisualEffects && ratio > 0f)
-        {
-            float interpolation = TOMathHelper.ParabolicInterpolation(1f - ratio);
-            float interpolation2 = TOMathHelper.ParabolicInterpolation(Math.Clamp(1f - ratio, 0f, 0.2f) * 5f);
-            for (int i = 0; i < 300; i++)
-                spriteBatch.DrawFromCenter(CalamityTextureHandler.GlowOrbParticle, NPC.Center + new PolarVector2(interpolation * 150f, MathHelper.TwoPi / 200 * i) - screenPos, Color.Blue with { A = 0 } * ratio * 1.5f, null, 0f, 0.4f * interpolation2);
-        }
-        JewelHandler.DrawJewel(spriteBatch, screenPos, NPC, Main.zenithWorld ? Color.Yellow : Color.Blue, Main.zenithWorld ? new Color(255, 255, 175) : new Color(175, 175, 255), ratio);
+            JewelHandler.DrawAttackEffect(spriteBatch, screenPos, NPC, ratio, 150f, 0.4f);
+        JewelHandler.DrawJewel(spriteBatch, screenPos, NPC, ratio);
         return false;
     }
 }

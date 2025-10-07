@@ -29,7 +29,7 @@ public static partial class TOExtensions
         /// <returns></returns>
         public Vector2 ToCustomLength(float length) => vector.SafeNormalize() * length;
 
-        public Vector2 RotatedByRandom() => vector.RotatedByRandom(MathHelper.TwoPi);
+        public Vector2 RotatedByRandom() => vector.RotatedByRandom(MathHelper.Pi);
     }
 
     extension(ref Vector2 vector)

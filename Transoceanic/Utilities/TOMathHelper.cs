@@ -60,7 +60,7 @@ public static class TOMathHelper
         return value;
     }
 
-    public static (T min, T max) MinMax<T>(T value, params ReadOnlySpan<T> values) where T : INumber<T>
+    public static (T Min, T Max) MinMax<T>(T value, params ReadOnlySpan<T> values) where T : INumber<T>
     {
         T min = value, max = value;
         foreach (T temp in values)
@@ -98,7 +98,7 @@ public static class TOMathHelper
     /// <param name="omega">ω。默认为1。</param>
     /// <param name="primary">φ。默认为0。</param>
     /// <param name="unsigned">是否将结果转换为非负值。默认为 <see langword="false"/>。</param>
-    public static (float sin, float cos) GetTimeSinCos(float max = 1f, float omega = 1f, float primary = 0f, bool unsigned = false)
+    public static (float Sin, float Cos) GetTimeSinCos(float max = 1f, float omega = 1f, float primary = 0f, bool unsigned = false)
     {
         (float sin1, float cos1) = MathF.SinCos(TOWorld.GeneralSeconds * omega + primary);
         return ((sin1 + unsigned.ToInt()) * max, (cos1 + unsigned.ToInt()) * max);

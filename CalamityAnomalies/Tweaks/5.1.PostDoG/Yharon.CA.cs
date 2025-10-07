@@ -120,7 +120,6 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
     }
     #endregion 数据、属性
 
-    #region Active
     public override bool CheckDead()
     {
         if (!startSecondAI || invincibilityCounter < Data.Phase2InvincibilityTime)
@@ -133,9 +132,6 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
 
         return true;
     }
-    #endregion Active
-
-    #region AI
 
     public override bool PreAI()
     {
@@ -176,9 +172,9 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
         int setDamage = NPC.defDamage;
 
         // Phase booleans
-        bool phase2Check = death || OceanNPC.LifeRatio <= (revenge ? 0.8f : expertMode ? 0.7f : 0.5f);
-        bool phase3Check = OceanNPC.LifeRatio <= (death ? 0.6f : revenge ? 0.5f : expertMode ? 0.4f : 0.25f);
-        bool phase4Check = OceanNPC.LifeRatio <= 0.1f;
+        bool phase2Check = death || NPC.LifeRatio <= (revenge ? 0.8f : expertMode ? 0.7f : 0.5f);
+        bool phase3Check = NPC.LifeRatio <= (death ? 0.6f : revenge ? 0.5f : expertMode ? 0.4f : 0.25f);
+        bool phase4Check = NPC.LifeRatio <= 0.1f;
         bool phase1Change = NPC.ai[0] > -1f;
         bool phase2Change = NPC.ai[0] > 5f;
         bool phase3Change = NPC.ai[0] > 12f;
@@ -1598,9 +1594,9 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
 
         CalamityGlobalNPC.yharonP2 = NPC.whoAmI;
 
-        bool phase2 = death || OceanNPC.LifeRatio <= (revenge ? 0.8f : expertMode ? 0.7f : 0.5f);
-        bool phase3 = OceanNPC.LifeRatio <= (death ? 0.65f : revenge ? 0.5f : expertMode ? 0.4f : 0.125f);
-        bool phase4 = OceanNPC.LifeRatio <= (death ? 0.3f : revenge ? 0.2f : 0f);
+        bool phase2 = death || NPC.LifeRatio <= (revenge ? 0.8f : expertMode ? 0.7f : 0.5f);
+        bool phase3 = NPC.LifeRatio <= (death ? 0.65f : revenge ? 0.5f : expertMode ? 0.4f : 0.125f);
+        bool phase4 = NPC.LifeRatio <= (death ? 0.3f : revenge ? 0.2f : 0f);
 
         if (NPC.ai[0] is not 5f and not 8f)
         {
@@ -1744,7 +1740,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
         }
 
         float flareSpawnDecelerationTimer = bossRush ? 60f : death ? 75f : 90f;
-        int flareSpawnPhaseTimerReduction = revenge ? (int)(flareSpawnDecelerationTimer * (1f - (float)OceanNPC.LifeRatio) * 0.55f) : 0;
+        int flareSpawnPhaseTimerReduction = revenge ? (int)(flareSpawnDecelerationTimer * (1f - NPC.LifeRatio) * 0.55f) : 0;
         float flareSpawnPhaseTimer = (bossRush ? 120f : death ? 150f : 180f) - flareSpawnPhaseTimerReduction;
 
         float teleportPhaseTimer = 45f;
@@ -2646,8 +2642,6 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
             p.timeLeft = timeLeft;
         });
     }
-
-    #endregion AI
 }
 
 public sealed class Yharon_Detour : CAModNPCDetour<Yharon>

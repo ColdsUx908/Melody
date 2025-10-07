@@ -1,4 +1,5 @@
-﻿using CalamityAnomalies.GameContents;
+﻿using CalamityAnomalies.Assets.Textures;
+using CalamityAnomalies.GameContents;
 using CalamityMod.NPCs.NormalNPCs;
 using CalamityMod.Particles;
 
@@ -7,6 +8,29 @@ namespace CalamityAnomalies.Anomaly.KingSlime;
 public static class JewelHandler
 {
     public const string JewelTexturePath = "CalamityMod/NPCs/NormalNPCs/KingSlimeJewel";
+
+    public static Color EmeraldColor => Main.zenithWorld ? Color.Purple : Color.RealGreen;
+    public static Color RubyColor => Main.zenithWorld ? Color.Cyan : Color.Red;
+    public static Color SapphireColor => Main.zenithWorld ? Color.Yellow : Color.Blue;
+    public static Color EmeraldFinalColor => Main.zenithWorld ? new(255, 175, 255) : new(175, 255, 175);
+    public static Color RubyFinalColor => Main.zenithWorld ? new(175, 255, 255) : new(255, 175, 175);
+    public static Color SapphireFinalColor => Main.zenithWorld ? new(255, 255, 175) : new(175, 175, 255);
+
+    public static Color GetColor(NPC jewel) => jewel.ModNPC switch
+    {
+        KingSlimeJewelEmerald => EmeraldColor,
+        KingSlimeJewelRuby => RubyColor,
+        KingSlimeJewelSapphire => SapphireColor,
+        _ => Color.White
+    };
+
+    public static Color GetFinalColor(NPC jewel) => jewel.ModNPC switch
+    {
+        KingSlimeJewelEmerald => EmeraldFinalColor,
+        KingSlimeJewelRuby => RubyFinalColor,
+        KingSlimeJewelSapphire => SapphireFinalColor,
+        _ => Color.White
+    };
 
     /// <summary>
     /// 宝石脱战通用逻辑。
@@ -24,7 +48,7 @@ public static class JewelHandler
     /// 宝石跟随目标通用逻辑。
     /// </summary>
     /// <param name="jewel">宝石。</param>
-    /// <param name="target">目标。</param>
+    /// <param name="destination">目标点。</param>
     /// <param name="maxVelocityX">水平速度最大值。</param>
     /// <param name="maxVelocityY">竖直速度最大值。</param>
     /// <param name="acceleration">加速度。</param>
@@ -71,11 +95,18 @@ public static class JewelHandler
     /// <param name="spriteBatch"><c>PreDraw</c> 方法中的 <c>spriteBatch</c> 参数。</param>
     /// <param name="screenPos"><c>PreDraw</c> 方法中的 <c>screenPos</c> 参数。</param>
     /// <param name="jewel">宝石。</param>
-    /// <param name="initialColor">正常颜色。</param>
-    /// <param name="finalColor">转变颜色。</param>
     /// <param name="lerpValue">插值比例。</param>
-    public static void DrawJewel(SpriteBatch spriteBatch, Vector2 screenPos, NPC jewel, Color initialColor, Color finalColor, float lerpValue) =>
-        spriteBatch.DrawFromCenter(jewel.Texture, jewel.Center - screenPos, Color.Lerp(initialColor, finalColor, lerpValue) with { A = jewel.GraphicAlpha }, null, jewel.rotation, jewel.scale);
+    public static void DrawJewel(SpriteBatch spriteBatch, Vector2 screenPos, NPC jewel, float lerpValue) =>
+        spriteBatch.DrawFromCenter(jewel.Texture, jewel.Center - screenPos, Color.Lerp(GetColor(jewel), GetFinalColor(jewel), lerpValue) with { A = jewel.GraphicAlpha }, null, jewel.rotation, jewel.scale);
+
+    public static void DrawAttackEffect(SpriteBatch spriteBatch, Vector2 screenPos, NPC jewel, float ratio, float radius, float scale)
+    {
+        Color color = GetColor(jewel) with { A = 0 } * ratio * 1.5f;
+        float interpolation = TOMathHelper.ParabolicInterpolation(1f - ratio);
+        float interpolation2 = TOMathHelper.ParabolicInterpolation(Math.Clamp(1f - ratio, 0f, 0.2f) * 5f);
+        for (int i = 0; i < 300; i++)
+            spriteBatch.DrawFromCenter(CalamityTextureHandler.GlowOrbParticle, jewel.Center + new PolarVector2(radius * interpolation, MathHelper.TwoPi / 200 * i) - screenPos, color, null, 0f, scale * interpolation2);
+    }
 
     /// <summary>
     /// 宝石粒子生成通用逻辑。
@@ -85,16 +116,5 @@ public static class JewelHandler
     /// <param name="velocity">粒子速度大小。</param>
     /// <param name="lifetime">粒子存在时长。</param>
     /// <param name="scale">粒子大小。</param>
-    public static void SpawnParticle(NPC jewel, float velocity, int lifetime, float scale)
-    {
-        Color color = jewel.ModNPC switch
-        {
-            KingSlimeJewelEmerald => Main.zenithWorld ? Color.Purple : Color.RealGreen,
-            KingSlimeJewelRuby => Main.zenithWorld ? Color.Cyan : Color.Red,
-            KingSlimeJewelSapphire => Main.zenithWorld ? Color.Yellow : Color.Blue,
-            _ => Color.White
-        };
-
-        GeneralParticleHandler.SpawnParticle(new FadingGlowOrbParticle(jewel.Center, Main.rand.NextPolarVector2(velocity), 0f, lifetime, 0.925f, scale, color));
-    }
+    public static void SpawnParticle(NPC jewel, float velocity, int lifetime, float scale) => GeneralParticleHandler.SpawnParticle(new FadingGlowOrbParticle(jewel.Center, Main.rand.NextPolarVector2(velocity), 0f, lifetime, 0.925f, scale, GetColor(jewel)));
 }

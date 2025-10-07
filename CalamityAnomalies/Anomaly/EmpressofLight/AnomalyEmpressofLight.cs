@@ -273,6 +273,8 @@ public sealed class AnomalyEmpressofLight : AnomalyNPCBehavior
     }
     #endregion 数据
 
+    public override bool ShouldProcess => false; //暂时禁用
+
     public override int ApplyingType => NPCID.HallowBoss;
 
     public override bool AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC method) => method switch
@@ -283,232 +285,229 @@ public sealed class AnomalyEmpressofLight : AnomalyNPCBehavior
 
 
     #region AI
-    /*
     public override bool PreAI()
     {
         StartUp();
-        
-        
-        //switch (NPC.ShouldEmpressBeEnraged(), CAWorld.AnomalyUltramundane)
-        //{
-        //    case (false, false):
-        //        AI_Night();
-        //        break;
-        //    case (true, false):
-        //        AI_Day();
-        //        break;
-        //    case (false, true):
-        //        AI_NightUltra();
-        //        break;
-        //    case (true, true):
-        //        AI_DayUltra();
-        //        break;
-        //}
+
+
+        switch (NPC.ShouldEmpressBeEnraged(), CAWorld.AnomalyUltramundane)
+        {
+            case (false, false):
+                AI_Night();
+                break;
+            case (true, false):
+                AI_Day();
+                break;
+            case (false, true):
+                AI_NightUltra();
+                break;
+            case (true, true):
+                AI_DayUltra();
+                break;
+        }
 
         return false;
-    }*/
 
-    public void StartUp()
-    {
-        NPC.rotation = NPC.velocity.X * 0.005f;
-        bool shouldBeInPhase2ButIsStillInPhase1 = OceanNPC.LifeRatio <= Data.Phase2GateValue && IsInPhase2;
-        CalamityNPC.DR = shouldBeInPhase2ButIsStillInPhase1 ? 0.99f : 0.15f;
-        CalamityNPC.unbreakableDR = shouldBeInPhase2ButIsStillInPhase1;
-        if (NPC.life == NPC.lifeMax && NPC.ShouldEmpressBeEnraged() && !Enrage)
-            Enrage = true;
-        CalamityNPC.CurrentlyEnraged = !BossRushEvent.BossRushActive && Enrage;
-        NPC.defense = (int)(NPC.defDefense * PhaseEnrage switch
+        void StartUp()
         {
-            PhaseEnrageData.Phase2 or PhaseEnrageData.Phase2Enraged => 1.2f,
-            PhaseEnrageData.Phase3 or PhaseEnrageData.Phase3Enraged => 0.8f,
-            _ => 1f
-        });
-        if (++NPC.localAI[0] >= 44f)
-            NPC.localAI[0] = 0f;
-        NPC.dontTakeDamage = !TakeDamage;
-        if (Visible)
-            NPC.alpha = Math.Clamp(NPC.alpha - 5, 0, 255);
-        Lighting.AddLight(NPC.Center, Vector3.One * NPC.Opacity);
-    }
-
-    public void AI_Night()
-    {
-
-    }
-
-    public void AI_Day()
-    {
-
-    }
-
-    public void AI_NightUltra()
-    {
-
-    }
-
-    public void AI_DayUltra()
-    {
-
-    }
-
-    #region 行为函数
-    public void CreateSpawnDust(bool useAI = true)
-    {
-        int spawnDustAmount = 2;
-        float timer = useAI ? Timer : NPC.Calamity().newAI[0];
-        for (int i = 0; i < spawnDustAmount; i++)
-        {
-            Dust.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.RainbowMk2, action: d =>
-            {
-                d.color = Main.hslToRgb(timer / Data.SpawnTime, 1f, 0.5f);
-                d.position = NPC.Center + Main.rand.NextVector2Circular(NPC.width * 3f, NPC.height * 3f) + new Vector2(0f, -150f);
-                d.velocity *= Main.rand.NextFloat(0.8f);
-                d.noGravity = true;
-                d.fadeIn = 0.6f + Main.rand.NextFloat(0.7f) * MathHelper.Lerp(1.3f, 0.7f, NPC.Opacity) * Utils.GetLerpValue(0f, 120f, timer, clamped: true);
-                d.velocity += new Vector2(0f, 3f);
-                d.scale = 0.35f;
-                Dust d2 = Dust.CloneDust(d);
-                d2.scale /= 2f;
-                d2.fadeIn *= 0.85f;
-                d2.color = new(255, 255, 255, 255);
-            });
-        }
-    }
-
-    public void AI_120_HallowBoss_DoMagicEffect(Vector2 spot, int effectType, float progress)
-    {
-        float magicDustSpawnArea = 4f;
-        float magicDustColorMult = 1f;
-        float fadeIn = 0f;
-        float magicDustPosChange = 0.5f;
-        int magicAmt = 2;
-        int magicDustType = 267;
-        switch (effectType)
-        {
-            case 1:
-                magicDustColorMult = 0.5f;
-                fadeIn = 2f;
-                magicDustPosChange = 0f;
-                break;
-            case 2:
-            case 4:
-                magicDustSpawnArea = 50f;
-                magicDustColorMult = 0.5f;
-                fadeIn = 0f;
-                magicDustPosChange = 0f;
-                magicAmt = 4;
-                break;
-            case 3:
-                magicDustSpawnArea = 30f;
-                magicDustColorMult = 0.1f;
-                fadeIn = 2.5f;
-                magicDustPosChange = 0f;
-                break;
-            case 5:
-                if (progress == 0f)
-                    magicAmt = 0;
-                else
-                {
-                    magicAmt = 5;
-                    magicDustType = Main.rand.Next(86, 92);
-                }
-                if (progress >= 1f)
-                    magicAmt = 0;
-                break;
-        }
-
-        for (int i = 0; i < magicAmt; i++)
-        {
-            Dust.NewDustPerfectAction(spot, magicDustType, d =>
-            {
-                d.velocity = Main.rand.NextVector2CircularEdge(magicDustSpawnArea, magicDustSpawnArea) * (Main.rand.NextFloat() * (1f - magicDustPosChange) + magicDustPosChange);
-                d.color = Main.hslToRgb(Main.rand.NextFloat(), 1f, 0.5f);
-                d.scale = (Main.rand.NextFloat() * 2f + 2f) * magicDustColorMult;
-                d.fadeIn = fadeIn;
-                d.noGravity = true;
-                switch (effectType)
-                {
-                    case 2:
-                    case 4:
-                        {
-                            d.velocity *= 0.005f;
-                            d.scale = 3f * Utils.GetLerpValue(0.7f, 0f, progress, clamped: true) * Utils.GetLerpValue(0f, 0.3f, progress, clamped: true);
-                            d.velocity = (MathHelper.TwoPi * (i / 4f) + MathHelper.PiOver4).ToRotationVector2() * 8f * Utils.GetLerpValue(1f, 0f, progress, clamped: true);
-                            d.velocity += NPC.velocity * 0.3f;
-                            float magicDustColorChange = 0f;
-                            if (effectType == 4)
-                                magicDustColorChange = 0.5f;
-
-                            d.color = Main.hslToRgb((i / 5f + magicDustColorChange + progress * 0.5f) % 1f, 1f, 0.5f);
-                            d.color.A /= 2;
-                            d.alpha = 127;
-                            break;
-                        }
-                    case 5:
-                        if (progress == 0f)
-                        {
-                            d.customData = NPC;
-                            d.scale = 1.5f;
-                            d.fadeIn = 0f;
-                            d.velocity = new Vector2(0f, -1f) + Main.rand.NextVector2Circular(1f, 1f);
-                            d.color = new Color(255, 255, 255, 80) * 0.3f;
-                        }
-                        else
-                        {
-                            d.color = Main.hslToRgb(progress * 2f % 1f, 1f, 0.5f);
-                            d.alpha = 0;
-                            d.scale = 1f;
-                            d.fadeIn = 1.3f;
-                            d.velocity *= 3f;
-                            d.velocity.X *= 0.1f;
-                            d.velocity += NPC.velocity * 1f;
-                        }
-                        break;
-                }
-            });
-        }
-    }
-
-    public void SpawnAnimation()
-    {
-        NPC.damage = 0;
-
-        if (Timer == 0f)
-        {
-            NPC.velocity = new Vector2(0f, 5f);
-            if (Main.netMode != NetmodeID.MultiplayerClient)
-                Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center + new Vector2(0f, -80f), Vector2.Zero, ProjectileID.HallowBossDeathAurora, 0, 0f, Main.myPlayer);
-        }
-
-        if (Timer == Data.PlaySpawnSoundTime)
-            SoundEngine.PlaySound(SoundID.Item161, NPC.Center);
-
-        NPC.velocity *= 0.95f;
-
-        if (Timer is > Data.PlaySpawnSoundTime and < Data.StopSpawningDustTime)
-            CreateSpawnDust();
-
-        Timer++;
-        Visible = false;
-        TakeDamage = false;
-        NPC.Opacity = MathHelper.Clamp((float)Timer / Data.SpawnTime, 0f, 1f);
-
-        if (Timer >= Data.SpawnTime)
-        {
-            if (NPC.ShouldEmpressBeEnraged() && !NPC.AI_120_HallowBoss_IsGenuinelyEnraged())
+            NPC.rotation = NPC.velocity.X * 0.005f;
+            bool shouldBeInPhase2ButIsStillInPhase1 = NPC.LifeRatio <= Data.Phase2GateValue && IsInPhase2;
+            CalamityNPC.DR = shouldBeInPhase2ButIsStillInPhase1 ? 0.99f : 0.15f;
+            CalamityNPC.unbreakableDR = shouldBeInPhase2ButIsStillInPhase1;
+            if (NPC.life == NPC.lifeMax && NPC.ShouldEmpressBeEnraged() && !Enrage)
                 Enrage = true;
+            CalamityNPC.CurrentlyEnraged = !BossRushEvent.BossRushActive && Enrage;
+            NPC.defense = (int)(NPC.defDefense * PhaseEnrage switch
+            {
+                PhaseEnrageData.Phase2 or PhaseEnrageData.Phase2Enraged => 1.2f,
+                PhaseEnrageData.Phase3 or PhaseEnrageData.Phase3Enraged => 0.8f,
+                _ => 1f
+            });
+            if (++NPC.localAI[0] >= 44f)
+                NPC.localAI[0] = 0f;
+            NPC.dontTakeDamage = !TakeDamage;
+            if (Visible)
+                NPC.alpha = Math.Clamp(NPC.alpha - 5, 0, 255);
+            Lighting.AddLight(NPC.Center, Vector3.One * NPC.Opacity);
+        }
 
-            CurrentAttack = Behavior.BehaviorSwitch;
-            Timer = 0;
-            NPC.netUpdate = true;
-            NPC.TargetClosest();
+        void AI_Night()
+        {
+
+        }
+
+        void AI_Day()
+        {
+
+        }
+
+        void AI_NightUltra()
+        {
+
+        }
+
+        void AI_DayUltra()
+        {
+
+        }
+
+        void CreateSpawnDust(bool useAI = true)
+        {
+            int spawnDustAmount = 2;
+            float timer = useAI ? Timer : NPC.Calamity().newAI[0];
+            for (int i = 0; i < spawnDustAmount; i++)
+            {
+                Dust.NewDustAction(NPC.Center, NPC.width, NPC.height, DustID.RainbowMk2, action: d =>
+                {
+                    d.color = Main.hslToRgb(timer / Data.SpawnTime, 1f, 0.5f);
+                    d.position = NPC.Center + Main.rand.NextVector2Circular(NPC.width * 3f, NPC.height * 3f) + new Vector2(0f, -150f);
+                    d.velocity *= Main.rand.NextFloat(0.8f);
+                    d.noGravity = true;
+                    d.fadeIn = 0.6f + Main.rand.NextFloat(0.7f) * MathHelper.Lerp(1.3f, 0.7f, NPC.Opacity) * Utils.GetLerpValue(0f, 120f, timer, clamped: true);
+                    d.velocity += new Vector2(0f, 3f);
+                    d.scale = 0.35f;
+                    Dust d2 = Dust.CloneDust(d);
+                    d2.scale /= 2f;
+                    d2.fadeIn *= 0.85f;
+                    d2.color = new(255, 255, 255, 255);
+                });
+            }
+        }
+
+        void AI_120_HallowBoss_DoMagicEffect(Vector2 spot, int effectType, float progress)
+        {
+            float magicDustSpawnArea = 4f;
+            float magicDustColorMult = 1f;
+            float fadeIn = 0f;
+            float magicDustPosChange = 0.5f;
+            int magicAmt = 2;
+            int magicDustType = 267;
+            switch (effectType)
+            {
+                case 1:
+                    magicDustColorMult = 0.5f;
+                    fadeIn = 2f;
+                    magicDustPosChange = 0f;
+                    break;
+                case 2:
+                case 4:
+                    magicDustSpawnArea = 50f;
+                    magicDustColorMult = 0.5f;
+                    fadeIn = 0f;
+                    magicDustPosChange = 0f;
+                    magicAmt = 4;
+                    break;
+                case 3:
+                    magicDustSpawnArea = 30f;
+                    magicDustColorMult = 0.1f;
+                    fadeIn = 2.5f;
+                    magicDustPosChange = 0f;
+                    break;
+                case 5:
+                    if (progress == 0f)
+                        magicAmt = 0;
+                    else
+                    {
+                        magicAmt = 5;
+                        magicDustType = Main.rand.Next(86, 92);
+                    }
+                    if (progress >= 1f)
+                        magicAmt = 0;
+                    break;
+            }
+
+            for (int i = 0; i < magicAmt; i++)
+            {
+                Dust.NewDustPerfectAction(spot, magicDustType, d =>
+                {
+                    d.velocity = Main.rand.NextVector2CircularEdge(magicDustSpawnArea, magicDustSpawnArea) * (Main.rand.NextFloat() * (1f - magicDustPosChange) + magicDustPosChange);
+                    d.color = Main.hslToRgb(Main.rand.NextFloat(), 1f, 0.5f);
+                    d.scale = (Main.rand.NextFloat() * 2f + 2f) * magicDustColorMult;
+                    d.fadeIn = fadeIn;
+                    d.noGravity = true;
+                    switch (effectType)
+                    {
+                        case 2:
+                        case 4:
+                            {
+                                d.velocity *= 0.005f;
+                                d.scale = 3f * Utils.GetLerpValue(0.7f, 0f, progress, clamped: true) * Utils.GetLerpValue(0f, 0.3f, progress, clamped: true);
+                                d.velocity = (MathHelper.TwoPi * (i / 4f) + MathHelper.PiOver4).ToRotationVector2() * 8f * Utils.GetLerpValue(1f, 0f, progress, clamped: true);
+                                d.velocity += NPC.velocity * 0.3f;
+                                float magicDustColorChange = 0f;
+                                if (effectType == 4)
+                                    magicDustColorChange = 0.5f;
+
+                                d.color = Main.hslToRgb((i / 5f + magicDustColorChange + progress * 0.5f) % 1f, 1f, 0.5f);
+                                d.color.A /= 2;
+                                d.alpha = 127;
+                                break;
+                            }
+                        case 5:
+                            if (progress == 0f)
+                            {
+                                d.customData = NPC;
+                                d.scale = 1.5f;
+                                d.fadeIn = 0f;
+                                d.velocity = new Vector2(0f, -1f) + Main.rand.NextVector2Circular(1f, 1f);
+                                d.color = new Color(255, 255, 255, 80) * 0.3f;
+                            }
+                            else
+                            {
+                                d.color = Main.hslToRgb(progress * 2f % 1f, 1f, 0.5f);
+                                d.alpha = 0;
+                                d.scale = 1f;
+                                d.fadeIn = 1.3f;
+                                d.velocity *= 3f;
+                                d.velocity.X *= 0.1f;
+                                d.velocity += NPC.velocity * 1f;
+                            }
+                            break;
+                    }
+                });
+            }
+
+            void SpawnAnimation()
+            {
+                NPC.damage = 0;
+
+                if (Timer == 0f)
+                {
+                    NPC.velocity = new Vector2(0f, 5f);
+                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                        Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center + new Vector2(0f, -80f), Vector2.Zero, ProjectileID.HallowBossDeathAurora, 0, 0f, Main.myPlayer);
+                }
+
+                if (Timer == Data.PlaySpawnSoundTime)
+                    SoundEngine.PlaySound(SoundID.Item161, NPC.Center);
+
+                NPC.velocity *= 0.95f;
+
+                if (Timer is > Data.PlaySpawnSoundTime and < Data.StopSpawningDustTime)
+                    CreateSpawnDust();
+
+                Timer++;
+                Visible = false;
+                TakeDamage = false;
+                NPC.Opacity = MathHelper.Clamp((float)Timer / Data.SpawnTime, 0f, 1f);
+
+                if (Timer >= Data.SpawnTime)
+                {
+                    if (NPC.ShouldEmpressBeEnraged() && !NPC.AI_120_HallowBoss_IsGenuinelyEnraged())
+                        Enrage = true;
+
+                    CurrentAttack = Behavior.BehaviorSwitch;
+                    Timer = 0;
+                    NPC.netUpdate = true;
+                    NPC.TargetClosest();
+                }
+            }
+        }
+
+        void BehaviorSwitch()
+        {
+
         }
     }
-
-    public void BehaviorSwitch()
-    {
-
-    }
-    #endregion
     #endregion AI
 }
