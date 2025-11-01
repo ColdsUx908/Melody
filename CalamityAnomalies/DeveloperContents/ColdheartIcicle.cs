@@ -134,7 +134,7 @@ public sealed class ColdheartIcicle : ModItem
         Item.UseSound = SoundID.Item1;
         Item.useTurn = true;
         Item.knockBack = 3f;
-        Item.value = TOMain.CelestialPrice;
+        Item.value = Celestial.CelestialPrice;
         Item.shoot = ModContent.ProjectileType<ColdheartIcicleProj>();
         Item.shootSpeed = 1.25f;
         Item.rare = ModContent.RarityType<Celestial>();

@@ -12,15 +12,18 @@ public static class JewelHandler
     public static Color EmeraldColor => Main.zenithWorld ? Color.Purple : Color.RealGreen;
     public static Color RubyColor => Main.zenithWorld ? Color.Cyan : Color.Red;
     public static Color SapphireColor => Main.zenithWorld ? Color.Yellow : Color.Blue;
+    public static Color RainbowColor => Main.DiscoColor;
     public static Color EmeraldFinalColor => Main.zenithWorld ? new(255, 175, 255) : new(175, 255, 175);
     public static Color RubyFinalColor => Main.zenithWorld ? new(175, 255, 255) : new(255, 175, 175);
     public static Color SapphireFinalColor => Main.zenithWorld ? new(255, 255, 175) : new(175, 175, 255);
+    public static Color RainbowFinalColor => Color.Lerp(Main.DiscoColor, Color.White, 0.7f);
 
     public static Color GetColor(NPC jewel) => jewel.ModNPC switch
     {
         KingSlimeJewelEmerald => EmeraldColor,
         KingSlimeJewelRuby => RubyColor,
         KingSlimeJewelSapphire => SapphireColor,
+        KingSlimeJewelRainbow => RainbowColor,
         _ => Color.White
     };
 
@@ -29,6 +32,7 @@ public static class JewelHandler
         KingSlimeJewelEmerald => EmeraldFinalColor,
         KingSlimeJewelRuby => RubyFinalColor,
         KingSlimeJewelSapphire => SapphireFinalColor,
+        KingSlimeJewelRainbow => RainbowFinalColor,
         _ => Color.White
     };
 
@@ -62,26 +66,31 @@ public static class JewelHandler
         jewel.knockBackResist = 0.7f;
         jewel.rotation = jewel.velocity.X / 15f;
         Vector2 distance = jewel.Center - destination;
-        if (distance.X > safeDistanceXMax)
+        float adjustedX = distance.X - (safeDistanceXMax + safeDistanceXMin) / 2f;
+        float safeX = (safeDistanceXMax - safeDistanceXMin) / 2f;
+        float adjustedY = distance.Y - (safeDistanceYMax + safeDistanceYMin) / 2f;
+        float safeY = (safeDistanceYMax - safeDistanceYMin) / 2f;
+        maxVelocityX = TOMathHelper.Map(safeX, safeX * 7f, maxVelocityX * 0.65f, maxVelocityX, Math.Abs(adjustedX), true);
+        maxVelocityY = TOMathHelper.Map(safeY, safeY * 7f, maxVelocityY * 0.65f, maxVelocityY, Math.Abs(adjustedY), true);
+        if (adjustedX > safeX)
         {
             if (jewel.velocity.X > 0f)
                 jewel.velocity.X *= 0.98f;
             jewel.velocity.X = Math.Clamp(jewel.velocity.X - acceleration, -maxVelocityX, maxVelocityX);
         }
-        else if (distance.X < safeDistanceXMin)
+        else if (adjustedX < -safeX)
         {
             if (jewel.velocity.X < 0f)
                 jewel.velocity.X *= 0.98f;
             jewel.velocity.X = Math.Clamp(jewel.velocity.X + acceleration, -maxVelocityX, maxVelocityX);
         }
-        if (distance.Y > safeDistanceYMax)
+        if (adjustedY > safeY)
         {
-
             if (jewel.velocity.Y > 0f)
                 jewel.velocity.Y *= 0.98f;
             jewel.velocity.Y = Math.Clamp(jewel.velocity.Y - acceleration, -maxVelocityY, maxVelocityY);
         }
-        else if (distance.Y < safeDistanceYMin)
+        else if (adjustedY < -safeY)
         {
             if (jewel.velocity.Y < 0f)
                 jewel.velocity.Y *= 0.98f;
@@ -111,10 +120,21 @@ public static class JewelHandler
     /// <summary>
     /// 宝石粒子生成通用逻辑。
     /// </summary>
-    /// <param name="amount">生成粒子数量。</param>
     /// <param name="jewel">宝石。</param>
     /// <param name="velocity">粒子速度大小。</param>
     /// <param name="lifetime">粒子存在时长。</param>
     /// <param name="scale">粒子大小。</param>
     public static void SpawnParticle(NPC jewel, float velocity, int lifetime, float scale) => GeneralParticleHandler.SpawnParticle(new FadingGlowOrbParticle(jewel.Center, Main.rand.NextPolarVector2(velocity), 0f, lifetime, 0.925f, scale, GetColor(jewel)));
+
+    public static bool CheckIfPhase2(NPC jewel) => jewel.ai[2] > 0f;
+
+    public static void EnterPhase2(NPC jewel)
+    {
+        for (int i = 0; i < 20; i++)
+            SpawnParticle(jewel, Main.rand.NextFloat(2f, 2.5f), Main.rand.Next(20, 30), Main.rand.NextFloat(0.4f, 0.7f));
+        SoundEngine.PlaySound(jewel.DeathSound, jewel.Center);
+        jewel.ai[2] = 1f;
+        jewel.dontTakeDamage = true;
+        jewel.netUpdate = true;
+    }
 }

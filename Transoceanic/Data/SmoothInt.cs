@@ -10,12 +10,8 @@ public struct SmoothInt : IEquatable<SmoothInt>
         0, max);
 
     public readonly bool Equals(SmoothInt other) => LastOn == other.LastOn && LastOff == other.LastOff;
-
     public override readonly bool Equals([NotNullWhen(true)] object obj) => obj is SmoothInt other && Equals(other);
-
-    public override readonly int GetHashCode() => HashCode.Combine(LastOn, LastOff);
-
     public static bool operator ==(SmoothInt left, SmoothInt right) => left.Equals(right);
-
     public static bool operator !=(SmoothInt left, SmoothInt right) => !(left == right);
+    public override readonly int GetHashCode() => HashCode.Combine(LastOn, LastOff);
 }

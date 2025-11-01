@@ -22,11 +22,7 @@ public sealed class ModReference : IResourceLoader
         /// </summary>
         public readonly Mod Mod;
 
-        public Container(string name = "")
-        {
-            Name = name;
-            IsLoaded = ModLoader.TryGetMod(Name, out Mod);
-        }
+        public Container(string name = "") => IsLoaded = ModLoader.TryGetMod(Name = name, out Mod);
 
         public static readonly Container Empty = new();
     }

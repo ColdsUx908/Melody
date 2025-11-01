@@ -27,36 +27,23 @@ public static partial class TOExtensions
         /// <summary>
         /// 检查指定类型中是否存在对应方法。
         /// </summary>
-        /// <param name="methodName"></param>
-        /// <param name="bindingAttr"></param>
-        /// <param name="methodInfo"></param>
-        /// <returns></returns>
         public bool HasMethod(string methodName, BindingFlags bindingAttr, out MethodInfo methodInfo) =>
             (methodInfo = type.GetMethod(methodName, bindingAttr)) is not null;
 
         /// <summary>
         /// 获取指定类型中所有由该类型声明的方法。
         /// </summary>
-        /// <param name="bindingAttr"></param>
-        /// <returns></returns>
         public MethodInfo[] GetRealMethods(BindingFlags bindingAttr) => type.GetMethods(bindingAttr | BindingFlags.DeclaredOnly);
 
         /// <summary>
         /// 检查指定类型是否声明了对应方法。
         /// </summary>
-        /// <param name="methodName"></param>
-        /// <param name="bindingAttr"></param>
-        /// <param name="methodInfo"></param>
-        /// <returns></returns>
         public bool HasRealMethod(string methodName, BindingFlags bindingAttr, out MethodInfo methodInfo) =>
             type.HasMethod(methodName, bindingAttr | BindingFlags.DeclaredOnly, out methodInfo);
 
         /// <summary>
         /// 检查指定类型是否声明了对应方法。
         /// </summary>
-        /// <param name="methodName"></param>
-        /// <param name="bindingAttr"></param>
-        /// <returns></returns>
         public bool HasRealMethod(string methodName, BindingFlags bindingAttr) =>
             type.HasRealMethod(methodName, bindingAttr, out _);
 
@@ -77,15 +64,11 @@ public static partial class TOExtensions
         /// <summary>
         /// 获取指定类型中所有重写方法。
         /// </summary>
-        /// <param name="bindingAttr"></param>
-        /// <returns></returns>
         public IEnumerable<MethodInfo> GetOverrideMethods(BindingFlags bindingAttr) => type.GetRealMethods(bindingAttr).Where(m => m.IsOverride);
 
         /// <summary>
         /// 获取指定类型中所有重写方法的名称。
         /// </summary>
-        /// <param name="bindingAttr"></param>
-        /// <returns></returns>
         public IEnumerable<string> GetOverrideMethodNames(BindingFlags bindingAttr) => type.GetOverrideMethods(bindingAttr).Select(m => m.Name);
 
         public T Attribute<T>(bool inherit = true) where T : Attribute => type.GetCustomAttributes(typeof(T), inherit).OfType<T>().FirstOrDefault();

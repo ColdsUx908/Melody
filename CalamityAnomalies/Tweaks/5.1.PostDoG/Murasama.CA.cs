@@ -17,7 +17,6 @@ using CalamityMod.NPCs.ProfanedGuardians;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.NPCs.Yharon;
 using CalamityMod.Projectiles.Melee;
-using Terraria.UI.Gamepad;
 
 namespace CalamityAnomalies.Tweaks;
 
@@ -142,6 +141,8 @@ public sealed class Murasama_Handler : IResourceLoader
 
 public sealed class Murasama_Tweak : CAItemTweak<Murasama>
 {
+    public override CAGamePhase Phase => CAGamePhase.PostDoG;
+
     public override void SetDefaults()
     {
         Item.damage = 2300;
@@ -227,37 +228,42 @@ public sealed class Murasama_Tweak : CAItemTweak<Murasama>
     }
 }
 
-public sealed class Murasama_Detour : CAModItemDetour<Murasama>
+public sealed class Murasama_Override : CAItemOverride<Murasama>
 {
-    public override bool Detour_PreDrawInInventory(Orig_PreDrawInInventory orig, Murasama self, SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
+    public override CAGamePhase Phase => CAGamePhase.PostDoG;
+
+    public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
     {
         if (Murasama_Handler.Unlocked(Main.LocalPlayer))
-            spriteBatch.Draw(Murasama_Handler.Texture, position, self.Item.GetCurrentFrame(ref self.frame, ref self.frameCounter, 2, 13), Color.White, 0f, origin, scale, SpriteEffects.None, 0); //0 = 6 frames, 8 = 3 frames
+            spriteBatch.Draw(Murasama_Handler.Texture, position, Item.GetCurrentFrame(ref Self.frame, ref Self.frameCounter, 2, 13), Color.White, 0f, origin, scale, SpriteEffects.None, 0); //0 = 6 frames, 8 = 3 frames
         else
             spriteBatch.Draw(Murasama_Handler.SteathedTexture, position, null, Color.White, 0f, origin, scale, SpriteEffects.None, 0);
 
         return false;
     }
 
-    public override bool Detour_PreDrawInWorld(Orig_PreDrawInWorld orig, Murasama self, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
+    public override bool PreDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
     {
         if (Murasama_Handler.Unlocked(Main.LocalPlayer))
-            spriteBatch.Draw(Murasama_Handler.Texture, self.Item.position - Main.screenPosition, self.Item.GetCurrentFrame(ref self.frame, ref self.frameCounter, 2, 13), lightColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
+            spriteBatch.Draw(Murasama_Handler.Texture, Item.position - Main.screenPosition, Item.GetCurrentFrame(ref Self.frame, ref Self.frameCounter, 2, 13), lightColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
         else
-            spriteBatch.Draw(Murasama_Handler.SteathedTexture, self.Item.position - Main.screenPosition, null, lightColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
+            spriteBatch.Draw(Murasama_Handler.SteathedTexture, Item.position - Main.screenPosition, null, lightColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
 
         return false;
     }
 
-    public override void Detour_PostDrawInWorld(Orig_PostDrawInWorld orig, Murasama self, SpriteBatch spriteBatch, Color lightColor, Color alphaColor, float rotation, float scale, int whoAmI) =>
-        spriteBatch.Draw(Murasama_Handler.GlowTexture, self.Item.position - Main.screenPosition, self.Item.GetCurrentFrame(ref self.frame, ref self.frameCounter, 2, 13, false), Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
+    public override void PostDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, float rotation, float scale, int whoAmI) =>
+        spriteBatch.Draw(Murasama_Handler.GlowTexture, Item.position - Main.screenPosition, Item.GetCurrentFrame(ref Self.frame, ref Self.frameCounter, 2, 13, false), Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
 
-    public override bool Detour_CanUseItem(Orig_CanUseItem orig, Murasama self, Player player) =>
-        Murasama_Handler.Unlocked(player) && player.ownedProjectileCounts[self.Item.shoot] < 1;
+    public override bool CanUseItem(Player player) =>
+        Murasama_Handler.Unlocked(player) && player.ownedProjectileCounts[Item.shoot] < 1;
 }
 
 public sealed class MurasamaSlash_Tweak : CAProjectileTweak<MurasamaSlash>
 {
+    public override CAGamePhase Phase => CAGamePhase.PostDoG;
+    public override int[] RelatedItems => [ModContent.ItemType<Murasama>()];
+
     public int OriginalDamage
     {
         get => AnomalyProjectile.AnomalyAI32[0].i;

@@ -1,7 +1,4 @@
-﻿using Microsoft.CodeAnalysis.FlowAnalysis.DataFlow;
-using Terraria;
-
-namespace Transoceanic.Extensions;
+﻿namespace Transoceanic.Extensions;
 
 public static partial class TOExtensions
 {

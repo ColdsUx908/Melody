@@ -9,7 +9,15 @@ public struct PolarVector2 : IEquatable<PolarVector2>
     /// 模长。
     /// <br/>非负。
     /// </summary>
-    public float Radius;
+    public float Radius
+    {
+        get;
+        set
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(value);
+            field = value;
+        }
+    }
 
     /// <summary>
     /// 角度。
@@ -17,8 +25,8 @@ public struct PolarVector2 : IEquatable<PolarVector2>
     /// </summary>
     public float Angle
     {
-        get;
-        set => field = TOMathHelper.NormalizeAngle(value);
+        readonly get => Radius == 0f ? 0f : field;
+        set => field = Radius == 0f ? 0f : TOMathHelper.NormalizeAngle(value); //零向量的角度强制为0
     }
 
     /// <summary>
@@ -55,13 +63,8 @@ public struct PolarVector2 : IEquatable<PolarVector2>
     /// <param name="angle">θ。</param>
     public PolarVector2(float radius, float angle)
     {
-        Radius = radius switch
-        {
-            >= 0f => radius,
-            < 0f => throw new ArgumentOutOfRangeException(nameof(radius), radius, "Radius is negative"),
-            _ => throw new NotFiniteNumberException("Radius is not finite.", radius)
-        };
-        Angle = radius == 0f ? 0f : angle; //零向量的角度强制为0
+        Radius = radius;
+        Angle = angle;
     }
 
     /// <summary>
@@ -209,9 +212,9 @@ public struct PolarVector2 : IEquatable<PolarVector2>
 
     public override readonly bool Equals([NotNullWhen(true)] object obj) => obj is PolarVector2 other && Equals(other);
     public readonly bool Equals(PolarVector2 other) => Radius == other.Radius && Angle == other.Angle;
-    public override readonly int GetHashCode() => HashCode.Combine(Radius, Angle);
     public static bool operator ==(PolarVector2 left, PolarVector2 right) => left.Equals(right);
     public static bool operator !=(PolarVector2 left, PolarVector2 right) => !(left == right);
+    public override readonly int GetHashCode() => HashCode.Combine(Radius, Angle);
 
     /// <summary>
     /// 获取字符串表示形式。

@@ -67,11 +67,9 @@ public static class YharimsGift_Handler
     }
 }
 
-public sealed class YharimsGift_Tweak : CAItemTweak<YharimsGift>, ICATweakLocalizationPrefix
+public sealed class YharimsGift_Tweak : CAItemTweak<YharimsGift>
 {
-    CATweakPhase ICATweakLocalizationPrefix.Phase => CATweakPhase.PostYharon;
-
-    string ICATweakLocalizationPrefix.Name => "YharimsGift";
+    public override CAGamePhase Phase => CAGamePhase.PostYharon;
 
     public override void UpdateAccessory(Player player, bool hideVisual)
     {
@@ -88,11 +86,11 @@ public sealed class YharimsGift_Tweak : CAItemTweak<YharimsGift>, ICATweakLocali
     }
 }
 
-public sealed class YharimsGift_Player : CAPlayerBehavior2, ICATweakLocalizationPrefix
+public sealed class YharimsGift_Player : CAPlayerBehavior2, ICALocalizationPrefix
 {
-    CATweakPhase ICATweakLocalizationPrefix.Phase => CATweakPhase.PostYharon;
+    CAGamePhase ICALocalizationPrefix.Phase => CAGamePhase.PostYharon;
 
-    string ICATweakLocalizationPrefix.Name => "YharimsGift";
+    string ICALocalizationPrefix.LocalizationName => "YharimsGift";
 
     public override void ProcessTriggers(TriggersSet triggersSet)
     {

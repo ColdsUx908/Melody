@@ -8,9 +8,10 @@
  * 加速度乘1.3（原版：1.75，原灾厄：1.1）。
  */
 
-public sealed class SoaringInsignia_Tweak : CAItemTweak, ILocalizationPrefix
+public sealed class SoaringInsignia_Tweak : CAItemTweak
 {
-    public string LocalizationPrefix => CAMain.TweakLocalizationPrefix + "3.2.SoaringInsignia.";
+    public override CAGamePhase Phase => CAGamePhase.PostGolem;
+    public override string LocalizationName => "SoaringInsignia.";
 
     public override int ApplyingType => ItemID.EmpressFlightBooster;
 

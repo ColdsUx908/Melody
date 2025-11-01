@@ -27,11 +27,9 @@ public static class Exoblade_Handler
     public static bool IsGod(Player player) => player.name == "神光";
 }
 
-public sealed class Exoblade_Tweak : CAItemTweak<Exoblade>, ICATweakLocalizationPrefix
+public sealed class Exoblade_Tweak : CAItemTweak<Exoblade>, ICALocalizationPrefix
 {
-    CATweakPhase ICATweakLocalizationPrefix.Phase => CATweakPhase.PostYharon;
-
-    string ICATweakLocalizationPrefix.Name => "Exoblade";
+    public override CAGamePhase Phase => CAGamePhase.PostYharon;
 
     public override void SetStaticDefaults()
     {
@@ -64,12 +62,14 @@ public sealed class Exoblade_Tweak : CAItemTweak<Exoblade>, ICATweakLocalization
     }
 }
 
-public sealed class ExobladeProj_Detour : CAModProjectileDetour<ExobladeProj>
+public sealed class ExobladeProj_Override : CAProjectileOverride<ExobladeProj>
 {
+    public override CAGamePhase Phase => CAGamePhase.PostYharon;
+    public override int[] RelatedItems => [ModContent.ItemType<Exoblade>()];
+
     public const float BladeLength = 180f;
 
     public delegate void Orig_DoBehavior_Swinging(ExobladeProj self);
-
     public static void Detour_DoBehavior_Swinging(Orig_DoBehavior_Swinging orig, ExobladeProj self)
     {
         Projectile projectile = self.Projectile;
@@ -189,7 +189,7 @@ public sealed class ExobladeProj_Detour : CAModProjectileDetour<ExobladeProj>
         }
     }
 
-    private static void AprilFoolProj(Projectile p)
+    public static void AprilFoolProj(Projectile p)
     {
         if (TOWorld.AprilFools)
         {
@@ -202,12 +202,15 @@ public sealed class ExobladeProj_Detour : CAModProjectileDetour<ExobladeProj>
     public override void ApplyDetour()
     {
         base.ApplyDetour();
-        TryApplyDetour(Detour_DoBehavior_Swinging);
+        ApplySingleDetour(Detour_DoBehavior_Swinging);
     }
 }
 
 public sealed class Exobeam_Tweak : CAProjectileTweak<Exobeam>
 {
+    public override CAGamePhase Phase => CAGamePhase.PostYharon;
+    public override int[] RelatedItems => [ModContent.ItemType<Exoblade>()];
+
     public override void SetDefaults()
     {
         Projectile.extraUpdates = 2;
@@ -278,14 +281,20 @@ public sealed class Exobeam_Tweak : CAProjectileTweak<Exobeam>
 
 public sealed class ExobeamSlash_Tweak : CAProjectileTweak<ExobeamSlash>
 {
+    public override CAGamePhase Phase => CAGamePhase.PostYharon;
+    public override int[] RelatedItems => [ModContent.ItemType<Exoblade>()];
+
     public override void SetDefaults()
     {
         Projectile.localNPCHitCooldown = -1;
     }
 }
 
-public sealed class ExobeamSlash_Detour : CAModProjectileDetour<ExobeamSlash>
+public sealed class ExobeamSlash_Detour : CAProjectileOverride<ExobeamSlash>
 {
-    public override bool? Detour_Colliding(Orig_Colliding orig, ExobeamSlash self, Rectangle projHitbox, Rectangle targetHitbox) =>
-        new Circle(self.Projectile.Center, 16f).Collides(targetHitbox);
+    public override CAGamePhase Phase => CAGamePhase.PostYharon;
+    public override int[] RelatedItems => [ModContent.ItemType<Exoblade>()];
+
+    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) =>
+        new Circle(Projectile.Center, 16f).Collides(targetHitbox);
 }

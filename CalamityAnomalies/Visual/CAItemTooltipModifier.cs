@@ -4,14 +4,12 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
 {
     public const string CATooltip = "CATooltip";
 
+    public ItemTooltipDictionary _tooltipDictionary;
+
     public int _nextCATooltipNum;
     public int _nextCATooltipIndex;
-    public bool _haveClearedCATooltip;
-    public bool _haveAddedCATooltip;
 
     public bool Valid => _nextCATooltipIndex != -1;
-    public bool ShouldUpdateBeforeModify => _haveClearedCATooltip || _haveAddedCATooltip;
-    public bool ShouldUpdateBeforeAdd => _haveClearedCATooltip;
 
     public CAItemTooltipModifier(Item item, List<TooltipLine> tooltips) : base(item, tooltips) => UpdateCA();
 
@@ -41,32 +39,13 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
     {
         UpdateDictionary();
         UpdateCA();
-        _haveClearedCATooltip = _haveAddedCATooltip = false;
     }
 
-    public override CAItemTooltipModifier Modify(string mod, string name, string newText)
-    {
-        if (ShouldUpdateBeforeModify)
-            Update();
-        Modify_Inner(mod, name, newText);
-        return this;
-    }
+    public override CAItemTooltipModifier Modify(string mod, string name, string newText) => (CAItemTooltipModifier)base.Modify(mod, name, newText);
 
-    public override CAItemTooltipModifier Modify(string mod, string name, string newText, Color newColor)
-    {
-        if (ShouldUpdateBeforeModify)
-            Update();
-        Modify_Inner(mod, name, newText, newColor);
-        return this;
-    }
+    public override CAItemTooltipModifier Modify(string mod, string name, string newText, Color newColor) => (CAItemTooltipModifier)base.Modify(mod, name, newText, newColor);
 
-    public override CAItemTooltipModifier Modify(string mod, string name, Action<TooltipLine> action)
-    {
-        if (ShouldUpdateBeforeModify)
-            Update();
-        Modify_Inner(mod, name, action);
-        return this;
-    }
+    public override CAItemTooltipModifier Modify(string mod, string name, Action<TooltipLine> action) => (CAItemTooltipModifier)base.Modify(mod, name, action);
 
     public override CAItemTooltipModifier ModifyTooltip(int num, string newText) => Modify(null, $"{Tooltip}{num}", newText);
 
@@ -85,7 +64,6 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
     public CAItemTooltipModifier ClearAllCATooltips()
     {
         _tooltips.RemoveAll(line => line.Mod == CAMain.ModName && line.Name.StartsWith(CATooltip));
-        _haveClearedCATooltip = true;
         return this;
     }
 
@@ -93,12 +71,9 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
     {
         if (Valid)
         {
-            if (ShouldUpdateBeforeAdd)
-                Update();
             _tooltips.Insert(_nextCATooltipIndex, CAUtils.CreateNewTooltipLine(_nextCATooltipNum, text));
             _nextCATooltipIndex++;
             _nextCATooltipNum++;
-            _haveAddedCATooltip = true;
         }
         return this;
     }
@@ -107,12 +82,9 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
     {
         if (Valid)
         {
-            if (ShouldUpdateBeforeAdd)
-                Update();
             _tooltips.Insert(_nextCATooltipIndex, CAUtils.CreateNewTooltipLine(_nextCATooltipNum, text, color));
             _nextCATooltipIndex++;
             _nextCATooltipNum++;
-            _haveAddedCATooltip = true;
         }
         return this;
     }
@@ -121,12 +93,9 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
     {
         if (Valid)
         {
-            if (ShouldUpdateBeforeAdd)
-                Update();
             _tooltips.Insert(_nextCATooltipIndex, CAUtils.CreateNewTooltipLine(_nextCATooltipNum, action));
             _nextCATooltipIndex++;
             _nextCATooltipNum++;
-            _haveAddedCATooltip = true;
         }
         return this;
     }

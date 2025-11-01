@@ -8,6 +8,8 @@ namespace CalamityAnomalies.Tweaks;
 
 public sealed class ScalRitualDrama_Tweak : CAProjectileTweak<SCalRitualDrama>
 {
+    public override CAGamePhase Phase => CAGamePhase.PostYharon;
+
     public override bool PreAI()
     {
         CalamityPlayer calamityPlayer = Main.LocalPlayer.Calamity();

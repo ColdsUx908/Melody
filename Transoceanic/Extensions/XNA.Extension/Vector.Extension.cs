@@ -45,6 +45,12 @@ public static partial class TOExtensions
             get => vector.Length();
             set => vector.CopyFrom(vector.ToCustomLength(value));
         }
+
+        public float Rotation
+        {
+            get => vector.ToRotation();
+            set => vector = new PolarVector2(vector.Length(), value);
+        }
     }
 
     extension(Vector2)

@@ -1,6 +1,7 @@
 Core: {
 	UpdateReminder: {
 		Header: TRANSOCEANIC UPDATE REMINDER
+		ExternalHeader: From External Mods:
 		Message: If you see this message, please inform the developer to update the mod.
 	}
 }

@@ -441,32 +441,67 @@ public class BetterBossHPUI : BossHPUI
 
             (float sin, float cos) = TOMathHelper.GetTimeSinCos(0.5f, 1f, 0f, true);
 
-            Color seperatorColor = (CAWorld.Anomaly ? Color.Lerp(BaseColor, Color.Lerp(CAMain.GetGradientColor(0.25f), CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin), Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f))
-                : EnrageTimer > 0 ? Color.Lerp(BaseColor, Color.Red * 0.5f, Math.Clamp(EnrageTimer / 80f, 0f, 1f))
-                : IncreasingDefenseOrDRTimer > 0 ? Color.Lerp(BaseColor, Color.LightGray * 0.6f, Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 1f))
-                : BaseColor) * AnimationCompletionRatio;
+            Color seperatorColor;
+            if (AnomalyNPC.IsRunningAnomalyAI)
+            {
+                seperatorColor = Color.Lerp(BaseColor, Color.Lerp(CAMain.GetGradientColor(0.25f), CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin), Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f));
+                if (IncreasingDefenseOrDRTimer > 0)
+                    seperatorColor = Color.Lerp(seperatorColor, Color.LightGray * 0.7f, Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 0.6f));
+            }
+            else if (EnrageTimer > 0)
+                seperatorColor = Color.Lerp(BaseColor, Color.Red * 0.5f, Math.Clamp(EnrageTimer / 80f, 0f, 1f));
+            else if (IncreasingDefenseOrDRTimer > 0)
+                seperatorColor = Color.Lerp(BaseColor, Color.LightGray * 0.7f, Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 1f));
+            else
+                seperatorColor = BaseColor;
+            seperatorColor *= AnimationCompletionRatio2;
+
             DrawSeperatorBar(spriteBatch, x, y, seperatorColor);
 
             //为了避免NPC名称过长遮挡大生命值数字，二者的绘制顺序在此处被调换了，即先绘制NPC名称，再绘制大生命值数字。
-            Color? mainColor = AnomalyNPC.IsRunningAnomalyAI ? Color.Lerp(CAMain.GetGradientColor(0.1f), CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * cos * 0.8f) * AnimationCompletionRatio2
-                : EnrageTimer > 0 ? Color.Red * 0.6f * AnimationCompletionRatio2
-                : IncreasingDefenseOrDRTimer > 0 ? Color.LightGray * 0.7f * AnimationCompletionRatio2
-                : null;
-            Color? borderColor = AnomalyNPC.IsRunningAnomalyAI ? Color.Lerp(CAMain.GetGradientColor(0.1f), CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin) * AnimationCompletionRatio2
-                : EnrageTimer > 0 || IncreasingDefenseOrDRTimer > 0 ? Color.Black * 0.2f * AnimationCompletionRatio2
-                : null;
-            float borderWidth = AnomalyNPC.IsRunningAnomalyAI ? (Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1.5f) + TOMathHelper.GetTimeSin(1f, 1f, 0f, true) * Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f))
-                : EnrageTimer > 0 ? (EnrageTimer / 80f + TOMathHelper.GetTimeSin(1f, 1f, 0f, true) * Math.Clamp(EnrageTimer / 80f, 0f, 1f))
-                : IncreasingDefenseOrDRTimer > 0 ? (IncreasingDefenseOrDRTimer / 80f + TOMathHelper.GetTimeSin(1f, 1f, 0f, true) * Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 1f))
-                : 0f;
+            Color? mainColor;
+            if (AnomalyNPC.IsRunningAnomalyAI)
+            {
+                mainColor = Color.Lerp(CAMain.GetGradientColor(0.1f), CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * cos * 0.8f);
+                if (IncreasingDefenseOrDRTimer > 0)
+                    mainColor = Color.Lerp(mainColor.Value, Color.LightGray * 0.7f, Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 0.6f));
+            }
+            else if (EnrageTimer > 0)
+                mainColor = Color.Red * 0.6f;
+            else if (IncreasingDefenseOrDRTimer > 0)
+                mainColor = Color.LightGray * 0.7f;
+            else
+                mainColor = null;
+            mainColor *= AnimationCompletionRatio2;
+
+            Color? borderColor;
+            if (AnomalyNPC.IsRunningAnomalyAI)
+            {
+                borderColor = Color.Lerp(CAMain.GetGradientColor(0.1f), CAMain.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin * 0.8f);
+                if (IncreasingDefenseOrDRTimer > 0)
+                    borderColor = Color.Lerp(borderColor.Value, Color.LightGray * 0.2f, Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 0.6f));
+            }
+            else if (EnrageTimer > 0 || IncreasingDefenseOrDRTimer > 0)
+                borderColor = Color.Black * 0.2f;
+            else
+                borderColor = null;
+            borderColor *= AnimationCompletionRatio2;
+
+            float borderWidth;
+            if (AnomalyNPC.IsRunningAnomalyAI)
+                borderWidth = (1.5f + TOMathHelper.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f);
+            else if (EnrageTimer > 0)
+                borderWidth = (1f + TOMathHelper.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(EnrageTimer / 80f, 0f, 1f);
+            else if (IncreasingDefenseOrDRTimer > 0)
+                borderWidth = (1f + TOMathHelper.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 1f);
+            else
+                borderWidth = 0f;
+
             DrawNPCName(spriteBatch, x, y, null, mainColor, borderColor, borderWidth);
-
             DrawBigLifeText(spriteBatch, x, y);
-
             DrawExtraSmallText(spriteBatch, x, y);
+            PostDraw(spriteBatch, x, y);
         }
-
-        PostDraw(spriteBatch, x, y);
     }
 
     protected bool PreDraw(SpriteBatch spriteBatch, ref int x, ref int y)

@@ -3,7 +3,7 @@ using Transoceanic.Data.Publicizer.Terraria;
 
 namespace Transoceanic.Core;
 
-public sealed class TOWorld : ModSystem
+public sealed class TOWorld : ModSystem, ITOLoader
 {
     public static bool AprilFools => DateTime.Now is (int _, 4, 1);
 
@@ -23,9 +23,9 @@ public sealed class TOWorld : ModSystem
 
     public static bool TrueMasterMode { get; internal set; }
 
-    public static bool MasterMode => TrueMasterMode || JourneyMasterMode;
-
     public static bool JourneyMasterMode { get; internal set; }
+
+    public static bool MasterMode => TrueMasterMode || JourneyMasterMode;
 
     public static bool TrueLegedaryMode => Main.getGoodWorld && TrueMasterMode;
 
@@ -68,5 +68,19 @@ public sealed class TOWorld : ModSystem
     public override void OnWorldUnload()
     {
         GameTimer = 0;
+    }
+
+    void ITOLoader.Load()
+    {
+        GameTimer = 0;
+    }
+
+    void ITOLoader.Unload()
+    {
+        GameTimer = 0;
+        TrueMasterMode = false;
+        JourneyMasterMode = false;
+        BossList = [];
+        BossActive = false;
     }
 }

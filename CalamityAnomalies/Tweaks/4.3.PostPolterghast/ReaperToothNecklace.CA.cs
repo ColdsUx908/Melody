@@ -1,13 +1,10 @@
 ﻿using CalamityMod.Items.Accessories;
-using Terraria;
 
 namespace CalamityAnomalies.Tweaks;
 
-public sealed class ReaperToothNecklace_CA : CAItemTweak<ReaperToothNecklace>, ICATweakLocalizationPrefix
+public sealed class ReaperToothNecklace_Tweak : CAItemTweak<ReaperToothNecklace>
 {
-    CATweakPhase ICATweakLocalizationPrefix.Phase => CATweakPhase.PostPolterghast;
-
-    string ICATweakLocalizationPrefix.Name => "ReaperToothNecklace";
+    public override CAGamePhase Phase => CAGamePhase.PostPolterghast;
 
     public override void UpdateAccessory(Player player, bool hideVisual)
     {

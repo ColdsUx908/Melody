@@ -8,11 +8,7 @@ public static class TOKinematicHelper
     /// <summary>
     /// 获取NPC目标。
     /// </summary>
-    /// <param name="origin"></param>
-    /// <param name="maxDistanceToCheck"></param>
-    /// <param name="ignoreTiles"></param>
-    /// <remarks>警告：遍历NPC对性能有较大影响。</remarks>
-    /// <returns>若未找到目标，null；否则，NPC实例。</returns>
+    /// <remarks><strong>警告</strong> 遍历NPC对性能有较大影响。</remarks>
     public static NPC GetNPCTarget(Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, bool bossPriority = false, PriorityType priorityType = PriorityType.Closest)
     {
         float maxDistanceToCheckSquared = maxDistanceToCheck * maxDistanceToCheck;
@@ -152,12 +148,7 @@ public static class TOKinematicHelper
     /// <summary>
     /// 获取玩家目标。
     /// </summary>
-    /// <param name="origin"></param>
-    /// <param name="maxDistanceToCheck"></param>
-    /// <param name="ignoreTiles"></param>
-    /// <param name="priorityType"></param>
-    /// <remarks>警告：该方法应由NPC调用。</remarks>
-    /// <returns>若未找到目标；null；否则返回玩家实例。</returns>
+    /// <remarks><strong>警告</strong> 该方法应由NPC调用。</remarks>
     public static Player GetPlayerTarget(Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, PriorityType priorityType = PriorityType.Closest)
     {
         float maxDistanceToCheckSquared = maxDistanceToCheck * maxDistanceToCheck;
@@ -211,12 +202,7 @@ public static class TOKinematicHelper
     /// 获取PvP状态的玩家目标。
     /// </summary>
     /// <param name="owner">调用方法的玩家。不会将该玩家作为潜在目标。</param>
-    /// <param name="origin"></param>
-    /// <param name="maxDistanceToCheck"></param>
-    /// <param name="ignoreTiles"></param>
-    /// <param name="priorityType"></param>
-    /// <remarks>警告：该方法应由玩家调用。慎用PvP玩家目标功能。</remarks>
-    /// <returns>若游戏为单人模式，null；若调用玩家未开启PvP，null；若未找到目标；null；否则，玩家实例。</returns>
+    /// <remarks><strong>警告</strong> 该方法应由玩家调用。慎用PvP玩家目标功能。</remarks>
     public static Player GetPvPPlayerTarget(Player owner, Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, PriorityType priorityType = PriorityType.Closest)
     {
         if (Main.netMode == NetmodeID.SinglePlayer || !owner.active || !owner.hostile)

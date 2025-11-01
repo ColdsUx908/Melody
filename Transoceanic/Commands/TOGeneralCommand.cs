@@ -42,8 +42,8 @@ public sealed class CommandArgumentException : Exception
         StringBuilder builder = new();
         builder.AppendLine($"Command: {CallInfo.Command}");
         builder.AppendLine($"Command Type: {CallInfo.CommandType}");
-        builder.AppendLine($"Calling Player Index and Name: {CallInfo.Caller.Player.whoAmI}, {CallInfo.Caller.Player.name}");
-        builder.AppendLine($"Arguments: {string.Join(' ', CallInfo.Args)}");
+        builder.AppendLine($"Calling Player: {CallInfo.Caller.Player.name} ({CallInfo.Caller.Player.whoAmI})");
+        builder.AppendLine($"Arguments: {string.Join(", ", CallInfo.Args)}");
         builder.AppendLine($"Message: {Message}");
         return builder.ToString();
     }
@@ -60,13 +60,13 @@ public sealed class TOGeneralChatCommand : ModCommand, ILocalizationPrefix
     public override void Action(CommandCaller caller, string input, string[] args)
     {
         if (args.Length == 0 || string.IsNullOrEmpty(args[0]))
-            caller.Reply(this.GetTextValue("Helper"));
+            caller.ReplyLocalizedText(this, "Helper");
         switch (args[0].ToLower())
         {
             case "help":
             case "h":
             case "?":
-                caller.Reply(this.GetTextValue("Helper"));
+                caller.ReplyLocalizedText(this, "Helper");
                 break;
             case "redo":
                 CommandCallInfo commandCallInfo = caller.Player.Ocean().CommandCallInfo;
@@ -112,11 +112,11 @@ public sealed class TOCommandHelper : IResourceLoader, ILocalizationPrefix
             }
             catch (CommandArgumentException e)
             {
-                caller.ReplyLocalizedTextFormat(this.GetTextValue("InvalidArguments"), Color.Red, e);
+                caller.ReplyLocalizedTextFormat(this, "InvalidArguments", Color.Red, e);
                 value.Help(caller, args);
             }
         }
         else
-            caller.ReplyLocalizedText(this.GetTextValue("Helper2"));
+            caller.ReplyLocalizedText(this, "Helper2");
     }
 }

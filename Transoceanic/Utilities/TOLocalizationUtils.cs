@@ -61,9 +61,9 @@ public static class TOLocalizationUtils
     public static void ChatLocalizedText(ILocalizationPrefix localizationPrefixProvider, string suffix, Color? textColor = null) => ChatLocalizedText(localizationPrefixProvider.GetKey(suffix), textColor);
 
     public static void ChatLocalizedText(ILocalizationPrefix localizationPrefixProvider, string suffix, Color? textColor = null, params ReadOnlySpan<Player> receivers) => ChatLocalizedText(localizationPrefixProvider.GetKey(suffix), textColor, receivers);
-    
+
     public static void ChatLocalizedTextFormat(ILocalizationPrefix localizationPrefixProvider, string suffix, Color? textColor = null, params object[] args) => ChatLocalizedTextFormat(localizationPrefixProvider.GetKey(suffix), textColor, args);
-    
+
     public static void ChatLocalizedTextFormat(ILocalizationPrefix localizationPrefixProvider, string suffix, Player receiver, Color? textColor = null, params object[] args) => ChatLocalizedTextFormat(localizationPrefixProvider.GetKey(suffix), receiver, textColor, args);
 
     public static void ChatLocalizedTextFormat(string key, Player[] receivers, Color? textColor = null, params object[] args)

@@ -1,1 +1,4 @@
-KingSlime.GFBSummon: King Slime has cloned itself!
+KingSlime: {
+	GFBSummon: King Slime has cloned itself!
+	KingSlimeJewelRainbow.DisplayName: Rainbow Jewel
+}

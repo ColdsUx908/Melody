@@ -1,5 +1,4 @@
-﻿using CalamityAnomalies.Assets.Textures;
-using CalamityMod.NPCs.NormalNPCs;
+﻿using CalamityMod.NPCs.NormalNPCs;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
@@ -14,14 +13,11 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
         Charge = 1,
     }
 
-    public static class Data
-    {
-        public const float DespawnDistance = 5000f;
-        public static int ChargeCooldownTime => 150;
-        public static int ChargePreparationTime => 60;
-        public static int ChargeTime => 60;
-        public static float ChargeSpeed => 28f;
-    }
+    public const float DespawnDistance = 5000f;
+    public int ChargeCooldownTime => HasEnteredPhase2 ? 210 : 150;
+    public int ChargePreparationTime => HasEnteredPhase2 ? 75 : 60;
+    public static int ChargeTime => 60;
+    public float ChargeSpeed => HasEnteredPhase2 ? 24f : 28f;
 
     public Behavior CurrentAttack
     {
@@ -34,7 +30,26 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
         get => (int)NPC.ai[1];
         set => NPC.ai[1] = value;
     }
+
+    public bool HasEnteredPhase2
+    {
+        get => NPC.ai[2] == 1f;
+        set => NPC.ai[2] = value.ToInt();
+    }
+
+    public bool CanAttack
+    {
+        get => NPC.ai[3] != 1f;
+        set => NPC.ai[3] = (!value).ToInt();
+    }
     #endregion 数据
+
+    public override void SetDefaults()
+    {
+        NPC.lifeMax = (int)(NPC.lifeMax * 0.5f);
+        NPC.width = 28;
+        NPC.height = 28;
+    }
 
     public override bool PreAI()
     {
@@ -48,7 +63,7 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
 
         Lighting.AddLight(NPC.Center, 0f, 1f, 0f);
 
-        if (!NPC.TargetClosestIfInvalid(true, Data.DespawnDistance))
+        if (!NPC.TargetClosestIfInvalid(true, DespawnDistance))
         {
             NPC.Center = master.Top - new Vector2(0, master.height);
             return false;
@@ -73,9 +88,10 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
 
         void FollowTarget()
         {
-            JewelHandler.Movement(NPC, Target.Center, 10f, 7.5f, 0.2f, 200f, -200f, -200f, -300f);
-            Timer1++;
-            if (Timer1 >= Data.ChargeCooldownTime)
+            JewelHandler.Movement(NPC, Target.Center, 15f, 12f, 0.2f, 350f, -350f, -200f, -400f);
+            if (CanAttack)
+                Timer1++;
+            if (Timer1 >= ChargeCooldownTime)
             {
                 Timer1 = 0;
                 CurrentAttack = Behavior.Charge;
@@ -91,28 +107,28 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
             {
                 case 0:
                     Timer1++;
-                    if (Timer1 >= Data.ChargePreparationTime) //停止，旋转
+                    if (Timer1 < ChargePreparationTime) //停止，旋转
+                    {
+                        NPC.damage = 0;
+                        NPC.velocity *= 0.94f;
+                        NPC.rotation += (0.1f + (float)Timer1 / ChargePreparationTime * 0.4f) * NPC.direction;
+                    }
+                    else //冲刺
                     {
                         Timer1 = 0;
                         for (int i = 0; i < 10; i++)
                             JewelHandler.SpawnParticle(NPC, Main.rand.NextFloat(4f, 7f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
                         SoundEngine.PlaySound(SoundID.Item38, NPC.Center);
                         NPC.damage = NPC.defDamage;
-                        NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, Data.ChargeSpeed), MathHelper.PiOver2);
+                        NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, ChargeSpeed), MathHelper.PiOver2);
                         NPC.netSpam = 0;
                         CurrentAttackPhase = 1;
                         NPC.netUpdate = true;
                     }
-                    else //冲刺
-                    {
-                        NPC.damage = 0;
-                        NPC.velocity *= 0.94f;
-                        NPC.rotation += (0.1f + (float)Timer1 / Data.ChargePreparationTime * 0.4f) * NPC.direction;
-                    }
                     break;
                 case 1: //冲刺中
                     Timer1++;
-                    if (Timer1 >= Data.ChargeTime)
+                    if (Timer1 >= ChargeTime)
                     {
                         Timer1 = 0;
                         for (int i = 0; i < 15; i++)
@@ -134,11 +150,24 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
     public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         float timeLeftGateValue = 30f;
-        float gateValue = Data.ChargePreparationTime - timeLeftGateValue;
+        float gateValue = ChargePreparationTime - timeLeftGateValue;
         float ratio = CurrentAttack == Behavior.Charge && CurrentAttackPhase == 0 && Timer1 > gateValue ? (Timer1 - gateValue) / timeLeftGateValue : 0f;
         if (CAClientConfig.Instance.AuxiliaryVisualEffects && ratio > 0f)
             JewelHandler.DrawAttackEffect(spriteBatch, screenPos, NPC, ratio, 120f, 0.35f);
         JewelHandler.DrawJewel(spriteBatch, screenPos, NPC, ratio);
         return false;
+    }
+
+    public override bool CheckDead()
+    {
+        if (CAWorld.AnomalyUltramundane)
+        {
+            NPC.life = 1;
+            NPC.active = true;
+            if (!HasEnteredPhase2)
+                JewelHandler.EnterPhase2(NPC);
+            return false;
+        }
+        return true;
     }
 }

@@ -56,7 +56,6 @@ public sealed class TOMain : Mod
         try
         {
             Instance = this;
-            TOWorld.GameTimer = 0;
 
             foreach (ITOLoader loader in
                 from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(Assembly).AsValueEnumerable()
@@ -98,13 +97,6 @@ public sealed class TOMain : Mod
                 {
                     loader.Unload();
                 }
-
-                TOWorld.GameTimer = 0;
-                TOWorld.TrueMasterMode = false;
-                TOWorld.JourneyMasterMode = false;
-                TOWorld.BossList = [];
-                TOWorld.BossActive = false;
-
                 SyncEnabled = false;
                 Instance = null;
             }
@@ -145,27 +137,18 @@ public sealed class TOMain : Mod
     }
 
     public static Assembly Assembly => field ??= Instance.Code;
-
-    public static readonly Assembly TerrariaAssembly = typeof(Main).Assembly;
-
-    public static readonly Dictionary<string, Type[]> TerrariaTypes = TerrariaAssembly.GetTypes().GroupBy(t => t.Name).ToDictionary(g => g.Key, g => g.ToArray());
+    public static Assembly TerrariaAssembly => field ??= typeof(Main).Assembly;
+    public static Dictionary<string, Type[]> TerrariaTypes => field ??= TerrariaAssembly.GetTypes().GroupBy(t => t.Name).ToDictionary(g => g.Key, g => g.ToArray());
 
     #region Constant
     public const string ModLocalizationPrefix = "Mods.Transoceanic.";
-
     public const string DebugPrefix = ModLocalizationPrefix + "DEBUG.";
-
     public const string DebugErrorMessageKey = ModLocalizationPrefix + "DEBUG.ErrorMessage";
+    public const string StringEmptyError = "String cannot be null or whitespace.";
 
     public static readonly Color TODebugWarnColor = Color.Orange;
-
     public static readonly Color TODebugErrorColor = new(0xFF, 0x00, 0x00);
-
     public static readonly Color CelestialColor = new(0xAF, 0xFF, 0xFF);
-
-    public static Color DiscoColor => new(Main.DiscoR, Main.DiscoG, Main.DiscoB, Main.DiscoR);
-
-    public const int CelestialPrice = 25000000;
 
     #endregion Constant
 }

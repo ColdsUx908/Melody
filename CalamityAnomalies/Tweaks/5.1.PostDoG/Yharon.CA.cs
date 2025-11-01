@@ -120,6 +120,8 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
     }
     #endregion 数据、属性
 
+    public override CAGamePhase Phase => CAGamePhase.PostDoG;
+
     public override bool CheckDead()
     {
         if (!startSecondAI || invincibilityCounter < Data.Phase2InvincibilityTime)

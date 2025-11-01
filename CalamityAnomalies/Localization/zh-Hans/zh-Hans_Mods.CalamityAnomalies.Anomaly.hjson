@@ -1,1 +1,4 @@
-KingSlime.GFBSummon: 史莱姆王克隆了自己！
+KingSlime: {
+	GFBSummon: 史莱姆王克隆了自己！
+	KingSlimeJewelRainbow.DisplayName: 王冠彩虹宝石
+}

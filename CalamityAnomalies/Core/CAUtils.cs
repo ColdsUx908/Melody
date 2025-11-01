@@ -19,7 +19,7 @@ public static class CAUtils
 
     public static void ILFailure(string name, string reason, [DoesNotReturnIf(true)] bool exception = false)
     {
-        string message = $"""IL edit "{name}" failed! {reason}""";
+        string message = $"""[CA IL Editing] IL edit "{name}" failed! {reason}""";
         CAMain.Instance.Logger.Warn(message);
         if (exception)
             throw new InvalidOperationException(message);

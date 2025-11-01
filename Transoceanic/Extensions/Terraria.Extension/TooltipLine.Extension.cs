@@ -4,19 +4,29 @@ public static partial class TOExtensions
 {
     extension(List<TooltipLine> tooltips)
     {
-        public void ModifyTooltip(Func<TooltipLine, bool> match, Action<TooltipLine> action)
+        public bool TryFindTooltip(Func<TooltipLine, bool> match, out int index, out TooltipLine tooltip)
         {
             ArgumentNullException.ThrowIfNull(match);
-            ArgumentNullException.ThrowIfNull(action);
             for (int i = 0; i < tooltips.Count; i++)
             {
                 TooltipLine line = tooltips[i];
                 if (match(line))
                 {
-                    action(line);
-                    return;
+                    index = i;
+                    tooltip = line;
+                    return true;
                 }
             }
+            index = -1;
+            tooltip = null;
+            return false;
+        }
+
+        public void ModifyTooltip(Func<TooltipLine, bool> match, Action<TooltipLine> action)
+        {
+            ArgumentNullException.ThrowIfNull(action);
+            if (tooltips.TryFindTooltip(match, out _, out TooltipLine tooltip))
+                action(tooltip);
         }
 
         public void ModifyVanillaTooltipByName(string name, Action<TooltipLine> action) =>

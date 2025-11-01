@@ -1,6 +1,7 @@
 Core: {
 	UpdateReminder: {
 		Header: TRANSOCEANIC 更新提醒
+		ExternalHeader: 来自外部 Mod：
 		Message: 如果看到此信息，请通知 Mod 开发者进行更新。
 	}
 }

@@ -8,6 +8,6 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
     public static class Data
     {
-        public const float DespawnDistance = 5000f;
+        public const float DespawnDistance = 6000f;
     }
 }

@@ -7,6 +7,13 @@ public static partial class TOExtensions
         public static readonly Color _realGreen = new(0, 255, 0);
     }
 
+    extension(Color color)
+    {
+        public string ToHexCode() => $"{color.R:X2}{color.G:X2}{color.B:X2}";
+
+        public string FormatString(string input) => $"[c/{color.ToHexCode()}:{input}]";
+    }
+
     extension(Color)
     {
         public static Color RealGreen => Color_Extension._realGreen;

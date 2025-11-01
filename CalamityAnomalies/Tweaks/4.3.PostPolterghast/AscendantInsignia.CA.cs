@@ -20,11 +20,9 @@ namespace CalamityAnomalies.Tweaks;
  *   跳跃速度再增加120%。
  */
 
-public sealed class AscendantInsignia_Tweak : CAItemTweak<AscendantInsignia>, ICATweakLocalizationPrefix
+public sealed class AscendantInsignia_Tweak : CAItemTweak<AscendantInsignia>
 {
-    CATweakPhase ICATweakLocalizationPrefix.Phase => CATweakPhase.PostPolterghast;
-
-    string ICATweakLocalizationPrefix.Name => "AscendantInsignia";
+    public override CAGamePhase Phase => CAGamePhase.PostPolterghast;
 
     public static bool HasYharimsGiftBuff
     {

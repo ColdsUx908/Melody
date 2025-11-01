@@ -70,21 +70,21 @@ public abstract class BaseLaserbeamProjectileDetour<T> : ModProjectileDetour<T> 
     public override void ApplyDetour()
     {
         base.ApplyDetour();
-        TryApplyDetour(Detour_Behavior);
-        TryApplyDetour(Detour_UpdateLaserMotion);
-        TryApplyDetour(Detour_DetermineScale);
-        TryApplyDetour(Detour_AttachToSomething);
-        TryApplyDetour(Detour_DetermineLaserLength);
-        TryApplyDetour(Detour_ExtraBehavior);
-        TryApplyDetour(Detour_get_Lifetime);
-        TryApplyDetour(Detour_get_MaxScale);
-        TryApplyDetour(Detour_get_MaxLaserLength);
-        TryApplyDetour(Detour_get_LaserBeginTexture);
-        TryApplyDetour(Detour_get_LaserMiddleTexture);
-        TryApplyDetour(Detour_get_LaserEndTexture);
-        TryApplyDetour(Detour_get_ScaleExpandRate);
-        TryApplyDetour(Detour_get_LightCastColor);
-        TryApplyDetour(Detour_get_LaserOverlayColor);
+        ApplySingleDetour(Detour_Behavior);
+        ApplySingleDetour(Detour_UpdateLaserMotion);
+        ApplySingleDetour(Detour_DetermineScale);
+        ApplySingleDetour(Detour_AttachToSomething);
+        ApplySingleDetour(Detour_DetermineLaserLength);
+        ApplySingleDetour(Detour_ExtraBehavior);
+        ApplySingleDetour(Detour_get_Lifetime);
+        ApplySingleDetour(Detour_get_MaxScale);
+        ApplySingleDetour(Detour_get_MaxLaserLength);
+        ApplySingleDetour(Detour_get_LaserBeginTexture);
+        ApplySingleDetour(Detour_get_LaserMiddleTexture);
+        ApplySingleDetour(Detour_get_LaserEndTexture);
+        ApplySingleDetour(Detour_get_ScaleExpandRate);
+        ApplySingleDetour(Detour_get_LightCastColor);
+        ApplySingleDetour(Detour_get_LaserOverlayColor);
     }
 }
 #endregion Abstract
@@ -103,8 +103,8 @@ public abstract class CalamityPlayerDetour : ModPlayerDetour<CalamityPlayer>
     public override void ApplyDetour()
     {
         base.ApplyDetour();
-        TryApplyDetour(Detour_MiscEffects);
-        TryApplyDetour(Detour_OtherBuffEffects);
+        ApplySingleDetour(Detour_MiscEffects);
+        ApplySingleDetour(Detour_OtherBuffEffects);
     }
 }
 

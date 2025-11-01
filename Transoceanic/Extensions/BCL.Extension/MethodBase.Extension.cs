@@ -43,5 +43,10 @@ public static partial class TOExtensions
             ) : null) is not null;
 
         public bool IsEventAccessor => method.TryGetEventAccessor(out _);
+
+        /// <summary>
+        /// 判定方法是否密封（无法被重写）。
+        /// </summary>
+        public bool IsNotVirtial => !method.IsVirtual || method.IsFinal;
     }
 }

@@ -1,7 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using Terraria;
-
-namespace Transoceanic.Extensions;
+﻿namespace Transoceanic.Extensions;
 
 public static partial class TOExtensions
 {

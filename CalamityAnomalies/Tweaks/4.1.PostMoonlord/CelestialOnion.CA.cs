@@ -7,20 +7,46 @@ namespace CalamityAnomalies.Tweaks;
  * 在大师模式下可正常使用，提供一个额外的饰品栏。
  */
 
-public sealed class CelestialOnion_Tweak : CAItemTweak<CelestialOnion>, ILocalizationPrefix
+public sealed class CelestialOnion_Override : CAItemOverride<CelestialOnion>
 {
-    public string LocalizationPrefix => CAMain.TweakLocalizationPrefix + "4.1.CelestialOnion.";
+    public override CAGamePhase Phase => CAGamePhase.PostMoonlord;
+
+    public override void SetDefaults()
+    {
+        Item.width = 28;
+        Item.height = 28;
+        Item.rare = ItemRarityID.Red;
+        Item.maxStack = 9999;
+        Item.useAnimation = 30;
+        Item.useTime = 30;
+        Item.useStyle = ItemUseStyleID.HoldUp;
+        Item.UseSound = SoundID.Item4;
+        Item.consumable = true;
+    }
+
+    public override bool CanUseItem(Player player) => !player.Calamity().extraAccessoryML;
+
+    public override bool? UseItem(Player player)
+    {
+        CalamityPlayer modPlayer = player.Calamity();
+        if (player.itemAnimation > 0 && !modPlayer.extraAccessoryML && player.itemTime == 0)
+        {
+            player.itemTime = Item.useTime;
+            modPlayer.extraAccessoryML = true;
+        }
+        return true;
+    }
+}
+
+public sealed class CelestialOnion_Tweak : CAItemTweak<CelestialOnion>
+{
+    public override CAGamePhase Phase => CAGamePhase.PostMoonlord;
 
     public override void ModifyTooltips(List<TooltipLine> tooltips)
     {
         new CAItemTooltipModifier(Item, tooltips)
             .ModifyWithCATweakColorDefault(this, 1);
     }
-}
-
-public sealed class CelestialOnion_Detour : CAModItemDetour<CelestialOnion>
-{
-    public override bool Detour_CanUseItem(Orig_CanUseItem orig, CelestialOnion self, Player player) => !player.Calamity().extraAccessoryML;
 }
 
 public sealed class CelestialOnion_AccessorySlot : ModAccessorySlot
