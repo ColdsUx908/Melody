@@ -27,8 +27,7 @@ public abstract class TypeDetour : ITODetourProvider
 
     /// <summary>
     /// <inheritdoc cref="ITODetourProvider.ApplyDetour"/><para/>
-    /// <strong>避免</strong>实现任何与自带方法同名的方法。
-    /// <br/>如果需要重载方法，使用 <c>Detour_{methodName}__{paramNames}</c> 方法名格式。
+    /// 如果需要重载方法，使用 <c>Detour_{methodName}__{paramNames}</c> 方法名格式。
     /// </summary>
     public virtual void ApplyDetour() { }
 }
@@ -871,6 +870,14 @@ public abstract class ModItemDetour<T> : ModTypeDetour<T> where T : ModItem
     public delegate void Orig_OnConsumeMana(T self, Player player, int manaConsumed);
     public virtual void Detour_OnConsumeMana(Orig_OnConsumeMana orig, T self, Player player, int manaConsumed) => orig(self, player, manaConsumed);
 
+    // ModifyPotionDelay
+    public delegate void Orig_ModifyPotionDelay(T self, Player player, ref int baseDelay);
+    public virtual void Detour_ModifyPotionDelay(Orig_ModifyPotionDelay orig, T self, Player player, ref int baseDelay) => orig(self, player, ref baseDelay);
+
+    // ApplyPotionDelay
+    public delegate bool Orig_ApplyPotionDelay(T self, Player player, int potionDelay);
+    public virtual bool Detour_ApplyPotionDelay(Orig_ApplyPotionDelay orig, T self, Player player, int potionDelay) => orig(self, player, potionDelay);
+
     // ModifyWeaponDamage
     public delegate void Orig_ModifyWeaponDamage(T self, Player player, ref StatModifier damage);
     public virtual void Detour_ModifyWeaponDamage(Orig_ModifyWeaponDamage orig, T self, Player player, ref StatModifier damage) => orig(self, player, ref damage);
@@ -1303,6 +1310,8 @@ public abstract class ModItemDetour<T> : ModTypeDetour<T> where T : ModItem
         ApplySingleDetour(Detour_ModifyManaCost);
         ApplySingleDetour(Detour_OnMissingMana);
         ApplySingleDetour(Detour_OnConsumeMana);
+        ApplySingleDetour(Detour_ModifyPotionDelay);
+        ApplySingleDetour(Detour_ApplyPotionDelay);
         ApplySingleDetour(Detour_ModifyWeaponDamage);
         ApplySingleDetour(Detour_ModifyResearchSorting);
         ApplySingleDetour(Detour_CanConsumeBait);
@@ -2335,6 +2344,10 @@ public abstract class ModPlayerDetour<T> : ModTypeDetour<T> where T : ModPlayer
     public delegate void Orig_OnConsumeMana(T self, Item item, int manaConsumed);
     public virtual void Detour_OnConsumeMana(Orig_OnConsumeMana orig, T self, Item item, int manaConsumed) => orig(self, item, manaConsumed);
 
+    // ApplyPotionDelay
+    public delegate bool Orig_ApplyPotionDelay(T self, Item item, int potionDelay);
+    public virtual bool Detour_ApplyPotionDelay(Orig_ApplyPotionDelay orig, T self, Item item, int potionDelay) => orig(self, item, potionDelay);
+
     // ModifyWeaponDamage
     public delegate void Orig_ModifyWeaponDamage(T self, Item item, ref StatModifier damage);
     public virtual void Detour_ModifyWeaponDamage(Orig_ModifyWeaponDamage orig, T self, Item item, ref StatModifier damage) => orig(self, item, ref damage);
@@ -2665,6 +2678,7 @@ public abstract class ModPlayerDetour<T> : ModTypeDetour<T> where T : ModPlayer
         ApplySingleDetour(Detour_ModifyManaCost);
         ApplySingleDetour(Detour_OnMissingMana);
         ApplySingleDetour(Detour_OnConsumeMana);
+        ApplySingleDetour(Detour_ApplyPotionDelay);
         ApplySingleDetour(Detour_ModifyWeaponDamage);
         ApplySingleDetour(Detour_ModifyWeaponKnockback);
         ApplySingleDetour(Detour_ModifyWeaponCrit);
@@ -4420,6 +4434,14 @@ public abstract class GlobalItemDetour<T> : GlobalTypeDetour<Item, GlobalItem, T
     public delegate void Orig_OnConsumeMana(T self, Item item, Player player, int manaConsumed);
     public virtual void Detour_OnConsumeMana(Orig_OnConsumeMana orig, T self, Item item, Player player, int manaConsumed) => orig(self, item, player, manaConsumed);
 
+    // ModifyPotionDelay
+    public delegate void Orig_ModifyPotionDelay(T self, Item item, Player player, ref int baseDelay);
+    public virtual void Detour_ModifyPotionDelay(Orig_ModifyPotionDelay orig, T self, Item item, Player player, ref int baseDelay) => orig(self, item, player, ref baseDelay);
+
+    // ApplyPotionDelay
+    public delegate bool Orig_ApplyPotionDelay(T self, Item item, Player player, int potionDelay);
+    public virtual bool Detour_ApplyPotionDelay(Orig_ApplyPotionDelay orig, T self, Item item, Player player, int potionDelay) => orig(self, item, player, potionDelay);
+
     // ModifyWeaponDamage
     public delegate void Orig_ModifyWeaponDamage(T self, Item item, Player player, ref StatModifier damage);
     public virtual void Detour_ModifyWeaponDamage(Orig_ModifyWeaponDamage orig, T self, Item item, Player player, ref StatModifier damage) => orig(self, item, player, ref damage);
@@ -4829,6 +4851,8 @@ public abstract class GlobalItemDetour<T> : GlobalTypeDetour<Item, GlobalItem, T
         ApplySingleDetour(Detour_ModifyManaCost);
         ApplySingleDetour(Detour_OnMissingMana);
         ApplySingleDetour(Detour_OnConsumeMana);
+        ApplySingleDetour(Detour_ModifyPotionDelay);
+        ApplySingleDetour(Detour_ApplyPotionDelay);
         ApplySingleDetour(Detour_ModifyWeaponDamage);
         ApplySingleDetour(Detour_ModifyResearchSorting);
         ApplySingleDetour(Detour_CanConsumeBait);

@@ -23,3 +23,14 @@ public record TrueMeleeNoSpeedDamageClass_Publicizer : Publicizer<TrueMeleeNoSpe
         set => s_f_Instance.SetValue(null, value);
     }
 }
+
+public record AverageDamageClass_Publicizer : Publicizer<AverageDamageClass>
+{
+    // Instance (static field)
+    public static readonly FieldInfo s_f_Instance = GetStaticField("Instance");
+    public static AverageDamageClass Instance
+    {
+        get => (AverageDamageClass)s_f_Instance.GetValue(null);
+        set => s_f_Instance.SetValue(null, value);
+    }
+}

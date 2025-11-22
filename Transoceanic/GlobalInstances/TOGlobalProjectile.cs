@@ -107,5 +107,73 @@ public class TOGlobalProjectile : GlobalProjectile
             }
         }
     }
+
+    public int Timer1
+    {
+        get => OceanAI32[27].i;
+        set
+        {
+            int temp = Math.Max(0, value);
+            if (OceanAI32[27].i != temp)
+            {
+                OceanAI32[27].i = temp;
+                AIChanged32[27] = true;
+            }
+        }
+    }
+
+    public int Timer2
+    {
+        get => OceanAI32[28].i;
+        set
+        {
+            int temp = Math.Max(0, value);
+            if (OceanAI32[28].i != temp)
+            {
+                OceanAI32[28].i = temp;
+                AIChanged32[28] = true;
+            }
+        }
+    }
+
+    public int Timer3
+    {
+        get => OceanAI32[29].i;
+        set
+        {
+            int temp = Math.Max(0, value);
+            if (OceanAI32[29].i != temp)
+            {
+                OceanAI32[29].i = temp;
+                AIChanged32[29] = true;
+            }
+        }
+    }
+
+    public float Timer4
+    {
+        get => OceanAI32[30].f;
+        set
+        {
+            if (OceanAI32[30].f != value)
+            {
+                OceanAI32[30].f = value;
+                AIChanged32[30] = true;
+            }
+        }
+    }
+
+    public float Timer5
+    {
+        get => OceanAI32[31].f;
+        set
+        {
+            if (OceanAI32[21].f != value)
+            {
+                OceanAI32[31].f = value;
+                AIChanged32[31] = true;
+            }
+        }
+    }
     #endregion 额外数据
 }

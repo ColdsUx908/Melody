@@ -53,7 +53,6 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
 
     public override bool PreAI()
     {
-        //如果找不到所属史莱姆王，直接脱战
         if (!OceanNPC.TryGetMaster(NPCID.KingSlime, out NPC master))
         {
             CurrentAttack = Behavior.Despawn;
@@ -61,13 +60,15 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
             return false;
         }
 
-        Lighting.AddLight(NPC.Center, 0f, 1f, 0f);
-
         if (!NPC.TargetClosestIfInvalid(true, DespawnDistance))
         {
             NPC.Center = master.Top - new Vector2(0, master.height);
             return false;
         }
+
+        Lighting.AddLight(NPC.Center, 0f, 1f, 0f);
+
+        NPC.damage = 0;
 
         switch (CurrentAttack)
         {
@@ -88,9 +89,17 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
 
         void FollowTarget()
         {
-            JewelHandler.Movement(NPC, Target.Center, 15f, 12f, 0.2f, 350f, -350f, -200f, -400f);
             if (CanAttack)
+            {
+                JewelHandler.Move(NPC, Target.Center, 15f, 12f, 0.2f, 0.125f, 350f, -350f, -200f, -400f);
                 Timer1++;
+            }
+            else
+            {
+                JewelHandler.Move(NPC, master.Center, 15f, 15f, 0.2f, 0.175f, 150f, -150f, 0f, -200f);
+                Timer1 -= 2;
+            }
+
             if (Timer1 >= ChargeCooldownTime)
             {
                 Timer1 = 0;
@@ -106,10 +115,16 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
             switch (CurrentAttackPhase)
             {
                 case 0:
-                    Timer1++;
+                    if (CanAttack)
+                        Timer1++;
+                    else
+                    {
+                        if ((Timer1 -= 2) <= ChargePreparationTime - 30)
+                            CurrentAttack = Behavior.FollowTarget;
+                        break;
+                    }
                     if (Timer1 < ChargePreparationTime) //停止，旋转
                     {
-                        NPC.damage = 0;
                         NPC.velocity *= 0.94f;
                         NPC.rotation += (0.1f + (float)Timer1 / ChargePreparationTime * 0.4f) * NPC.direction;
                     }
@@ -127,13 +142,19 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
                     }
                     break;
                 case 1: //冲刺中
-                    Timer1++;
+                    if (CanAttack)
+                        Timer1++;
+                    else
+                    {
+                        Timer1 -= 2;
+                        CurrentAttack = Behavior.FollowTarget;
+                        break;
+                    }
                     if (Timer1 >= ChargeTime)
                     {
                         Timer1 = 0;
                         for (int i = 0; i < 15; i++)
                             JewelHandler.SpawnParticle(NPC, Main.rand.NextFloat(2f, 3f), Main.rand.Next(20, 30), Main.rand.NextFloat(0.4f, 0.7f));
-                        NPC.damage = 0;
                         SoundEngine.PlaySound(SoundID.Item8, NPC.Center);
                         CurrentAttackPhase = 0;
                         CurrentAttack = Behavior.FollowTarget;

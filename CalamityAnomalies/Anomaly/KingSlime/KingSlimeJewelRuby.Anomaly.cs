@@ -34,18 +34,27 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
             return false;
         }
 
-        Lighting.AddLight(NPC.Center, 1f, 0f, 0f);
-
         if (!NPC.TargetClosestIfInvalid(true, DespawnDistance))
         {
             NPC.Center = master.Top - new Vector2(0, master.height);
             return false;
         }
 
-        JewelHandler.Movement(NPC, Target.Center, 15f, 15f, 0.175f, 250f, -250f, -300f, -500f);
+        Lighting.AddLight(NPC.Center, 1f, 0f, 0f);
+
+        NPC.damage = 0;
 
         if (CanAttack)
+        {
+            JewelHandler.Move(NPC, Target.Center, 15f, 15f, 0.175f, 0.125f, 250f, -250f, -250f, -400f);
             Timer1++;
+        }
+        else
+        {
+            JewelHandler.Move(NPC, master.Center, 15f, 15f, 0.2f, 0.175f, 150f, -150f, 0f, -200f);
+            Timer1 -= 2;
+        }
+
         if (Timer1 >= ShootCooldownTime)
         {
             Timer1 = 0;

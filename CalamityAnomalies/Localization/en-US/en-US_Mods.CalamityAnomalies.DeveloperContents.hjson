@@ -24,3 +24,8 @@ Permafrost: {
 	Welcome2: ""
 	Beginning: ""
 }
+
+TestItem: {
+	DisplayName: Test Item
+	Tooltip: ""
+}

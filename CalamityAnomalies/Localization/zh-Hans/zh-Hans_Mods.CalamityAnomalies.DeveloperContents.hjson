@@ -24,3 +24,8 @@ Permafrost: {
 	Welcome2: 现在你要面对的是，真正的最终挑战。
 	Beginning: 将你的真正实力展示在我面前！
 }
+
+TestItem: {
+	DisplayName: 测试物品
+	Tooltip: ""
+}

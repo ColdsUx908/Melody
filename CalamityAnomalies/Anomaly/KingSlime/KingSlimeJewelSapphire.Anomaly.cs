@@ -92,8 +92,14 @@ public sealed class KingSlimeJewelSapphire_Anomaly : AnomalyNPCBehavior<KingSlim
             return false;
         }
 
+        if (!NPC.TargetClosestIfInvalid(true, DespawnDistance))
+        {
+            NPC.Center = master.Top - new Vector2(0, master.height);
+            return false;
+        }
+
+        NPC.damage = 0;
         Lighting.AddLight(NPC.Center, 0f, 0f, 1f);
-        NPC.TargetClosestIfInvalid(true, DespawnDistance);
 
         bool shouldFindEmerald = !JewelEmeraldAlive;
         bool shouldFindRuby = !JewelRubyAlive;
@@ -108,59 +114,35 @@ public sealed class KingSlimeJewelSapphire_Anomaly : AnomalyNPCBehavior<KingSlim
             }
         }
 
-        JewelHandler.Movement(NPC, Vector2.Lerp(Target.Center, master.Center, 0.35f), 17f, 17f, 0.2f, 300f, -300f, 300f, -300f);
-
         if (CanAttack)
+        {
+            JewelHandler.Move(NPC, Vector2.Lerp(Target.Center, master.Center, 0.35f), 17f, 17f, 0.175f, 0.125f, 300f, -300f, 50f, -250f);
             Timer1++;
+        }
+        else
+        {
+            JewelHandler.Move(NPC, master.Center, 15f, 15f, 0.2f, 0.5f, 150f, -150f, 50f, -250f);
+            Timer1 -= 2;
+        }
+
         if (Timer1 >= BuffedShootCooldownTime)
         {
             Timer1 = 0;
+            int type = Main.zenithWorld ? DustID.GemTopaz : DustID.GemSapphire;
             if (JewelEmeraldAlive)
             {
-                CreateDustBetweenJewels(JewelEmerald);
+                JewelHandler.CreateDustFromJewelTo(NPC, JewelEmerald.Center, type);
                 BuffedShoot_Emerald();
             }
             if (JewelRubyAlive)
             {
-                CreateDustBetweenJewels(JewelRuby);
+                JewelHandler.CreateDustFromJewelTo(NPC, JewelRuby.Center, type);
                 BuffedShoot_Ruby();
             }
         }
 
         NPC.netUpdate = true;
         return false;
-
-        void CreateDustBetweenJewels(NPC otherJewel)
-        {
-            int maxDustIterations = (int)Vector2.Distance(NPC.Center, otherJewel.Center); //distance
-            int maxDust = 100;
-            int dustDivisor = Math.Max(maxDustIterations / maxDust, 2);
-
-            Vector2 dustLineStart = NPC.Center;
-            Vector2 dustLineEnd = otherJewel.Center;
-            Vector2 spinningpoint = new Vector2(0f, -1f).RotatedByRandom();
-            for (int i = 0; i < maxDustIterations; i++)
-            {
-                if (i % dustDivisor == 0)
-                {
-                    Vector2 position = Vector2.Lerp(dustLineStart, dustLineEnd, i / (float)maxDustIterations);
-                    Dust.NewDustAction(position, 0, 0, Main.zenithWorld ? DustID.GemTopaz : DustID.GemSapphire, Vector2.Zero, d =>
-                    {
-                        d.position = position;
-                        d.velocity = spinningpoint.RotatedBy(MathHelper.TwoPi * i / maxDustIterations) * (0.9f + Main.rand.NextFloat() * 0.2f);
-                        d.noGravity = true;
-                        if (Main.rand.NextBool())
-                        {
-                            d.scale = 0.5f;
-                            d.fadeIn = 1f + Main.rand.Next(10) * 0.1f;
-                        }
-                        Dust d2 = Dust.CloneDust(d);
-                        d2.scale *= 0.5f;
-                        d2.fadeIn *= 0.5f;
-                    });
-                }
-            }
-        }
 
         void BuffedShoot_Emerald()
         {

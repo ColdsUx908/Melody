@@ -2173,6 +2173,32 @@ public abstract class SingleProjectileBehavior : SingleEntityBehavior<Projectile
 
     public Player Owner => Projectile.Owner;
 
+    public int Timer1
+    {
+        get => OceanProjectile.Timer1;
+        set => OceanProjectile.Timer1 = value;
+    }
+    public int Timer2
+    {
+        get => OceanProjectile.Timer2;
+        set => OceanProjectile.Timer2 = value;
+    }
+    public int Timer3
+    {
+        get => OceanProjectile.Timer3;
+        set => OceanProjectile.Timer3 = value;
+    }
+    public float Timer4
+    {
+        get => OceanProjectile.Timer4;
+        set => OceanProjectile.Timer4 = value;
+    }
+    public float Timer5
+    {
+        get => OceanProjectile.Timer5;
+        set => OceanProjectile.Timer5 = value;
+    }
+
     #region 虚成员
     #region Lifetime
     /// <inheritdoc cref="GlobalProjectile.OnSpawn"/>

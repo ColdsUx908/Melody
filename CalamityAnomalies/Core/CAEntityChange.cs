@@ -365,7 +365,7 @@ public abstract class CANPCOverride<TSource> : CAModNPCDetour<TSource>, ICALocal
                 case (false, true):
                     if (_exclusiveDetours.Contains(sourceName))
                         return null;
-                    CAMain.Instance.Logger.Warn($"""[CA Override] Source method "{sourceName}" does not have an implemented hook, and will not be hooked.""");
+                    //CAMain.Instance.Logger.Warn($"""[CA Override] Source method "{sourceName}" does not have an implemented hook, and will not be hooked.""");
                     return null;
                 case (_, false):
                     return null;
@@ -1590,7 +1590,7 @@ public abstract class CAProjectileOverride<TSource> : CAModProjectileDetour<TSou
                 case (false, true):
                     if (_exclusiveDetours.Contains(sourceName))
                         return null;
-                    CAMain.Instance.Logger.Warn($"""[CA Override] Source method "{sourceName}" does not have an implemented hook, and will not be hooked.""");
+                    //CAMain.Instance.Logger.Warn($"""[CA Override] Source method "{sourceName}" does not have an implemented hook, and will not be hooked.""");
                     return null;
                 case (_, false):
                     return null;
@@ -2275,7 +2275,7 @@ public abstract class CAItemOverride<TSource> : CAModItemDetour<TSource>, ICALoc
                 case (false, true):
                     if (_exclusiveDetours.Contains(sourceName))
                         return null;
-                    CAMain.Instance.Logger.Warn($"""[CA Override] Source method "{sourceName}" does not have an implemented hook, and will not be hooked.""");
+                    //CAMain.Instance.Logger.Warn($"""[CA Override] Source method "{sourceName}" does not have an implemented hook, and will not be hooked.""");
                     return null;
                 case (_, false):
                     return null;

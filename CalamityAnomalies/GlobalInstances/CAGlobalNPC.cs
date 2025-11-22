@@ -216,16 +216,33 @@ public sealed class CAGlobalNPC : GlobalNPC, IResourceLoader
         }
     }
 
+    /// <summary>
+    /// 额外DR，不受任何修改DR的机制影响。
+    /// </summary>
+    /// <remarks>谨慎使用。</remarks>
+    public float ExtraDR
+    {
+        get => InternalAnomalyAI32[6].f;
+        set
+        {
+            if (InternalAnomalyAI32[6].f != value)
+            {
+                InternalAnomalyAI32[6].f = value;
+                InternalAIChanged32[6] = true;
+            }
+        }
+    }
+
     public int Debuff_DimensionalRend
     {
-        get => InternalAnomalyAI32[5].i;
+        get => InternalAnomalyAI32[6].i;
         set
         {
             int temp = Math.Max(value, 0);
-            if (InternalAnomalyAI32[5].i != temp)
+            if (InternalAnomalyAI32[6].i != temp)
             {
-                InternalAnomalyAI32[5].i = temp;
-                InternalAIChanged32[5] = true;
+                InternalAnomalyAI32[6].i = temp;
+                InternalAIChanged32[6] = true;
             }
         }
     }

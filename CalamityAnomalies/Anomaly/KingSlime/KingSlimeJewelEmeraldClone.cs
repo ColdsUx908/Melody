@@ -35,7 +35,7 @@ public sealed class KingSlimeJewelEmeraldClone : ModProjectile
 
     public override bool PreDraw(ref Color lightColor)
     {
-        Main.spriteBatch.DrawFromCenter(Projectile.Texture, Projectile.Center - Main.screenPosition, Color.Lerp(Main.zenithWorld ? Color.Purple : Color.RealGreen, Main.zenithWorld ? new Color(255, 175, 255) : new Color(175, 255, 175), Math.Clamp(Projectile.timeLeft, 0f, 12f) / 12f) * Projectile.Opacity, null, Projectile.rotation, Projectile.scale);
+        Main.spriteBatch.DrawFromCenter(Projectile.Texture, Projectile.Center - Main.screenPosition, Color.Lerp(Main.zenithWorld ? Color.Purple : Color.FullGreen, Main.zenithWorld ? new Color(255, 175, 255) : new Color(175, 255, 175), Math.Clamp(Projectile.timeLeft, 0f, 12f) / 12f) * Projectile.Opacity, null, Projectile.rotation, Projectile.scale);
         return false;
     }
 }

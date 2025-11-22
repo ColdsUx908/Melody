@@ -1,4 +1,4 @@
-﻿#define CELESS_DEV
+﻿//#define CELESS_DEV
 
 using CalamityAnomalies.Assets.Textures;
 using CalamityAnomalies.GameContents;
@@ -13,7 +13,7 @@ using Transoceanic.Data.Geometry;
 namespace CalamityAnomalies.DeveloperContents;
 
 #region 物品
-public sealed class ColdheartIcicle : ModItem
+public sealed class ColdheartIcicle : CAModItem
 {
     #region Static
     public const int SpriteWidth = 24;
@@ -123,25 +123,25 @@ public sealed class ColdheartIcicle : ModItem
 
     public override void SetDefaults()
     {
-        Item.useStyle = ItemUseStyleID.Rapier;
-        Item.damage = 20;
-        Item.DamageType = TrueMeleeNoSpeedDamageClass_Publicizer.Instance;
         Item.width = SpriteWidth;
         Item.height = SpriteWidth;
+        Item.damage = 20;
+        Item.DamageType = TrueMeleeNoSpeedDamageClass_Publicizer.Instance;
         Item.useTime = 27;
         Item.useAnimation = 27;
+        Item.useStyle = ItemUseStyleID.Rapier;
         Item.autoReuse = true;
         Item.UseSound = SoundID.Item1;
         Item.useTurn = true;
         Item.knockBack = 3f;
-        Item.value = Celestial.CelestialPrice;
         Item.shoot = ModContent.ProjectileType<ColdheartIcicleProj>();
         Item.shootSpeed = 1.25f;
         Item.rare = ModContent.RarityType<Celestial>();
+        Item.value = Celestial.CelestialPrice;
         Item.noUseGraphic = true;
         Item.noMelee = true;
         Item.ArmorPenetration = 350258;
-        Item.Calamity().devItem = true;
+        CalamityItem.devItem = true;
     }
 
     public override void Update(ref float gravity, ref float maxFallSpeed)
@@ -183,54 +183,37 @@ public sealed class ColdheartIcicle : ModItem
 
     public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
     {
-        damage *= Phase switch
+        damage *= (Phase, SubPhase) switch
         {
-            1 => SubPhase switch
-            {
-                1 => 1f,        //20
-                2 => 1.25f,     //25
-                3 => 2f,        //40
-                4 => 3f,        //60
-                5 => 3.5f,      //70
-                _ => 1f
-            },
-            2 => SubPhase switch
-            {
-                1 => 4f,        //80
-                2 => 8f,        //160
-                _ => 1f
-            },
-            3 => SubPhase switch
-            {
-                1 => 12.5f,     //250
-                2 => 18f,       //360
-                3 => 25f,       //500
-                _ => 1f
-            },
-            4 => SubPhase switch
-            {
-                1 => 35f,       //700
-                2 => 50f,       //1000
-                _ => 1f
-            },
-            5 => SubPhase switch
-            {
-                1 => 65f,       //1300
-                2 => 100f,      //2000
-                3 => 120f,      //2400
-                _ => 1f
-            },
-            6 => SubPhase switch
-            {
-                1 => 150f,       //3000
-                2 => 200f,       //4000
-                3 => 300f,       //6000
-                4 => 400f,       //8000
-                5 => 450f,       //9000
-                6 => 750f,       //15000
-                _ => 1f
-            },
-            7 => 1500f,          //30000
+            (1, 1) => 1f,        //20
+            (1, 2) => 1.25f,     //25
+            (1, 3) => 2f,        //40
+            (1, 4) => 3f,        //60
+            (1, 5) => 3.5f,      //70
+
+            (2, 1) => 4f,        //80
+            (2, 2) => 8f,        //160
+
+            (3, 1) => 12.5f,     //250
+            (3, 2) => 18f,       //360
+            (3, 3) => 25f,       //500
+
+            (4, 1) => 35f,       //700
+            (4, 2) => 50f,       //1000
+
+            (5, 1) => 65f,       //1300
+            (5, 2) => 100f,      //2000
+            (5, 3) => 120f,      //2400
+
+            (6, 1) => 150f,      //3000
+            (6, 2) => 200f,      //4000
+            (6, 3) => 300f,      //6000
+            (6, 4) => 400f,      //8000
+            (6, 5) => 450f,      //9000
+            (6, 6) => 750f,      //15000
+
+            (7, _) => 1500f,     //30000
+
             _ => 1f
         };
     }
@@ -371,20 +354,8 @@ public sealed class ColdheartIcicleProj : BaseShortswordProjectile, ICAModProjec
     }
 }
 
-public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
+public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
 {
-    public int Timer
-    {
-        get => (int)Projectile.ai[1];
-        set => Projectile.ai[1] = value;
-    }
-
-    public int Timer2
-    {
-        get => (int)Projectile.ai[2];
-        set => Projectile.ai[2] = value;
-    }
-
     public int TargetIndex = -1;
     public Entity Target
     {
@@ -394,15 +365,12 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
             >= 0 => Main.player[TargetIndex],
             _ => Projectile.Owner
         };
-        set
+        set => TargetIndex = value switch
         {
-            if (value is NPC npc)
-                TargetIndex = npc.whoAmI + 300;
-            else if (value is Player player)
-                TargetIndex = player.whoAmI;
-            else
-                TargetIndex = -1;
-        }
+            NPC npc => npc.whoAmI + 300,
+            Player player => player.whoAmI,
+            _ => -1,
+        };
     }
 
 #if CELESS_DEV
@@ -443,7 +411,7 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
     {
         get
         {
-            float ratio = Math.Clamp(Timer / 240f, 0f, 1f);
+            float ratio = Math.Clamp(Timer1 / 240f, 0f, 1f);
             return Projectile.Center + new PolarVector2(450f * ratio * (2f - ratio), RealRotation - MathHelper.PiOver2);
         }
     }
@@ -476,10 +444,6 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
         Projectile.localNPCHitCooldown = -1;
     }
 
-    /* 绘制六段类椭圆圆弧组成的雪花图案。
-     * 当 amount > 1f 时，对椭圆进行缩放，以绘制中心曲边六边形。
-     */
-
     public static class EllipseData
     {
         /// <summary>
@@ -498,7 +462,7 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
 
     public override void AI()
     {
-        Timer++;
+        Timer1++;
 #if CELESS_DEV
         switch (Behavior)
         {
@@ -508,8 +472,8 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
             case BehaviorType.Dream:
                 Projectile.Center = Projectile.Owner.Center;
                 Projectile.timeLeft = LifeTime;
-                float interpolation = TOMathHelper.ParabolicInterpolation(Timer > 2398 ? (2598 - Timer) / 200f : Math.Clamp(Timer / 240f, 0f, 1f));
-                if (Main.rand.NextProbability((float)(Timer > 2398 ? (2598 - Timer) / 200f : Math.Clamp(Timer / 240f, 0f, 1f)) * 0.8f))
+                float interpolation = TOMathHelper.ParabolicInterpolation(Timer1 > 2398 ? (2598 - Timer1) / 200f : Math.Clamp(Timer1 / 240f, 0f, 1f));
+                if (Main.rand.NextProbability((float)(Timer1 > 2398 ? (2598 - Timer1) / 200f : Math.Clamp(Timer1 / 240f, 0f, 1f)) * 0.8f))
                     GeneralParticleHandler.SpawnParticle(new FadingGlowOrbParticle(SnowflakeCenter, Main.rand.NextVector2Circular(6f, 4f), Main.rand.NextFloat(0.9f, 1.4f), Main.rand.Next(40, 75), 0.8f, Main.rand.NextFloat(0.4f, 0.7f), Color.White, needed: true));
                 SnowflakeScale = 0.7f * interpolation;
                 SnowflakeRotation += 0.03f * interpolation * interpolation;
@@ -517,14 +481,14 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
                 {
                     Projectile.rotation += TOMathHelper.PiOver3 / LifeTime2 * interpolation;
                     if (RealRotation > MathHelper.TwoPi - MathHelper.PiOver4)
-                        Projectile.rotation -= TOMathHelper.PiOver3 / 130f * (float)TOMathHelper.Map(MathHelper.TwoPi + MathHelper.PiOver4, MathHelper.TwoPi + MathHelper.PiOver2, 0f, 1f, Projectile.rotation);
+                        Projectile.rotation -= TOMathHelper.PiOver3 / 130f * Utils.Remap(Projectile.rotation, MathHelper.Pi * 2.25f, MathHelper.Pi * 2.5f, 0f, 1f);
                     if (RealRotation > MathHelper.TwoPi)
                     {
                         RealRotation = 0f;
                         ShouldStopRotating = true;
                     }
                 }
-                if (Timer > 2598)
+                if (Timer1 > 2598)
                     Projectile.Kill();
                 break;
             case BehaviorType.SetOut:
@@ -540,51 +504,51 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
                 switch (SetOutPhase)
                 {
                     case 1:
-                        if (Timer == 1)
+                        if (Timer1 == 1)
                         {
                             Projectile.Center = destination;
                             Projectile.velocity = new PolarVector2(3f, MathHelper.PiOver2 + TOMathHelper.PiOver6);
                         }
                         float distance = Projectile.Distance(depart);
-                        Projectile.Homing(depart, distance < 50f ? 1f : 0.075f, velocityOverride: Projectile.velocity.Length() * TOMathHelper.Map(0f, 1000f, 0.9943f, 1f, distance, true));
+                        Projectile.Homing(depart, distance < 50f ? 1f : 0.075f, velocityOverride: Projectile.velocity.Length() * Utils.Remap(distance, 0f, 1000f, 0.9943f, 1f));
                         if (Projectile.Center == depart && Projectile.Owner.Center.X > DepartX - 88)
                         {
-                            Timer = 0;
+                            Timer1 = 0;
                             SetOutPhase = 2;
                         }
                         break;
                     case 2:
-                        if (Timer > 100)
+                        if (Timer1 > 100)
                         {
-                            Timer = 0;
+                            Timer1 = 0;
                             SetOutPhase = 3;
                         }
                         break;
                     case 3:
-                        if (Timer == 1)
+                        if (Timer1 == 1)
                         {
                             Projectile.Center = depart;
                             Projectile.velocity = new PolarVector2(0.02f, -MathHelper.PiOver2);
                         }
                         float distance2 = Projectile.Distance(destination);
-                        Projectile.Homing(destination, distance2 < 50f ? 1f : distance2 < 200f ? 0.1f : 0.045f, velocityOverride: distance2 < 500f ? Projectile.velocity.Length() * TOMathHelper.Map(0f, 500f, 0.9947f, 1f, distance2, true) : Math.Min(Projectile.velocity.Length() + 0.01f, 1.5f));
+                        Projectile.Homing(destination, distance2 < 50f ? 1f : distance2 < 200f ? 0.1f : 0.045f, velocityOverride: distance2 < 500f ? Projectile.velocity.Length() * Utils.Remap(distance2, 0f, 500f, 0.9947f, 1f) : Math.Min(Projectile.velocity.Length() + 0.01f, 1.5f));
                         if (Projectile.Center == destination && Projectile.Owner.Center.X > DestinationX + 256)
                         {
-                            Timer = 0;
+                            Timer1 = 0;
                             SetOutPhase = 4;
                         }
                         break;
                     case 4:
-                        if (Timer > 200)
-                            interpolation3 = TOMathHelper.ParabolicInterpolation((float)((700 - Timer) / 500f));
-                        if (Timer > 100)
-                            interpolation4 = TOMathHelper.ParabolicInterpolation((float)((700 - Timer) / 600f));
-                        if (Timer == 500)
+                        if (Timer1 > 200)
+                            interpolation3 = TOMathHelper.ParabolicInterpolation((float)((700 - Timer1) / 500f));
+                        if (Timer1 > 100)
+                            interpolation4 = TOMathHelper.ParabolicInterpolation((float)((700 - Timer1) / 600f));
+                        if (Timer1 == 500)
                         {
                             for (int i = 0; i < 2000; i++)
                                 GeneralParticleHandler.SpawnParticle(new FadingGlowOrbParticle(Projectile.Owner.Center + new Vector2(Main.rand.NextFloat(-1600f, 1600f), -1300f - Main.rand.NextFloat(3700f)), Main.rand.NextVector2Circular(8f, 6f), Main.rand.NextFloat(0.25f, 0.7f), Main.rand.Next(370, 660), 0.8f, Main.rand.NextFloat(0.4f, 0.7f), Color.White, needed: true));
                         }
-                        if (Timer > 700)
+                        if (Timer1 > 700)
                             Projectile.Kill();
                         break;
                 }
@@ -618,12 +582,12 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
                 Main.Rasterizer.ScissorTestEnable = true;
                 Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
                 Main.instance.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
-                if (Timer < 2200)
+                if (Timer1 < 2200)
                 {
                     float radius = 150f; //圆心半径
                     for (int j = 0; j < 6; j++)
                     {
-                        int localTimer = Timer > 2000 ? (2200 - Timer) / 2 : Math.Min(Timer - LifeTime2 * j - 235, LifeTime);
+                        int localTimer = Timer1 > 2000 ? (2200 - Timer1) / 2 : Math.Min(Timer1 - LifeTime2 * j - 235, LifeTime);
                         for (int i = 0; i <= localTimer * 10; i++)
                         {
                             float a = radius * EllipseData.AMultiplier; //椭圆半长轴
@@ -639,7 +603,7 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
                             Vector2 circleCenter = Projectile.Center + new PolarVector2(radius, angle);
                             (float sin, float cos) = MathF.SinCos(MathHelper.Lerp(-EllipseData.MaxAngleOffset, EllipseData.MaxAngleOffset, amount));
                             Vector2 position = circleCenter + new Vector2(a * cos, b * sin).RotatedBy(angle);
-                            Main.spriteBatch.DrawFromCenter(CalamityTextureHandler.GlowOrbParticle, position - Main.screenPosition, Color.White with { A = 0 }, null, 0f, 0.5f * TOMathHelper.Map(0f, 1.83f, 0.4f, 1.2f, amount));
+                            Main.spriteBatch.DrawFromCenter(CalamityTextureHandler.GlowOrbParticle, position - Main.screenPosition, Color.White with { A = 0 }, null, 0f, 0.5f * Utils.Remap(amount, 0f, 1.83f, 0.4f, 1.2f));
                         }
                     }
                 }
@@ -660,13 +624,13 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
             Main.Rasterizer.ScissorTestEnable = true;
             Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
             Main.instance.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
-            if (Timer < 300)
+            if (Timer1 < 300)
             {
                 float radius = 40f; //圆心半径
                 Vector2 origin = CalamityTextureHandler.GlowOrbParticle.Size() * 0.5f;
                 for (int j = 0; j < 6; j++)
                 {
-                    int localTimer = Timer2 > 0 ? (100 - Timer2) / 2 : Math.Min(Timer - j * 10, LifeTime);
+                    int localTimer = Timer2 > 0 ? (100 - Timer2) / 2 : Math.Min(Timer1 - j * 10, LifeTime);
                     for (int i = 0; i <= localTimer * 10; i++)
                     {
                         float a = radius * EllipseData.AMultiplier; //椭圆半长轴
@@ -682,7 +646,7 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
                         Vector2 circleCenter = Projectile.Center + new PolarVector2(radius, angle);
                         (float sin, float cos) = MathF.SinCos(MathHelper.Lerp(-EllipseData.MaxAngleOffset, EllipseData.MaxAngleOffset, amount));
                         Vector2 position = circleCenter + new Vector2(a * cos, b * sin).RotatedBy(angle);
-                        Main.spriteBatch.DrawFromCenter(CalamityTextureHandler.GlowOrbParticle, position - Main.screenPosition, Color.White with { A = 0 }, null, 0f, 0.3f * TOMathHelper.Map(0f, 1.83f, 0.4f, 1.2f, amount));
+                        Main.spriteBatch.DrawFromCenter(CalamityTextureHandler.GlowOrbParticle, position - Main.screenPosition, Color.White with { A = 0 }, null, 0f, 0.3f * Utils.Remap(amount, 0f, 1.83f, 0.4f, 1.2f));
                     }
                 }
             }
@@ -716,15 +680,9 @@ public sealed class ColdheartIcicleDream : ModProjectile, IResourceLoader
     }
 }
 
-public sealed class ColdheartIcicleSnowflake : ModProjectile, ICAModProjectile
+public sealed class ColdheartIcicleSnowflake : CAModProjectile, ICAModProjectile
 {
     public const int LeftTime = 360;
-
-    public int Timer
-    {
-        get => (int)Projectile.ai[0];
-        set => Projectile.ai[0] = value;
-    }
 
     public override string Texture => CAMain.CalamityInvisibleProj;
 
@@ -750,9 +708,9 @@ public sealed class ColdheartIcicleSnowflake : ModProjectile, ICAModProjectile
     {
         Lighting.AddLight(Projectile.Center, Color.White.ToVector3());
 
-        Timer++;
-        float interpolation = TOMathHelper.ParabolicInterpolation(Timer <= 10 ? Timer / 10f : Timer >= LeftTime - 25 ? (LeftTime - Timer) / 25f : 1f);
-        Projectile.velocity.Modulus = TOMathHelper.Map(0, LeftTime, 18f, 30f, Timer) * interpolation;
+        Timer1++;
+        float interpolation = TOMathHelper.ParabolicInterpolation(Timer1 <= 10 ? Timer1 / 10f : Timer1 >= LeftTime - 25 ? (LeftTime - Timer1) / 25f : 1f);
+        Projectile.velocity.Modulus = Utils.Remap(Timer1, 0, LeftTime, 18f, 30f) * interpolation;
         Projectile.BetterChangeScale(80, 80, 0.5f * interpolation, Projectile.Center);
         Projectile.rotation += 0.05f * interpolation;
         GeneralParticleHandler.SpawnParticle(new FadingGlowOrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(4f, 4f), Main.rand.NextFloat(0.8f, 1.3f), Main.rand.Next(40, 75), 0.8f, Main.rand.NextFloat(0.35f, 0.6f), Color.White, needed: true));
@@ -794,7 +752,7 @@ public sealed class ColdheartIcicleSnowflake : ModProjectile, ICAModProjectile
         modifiers.ForceCrit();
     }
 
-    public void ModifyHitNPC_DR(NPC target, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier)
+    public override void ModifyHitNPC_DR(NPC target, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier)
     {
         baseDRModifier *= 0f;
         timedDRModifier *= 0f;
@@ -852,7 +810,7 @@ public sealed class ColdheartIcicleSnowFlake_GlobalNPC : CAGlobalNPCBehavior
     }
 }
 
-public sealed class ColdheartIcicleIceRain : ModProjectile
+public sealed class ColdheartIcicleIceRain : CAModProjectile
 {
     public override string Texture => CAMain.CATexturePath + "Touhou/Ice1";
 

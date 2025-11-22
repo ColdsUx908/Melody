@@ -9,7 +9,7 @@ public static class JewelHandler
 {
     public const string JewelTexturePath = "CalamityMod/NPCs/NormalNPCs/KingSlimeJewel";
 
-    public static Color EmeraldColor => Main.zenithWorld ? Color.Purple : Color.RealGreen;
+    public static Color EmeraldColor => Main.zenithWorld ? Color.Purple : Color.FullGreen;
     public static Color RubyColor => Main.zenithWorld ? Color.Cyan : Color.Red;
     public static Color SapphireColor => Main.zenithWorld ? Color.Yellow : Color.Blue;
     public static Color RainbowColor => Main.DiscoColor;
@@ -55,12 +55,13 @@ public static class JewelHandler
     /// <param name="destination">目标点。</param>
     /// <param name="maxVelocityX">水平速度最大值。</param>
     /// <param name="maxVelocityY">竖直速度最大值。</param>
-    /// <param name="acceleration">加速度。</param>
+    /// <param name="accelerationX">水平加速度。</param>
+    /// <param name="accelerationY">竖直加速度。</param>
     /// <param name="safeDistanceXMax">水平安全距离（宝石中心X坐标减目标中心X坐标）最大值。当水平距离大于此值时触发反向移动。</param>
     /// <param name="safeDistanceXMin">水平安全距离（宝石中心X坐标减目标中心X坐标）最小值。当水平距离小于此值时触发反向移动。</param>
     /// <param name="safeDistanceYMax">竖直安全距离（宝石中心Y坐标减目标中心Y坐标）最大值。当竖直距离大于此值时触发反向移动。</param>
     /// <param name="safeDistanceYMin">竖直安全距离（宝石中心Y坐标减目标中心Y坐标）最小值。当竖直距离小于此值时触发反向移动。</param>
-    public static void Movement(NPC jewel, Vector2 destination, float maxVelocityX, float maxVelocityY, float acceleration, float safeDistanceXMax, float safeDistanceXMin, float safeDistanceYMax, float safeDistanceYMin)
+    public static void Move(NPC jewel, Vector2 destination, float maxVelocityX, float maxVelocityY, float accelerationX, float accelerationY, float safeDistanceXMax, float safeDistanceXMin, float safeDistanceYMax, float safeDistanceYMin)
     {
         jewel.damage = 0;
         jewel.knockBackResist = 0.7f;
@@ -70,31 +71,31 @@ public static class JewelHandler
         float safeX = (safeDistanceXMax - safeDistanceXMin) / 2f;
         float adjustedY = distance.Y - (safeDistanceYMax + safeDistanceYMin) / 2f;
         float safeY = (safeDistanceYMax - safeDistanceYMin) / 2f;
-        maxVelocityX = TOMathHelper.Map(safeX, safeX * 7f, maxVelocityX * 0.65f, maxVelocityX, Math.Abs(adjustedX), true);
-        maxVelocityY = TOMathHelper.Map(safeY, safeY * 7f, maxVelocityY * 0.65f, maxVelocityY, Math.Abs(adjustedY), true);
+        maxVelocityX = Utils.Remap(Math.Abs(adjustedX), safeX, safeX * 7f, maxVelocityX * 0.65f, maxVelocityX);
+        maxVelocityY = Utils.Remap(Math.Abs(adjustedY), safeY, safeY * 7f, maxVelocityY * 0.65f, maxVelocityY, true);
         if (adjustedX > safeX)
         {
             if (jewel.velocity.X > 0f)
                 jewel.velocity.X *= 0.98f;
-            jewel.velocity.X = Math.Clamp(jewel.velocity.X - acceleration, -maxVelocityX, maxVelocityX);
+            jewel.velocity.X = Math.Clamp(jewel.velocity.X - accelerationX, -maxVelocityX, maxVelocityX);
         }
         else if (adjustedX < -safeX)
         {
             if (jewel.velocity.X < 0f)
                 jewel.velocity.X *= 0.98f;
-            jewel.velocity.X = Math.Clamp(jewel.velocity.X + acceleration, -maxVelocityX, maxVelocityX);
+            jewel.velocity.X = Math.Clamp(jewel.velocity.X + accelerationX, -maxVelocityX, maxVelocityX);
         }
         if (adjustedY > safeY)
         {
             if (jewel.velocity.Y > 0f)
                 jewel.velocity.Y *= 0.98f;
-            jewel.velocity.Y = Math.Clamp(jewel.velocity.Y - acceleration, -maxVelocityY, maxVelocityY);
+            jewel.velocity.Y = Math.Clamp(jewel.velocity.Y - accelerationY, -maxVelocityY, maxVelocityY);
         }
         else if (adjustedY < -safeY)
         {
             if (jewel.velocity.Y < 0f)
                 jewel.velocity.Y *= 0.98f;
-            jewel.velocity.Y = Math.Clamp(jewel.velocity.Y + acceleration, -maxVelocityY, maxVelocityY);
+            jewel.velocity.Y = Math.Clamp(jewel.velocity.Y + accelerationY, -maxVelocityY, maxVelocityY);
         }
     }
 
@@ -110,11 +111,16 @@ public static class JewelHandler
 
     public static void DrawAttackEffect(SpriteBatch spriteBatch, Vector2 screenPos, NPC jewel, float ratio, float radius, float scale)
     {
+        bool isRainbowJewel = jewel.ModNPC is KingSlimeJewelRainbow;
         Color color = GetColor(jewel) with { A = 0 } * ratio * 1.5f;
         float interpolation = TOMathHelper.ParabolicInterpolation(1f - ratio);
         float interpolation2 = TOMathHelper.ParabolicInterpolation(Math.Clamp(1f - ratio, 0f, 0.2f) * 5f);
         for (int i = 0; i < 300; i++)
-            spriteBatch.DrawFromCenter(CalamityTextureHandler.GlowOrbParticle, jewel.Center + new PolarVector2(radius * interpolation, MathHelper.TwoPi / 200 * i) - screenPos, color, null, 0f, scale * interpolation2);
+        {
+            if (isRainbowJewel)
+                color = Color.LerpMany(Color.RainbowColors, (ratio + i / 300f + TOMathHelper.GetTimeSin(0.5f, 0.5f, 0f, true)) % 1f) with { A = 0 } * ratio * 1.5f;
+            spriteBatch.DrawFromCenter(CalamityTextureHandler.GlowOrbParticle, jewel.Center + new PolarVector2(radius * interpolation, MathHelper.TwoPi / 300 * i) - screenPos, color, null, 0f, scale * interpolation2);
+        }
     }
 
     /// <summary>
@@ -124,7 +130,46 @@ public static class JewelHandler
     /// <param name="velocity">粒子速度大小。</param>
     /// <param name="lifetime">粒子存在时长。</param>
     /// <param name="scale">粒子大小。</param>
-    public static void SpawnParticle(NPC jewel, float velocity, int lifetime, float scale) => GeneralParticleHandler.SpawnParticle(new FadingGlowOrbParticle(jewel.Center, Main.rand.NextPolarVector2(velocity), 0f, lifetime, 0.925f, scale, GetColor(jewel)));
+    public static void SpawnParticle(NPC jewel, float velocity, int lifetime, float scale)
+    {
+        Color color = jewel.ModNPC switch
+        {
+            KingSlimeJewelRainbow => Color.GetRandomRainbowColor(),
+            _ => GetColor(jewel)
+        };
+        GeneralParticleHandler.SpawnParticle(new FadingGlowOrbParticle(jewel.Center, Main.rand.NextPolarVector2(velocity), 0f, lifetime, 0.925f, scale, color));
+    }
+
+    public static void CreateDustFromJewelTo(NPC jewel, Vector2 destination, int type)
+    {
+        int maxDustIterations = (int)Vector2.Distance(jewel.Center, destination); //distance
+        int maxDust = 100;
+        int dustDivisor = Math.Max(maxDustIterations / maxDust, 2);
+
+        Vector2 start = jewel.Center;
+        Vector2 spinningpoint = new Vector2(0f, -1f).RotatedByRandom();
+        for (int i = 0; i < maxDustIterations; i++)
+        {
+            if (i % dustDivisor == 0)
+            {
+                Vector2 position = Vector2.Lerp(start, destination, i / (float)maxDustIterations);
+                Dust.NewDustAction(position, 0, 0, type, Vector2.Zero, d =>
+                {
+                    d.position = position;
+                    d.velocity = spinningpoint.RotatedBy(MathHelper.TwoPi * i / maxDustIterations) * (0.9f + Main.rand.NextFloat() * 0.2f);
+                    d.noGravity = true;
+                    if (Main.rand.NextBool())
+                    {
+                        d.scale = 0.5f;
+                        d.fadeIn = 1f + Main.rand.Next(10) * 0.1f;
+                    }
+                    Dust d2 = Dust.CloneDust(d);
+                    d2.scale *= 0.5f;
+                    d2.fadeIn *= 0.5f;
+                });
+            }
+        }
+    }
 
     public static bool CheckIfPhase2(NPC jewel) => jewel.ai[2] > 0f;
 
@@ -137,4 +182,21 @@ public static class JewelHandler
         jewel.dontTakeDamage = true;
         jewel.netUpdate = true;
     }
+
+    public static void DisableAttack(NPC jewel)
+    {
+        jewel.ai[3] = 1f;
+    }
+
+    public static int GetRandomDustID() => Main.rand.Next(7) switch
+    {
+        0 => DustID.GemAmethyst,
+        1 => DustID.GemTopaz,
+        2 => DustID.GemSapphire,
+        3 => DustID.GemEmerald,
+        4 => DustID.GemRuby,
+        5 => DustID.GemDiamond,
+        6 => DustID.GemAmber,
+        _ => DustID.TintableDust
+    };
 }

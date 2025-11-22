@@ -193,9 +193,10 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
         get => OceanAI32[27].i;
         set
         {
-            if (OceanAI32[27].i != value)
+            int temp = Math.Max(0, value);
+            if (OceanAI32[27].i != temp)
             {
-                OceanAI32[27].i = value;
+                OceanAI32[27].i = temp;
                 AIChanged32[27] = true;
             }
         }
@@ -206,9 +207,10 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
         get => OceanAI32[28].i;
         set
         {
-            if (OceanAI32[28].i != value)
+            int temp = Math.Max(0, value);
+            if (OceanAI32[28].i != temp)
             {
-                OceanAI32[28].i = value;
+                OceanAI32[28].i = temp;
                 AIChanged32[28] = true;
             }
         }
@@ -219,9 +221,10 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
         get => OceanAI32[29].i;
         set
         {
-            if (OceanAI32[29].i != value)
+            int temp = Math.Max(0, value);
+            if (OceanAI32[29].i != temp)
             {
-                OceanAI32[29].i = value;
+                OceanAI32[29].i = temp;
                 AIChanged32[29] = true;
             }
         }

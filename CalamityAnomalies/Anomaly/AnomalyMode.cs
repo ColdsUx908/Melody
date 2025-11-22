@@ -7,7 +7,7 @@ namespace CalamityAnomalies.Anomaly;
 
 public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
 {
-    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "UI.AnomalyMode";
+    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "Anomaly.AnomalyMode";
 
     internal static AnomalyMode Instance;
 
@@ -53,7 +53,7 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
 
 public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizationPrefix
 {
-    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "UI.AnomalyMode";
+    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "Anomaly.AnomalyMode";
 
     public override void PreUpdateWorld()
     {

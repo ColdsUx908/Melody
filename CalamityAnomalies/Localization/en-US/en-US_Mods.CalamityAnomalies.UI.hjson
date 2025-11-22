@@ -1,30 +1,3 @@
-AnomalyMode: {
-	Anomaly: Anomaly
-	AnomalyShortInfo: "[c/FFCFFF:Extreme]"
-	AnomalyExpandedInfo:
-		'''
-		[c/AFFFFF:Do you think you are worthy of transcending the gods?]
-		[c/AFFFFF:If you crave a challenge beyond Legendary+Death Mode...]
-		[c/FF0000:Then...]
-		[c/FF0000:>:(]
-		'''
-	AnomalyActivate: Anomaly is active... are you serious?
-	AnomalyDeactivate: Anomaly is not active; wise choice.
-	AnomalyInvalid: Anomaly is only available in TRUE Master difficulty.
-	AnomalyUltraInvalidNotLegendary: Anomaly Ultramundane is only available in TRUE Legendary difficulty.
-	AnomalyUltraInvalidZenith: Anomaly Ultramundane is not supported in Get fixed boi worlds.
-	AnomalyUltramundaneActivate:
-		'''
-		Anomaly Ultramundane is fully activated, please make sure you know what you're doing!
-		Note: This difficulty is extremely difficult and only suitable for ALIEN players!
-		'''
-	AnomalyUltramundaneDeactivate:
-		'''
-		Anomaly Ultramundane is back to normal...
-		Did you try it?
-		'''
-}
-
 BetterBossHealthBar: {
 	BrainofCthulhuExtension: ""
 	CeaselessVoidExtension: (Dark Energy left: {0}, {1} / {2})

@@ -1,19 +1,7 @@
 ﻿namespace Transoceanic.Core;
 
-public enum LoaderMethodType
-{
-    Load,
-    PostSetupContent,
-    PostAddRecipes,
-    OnModUnload,
-    UnLoad,
-
-    OnWorldLoad,
-    OnWorldUnload
-}
-
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class LoadPriorityAttribute : Attribute
+public class LoadPriorityAttribute : Attribute
 {
     /// <summary>
     /// 加载优先级。

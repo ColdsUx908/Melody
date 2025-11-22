@@ -74,6 +74,15 @@ public static class TOMathHelper
     }
 
     /// <summary>
+    /// 确保 <paramref name="left"/> 不大于 <paramref name="right"/>，否则交换二者。
+    /// </summary>
+    public static void NormalizeMinMax<T>(ref T left, ref T right) where T : INumber<T>
+    {
+        if (left > right)
+            Utils.Swap(ref left, ref right);
+    }
+
+    /// <summary>
     /// 生成一个形如 <c>y = A * sin(</c>ω<c>t + </c>φ<c>)</c> 的正弦波。其中 <c>t</c> 随游戏内时间变化，单位是秒。
     /// </summary>
     /// <param name="max">A。默认为1。</param>
@@ -94,10 +103,10 @@ public static class TOMathHelper
     /// <summary>
     /// 生成形如 <c>(sin, cos) = (A * sin(</c>ω<c>t + </c>φ<c>, A * cos(</c>ω<c>t + </c>φ<c>))</c> 的正余弦波。其中 <c>t</c> 随游戏内时间变化，单位是秒。
     /// </summary>
-    /// <param name="max">A。默认为1。</param>
+    /// <param name="max"><c>A</c>。默认为1。</param>
     /// <param name="omega">ω。默认为1。</param>
     /// <param name="primary">φ。默认为0。</param>
-    /// <param name="unsigned">是否将结果转换为非负值。默认为 <see langword="false"/>。</param>
+    /// <param name="unsigned">是否将结果转换为非负值（即加上 <c>A</c> / 2）。默认为 <see langword="false"/>。</param>
     public static (float Sin, float Cos) GetTimeSinCos(float max = 1f, float omega = 1f, float primary = 0f, bool unsigned = false)
     {
         (float sin1, float cos1) = MathF.SinCos(TOWorld.GeneralSeconds * omega + primary);
@@ -127,27 +136,5 @@ public static class TOMathHelper
             throw new ArgumentOutOfRangeException(nameof(value), "Value must be a finite number.");
         int integerPart = (int)value;
         return (integerPart, value - integerPart);
-    }
-
-    public static float Map(float oldMin, float oldMax, float newMin, float newMax, float value, bool clamp = false)
-    {
-        if (oldMin > oldMax)
-            throw new ArgumentOutOfRangeException($"{nameof(oldMin)}, {nameof(oldMax)}", "oldMin must be less than or equal to oldMax.");
-        if (newMin > newMax)
-            throw new ArgumentOutOfRangeException($"{nameof(newMin)}, {nameof(newMax)}", "newMin must be less than or equal to newMax.");
-        if (clamp)
-            value = Math.Clamp(value, oldMin, oldMax);
-        return (value - oldMin) / (oldMax - oldMin) * (newMax - newMin) + newMin;
-    }
-
-    public static float MapReverse(float oldMin, float oldMax, float newMin, float newMax, float value, bool clamp = false)
-    {
-        if (oldMin > oldMax)
-            throw new ArgumentOutOfRangeException($"{nameof(oldMin)}, {nameof(oldMax)}", "oldMin must be less than or equal to oldMax.");
-        if (newMin > newMax)
-            throw new ArgumentOutOfRangeException($"{nameof(newMin)}, {nameof(newMax)}", "newMin must be less than or equal to newMax.");
-        if (clamp)
-            value = Math.Clamp(value, oldMin, oldMax);
-        return newMax - (value - oldMin) / (oldMax - oldMin) * (newMax - newMin);
     }
 }

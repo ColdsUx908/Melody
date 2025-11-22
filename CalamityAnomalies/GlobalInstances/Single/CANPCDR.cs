@@ -63,7 +63,7 @@ public sealed class CANPCDR : CAGlobalNPCBehavior2, IResourceLoader
         baseDR = baseDRModifier.ApplyTo(baseDR);
         float standardDR = standardDRModifier.ApplyTo(baseDR);
         float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR));
-        modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR, 0f, 1f);
+        modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR - npc.Anomaly().ExtraDR, 0f, 1f);
     }
 
     public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
@@ -81,7 +81,7 @@ public sealed class CANPCDR : CAGlobalNPCBehavior2, IResourceLoader
         baseDR = baseDRModifier.ApplyTo(baseDR);
         float standardDR = standardDRModifier.ApplyTo(baseDR);
         float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR));
-        modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR, 0f, 1f);
+        modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR - npc.Anomaly().ExtraDR, 0f, 1f);
     }
 
     void IResourceLoader.PostSetupContent()
