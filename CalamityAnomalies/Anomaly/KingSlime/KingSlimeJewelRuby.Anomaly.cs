@@ -75,7 +75,7 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
                 return;
 
             int amount = HasEnteredPhase2 ? (Main.zenithWorld ? 7 : 3) : (Main.zenithWorld ? 11 : 5);
-            float singleRadian = MathHelper.ToRadians(HasEnteredPhase2 ? (Main.zenithWorld ? 22.5f : CAWorld.AnomalyUltramundane ? 5f : 13.5f) : (Main.zenithWorld ? 18f : CAWorld.AnomalyUltramundane ? 13.5f : 12f));
+            float singleRadian = MathHelper.ToRadians(HasEnteredPhase2 ? (Main.zenithWorld ? 22.5f : 10f) : (Main.zenithWorld ? 18f : CAWorld.AnomalyUltramundane ? 13.5f : 12f));
             float radian = singleRadian * (amount - 1);
             float initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
             Projectile.RotatedProj<JewelProjectile>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(Main.zenithWorld ? 18f : 15f, initialRotation), NPC.GetProjectileDamage<JewelProjectile>(), 0f, Main.myPlayer, p =>

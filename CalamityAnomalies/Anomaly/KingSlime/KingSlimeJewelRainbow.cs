@@ -6,9 +6,9 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
 {
     public const float DespawnDistance = 5000f;
     public const int AttackTypes = 4;
-    public int ShootCooldownTime => (int)MathHelper.Lerp(180f, 150f, NPC.LostLifeRatio);
+    public int ShootCooldownTime => (int)MathHelper.Lerp(210f, 180f, NPC.LostLifeRatio);
 
-    public int NextAttackType
+    public int CurrentAttackType
     {
         get => (int)NPC.ai[1];
         set => NPC.ai[1] = value % AttackTypes;
@@ -89,9 +89,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
         {
             Timer1 = 0;
             Shoot();
-            int particleAmount = Main.zenithWorld ? 30 : 20;
-            for (int i = 0; i < particleAmount; i++)
-                JewelHandler.SpawnParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
+            SpawnParticle();
         }
 
         NPC.netUpdate = true;
@@ -105,35 +103,59 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
                 return;
 
             bool buffedAttack = NPC.LifeRatio < 0.5f;
-            switch (NextAttackType++)
+            switch (++CurrentAttackType)
             {
                 case 0:
-                case 1:
+                    {
+                        int amount = 24;
+                        float initialRotation = (Target.Center - NPC.Center).ToRotation();
+                        Projectile.RotatedProj<JewelProjectileRainbow>(amount, MathHelper.TwoPi / amount, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(16.5f, initialRotation), NPC.GetProjectileDamage<JewelProjectile>(), 0f);
+                        for (int i = 0; i < 50; i++)
+                            Projectile.NewProjectileAction<JewelProjectileRainbow>(NPC.GetSource_FromAI(), Target.Center + new Vector2(Main.rand.NextFloat(-2500f, 2500f), Main.rand.NextFloat(-2200f, -900f)), new PolarVector2(Main.rand.NextFloat(9f, 13f), MathHelper.PiOver2 + Main.rand.NextFloat(-TOMathHelper.PiOver8, TOMathHelper.PiOver8)), NPC.GetProjectileDamage<JewelProjectileRainbow>(), 0f);
+                    }
+                    break;
+                case 1 or 2:
                     {
                         int amount = 7;
                         float singleRadian = MathHelper.ToRadians(15f);
                         float radian = singleRadian * (amount - 1);
                         float initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
-                        Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(15f, initialRotation), NPC.GetProjectileDamage<JewelProjectile>(), 0f, Main.myPlayer);
-                    }
-                    break;
-                case 2:
-                    {
-                        int amount = buffedAttack ? 11 : 9;
-                        float singleRadian = MathHelper.ToRadians(15f);
-                        float radian = singleRadian * (amount - 1);
-                        float initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
-                        Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(16.5f, initialRotation), NPC.GetProjectileDamage<JewelProjectile>(), 0f, Main.myPlayer);
+                        Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(15f, initialRotation), NPC.GetProjectileDamage<JewelProjectileRainbow>(), 0f);
                     }
                     break;
                 case 3:
                     {
-                        int amount = buffedAttack ? 36 : 30;
-                        float initialRotation = (Target.Center - NPC.Center).ToRotation();
-                        Projectile.RotatedProj<JewelProjectileRainbow>(amount, MathHelper.TwoPi / amount, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(16.5f, initialRotation), NPC.GetProjectileDamage<JewelProjectile>(), 0f, Main.myPlayer);
+                        int amount = buffedAttack ? 11 : 9;
+                        float singleRadian = MathHelper.ToRadians(17.5f);
+                        float radian = singleRadian * (amount - 1);
+                        float initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
+                        Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(16.5f, initialRotation), NPC.GetProjectileDamage<JewelProjectileRainbow>(), 0f);
+                        amount--;
+                        radian = singleRadian * (amount - 1);
+                        initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
+                        Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(15f, initialRotation), NPC.GetProjectileDamage<JewelProjectileRainbow>(), 0f);
                     }
                     break;
             }
+        }
+
+        void SpawnParticle()
+        {
+            int particleAmount = Main.zenithWorld ? 30 : CurrentAttackType switch
+            {
+                2 => 30,
+                3 => 50,
+                _ => 20
+            };
+            float minVelocity = 3f;
+            float maxVelocity = CurrentAttackType switch
+            {
+                2 => 8f,
+                3 => 10f,
+                _ => 6f
+            };
+            for (int i = 0; i < particleAmount; i++)
+                JewelHandler.SpawnParticle(NPC, Main.rand.NextFloat(minVelocity, maxVelocity), Main.rand.Next(30, 50), Main.rand.NextFloat(0.4f, 0.7f));
         }
     }
 
@@ -141,11 +163,28 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
     {
         DrawRainbowTrail(spriteBatch, screenPos, NPC, NPC.oldPos);
 
-        float timeLeftGateValue = 45f;
+        float timeLeftGateValue = CurrentAttackType switch
+        {
+            2 => 45,
+            3 => 55,
+            _ => 40
+        };
         float gateValue = ShootCooldownTime - timeLeftGateValue;
         float ratio = Timer1 > gateValue ? (Timer1 - gateValue) / timeLeftGateValue : 0f;
+        float radius = CurrentAttackType switch
+        {
+            2 => 145f,
+            3 => 160f,
+            _ => 135f
+        };
+        float scale = CurrentAttackType switch
+        {
+            2 => 0.375f,
+            3 => 0.425f,
+            _ => 0.35f
+        };
         if (CAClientConfig.Instance.AuxiliaryVisualEffects && ratio > 0f)
-            JewelHandler.DrawAttackEffect(spriteBatch, screenPos, NPC, ratio, 135f, 0.35f);
+            JewelHandler.DrawAttackEffect(spriteBatch, screenPos, NPC, ratio, radius, scale);
         JewelHandler.DrawJewel(spriteBatch, screenPos, NPC, ratio);
         return false;
     }

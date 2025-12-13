@@ -860,7 +860,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
 
     public override Color? GetAlpha(Color drawColor)
     {
-        Color newColor = Color.Lerp(new Color(0, 0, 150, NPC.alpha), new Color(125, 125, 255, NPC.alpha), TOMathHelper.GetTimeSin(0.5f, unsigned: true));
+        Color newColor = Color.Lerp(new Color(0, 0, 150, NPC.alpha), new Color(125, 125, 255, NPC.alpha), TOMathHelper.GetTimeSin(0.35f, 1.5f, unsigned: true) + 0.3f);
         Color preRainbow = Color.Lerp(drawColor, newColor, SapphireBuffRatio);
 
         if (Main.remixWorld)

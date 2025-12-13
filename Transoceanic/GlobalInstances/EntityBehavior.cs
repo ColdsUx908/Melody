@@ -2231,6 +2231,7 @@ public abstract class SingleItemBehavior : SingleEntityBehavior<Item>
 #endregion Single Behavior
 
 #region Single Behavior Handler
+[CriticalBehavior]
 public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior where TNPCBehavior : SingleNPCBehavior
 {
     protected abstract SingleEntityBehaviorSet<NPC, TNPCBehavior> BehaviorSet { get; }
@@ -2824,6 +2825,7 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
     #endregion WorldSaving
 }
 
+[CriticalBehavior]
 public abstract class SingleProjectileBehaviorHandler<TProjectileBehavior> : GlobalProjectileBehavior where TProjectileBehavior : SingleProjectileBehavior
 {
     protected abstract SingleEntityBehaviorSet<Projectile, TProjectileBehavior> BehaviorSet { get; }
@@ -3136,6 +3138,7 @@ public abstract class SingleProjectileBehaviorHandler<TProjectileBehavior> : Glo
     #endregion SpecialEffects
 }
 
+[CriticalBehavior]
 public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehavior where TItemBehavior : SingleItemBehavior
 {
     protected abstract SingleEntityBehaviorSet<Item, TItemBehavior> BehaviorSet { get; }

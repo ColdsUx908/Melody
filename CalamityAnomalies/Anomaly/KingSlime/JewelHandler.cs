@@ -107,7 +107,7 @@ public static class JewelHandler
     /// <param name="jewel">宝石。</param>
     /// <param name="lerpValue">插值比例。</param>
     public static void DrawJewel(SpriteBatch spriteBatch, Vector2 screenPos, NPC jewel, float lerpValue) =>
-        spriteBatch.DrawFromCenter(jewel.Texture, jewel.Center - screenPos, Color.Lerp(GetColor(jewel), GetFinalColor(jewel), lerpValue) with { A = jewel.GraphicAlpha }, null, jewel.rotation, jewel.scale);
+        spriteBatch.DrawFromCenter(jewel.Texture, jewel.Center - screenPos, (Color.Lerp(GetColor(jewel), GetFinalColor(jewel), lerpValue) * (CheckIfPhase2(jewel) ? 0.5f : 1f)) with { A = jewel.GraphicAlpha }, null, jewel.rotation, jewel.scale);
 
     public static void DrawAttackEffect(SpriteBatch spriteBatch, Vector2 screenPos, NPC jewel, float ratio, float radius, float scale)
     {
