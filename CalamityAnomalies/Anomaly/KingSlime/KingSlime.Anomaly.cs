@@ -375,7 +375,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
         {
             if (InvalidPhase1)
                 CurrentBehavior = Behavior.PhaseChange_P1To2;
-            else if (TeleportTimer > MathHelper.Lerp(1250f, 1000f, NPC.MissingLifeRatio) || !NPC.WithinRange(Target.Center, 2400f))
+            else if (TeleportTimer > MathHelper.Lerp(1250f, 1000f, NPC.LostLifeRatio) || !NPC.WithinRange(Target.Center, 2400f))
             {
                 CurrentBehavior = Behavior.Teleport;
                 TeleportTimer = 0f;
@@ -454,7 +454,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                 JewelHandler.SpawnParticle(jewel, Main.rand.NextFloat(5f, 10f), Main.rand.Next(40, 60), Main.rand.NextFloat(0.4f, 0.7f));
         }
 
-        void ChangeScale() => NPC.ChangeScaleFixBottom(98, 92, MathHelper.Lerp(MaxScale, MinScale, NPC.MissingLifeRatio) * TeleportScaleMultiplier * DespawnScaleMultiplier);
+        void ChangeScale() => NPC.ChangeScaleFixBottom(98, 92, MathHelper.Lerp(MaxScale, MinScale, NPC.LostLifeRatio) * TeleportScaleMultiplier * DespawnScaleMultiplier);
 
         void SpawnSlime(int type)
         {
@@ -517,11 +517,11 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             if (distance >= distanceNeeded)
             {
                 LastSpawnSlimeLife = NPC.life;
-                int spawnAmount = Main.rand.Next(1, Main.zenithWorld ? (int)MathHelper.Lerp(3f, 6f, NPC.MissingLifeRatio) : 3) + Math.Clamp((int)Math.Pow(distance / distanceNeeded, SpawnSlimePow), 0, 5);
+                int spawnAmount = Main.rand.Next(1, Main.zenithWorld ? (int)MathHelper.Lerp(3f, 6f, NPC.LostLifeRatio) : 3) + Math.Clamp((int)Math.Pow(distance / distanceNeeded, SpawnSlimePow), 0, 5);
 
                 for (int i = 0; i < spawnAmount; i++)
                 {
-                    int minTypeChoice = (int)MathHelper.Lerp(i < 2 ? 0 : 4, 9f, NPC.MissingLifeRatio);
+                    int minTypeChoice = (int)MathHelper.Lerp(i < 2 ? 0 : 4, 9f, NPC.LostLifeRatio);
                     int maxTypeChoice = 16;
 
                     int type = -1;
@@ -615,7 +615,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     StopHorizontalMovement();
                     if (NPC.velocity.Y == 0f && TeleportScaleMultiplier > 0.6f)
                         Timer1++;
-                    int jumpDelay = (int)MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 20f : 27.5f, CAWorld.AnomalyUltramundane ? 15f : 20f, NPC.MissingLifeRatio);
+                    int jumpDelay = (int)MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 20f : 27.5f, CAWorld.AnomalyUltramundane ? 15f : 20f, NPC.LostLifeRatio);
                     if (Timer1 > jumpDelay)
                     {
                         if (CurrentBehavior != Behavior.HighJump)
@@ -691,31 +691,31 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             Vector2 GetInitialVelocity() => new(
                 CurrentBehavior switch
                 {
-                    Behavior.NormalJump => MathHelper.Lerp(4f, 7f, NPC.MissingLifeRatio),
-                    Behavior.HighJump => MathHelper.Lerp(6f, 9f, NPC.MissingLifeRatio),
-                    Behavior.RapidJump => MathHelper.Lerp(10f, 12.5f, NPC.MissingLifeRatio),
+                    Behavior.NormalJump => MathHelper.Lerp(4f, 7f, NPC.LostLifeRatio),
+                    Behavior.HighJump => MathHelper.Lerp(6f, 9f, NPC.LostLifeRatio),
+                    Behavior.RapidJump => MathHelper.Lerp(10f, 12.5f, NPC.LostLifeRatio),
                     _ => 0f
                 } * NPC.direction,
                 CurrentBehavior switch
                 {
                     Behavior.NormalJump => 7f * (1f + Math.Clamp(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 1000f, 0f, 0.5f)),
-                    Behavior.HighJump => MathHelper.Lerp(10f, 12.5f, NPC.MissingLifeRatio) * (1f + Math.Clamp(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 1000f, 0f, 1f)),
+                    Behavior.HighJump => MathHelper.Lerp(10f, 12.5f, NPC.LostLifeRatio) * (1f + Math.Clamp(Math.Max(NPC.Center.Y - Target.Center.Y, 0f) / 1000f, 0f, 1f)),
                     Behavior.RapidJump => 4f,
                     _ => 0f
                 } * -1f);
 
             float GetMaxVelocityX() => CurrentBehavior switch
             {
-                Behavior.RapidJump => MathHelper.Lerp(13.5f, 15f, NPC.MissingLifeRatio) + TOMathHelper.ParabolicInterpolation(Math.Max(Math.Abs(NPC.Center.X - Target.Center.X) - 300f, 0f) / 1000f) * 5f,
+                Behavior.RapidJump => MathHelper.Lerp(13.5f, 15f, NPC.LostLifeRatio) + TOMathHelper.ParabolicInterpolation(Math.Max(Math.Abs(NPC.Center.X - Target.Center.X) - 300f, 0f) / 1000f) * 5f,
                 Behavior.HighJump => ChangedVelocityDirectionDuringJump switch
                 {
-                    0 => MathHelper.Lerp(9f, 11.5f, NPC.MissingLifeRatio),
+                    0 => MathHelper.Lerp(9f, 11.5f, NPC.LostLifeRatio),
                     1 => 2.5f,
                     _ => 1.5f
                 },
                 _ => ChangedVelocityDirectionDuringJump switch
                 {
-                    0 => MathHelper.Lerp(7f, 9f, NPC.MissingLifeRatio),
+                    0 => MathHelper.Lerp(7f, 9f, NPC.LostLifeRatio),
                     1 => 2.5f,
                     _ => 1.5f
                 }
@@ -782,7 +782,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     break;
                 case 1: //停止水平移动并缩小体型，满足条件时传送
                     MakeSlimeDust((int)Utils.Remap(NPC.scale, MinScale, MaxScale, 5f, 12.5f));
-                    TeleportScaleMultiplier -= MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 0.016f : 0.013f, CAWorld.AnomalyUltramundane ? 0.02f : 0.015f, NPC.MissingLifeRatio);
+                    TeleportScaleMultiplier -= MathHelper.Lerp(CAWorld.AnomalyUltramundane ? 0.016f : 0.013f, CAWorld.AnomalyUltramundane ? 0.02f : 0.015f, NPC.LostLifeRatio);
                     if (StopHorizontalMovement() && TeleportScaleMultiplier <= 0.2f)
                     {
                         Gore.NewGoreAction(NPC.GetSource_FromAI(), NPC.Center + new Vector2(-40f, -NPC.height / 2f), NPC.velocity, GoreID.KingSlimeCrown, g => g.timeLeft += 180);
@@ -796,7 +796,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     }
                     break;
                 case 2: //恢复体型，恢复完成后开始下一次攻击
-                    TeleportScaleMultiplier += MathHelper.Lerp(0.03f, 0.05f, NPC.MissingLifeRatio);
+                    TeleportScaleMultiplier += MathHelper.Lerp(0.03f, 0.05f, NPC.LostLifeRatio);
                     if (TeleportScaleMultiplier >= 1f)
                     {
                         TeleportScaleMultiplier = 1f;

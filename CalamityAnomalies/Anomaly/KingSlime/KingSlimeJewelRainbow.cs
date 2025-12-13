@@ -6,7 +6,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
 {
     public const float DespawnDistance = 5000f;
     public const int AttackTypes = 4;
-    public static int ShootCooldownTime => 180;
+    public int ShootCooldownTime => (int)MathHelper.Lerp(180f, 150f, NPC.LostLifeRatio);
 
     public int NextAttackType
     {
@@ -118,20 +118,17 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
                     }
                     break;
                 case 2:
-                    if (buffedAttack)
                     {
-                        int amount = 11;
+                        int amount = buffedAttack ? 11 : 9;
                         float singleRadian = MathHelper.ToRadians(15f);
                         float radian = singleRadian * (amount - 1);
                         float initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
                         Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(16.5f, initialRotation), NPC.GetProjectileDamage<JewelProjectile>(), 0f, Main.myPlayer);
                     }
-                    else
-                        goto case 0;
                     break;
                 case 3:
                     {
-                        int amount = buffedAttack ? 36 : 24;
+                        int amount = buffedAttack ? 36 : 30;
                         float initialRotation = (Target.Center - NPC.Center).ToRotation();
                         Projectile.RotatedProj<JewelProjectileRainbow>(amount, MathHelper.TwoPi / amount, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(16.5f, initialRotation), NPC.GetProjectileDamage<JewelProjectile>(), 0f, Main.myPlayer);
                     }

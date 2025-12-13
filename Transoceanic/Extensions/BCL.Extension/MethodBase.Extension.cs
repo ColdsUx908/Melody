@@ -6,7 +6,7 @@ public static partial class TOExtensions
     {
         public T Attribute<T>(bool inherit = true) where T : Attribute => method.GetCustomAttributes(typeof(T), inherit).OfType<T>().FirstOrDefault();
 
-        public bool HasAttribute<T>(bool inherit = true) where T : Attribute => method.Attribute<T>(inherit) is not null;
+        public bool HasAttribute<T>(bool inherit = true) where T : Attribute => method.IsDefined(typeof(T), inherit);
 
         public bool TryGetAttribute<T>([NotNullWhen(true)] out T attribute, bool inherit = true) where T : Attribute => (attribute = method.Attribute<T>(inherit)) is not null;
 

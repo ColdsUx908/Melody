@@ -222,13 +222,13 @@ public sealed class CAGlobalNPC : GlobalNPC, IResourceLoader
     /// <remarks>谨慎使用。</remarks>
     public float ExtraDR
     {
-        get => InternalAnomalyAI32[6].f;
+        get => InternalAnomalyAI32[5].f;
         set
         {
-            if (InternalAnomalyAI32[6].f != value)
+            if (InternalAnomalyAI32[5].f != value)
             {
-                InternalAnomalyAI32[6].f = value;
-                InternalAIChanged32[6] = true;
+                InternalAnomalyAI32[5].f = value;
+                InternalAIChanged32[5] = true;
             }
         }
     }

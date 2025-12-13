@@ -1,6 +1,4 @@
-﻿using Terraria.Graphics.Effects;
-
-namespace CalamityAnomalies.Anomaly.KingSlime;
+﻿namespace CalamityAnomalies.Anomaly.KingSlime;
 
 public sealed class RainbowShield : CAModProjectile
 {

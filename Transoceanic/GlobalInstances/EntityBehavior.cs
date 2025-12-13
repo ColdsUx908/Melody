@@ -1,4 +1,5 @@
-﻿using Terraria.GameContent.Bestiary;
+﻿using MonoMod.Utils;
+using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
 
@@ -20,6 +21,7 @@ public abstract class EntityBehavior<TEntity> where TEntity : Entity
 
     /// <summary>
     /// 优先级，越大越先应用。
+    /// <br/>设计规范：对于需优先应用的行为，建议设置为正值；对于需最后应用的行为，建议设置为负值。
     /// </summary>
     public virtual decimal Priority => 0m;
 
@@ -53,14 +55,159 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
     where TEntity : Entity
     where TBehavior : EntityBehavior<TEntity>
 {
-    protected internal readonly Dictionary<string, List<TBehavior>> _data = [];
-
-    public void Clear()
+    public readonly ref struct BehaviorFilter
     {
-        foreach ((string _, List<TBehavior> behaviors) in _data)
-            behaviors.Clear();
-        _data.Clear();
+        public static BehaviorFilter Empty => new([]);
+
+        private readonly Span<TBehavior> _span;
+
+        public BehaviorFilter(Span<TBehavior> span) => _span = span;
+
+        public Enumerator GetEnumerator() => new(this);
+
+        public ref struct Enumerator
+        {
+            private Span<TBehavior>.Enumerator _enumerator;
+
+            public Enumerator(BehaviorFilter filter) => _enumerator = filter._span.GetEnumerator();
+
+            public ref TBehavior Current => ref _enumerator.Current;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                while (_enumerator.MoveNext())
+                {
+                    if (Current.ShouldProcess)
+                        return true;
+                }
+                return false;
+            }
+        }
     }
+
+    public readonly ref struct ConnectedBehaviorFilter //这个直接设置_entity字段的行为很丑陋，但是性能要求不得不这样做，下同
+    {
+        public static ConnectedBehaviorFilter Empty => new([], null);
+
+        private readonly Span<TBehavior> _span;
+        private readonly TEntity _entity;
+
+        public ConnectedBehaviorFilter(Span<TBehavior> span, TEntity entity)
+        {
+            _span = span;
+            _entity = entity;
+        }
+
+        public Enumerator GetEnumerator() => new(this);
+
+        public ref struct Enumerator
+        {
+            private Span<TBehavior>.Enumerator _enumerator;
+            private readonly TEntity _entity;
+
+            public Enumerator(ConnectedBehaviorFilter filter)
+            {
+                _enumerator = filter._span.GetEnumerator();
+                _entity = filter._entity;
+            }
+
+            public ref TBehavior Current => ref _enumerator.Current;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                while (_enumerator.MoveNext())
+                {
+                    Current._entity = _entity;
+                    if (Current.ShouldProcess)
+                        return true;
+                }
+                return false;
+            }
+        }
+    }
+
+    public readonly ref struct TypedBehaviorFilter<T> where T : TBehavior
+    {
+        public static TypedBehaviorFilter<T> Empty => new([]);
+
+        private readonly Span<TBehavior> _span;
+
+        public TypedBehaviorFilter(Span<TBehavior> span) => _span = span;
+
+        public Enumerator GetEnumerator() => new(this);
+
+        public ref struct Enumerator
+        {
+            private Span<TBehavior>.Enumerator _enumerator;
+
+            public Enumerator(TypedBehaviorFilter<T> filter) => _enumerator = filter._span.GetEnumerator();
+
+            public T Current => _enumerator.Current as T;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                while (_enumerator.MoveNext())
+                {
+                    if (Current?.ShouldProcess == true)
+                        return true;
+                }
+                return false;
+            }
+        }
+    }
+
+    public readonly ref struct TypedConnectedBehaviorFilter<T> where T : TBehavior
+    {
+        public static TypedConnectedBehaviorFilter<T> Empty => new([], null);
+
+        private readonly Span<TBehavior> _span;
+        private readonly TEntity _entity;
+
+        public TypedConnectedBehaviorFilter(Span<TBehavior> span, TEntity entity)
+        {
+            _span = span;
+            _entity = entity;
+        }
+
+        public Enumerator GetEnumerator() => new(this);
+
+        public ref struct Enumerator
+        {
+            private Span<TBehavior>.Enumerator _enumerator;
+            private readonly TEntity _entity;
+
+            public Enumerator(TypedConnectedBehaviorFilter<T> filter)
+            {
+                _enumerator = filter._span.GetEnumerator();
+                _entity = filter._entity;
+            }
+
+            public TBehavior Current => _enumerator.Current as T;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                while (_enumerator.MoveNext())
+                {
+                    TBehavior current = Current;
+                    if (current is not null)
+                    {
+                        current._entity = _entity;
+                        if (current.ShouldProcess)
+                            return true;
+                    }
+                }
+                return false;
+            }
+        }
+    }
+
+    protected internal readonly Dictionary<string, TBehavior[]> _data = [];
+
+    public void Clear() => _data.Clear();
 
     public void FillSet() => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>());
 
@@ -68,68 +215,28 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
 
     public void FillSet<T>() where T : Mod => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>().Where(b => b.Mod is T));
 
-    public IEnumerable<TBehavior> GetBehaviors([CallerMemberName] string methodName = null!)
-    {
-        if (_data.TryGetValue(methodName, out List<TBehavior> behaviors))
-        {
-            foreach (TBehavior behavior in behaviors)
-            {
-                if (behavior.ShouldProcess)
-                    yield return behavior;
-            }
-        }
-    }
+    public BehaviorFilter GetBehaviors([CallerMemberName] string methodName = null) =>
+        _data.TryGetValue(methodName, out TBehavior[] behaviors) ? new(behaviors) : BehaviorFilter.Empty;
 
-    public IEnumerable<TBehavior> GetBehaviors(TEntity entity, [CallerMemberName] string methodName = null!)
-    {
-        if (_data.TryGetValue(methodName, out List<TBehavior> behaviors))
-        {
-            foreach (TBehavior behavior in behaviors)
-            {
-                behavior._entity = entity;
-                if (behavior.ShouldProcess)
-                    yield return behavior;
-            }
-        }
-    }
+    public ConnectedBehaviorFilter GetBehaviors(TEntity entity, [CallerMemberName] string methodName = null) =>
+        _data.TryGetValue(methodName, out TBehavior[] behaviors) ? new(behaviors, entity) : ConnectedBehaviorFilter.Empty;
 
-    public IEnumerable<T> GetBehaviors<T>([CallerMemberName] string methodName = null!) where T : TBehavior
-    {
-        if (_data.TryGetValue(methodName, out List<TBehavior> behaviors))
-        {
-            foreach (TBehavior behavior in behaviors)
-            {
-                if (behavior is T typedBehavior && typedBehavior.ShouldProcess)
-                    yield return typedBehavior;
-            }
-        }
-    }
+    public TypedBehaviorFilter<T> GetBehaviors<T>([CallerMemberName] string methodName = null) where T : TBehavior =>
+        _data.TryGetValue(methodName, out TBehavior[] behaviors) ? new(behaviors) : TypedBehaviorFilter<T>.Empty;
 
-    public IEnumerable<T> GetBehaviors<T>(TEntity entity, [CallerMemberName] string methodName = null!) where T : TBehavior
-    {
-        if (_data.TryGetValue(methodName, out List<TBehavior> behaviors))
-        {
-            foreach (TBehavior behavior in behaviors)
-            {
-                if (behavior is T typedBehavior)
-                {
-                    behavior._entity = entity;
-                    if (typedBehavior.ShouldProcess)
-                        yield return typedBehavior;
-                }
-            }
-        }
-    }
+    public TypedConnectedBehaviorFilter<T> GetBehaviors<T>(TEntity entity, [CallerMemberName] string methodName = null) where T : TBehavior =>
+        _data.TryGetValue(methodName, out TBehavior[] behaviors) ? new(behaviors, entity) : TypedConnectedBehaviorFilter<T>.Empty;
 
     /// <summary>
     /// 按照 <see cref="EntityBehavior{TEntity}.Priority"/> 降序寻找通过 <see cref="SingleEntityBehavior{TEntity}.ShouldProcess"/> 检测且实现了指定方法的Override实例。
     /// </summary>
-    public TBehavior GetFirstBehavior(TEntity entity, [CallerMemberName] string methodName = null!)
+    public TBehavior GetFirstBehavior(TEntity entity, [CallerMemberName] string methodName = null)
     {
-        if (_data.TryGetValue(methodName, out List<TBehavior> behaviors))
+        if (_data.TryGetValue(methodName, out TBehavior[] behaviors))
         {
-            foreach (TBehavior behavior in behaviors)
+            for (int i = 0; i < behaviors.Length; i++)
             {
+                TBehavior behavior = behaviors[i];
                 behavior._entity = entity;
                 if (behavior.ShouldProcess)
                     return behavior;
@@ -140,6 +247,7 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
 
     internal void Initialize(IEnumerable<TBehavior> behaviors)
     {
+        Dictionary<string, List<TBehavior>> tempData = [];
         foreach ((TBehavior behavior, HashSet<string> behaviorMethods) in
             behaviors.Select(b =>
             {
@@ -149,25 +257,23 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
         {
             foreach (string method in behaviorMethods)
             {
-                if (_data.TryGetValue(method, out List<TBehavior> behaviorList))
+                if (tempData.TryGetValue(method, out List<TBehavior> behaviorList))
                     behaviorList.Add(behavior);
                 else
-                    _data[method] = [behavior];
+                    tempData[method] = [behavior];
             }
         }
-        foreach (string methodName in _data.Keys)
-            _data[methodName] = [.. _data[methodName].Distinct().OrderByDescending(b => b.Priority)];
+        _data.AddRange(tempData.ToDictionary(kv => kv.Key, kv => kv.Value.Distinct().OrderByDescending(b => b.Priority).ToArray()));
     }
 }
 
-public class GeneralEntityBehaviorSet<TEntity, TBehavior> : SimpleEntityBehaviorSet<TEntity, TBehavior> where TEntity : Entity
-    where TBehavior : GeneralEntityBehavior<TEntity>
-{ }
+public class GeneralEntityBehaviorSet<TEntity, TBehavior> : SimpleEntityBehaviorSet<TEntity, TBehavior>
+    where TEntity : Entity
+    where TBehavior : GeneralEntityBehavior<TEntity>;
 
 public class GlobalEntityBehaviorSet<TEntity, TBehavior> : GeneralEntityBehaviorSet<TEntity, TBehavior>
     where TEntity : Entity
-    where TBehavior : GeneralEntityBehavior<TEntity>
-{ }
+    where TBehavior : GeneralEntityBehavior<TEntity>;
 
 public class SingleEntityBehaviorSet<TEntity, TBehavior>
     where TEntity : Entity
@@ -213,1287 +319,790 @@ public abstract class PlayerBehavior : GeneralEntityBehavior<Player>
     public TOPlayer OceanPlayer => _entity.Ocean();
 
     #region 虚成员
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.Initialize"/>
-    /// </summary>
     public virtual void Initialize() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ResetEffects"/>
-    /// </summary>
     public virtual void ResetEffects() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ResetInfoAccessories"/>
-    /// </summary>
     public virtual void ResetInfoAccessories() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.RefreshInfoAccessoriesFromTeamPlayers"/>
-    /// </summary>
     public virtual void RefreshInfoAccessoriesFromTeamPlayers(Player otherPlayer) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyMaxStats"/>
-    /// </summary>
     public virtual void ModifyMaxStats(out StatModifier health, out StatModifier mana)
     {
         health = StatModifier.Default;
         mana = StatModifier.Default;
     }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.UpdateDead"/>
-    /// </summary>
     public virtual void UpdateDead() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PreSaveCustomData"/>
-    /// </summary>
     public virtual void PreSaveCustomData() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.SaveData"/>
-    /// </summary>
     public virtual void SaveData(TagCompound tag) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.LoadData"/>
-    /// </summary>
     public virtual void LoadData(TagCompound tag) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PreSavePlayer"/>
-    /// </summary>
     public virtual void PreSavePlayer() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PostSavePlayer"/>
-    /// </summary>
     public virtual void PostSavePlayer() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CopyClientState"/>
-    /// </summary>
     public virtual void CopyClientState(ModPlayer targetCopy) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.SyncPlayer"/>
-    /// </summary>
     public virtual void SyncPlayer(int toWho, int fromWho, bool newPlayer) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.SendClientChanges"/>
-    /// </summary>
     public virtual void SendClientChanges(ModPlayer clientPlayer) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.UpdateBadLifeRegen"/>
-    /// </summary>
     public virtual void UpdateBadLifeRegen() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.UpdateLifeRegen"/>
-    /// </summary>
     public virtual void UpdateLifeRegen() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.NaturalLifeRegen"/>
-    /// </summary>
     public virtual void NaturalLifeRegen(ref float regen) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.UpdateAutopause"/>
-    /// </summary>
     public virtual void UpdateAutopause() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PreUpdate"/>
-    /// </summary>
     public virtual void PreUpdate() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ProcessTriggers"/>
-    /// </summary>
     public virtual void ProcessTriggers(TriggersSet triggersSet) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ArmorSetBonusActivated"/>
-    /// </summary>
     public virtual void ArmorSetBonusActivated() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ArmorSetBonusHeld"/>
-    /// </summary>
     public virtual void ArmorSetBonusHeld(int holdTime) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.SetControls"/>
-    /// </summary>
     public virtual void SetControls() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PreUpdateBuffs"/>
-    /// </summary>
     public virtual void PreUpdateBuffs() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PostUpdateBuffs"/>
-    /// </summary>
     public virtual void PostUpdateBuffs() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.UpdateEquips"/>
-    /// </summary>
     public virtual void UpdateEquips() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PostUpdateEquips"/>
-    /// </summary>
     public virtual void PostUpdateEquips() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.UpdateVisibleAccessories"/>
-    /// </summary>
     public virtual void UpdateVisibleAccessories() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.UpdateVisibleVanityAccessories"/>
-    /// </summary>
     public virtual void UpdateVisibleVanityAccessories() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.UpdateDyes"/>
-    /// </summary>
     public virtual void UpdateDyes() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PostUpdateMiscEffects"/>
-    /// </summary>
     public virtual void PostUpdateMiscEffects() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PostUpdateRunSpeeds"/>
-    /// </summary>
     public virtual void PostUpdateRunSpeeds() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PreUpdateMovement"/>
-    /// </summary>
     public virtual void PreUpdateMovement() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PostUpdate"/>
-    /// </summary>
     public virtual void PostUpdate() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyExtraJumpDurationMultiplier"/>
-    /// </summary>
     public virtual void ModifyExtraJumpDurationMultiplier(ExtraJump jump, ref float duration) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanStartExtraJump"/>
-    /// </summary>
     public virtual bool CanStartExtraJump(ExtraJump jump) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnExtraJumpStarted"/>
-    /// </summary>
     public virtual void OnExtraJumpStarted(ExtraJump jump, ref bool playSound) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnExtraJumpEnded"/>
-    /// </summary>
     public virtual void OnExtraJumpEnded(ExtraJump jump) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnExtraJumpRefreshed"/>
-    /// </summary>
     public virtual void OnExtraJumpRefreshed(ExtraJump jump) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ExtraJumpVisuals"/>
-    /// </summary>
     public virtual void ExtraJumpVisuals(ExtraJump jump) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanShowExtraJumpVisuals"/>
-    /// </summary>
     public virtual bool CanShowExtraJumpVisuals(ExtraJump jump) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnExtraJumpCleared"/>
-    /// </summary>
     public virtual void OnExtraJumpCleared(ExtraJump jump) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.FrameEffects"/>
-    /// </summary>
     public virtual void FrameEffects() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ImmuneTo"/>
-    /// </summary>
     public virtual bool ImmuneTo(PlayerDeathReason damageSource, int cooldownCounter, bool dodgeable) => false;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.FreeDodge"/>
-    /// </summary>
     public virtual bool FreeDodge(Player.HurtInfo info) => false;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ConsumableDodge"/>
-    /// </summary>
     public virtual bool ConsumableDodge(Player.HurtInfo info) => false;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyHurt"/>
-    /// </summary>
     public virtual void ModifyHurt(ref Player.HurtModifiers modifiers) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnHurt"/>
-    /// </summary>
     public virtual void OnHurt(Player.HurtInfo info) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PostHurt"/>
-    /// </summary>
     public virtual void PostHurt(Player.HurtInfo info) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PreKill"/>
-    /// </summary>
     public virtual bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genDust, ref PlayerDeathReason damageSource) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.Kill"/>
-    /// </summary>
     public virtual void Kill(double damage, int hitDirection, bool pvp, PlayerDeathReason damageSource) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PreModifyLuck"/>
-    /// </summary>
     public virtual bool PreModifyLuck(ref float luck) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyLuck"/>
-    /// </summary>
     public virtual void ModifyLuck(ref float luck) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PreItemCheck"/>
-    /// </summary>
     public virtual bool PreItemCheck() => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PostItemCheck"/>
-    /// </summary>
     public virtual void PostItemCheck() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.UseTimeMultiplier"/>
-    /// </summary>
     public virtual float UseTimeMultiplier(Item item) => 1f;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.UseAnimationMultiplier"/>
-    /// </summary>
     public virtual float UseAnimationMultiplier(Item item) => 1f;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.UseSpeedMultiplier"/>
-    /// </summary>
     public virtual float UseSpeedMultiplier(Item item) => 1f;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.GetHealLife"/>
-    /// </summary>
     public virtual void GetHealLife(Item item, bool quickHeal, ref int healValue) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.GetHealMana"/>
-    /// </summary>
     public virtual void GetHealMana(Item item, bool quickHeal, ref int healValue) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyManaCost"/>
-    /// </summary>
     public virtual void ModifyManaCost(Item item, ref float reduce, ref float mult) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnMissingMana"/>
-    /// </summary>
     public virtual void OnMissingMana(Item item, int neededMana) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnConsumeMana"/>
-    /// </summary>
     public virtual void OnConsumeMana(Item item, int manaConsumed) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyWeaponDamage"/>
-    /// </summary>
     public virtual void ModifyWeaponDamage(Item item, ref StatModifier damage) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyWeaponKnockback"/>
-    /// </summary>
     public virtual void ModifyWeaponKnockback(Item item, ref StatModifier knockback) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyWeaponCrit"/>
-    /// </summary>
     public virtual void ModifyWeaponCrit(Item item, ref float crit) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanConsumeAmmo"/>
-    /// </summary>
     public virtual bool CanConsumeAmmo(Item weapon, Item ammo) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnConsumeAmmo"/>
-    /// </summary>
     public virtual void OnConsumeAmmo(Item weapon, Item ammo) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanShoot"/>
-    /// </summary>
     public virtual bool CanShoot(Item item) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyShootStats"/>
-    /// </summary>
     public virtual void ModifyShootStats(Item item, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.Shoot"/>
-    /// </summary>
     public virtual bool Shoot(Item item, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.MeleeEffects"/>
-    /// </summary>
     public virtual void MeleeEffects(Item item, Rectangle hitbox) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.EmitEnchantmentVisualsAt"/>
-    /// </summary>
     public virtual void EmitEnchantmentVisualsAt(Projectile projectile, Vector2 boxPosition, int boxWidth, int boxHeight) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanCatchNPC"/>
-    /// </summary>
     public virtual bool? CanCatchNPC(NPC target, Item item) => null;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnCatchNPC"/>
-    /// </summary>
     public virtual void OnCatchNPC(NPC npc, Item item, bool failed) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyItemScale"/>
-    /// </summary>
     public virtual void ModifyItemScale(Item item, ref float scale) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnHitAnything"/>
-    /// </summary>
     public virtual void OnHitAnything(float x, float y, Entity victim) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanHitNPC"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool CanHitNPC(NPC target) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanMeleeAttackCollideWithNPC"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool? CanMeleeAttackCollideWithNPC(Item item, Rectangle meleeAttackHitbox, NPC target) => null;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyHitNPC"/>
-    /// </summary>
     public virtual void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnHitNPC"/>
-    /// </summary>
     public virtual void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanHitNPCWithItem"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool? CanHitNPCWithItem(Item item, NPC target) => null;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyHitNPCWithItem"/>
-    /// </summary>
     public virtual void ModifyHitNPCWithItem(Item item, NPC target, ref NPC.HitModifiers modifiers) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnHitNPCWithItem"/>
-    /// </summary>
     public virtual void OnHitNPCWithItem(Item item, NPC target, NPC.HitInfo hit, int damageDone) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanHitNPCWithProj"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool? CanHitNPCWithProj(Projectile proj, NPC target) => null;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyHitNPCWithProj"/>
-    /// </summary>
     public virtual void ModifyHitNPCWithProj(Projectile proj, NPC target, ref NPC.HitModifiers modifiers) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnHitNPCWithProj"/>
-    /// </summary>
     public virtual void OnHitNPCWithProj(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanHitPvp"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool CanHitPvp(Item item, Player target) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanHitPvpWithProj"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool CanHitPvpWithProj(Projectile proj, Player target) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanBeHitByNPC"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool CanBeHitByNPC(NPC npc, ref int cooldownSlot) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyHitByNPC"/>
-    /// </summary>
     public virtual void ModifyHitByNPC(NPC npc, ref Player.HurtModifiers modifiers) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnHitByNPC"/>
-    /// </summary>
     public virtual void OnHitByNPC(NPC npc, Player.HurtInfo hurtInfo) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanBeHitByProjectile"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool CanBeHitByProjectile(Projectile proj) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyHitByProjectile"/>
-    /// </summary>
     public virtual void ModifyHitByProjectile(Projectile proj, ref Player.HurtModifiers modifiers) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnHitByProjectile"/>
-    /// </summary>
     public virtual void OnHitByProjectile(Projectile proj, Player.HurtInfo hurtInfo) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyFishingAttempt"/>
-    /// </summary>
     public virtual void ModifyFishingAttempt(ref FishingAttempt attempt) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CatchFish"/>
-    /// </summary>
     public virtual void CatchFish(FishingAttempt attempt, ref int itemDrop, ref int npcSpawn, ref AdvancedPopupRequest sonar, ref Vector2 sonarPosition) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyCaughtFish"/>
-    /// </summary>
     public virtual void ModifyCaughtFish(Item fish) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanConsumeBait"/>
-    /// </summary>
     public virtual bool? CanConsumeBait(Item bait) => null;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.GetFishingLevel"/>
-    /// </summary>
     public virtual void GetFishingLevel(Item fishingRod, Item bait, ref float fishingLevel) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.AnglerQuestReward"/>
-    /// </summary>
     public virtual void AnglerQuestReward(float rareMultiplier, List<Item> rewardItems) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.GetDyeTraderReward"/>
-    /// </summary>
     public virtual void GetDyeTraderReward(List<int> rewardPool) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.DrawEffects"/>
-    /// </summary>
     public virtual void DrawEffects(PlayerDrawSet drawInfo, ref float r, ref float g, ref float b, ref float a, ref bool fullBright) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyDrawInfo"/>
-    /// </summary>
     public virtual void ModifyDrawInfo(ref PlayerDrawSet drawInfo) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyDrawLayerOrdering"/>
-    /// </summary>
     public virtual void ModifyDrawLayerOrdering(IDictionary<PlayerDrawLayer, PlayerDrawLayer.Position> positions) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.HideDrawLayers"/>
-    /// </summary>
     public virtual void HideDrawLayers(PlayerDrawSet drawInfo) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyScreenPosition"/>
-    /// </summary>
     public virtual void ModifyScreenPosition() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyZoom"/>
-    /// </summary>
     public virtual void ModifyZoom(ref float zoom) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PlayerConnect"/>
-    /// </summary>
     public virtual void PlayerConnect() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PlayerDisconnect"/>
-    /// </summary>
     public virtual void PlayerDisconnect() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnEnterWorld"/>
-    /// </summary>
     public virtual void OnEnterWorld() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnRespawn"/>
-    /// </summary>
     public virtual void OnRespawn() { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ShiftClickSlot"/>
-    /// </summary>
     public virtual bool ShiftClickSlot(Item[] inventory, int context, int slot) => false;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.HoverSlot"/>
-    /// </summary>
     public virtual bool HoverSlot(Item[] inventory, int context, int slot) => false;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PostSellItem"/>
-    /// </summary>
     public virtual void PostSellItem(NPC vendor, Item[] shopInventory, Item item) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanSellItem"/>
-    /// </summary>
     public virtual bool CanSellItem(NPC vendor, Item[] shopInventory, Item item) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PostBuyItem"/>
-    /// </summary>
     public virtual void PostBuyItem(NPC vendor, Item[] shopInventory, Item item) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanBuyItem"/>
-    /// </summary>
     public virtual bool CanBuyItem(NPC vendor, Item[] shopInventory, Item item) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanUseItem"/>
-    /// </summary>
     public virtual bool CanUseItem(Item item) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanAutoReuseItem"/>
-    /// </summary>
     public virtual bool? CanAutoReuseItem(Item item) => null;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyNurseHeal"/>
-    /// </summary>
     public virtual bool ModifyNurseHeal(NPC nurse, ref int health, ref bool removeDebuffs, ref string chatText) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyNursePrice"/>
-    /// </summary>
     public virtual void ModifyNursePrice(NPC nurse, int health, bool removeDebuffs, ref int price) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.PostNurseHeal"/>
-    /// </summary>
     public virtual void PostNurseHeal(NPC nurse, int health, bool removeDebuffs, int price) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.AddStartingItems"/>
-    /// </summary>
     public virtual IEnumerable<Item> AddStartingItems(bool mediumCoreDeath) => [];
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.ModifyStartingInventory"/>
-    /// </summary>
     public virtual void ModifyStartingInventory(IReadOnlyDictionary<string, List<Item>> itemsByMod, bool mediumCoreDeath) { }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.AddMaterialsForCrafting"/>
-    /// </summary>
     public virtual IEnumerable<Item> AddMaterialsForCrafting(out ModPlayer.ItemConsumedCallback itemConsumedCallback)
     {
         itemConsumedCallback = null;
         return null;
     }
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnPickup"/>
-    /// </summary>
     public virtual bool OnPickup(Item item) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.CanBeTeleportedTo"/>
-    /// </summary>
     public virtual bool CanBeTeleportedTo(Vector2 teleportPosition, string context) => true;
 
-    /// <summary>
     /// <inheritdoc cref="ModPlayer.OnEquipmentLoadoutSwitched"/>
-    /// </summary>
     public virtual void OnEquipmentLoadoutSwitched(int oldLoadoutIndex, int loadoutIndex) { }
     #endregion 虚成员
 }
 
 public abstract class GlobalNPCBehavior : GlobalEntityBehavior<NPC>
 {
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.SetDefaultsFromNetId"/>
-    /// </summary>
     public virtual void SetDefaultsFromNetId(NPC npc) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.OnSpawn"/>
-    /// </summary>
     public virtual void OnSpawn(NPC npc, IEntitySource source) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ApplyDifficultyAndPlayerScaling"/>
-    /// </summary>
     public virtual void ApplyDifficultyAndPlayerScaling(NPC npc, int numPlayers, float balance, float bossAdjustment) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.SetBestiary"/>
-    /// </summary>
     public virtual void SetBestiary(NPC npc, BestiaryDatabase database, BestiaryEntry bestiaryEntry) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ModifyTypeName"/>
-    /// </summary>
     public virtual void ModifyTypeName(NPC npc, ref string typeName) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ModifyHoverBoundingBox"/>
-    /// </summary>
     public virtual void ModifyHoverBoundingBox(NPC npc, ref Rectangle boundingBox) { }
 
-    /// <summary>
+    /// <inheritdoc cref="GlobalNPC.PreHoverInteract(NPC, bool)"/>
+    public virtual bool PreHoverInteract(NPC npc, bool mouseInteracts) => true;
+
     /// <inheritdoc cref="GlobalNPC.ModifyTownNPCProfile"/>
-    /// </summary>
     public virtual ITownNPCProfile ModifyTownNPCProfile(NPC npc) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ModifyNPCNameList"/>
-    /// </summary>
     public virtual void ModifyNPCNameList(NPC npc, List<string> nameList) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ResetEffects"/>
-    /// </summary>
     public virtual void ResetEffects(NPC npc) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.PreAI"/>
-    /// </summary>
     public virtual bool PreAI(NPC npc) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.AI"/>
-    /// </summary>
     public virtual void AI(NPC npc) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.PostAI"/>
-    /// </summary>
     public virtual void PostAI(NPC npc) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.SendExtraAI"/>
-    /// </summary>
     public virtual void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ReceiveExtraAI"/>
-    /// </summary>
     public virtual void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.FindFrame"/>
-    /// </summary>
     public virtual void FindFrame(NPC npc, int frameHeight) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.HitEffect"/>
-    /// </summary>
     public virtual void HitEffect(NPC npc, NPC.HitInfo hit) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.UpdateLifeRegen"/>
-    /// </summary>
     public virtual void UpdateLifeRegen(NPC npc, ref int damage) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.CheckActive"/>
-    /// </summary>
     public virtual bool CheckActive(NPC npc) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.CheckDead"/>
-    /// </summary>
     public virtual bool CheckDead(NPC npc) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.SpecialOnKill"/>
-    /// </summary>
     public virtual bool SpecialOnKill(NPC npc) => false;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.PreKill"/>
-    /// </summary>
     public virtual bool PreKill(NPC npc) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.OnKill"/>
-    /// </summary>
     public virtual void OnKill(NPC npc) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.CanFallThroughPlatforms"/>
-    /// </summary>
     public virtual bool? CanFallThroughPlatforms(NPC npc) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.CanBeCaughtBy"/>
-    /// </summary>
     public virtual bool? CanBeCaughtBy(NPC npc, Item item, Player player) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.OnCaughtBy"/>
-    /// </summary>
     public virtual void OnCaughtBy(NPC npc, Player player, Item item, bool failed) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ModifyNPCLoot"/>
-    /// </summary>
     public virtual void ModifyNPCLoot(NPC npc, NPCLoot npcLoot) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ModifyGlobalLoot"/>
-    /// </summary>
     public virtual void ModifyGlobalLoot(GlobalLoot globalLoot) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.CanHitPlayer"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ModifyHitPlayer"/>
-    /// </summary>
     public virtual void ModifyHitPlayer(NPC npc, Player target, ref Player.HurtModifiers modifiers) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.OnHitPlayer"/>
-    /// </summary>
     public virtual void OnHitPlayer(NPC npc, Player target, Player.HurtInfo hurtInfo) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.CanHitNPC"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool CanHitNPC(NPC npc, NPC target) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.CanBeHitByNPC"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool CanBeHitByNPC(NPC npc, NPC attacker) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ModifyHitNPC"/>
-    /// </summary>
     public virtual void ModifyHitNPC(NPC npc, NPC target, ref NPC.HitModifiers modifiers) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.OnHitNPC"/>
-    /// </summary>
     public virtual void OnHitNPC(NPC npc, NPC target, NPC.HitInfo hit) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.CanBeHitByItem"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool? CanBeHitByItem(NPC npc, Player player, Item item) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.CanCollideWithPlayerMeleeAttack"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool? CanCollideWithPlayerMeleeAttack(NPC npc, Player player, Item item, Rectangle meleeAttackHitbox) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ModifyHitByItem"/>
-    /// </summary>
     public virtual void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.OnHitByItem"/>
-    /// </summary>
     public virtual void OnHitByItem(NPC npc, Player player, Item item, NPC.HitInfo hit, int damageDone) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.CanBeHitByProjectile"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool? CanBeHitByProjectile(NPC npc, Projectile projectile) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ModifyHitByProjectile"/>
-    /// </summary>
     public virtual void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.OnHitByProjectile"/>
-    /// </summary>
     public virtual void OnHitByProjectile(NPC npc, Projectile projectile, NPC.HitInfo hit, int damageDone) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ModifyIncomingHit"/>
-    /// </summary>
     public virtual void ModifyIncomingHit(NPC npc, ref NPC.HitModifiers modifiers) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.BossHeadSlot"/>
-    /// </summary>
     public virtual void BossHeadSlot(NPC npc, ref int index) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.BossHeadRotation"/>
-    /// </summary>
     public virtual void BossHeadRotation(NPC npc, ref float rotation) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.BossHeadSpriteEffects"/>
-    /// </summary>
     public virtual void BossHeadSpriteEffects(NPC npc, ref SpriteEffects spriteEffects) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.GetAlpha"/>
-    /// </summary>
     public virtual Color? GetAlpha(NPC npc, Color drawColor) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.DrawEffects"/>
-    /// </summary>
     public virtual void DrawEffects(NPC npc, ref Color drawColor) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.PreDraw"/>
-    /// </summary>
     public virtual bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.PostDraw"/>
-    /// </summary>
     public virtual void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.DrawBehind"/>
-    /// </summary>
     public virtual void DrawBehind(NPC npc, int index) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.DrawHealthBar"/>
-    /// </summary>
     public virtual bool? DrawHealthBar(NPC npc, byte hbPosition, ref float scale, ref Vector2 position) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.EditSpawnRate"/>
-    /// </summary>
     public virtual void EditSpawnRate(Player player, ref int spawnRate, ref int maxSpawns) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.EditSpawnRange"/>
-    /// </summary>
     public virtual void EditSpawnRange(Player player, ref int spawnRangeX, ref int spawnRangeY, ref int safeRangeX, ref int safeRangeY) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.EditSpawnPool"/>
-    /// </summary>
     public virtual void EditSpawnPool(IDictionary<int, float> pool, NPCSpawnInfo spawnInfo) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.SpawnNPC"/>
-    /// </summary>
     public virtual void SpawnNPC(int npc, int tileX, int tileY) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.CanChat"/>
-    /// </summary>
     public virtual bool? CanChat(NPC npc) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.GetChat"/>
-    /// </summary>
     public virtual void GetChat(NPC npc, ref string chat) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.PreChatButtonClicked"/>
-    /// </summary>
     public virtual bool PreChatButtonClicked(NPC npc, bool firstButton) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.OnChatButtonClicked"/>
-    /// </summary>
     public virtual void OnChatButtonClicked(NPC npc, bool firstButton) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ModifyShop"/>
-    /// </summary>
     public virtual void ModifyShop(NPCShop shop) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ModifyActiveShop"/>
-    /// </summary>
     public virtual void ModifyActiveShop(NPC npc, string shopName, Item[] items) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.SetupTravelShop"/>
-    /// </summary>
     public virtual void SetupTravelShop(int[] shop, ref int nextSlot) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.CanGoToStatue"/>
-    /// </summary>
     public virtual bool? CanGoToStatue(NPC npc, bool toKingStatue) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.OnGoToStatue"/>
-    /// </summary>
     public virtual void OnGoToStatue(NPC npc, bool toKingStatue) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.BuffTownNPC"/>
-    /// </summary>
     public virtual void BuffTownNPC(ref float damageMult, ref int defense) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ModifyDeathMessage"/>
-    /// </summary>
     public virtual bool ModifyDeathMessage(NPC npc, ref NetworkText customText, ref Color color) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.TownNPCAttackStrength"/>
-    /// </summary>
     public virtual void TownNPCAttackStrength(NPC npc, ref int damage, ref float knockback) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.TownNPCAttackCooldown"/>
-    /// </summary>
     public virtual void TownNPCAttackCooldown(NPC npc, ref int cooldown, ref int randExtraCooldown) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.TownNPCAttackProj"/>
-    /// </summary>
     public virtual void TownNPCAttackProj(NPC npc, ref int projType, ref int attackDelay) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.TownNPCAttackProjSpeed"/>
-    /// </summary>
     public virtual void TownNPCAttackProjSpeed(NPC npc, ref float multiplier, ref float gravityCorrection, ref float randomOffset) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.TownNPCAttackShoot"/>
-    /// </summary>
     public virtual void TownNPCAttackShoot(NPC npc, ref bool inBetweenShots) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.TownNPCAttackMagic"/>
-    /// </summary>
     public virtual void TownNPCAttackMagic(NPC npc, ref float auraLightMultiplier) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.TownNPCAttackSwing"/>
-    /// </summary>
     public virtual void TownNPCAttackSwing(NPC npc, ref int itemWidth, ref int itemHeight) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.DrawTownAttackGun"/>
-    /// </summary>
     public virtual void DrawTownAttackGun(NPC npc, ref Texture2D item, ref Rectangle itemFrame, ref float scale, ref int horizontalHoldoutOffset) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.DrawTownAttackSwing"/>
-    /// </summary>
     public virtual void DrawTownAttackSwing(NPC npc, ref Texture2D item, ref Rectangle itemFrame, ref int itemSize, ref float scale, ref Vector2 offset) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ModifyCollisionData"/>
-    /// </summary>
     public virtual bool ModifyCollisionData(NPC npc, Rectangle victimHitbox, ref int immunityCooldownSlot, ref MultipliableFloat damageMultiplier, ref Rectangle npcHitbox) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.NeedSaving"/>
-    /// </summary>
     public virtual bool NeedSaving(NPC npc) => false;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.SaveData"/>
-    /// </summary>
     public virtual void SaveData(NPC npc, TagCompound tag) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.LoadData"/>
-    /// </summary>
     public virtual void LoadData(NPC npc, TagCompound tag) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.PickEmote"/>
-    /// </summary>
     public virtual int? PickEmote(NPC npc, Player closestPlayer, List<int> emoteList, WorldUIAnchor otherAnchor) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.ChatBubblePosition"/>
-    /// </summary>
     public virtual void ChatBubblePosition(NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.PartyHatPosition"/>
-    /// </summary>
     public virtual void PartyHatPosition(NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalNPC.EmoteBubblePosition"/>
-    /// </summary>
     public virtual void EmoteBubblePosition(NPC npc, ref Vector2 position, ref SpriteEffects spriteEffects) { }
 }
 
 public abstract class GlobalProjectileBehavior : GlobalEntityBehavior<Projectile>
 {
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.OnSpawn"/>
-    /// </summary>
     public virtual void OnSpawn(Projectile projectile, IEntitySource source) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.PreAI"/>
-    /// </summary>
     public virtual bool PreAI(Projectile projectile) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.AI"/>
-    /// </summary>
     public virtual void AI(Projectile projectile) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.PostAI"/>
-    /// </summary>
     public virtual void PostAI(Projectile projectile) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.SendExtraAI"/>
-    /// </summary>
     public virtual void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.ReceiveExtraAI"/>
-    /// </summary>
     public virtual void ReceiveExtraAI(Projectile projectile, BitReader bitReader, BinaryReader binaryReader) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.ShouldUpdatePosition"/>
-    /// </summary>
     public virtual bool ShouldUpdatePosition(Projectile projectile) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.TileCollideStyle"/>
-    /// </summary>
     public virtual bool TileCollideStyle(Projectile projectile, ref int width, ref int height, ref bool fallThrough, ref Vector2 hitboxCenterFrac) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.OnTileCollide"/>
-    /// </summary>
     public virtual bool OnTileCollide(Projectile projectile, Vector2 oldVelocity) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.PreKill"/>
-    /// </summary>
     public virtual bool PreKill(Projectile projectile, int timeLeft) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.OnKill"/>
-    /// </summary>
     public virtual void OnKill(Projectile projectile, int timeLeft) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.CanCutTiles"/>
-    /// </summary>
     public virtual bool? CanCutTiles(Projectile projectile) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.CutTiles"/>
-    /// </summary>
     public virtual void CutTiles(Projectile projectile) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.CanDamage"/>
-    /// </summary>
     public virtual bool? CanDamage(Projectile projectile) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.MinionContactDamage"/>
-    /// </summary>
     public virtual bool MinionContactDamage(Projectile projectile) => false;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.ModifyDamageHitbox"/>
-    /// </summary>
     public virtual void ModifyDamageHitbox(Projectile projectile, ref Rectangle hitbox) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.CanHitNPC"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool? CanHitNPC(Projectile projectile, NPC target) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.ModifyHitNPC"/>
-    /// </summary>
     public virtual void ModifyHitNPC(Projectile projectile, NPC target, ref NPC.HitModifiers modifiers) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.OnHitNPC"/>
-    /// </summary>
     public virtual void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damageDone) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.CanHitPvp"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool CanHitPvp(Projectile projectile, Player target) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.CanHitPlayer"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool CanHitPlayer(Projectile projectile, Player target) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.ModifyHitPlayer"/>
-    /// </summary>
     public virtual void ModifyHitPlayer(Projectile projectile, Player target, ref Player.HurtModifiers modifiers) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.OnHitPlayer"/>
-    /// </summary>
     public virtual void OnHitPlayer(Projectile projectile, Player target, Player.HurtInfo info) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.Colliding"/>
-    /// </summary>
     [Obsolete("Poor performance.", true)]
     public virtual bool? Colliding(Projectile projectile, Rectangle projHitbox, Rectangle targetHitbox) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.GetAlpha"/>
-    /// </summary>
     public virtual Color? GetAlpha(Projectile projectile, Color lightColor) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.PreDrawExtras"/>
-    /// </summary>
     public virtual bool PreDrawExtras(Projectile projectile) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.PreDraw"/>
-    /// </summary>
     public virtual bool PreDraw(Projectile projectile, ref Color lightColor) => true;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.PostDraw"/>
-    /// </summary>
     public virtual void PostDraw(Projectile projectile, Color lightColor) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.DrawBehind"/>
-    /// </summary>
     public virtual void DrawBehind(Projectile projectile, int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.CanUseGrapple"/>
-    /// </summary>
     public virtual bool? CanUseGrapple(int type, Player player) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.UseGrapple"/>
-    /// </summary>
     public virtual void UseGrapple(Player player, ref int type) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.NumGrappleHooks"/>
-    /// </summary>
     public virtual void NumGrappleHooks(Projectile projectile, Player player, ref int numHooks) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.GrappleRetreatSpeed"/>
-    /// </summary>
     public virtual void GrappleRetreatSpeed(Projectile projectile, Player player, ref float speed) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.GrapplePullSpeed"/>
-    /// </summary>
     public virtual void GrapplePullSpeed(Projectile projectile, Player player, ref float speed) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.GrappleTargetPoint"/>
-    /// </summary>
     public virtual void GrappleTargetPoint(Projectile projectile, Player player, ref float grappleX, ref float grappleY) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.GrappleCanLatchOnTo"/>
-    /// </summary>
     public virtual bool? GrappleCanLatchOnTo(Projectile projectile, Player player, int x, int y) => null;
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.PrepareBombToBlow"/>
-    /// </summary>
     public virtual void PrepareBombToBlow(Projectile projectile) { }
 
-    /// <summary>
     /// <inheritdoc cref="GlobalProjectile.EmitEnchantmentVisualsAt"/>
-    /// </summary>
     public virtual void EmitEnchantmentVisualsAt(Projectile projectile, Vector2 boxPosition, int boxWidth, int boxHeight) { }
 }
 
@@ -1552,6 +1161,12 @@ public abstract class GlobalItemBehavior : GlobalEntityBehavior<Item>
 
     /// <inheritdoc cref="GlobalItem.OnConsumeMana"/>
     public virtual void OnConsumeMana(Item item, Player player, int manaConsumed) { }
+
+    /// <inheritdoc cref="GlobalItem.ModifyPotionDelay"/>
+    public virtual void ModifyPotionDelay(Item item, Player player, ref int baseDelay) { }
+
+    /// <inheritdoc cref="GlobalItem.ApplyPotionDelay"/>
+    public virtual bool ApplyPotionDelay(Item item, Player player, int potionDelay) => true;
 
     /// <inheritdoc cref="GlobalItem.ModifyWeaponDamage"/>
     public virtual void ModifyWeaponDamage(Item item, Player player, ref StatModifier damage) { }
@@ -1947,6 +1562,9 @@ public abstract class SingleNPCBehavior : SingleEntityBehavior<NPC>
 
     /// <inheritdoc cref="GlobalNPC.ModifyHoverBoundingBox"/>
     public virtual void ModifyHoverBoundingBox(ref Rectangle boundingBox) { }
+
+    /// <inheritdoc cref="GlobalNPC.PreHoverInteract"/>
+    public virtual bool PreHoverInteract(bool mouseIntersects) => true;
 
     /// <inheritdoc cref="GlobalNPC.ModifyTownNPCProfile"/>
     public virtual ITownNPCProfile ModifyTownNPCProfile() => null;
@@ -2480,6 +2098,9 @@ public abstract class SingleItemBehavior : SingleEntityBehavior<Item>
 
     /// <inheritdoc cref="GlobalItem.ModifyItemScale"/>
     public virtual void ModifyItemScale(Player player, ref float scale) { }
+
+    /// <inheritdoc cref="GlobalItem.ModifyItemLoot"/>
+    public virtual void ModifyItemLoot(ItemLoot itemLoot) { }
     #endregion ModifyStats
 
     #region Hit
@@ -2521,6 +2142,12 @@ public abstract class SingleItemBehavior : SingleEntityBehavior<Item>
     /// <inheritdoc cref="GlobalItem.OnConsumeMana"/>
     public virtual void OnConsumeMana(Player player, int manaConsumed) { }
 
+    /// <inheritdoc cref="GlobalItem.ModifyPotionDelay"/>
+    public virtual void ModifyPotionDelay(Player player, ref int baseDelay) { }
+
+    /// <inheritdoc cref="GlobalItem.ApplyPotionDelay"/>
+    public virtual bool ApplyPotionDelay(Player player, int potionDelay) => true;
+
     /// <inheritdoc cref="GlobalItem.CanResearch"/>
     public virtual bool CanResearch() => true;
 
@@ -2558,9 +2185,7 @@ public abstract class SingleItemBehavior : SingleEntityBehavior<Item>
     public virtual void HoldItemFrame(Player player) { }
 
     /// <inheritdoc cref="GlobalItem.VerticalWingSpeeds"/>
-    public virtual void VerticalWingSpeeds(Player player, ref float ascentWhenFalling, ref float ascentWhenRising,
-        ref float maxCanAscendMultiplier, ref float maxAscentMultiplier, ref float constantAscend)
-    { }
+    public virtual void VerticalWingSpeeds(Player player, ref float ascentWhenFalling, ref float ascentWhenRising, ref float maxCanAscendMultiplier, ref float maxAscentMultiplier, ref float constantAscend) { }
 
     /// <inheritdoc cref="GlobalItem.HorizontalWingSpeeds"/>
     public virtual void HorizontalWingSpeeds(Player player, ref float speed, ref float acceleration) { }
@@ -2606,12 +2231,11 @@ public abstract class SingleItemBehavior : SingleEntityBehavior<Item>
 #endregion Single Behavior
 
 #region Single Behavior Handler
-[CriticalBehavior]
 public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior where TNPCBehavior : SingleNPCBehavior
 {
     protected abstract SingleEntityBehaviorSet<NPC, TNPCBehavior> BehaviorSet { get; }
 
-    public virtual bool TryGetBehavior(NPC npc, out TNPCBehavior npcBehavior, [CallerMemberName] string methodName = null!) => BehaviorSet.TryGetBehavior(npc, methodName, out npcBehavior);
+    public virtual bool TryGetBehavior(NPC npc, out TNPCBehavior npcBehavior, [CallerMemberName] string methodName = null) => BehaviorSet.TryGetBehavior(npc, methodName, out npcBehavior);
 
     #region Defaults
     public override void SetStaticDefaults()
@@ -2657,6 +2281,16 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
     {
         if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
             npcBehavior.ModifyHoverBoundingBox(ref boundingBox);
+    }
+
+    public override bool PreHoverInteract(NPC npc, bool mouseIntersects)
+    {
+        if (TryGetBehavior(npc, out TNPCBehavior npcBehavior))
+        {
+            if (!npcBehavior.PreHoverInteract(mouseIntersects))
+                return false;
+        }
+        return true;
     }
 
     public override ITownNPCProfile ModifyTownNPCProfile(NPC npc)
@@ -3190,12 +2824,11 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
     #endregion WorldSaving
 }
 
-[CriticalBehavior]
 public abstract class SingleProjectileBehaviorHandler<TProjectileBehavior> : GlobalProjectileBehavior where TProjectileBehavior : SingleProjectileBehavior
 {
     protected abstract SingleEntityBehaviorSet<Projectile, TProjectileBehavior> BehaviorSet { get; }
 
-    public virtual bool TryGetBehavior(Projectile projectile, out TProjectileBehavior projectileBehavior, [CallerMemberName] string methodName = null!) => BehaviorSet.TryGetBehavior(projectile, methodName, out projectileBehavior);
+    public virtual bool TryGetBehavior(Projectile projectile, out TProjectileBehavior projectileBehavior, [CallerMemberName] string methodName = null) => BehaviorSet.TryGetBehavior(projectile, methodName, out projectileBehavior);
 
     #region Defaults
     public override void SetStaticDefaults()
@@ -3503,12 +3136,11 @@ public abstract class SingleProjectileBehaviorHandler<TProjectileBehavior> : Glo
     #endregion SpecialEffects
 }
 
-[CriticalBehavior]
 public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehavior where TItemBehavior : SingleItemBehavior
 {
     protected abstract SingleEntityBehaviorSet<Item, TItemBehavior> BehaviorSet { get; }
 
-    public virtual bool TryGetBehavior(Item item, out TItemBehavior itemBehavior, [CallerMemberName] string methodName = null!) => BehaviorSet.TryGetBehavior(item, methodName, out itemBehavior);
+    public virtual bool TryGetBehavior(Item item, out TItemBehavior itemBehavior, [CallerMemberName] string methodName = null) => BehaviorSet.TryGetBehavior(item, methodName, out itemBehavior);
 
     #region Defaults
     public override void SetStaticDefaults()
@@ -3930,6 +3562,12 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
         if (TryGetBehavior(item, out TItemBehavior itemBehavior))
             itemBehavior.ModifyItemScale(player, ref scale);
     }
+
+    public override void ModifyItemLoot(Item item, ItemLoot itemLoot)
+    {
+        if (TryGetBehavior(item, out TItemBehavior itemBehavior))
+            itemBehavior.ModifyItemLoot(itemLoot);
+    }
     #endregion ModifyStats
 
     #region Hit
@@ -4025,6 +3663,22 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
             itemBehavior.OnConsumeMana(player, manaConsumed);
     }
 
+    public override void ModifyPotionDelay(Item item, Player player, ref int baseDelay)
+    {
+        if (TryGetBehavior(item, out TItemBehavior itemBehavior))
+            itemBehavior.ModifyPotionDelay(player, ref baseDelay);
+    }
+
+    public override bool ApplyPotionDelay(Item item, Player player, int potionDelay)
+    {
+        if (TryGetBehavior(item, out TItemBehavior itemBehavior))
+        {
+            if (!itemBehavior.ApplyPotionDelay(player, potionDelay))
+                return false;
+        }
+        return true;
+    }
+
     public override bool CanResearch(Item item)
     {
         if (TryGetBehavior(item, out TItemBehavior itemBehavior))
@@ -4117,8 +3771,7 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
     public override void VerticalWingSpeeds(Item item, Player player, ref float ascentWhenFalling, ref float ascentWhenRising, ref float maxCanAscendMultiplier, ref float maxAscentMultiplier, ref float constantAscend)
     {
         if (TryGetBehavior(item, out TItemBehavior itemBehavior))
-            itemBehavior.VerticalWingSpeeds(player, ref ascentWhenFalling, ref ascentWhenRising, ref maxCanAscendMultiplier,
-                ref maxAscentMultiplier, ref constantAscend);
+            itemBehavior.VerticalWingSpeeds(player, ref ascentWhenFalling, ref ascentWhenRising, ref maxCanAscendMultiplier, ref maxAscentMultiplier, ref constantAscend);
     }
 
     public override void HorizontalWingSpeeds(Item item, Player player, ref float speed, ref float acceleration)

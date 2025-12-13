@@ -147,6 +147,9 @@ public sealed class KingSlimeJewelSapphire_Anomaly : AnomalyNPCBehavior<KingSlim
         void BuffedShoot_Emerald()
         {
             SoundEngine.PlaySound(SoundID.Item38, JewelEmerald.Center);
+            if (!TOWorld.GeneralClient)
+                return;
+
             for (int i = 0; i < 30; i++)
             {
                 JewelHandler.SpawnParticle(JewelEmerald, Main.rand.NextFloat(4f, 8f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
@@ -167,6 +170,9 @@ public sealed class KingSlimeJewelSapphire_Anomaly : AnomalyNPCBehavior<KingSlim
         void BuffedShoot_Ruby()
         {
             SoundEngine.PlaySound(SoundID.Item38, JewelRuby.Center);
+            if (!TOWorld.GeneralClient)
+                return;
+
             for (int i = 0; i < 30; i++)
             {
                 JewelHandler.SpawnParticle(JewelRuby, Main.rand.NextFloat(4f, 8f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));

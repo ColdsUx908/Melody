@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.Utilities;
+﻿using System.Linq.Expressions;
+
+namespace Transoceanic.Utilities;
 
 public static class TOReflectionUtils
 {
@@ -190,4 +192,23 @@ public static class TOReflectionUtils
         field.SetValue(boxed, value);
         target = (T)boxed;
     }
+
+    public static Type GetDelegateType(MethodInfo method)
+    {
+        ParameterInfo[] parameters = method.GetParameters();
+        if (method.ReturnType == typeof(void)) //Action
+        {
+            Type[] actionTypes = [.. parameters.Select(p => p.ParameterType)];
+            if (actionTypes.Length == 0)
+                return typeof(Action);
+            return Expression.GetActionType(actionTypes);
+        }
+        else //Func
+        {
+            Type[] funcTypes = [.. parameters.Select(p => p.ParameterType), method.ReturnType];
+            return Expression.GetFuncType(funcTypes);
+        }
+    }
+
+    public static Delegate CreateMethodDelegate(MethodInfo method) => Delegate.CreateDelegate(GetDelegateType(method), method);
 }

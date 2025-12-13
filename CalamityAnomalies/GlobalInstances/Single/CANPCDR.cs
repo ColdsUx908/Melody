@@ -36,7 +36,7 @@ public sealed class CANPCDR : CAGlobalNPCBehavior2, IResourceLoader
         {
             const float tdrFactor = 10f;
             float extraDRLimit = (1f - baseDR) * tdrFactor / 2f;
-            float lifeCompletion = npc.MissingLifeRatio;
+            float lifeCompletion = npc.LostLifeRatio;
             float timeCompletion = (float)aiTimer / killTime;
             float timedDRStrength = lifeCompletion - timeCompletion;
             if (timedDRStrength > 0f)

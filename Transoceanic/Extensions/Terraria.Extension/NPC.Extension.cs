@@ -20,7 +20,7 @@ public static partial class TOExtensions
         public NPC NPCTarget => npc.HasNPCTarget ? Main.npc[npc.target - 300] : null;
 
         public float LifeRatio => npc.lifeMax <= 0 ? 0f : (float)npc.life / npc.lifeMax;
-        public float MissingLifeRatio => 1f - npc.LifeRatio;
+        public float LostLifeRatio => 1f - npc.LifeRatio;
 
         /// <summary>
         /// 符合直观习惯的NPC透明度。0表示完全透明，255表示完全不透明。

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace CalamityAnomalies.Anomaly.KingSlime;
+﻿namespace CalamityAnomalies.Anomaly.KingSlime;
 
 public class JewelProjectileRainbow : CAModProjectile
 {
@@ -50,7 +48,7 @@ public class JewelProjectileRainbow : CAModProjectile
     public override bool PreDraw(ref Color lightColor)
     {
         Texture2D texture = Projectile.Texture;
-        TODrawUtils.DrawBorderTexture(Main.spriteBatch, texture, Projectile.Center - Main.screenPosition, null, Color.Lerp(Main.DiscoColor, Color.White, 0.1f), Projectile.rotation, texture.Size() / 2f, borderWidth: 2f);
+        TODrawUtils.DrawBorderTexture(Main.spriteBatch, texture, Projectile.Center - Main.screenPosition, null, Color.Lerp(Main.DiscoColor, Color.White * 0.5f, 0.1f), Projectile.rotation, texture.Size() / 2f, borderWidth: 1.2f);
         CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Projectile.type], lightColor, 1);
         return false;
     }

@@ -6,6 +6,12 @@ namespace CalamityAnomalies.Core;
 
 public static class CAUtils
 {
+    public static void StopRain(bool force = false)
+    {
+        if (CalamityServerConfig.Instance.BossesStopWeather || force)
+            CalamityMod_.StopRain();
+    }
+
     public static bool IsDefeatingLeviathan(NPC npc) => npc.LeviathanBoss && !TOIteratorFactory.NewActiveNPCIterator(n => n.LeviathanBoss, npc).Any();
 
     public static bool IsDefeatingProfanedGuardians(NPC npc) => npc.ProfanedGuardianBoss && !TOIteratorFactory.NewActiveNPCIterator(n => n.ProfanedGuardianBoss, npc).Any();

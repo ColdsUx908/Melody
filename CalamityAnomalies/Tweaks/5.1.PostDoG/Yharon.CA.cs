@@ -139,8 +139,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
     {
         YharonPublicizer = new(ModNPC);
 
-        if (CalamityConfig.Instance.BossesStopWeather)
-            CalamityMod_.StopRain();
+        CAUtils.StopRain();
 
         if (!Initialized)
         {

@@ -12,6 +12,10 @@
 /// </summary>
 public readonly ref struct TOIterator<T> where T : class
 {
+    public static Func<T, bool> MatchAll => _ => true;
+    public static Func<T, bool> MatchNone => _ => false;
+    public static TOIterator<T> Empty => new([], MatchNone);
+
     private readonly ReadOnlySpan<T> _span;
     private readonly Func<T, bool> _match;
 
@@ -144,6 +148,10 @@ public readonly ref struct TOIterator<T> where T : class
 /// </summary>
 public readonly ref struct TOExclusiveIterator<T> where T : class
 {
+    public static Func<T, bool> MatchAll => _ => true;
+    public static Func<T, bool> MatchNone => _ => false;
+    public static TOExclusiveIterator<T> Empty => new([], _ => false, new HashSet<T>());
+
     private readonly ReadOnlySpan<T> _span;
     private readonly Func<T, bool> _match;
     private readonly HashSet<T> _exclusions;

@@ -2512,6 +2512,10 @@ public abstract class ModPlayerDetour<T> : ModTypeDetour<T> where T : ModPlayer
     public delegate void Orig_ModifyDrawInfo(T self, ref PlayerDrawSet drawInfo);
     public virtual void Detour_ModifyDrawInfo(Orig_ModifyDrawInfo orig, T self, ref PlayerDrawSet drawInfo) => orig(self, ref drawInfo);
 
+    // TransformDrawData
+    public delegate void Orig_TransformDrawData(T self, ref PlayerDrawSet drawInfo);
+    public virtual void Detour_TransformDrawData(Orig_TransformDrawData orig, T self, ref PlayerDrawSet drawInfo) => orig(self, ref drawInfo);
+
     // ModifyDrawLayerOrdering
     public delegate void Orig_ModifyDrawLayerOrdering(T self, IDictionary<PlayerDrawLayer, PlayerDrawLayer.Position> positions);
     public virtual void Detour_ModifyDrawLayerOrdering(Orig_ModifyDrawLayerOrdering orig, T self, IDictionary<PlayerDrawLayer, PlayerDrawLayer.Position> positions) => orig(self, positions);
@@ -2611,6 +2615,10 @@ public abstract class ModPlayerDetour<T> : ModTypeDetour<T> where T : ModPlayer
     // OnEquipmentLoadoutSwitched
     public delegate void Orig_OnEquipmentLoadoutSwitched(T self, int oldLoadoutIndex, int loadoutIndex);
     public virtual void Detour_OnEquipmentLoadoutSwitched(Orig_OnEquipmentLoadoutSwitched orig, T self, int oldLoadoutIndex, int loadoutIndex) => orig(self, oldLoadoutIndex, loadoutIndex);
+
+    // DrawPlayer
+    public delegate void Orig_DrawPlayer(T self, Camera camera);
+    public virtual void Detour_DrawPlayer(Orig_DrawPlayer orig, T self, Camera camera) => orig(self, camera);
 
     public override void ApplyDetour()
     {
@@ -2720,6 +2728,7 @@ public abstract class ModPlayerDetour<T> : ModTypeDetour<T> where T : ModPlayer
         ApplySingleDetour(Detour_GetDyeTraderReward);
         ApplySingleDetour(Detour_DrawEffects);
         ApplySingleDetour(Detour_ModifyDrawInfo);
+        ApplySingleDetour(Detour_TransformDrawData);
         ApplySingleDetour(Detour_ModifyDrawLayerOrdering);
         ApplySingleDetour(Detour_HideDrawLayers);
         ApplySingleDetour(Detour_ModifyScreenPosition);
@@ -2745,6 +2754,7 @@ public abstract class ModPlayerDetour<T> : ModTypeDetour<T> where T : ModPlayer
         ApplySingleDetour(Detour_OnPickup);
         ApplySingleDetour(Detour_CanBeTeleportedTo);
         ApplySingleDetour(Detour_OnEquipmentLoadoutSwitched);
+        ApplySingleDetour(Detour_DrawPlayer);
     }
 }
 
@@ -3756,6 +3766,14 @@ public abstract class ModTileDetour<T> : ModBlockTypeDetour<T> where T : ModTile
     public delegate void Orig_HitWire(T self, int i, int j);
     public virtual void Detour_HitWire(Orig_HitWire orig, T self, int i, int j) => orig(self, i, j);
 
+    // HitSwitch
+    public delegate void Orig_HitSwitch(T self, int i, int j);
+    public virtual void Detour_HitSwitch(Orig_HitSwitch orig, T self, int i, int j) => orig(self, i, j);
+
+    // SwitchTiles
+    public delegate bool Orig_SwitchTiles(T self, int i, int j, Entity entity, Vector2 position, int width, int height, Vector2 oldPosition, int objType);
+    public virtual bool Detour_SwitchTiles(Orig_SwitchTiles orig, T self, int i, int j, Entity entity, Vector2 position, int width, int height, Vector2 oldPosition, int objType) => orig(self, i, j, entity, position, width, height, oldPosition, objType);
+
     // Slope
     public delegate bool Orig_Slope(T self, int i, int j);
     public virtual bool Detour_Slope(Orig_Slope orig, T self, int i, int j) => orig(self, i, j);
@@ -3849,6 +3867,8 @@ public abstract class ModTileDetour<T> : ModBlockTypeDetour<T> where T : ModTile
         ApplySingleDetour(Detour_MouseOverFar);
         ApplySingleDetour(Detour_AutoSelect);
         ApplySingleDetour(Detour_HitWire);
+        ApplySingleDetour(Detour_HitSwitch);
+        ApplySingleDetour(Detour_SwitchTiles);
         ApplySingleDetour(Detour_Slope);
         ApplySingleDetour(Detour_FloorVisuals);
         ApplySingleDetour(Detour_HasWalkDust);
@@ -5714,6 +5734,14 @@ public abstract class GlobalTileDetour<T> : GlobalBlockTypeDetour<T> where T : G
     public delegate void Orig_HitWire(T self, int i, int j, int type);
     public virtual void Detour_HitWire(Orig_HitWire orig, T self, int i, int j, int type) => orig(self, i, j, type);
 
+    // HitSwitch
+    public delegate bool Orig_HitSwitch(T self, int i, int j, int type);
+    public virtual bool Detour_HitSwitch(Orig_HitSwitch orig, T self, int i, int j, int type) => orig(self, i, j, type);
+
+    // SwitchTiles
+    public delegate bool Orig_SwitchTiles(T self, int i, int j, Entity entity, Vector2 position, int width, int height, Vector2 oldPosition, int objType);
+    public virtual bool Detour_SwitchTiles(Orig_SwitchTiles orig, T self, int i, int j, Entity entity, Vector2 position, int width, int height, Vector2 oldPosition, int objType) => orig(self, i, j, entity, position, width, height, oldPosition, objType);
+
     // Slope
     public delegate bool Orig_Slope(T self, int i, int j, int type);
     public virtual bool Detour_Slope(Orig_Slope orig, T self, int i, int j, int type) => orig(self, i, j, type);
@@ -5773,6 +5801,8 @@ public abstract class GlobalTileDetour<T> : GlobalBlockTypeDetour<T> where T : G
         ApplySingleDetour(Detour_AutoSelect);
         ApplySingleDetour(Detour_PreHitWire);
         ApplySingleDetour(Detour_HitWire);
+        ApplySingleDetour(Detour_HitSwitch);
+        ApplySingleDetour(Detour_SwitchTiles);
         ApplySingleDetour(Detour_Slope);
         ApplySingleDetour(Detour_FloorVisuals);
         ApplySingleDetour(Detour_ChangeWaterfallStyle);

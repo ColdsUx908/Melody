@@ -138,8 +138,7 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
                 CalamityNetcode.SyncWorld();
             }
 
-            if (CalamityConfig.Instance.BossesStopWeather)
-                CalamityMod_.StopRain();
+            CAUtils.StopRain();
 
             #region 目标与脱战
             if (!NPC.TargetClosestIfInvalid(true, Data.DespawnDistance))
@@ -431,7 +430,7 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
         newBar.DrawNPCName(spriteBatch, x, y, null,
             Data.BlueColor * newBar.AnimationCompletionRatio2,
             Data.NameColor * newBar.AnimationCompletionRatio2,
-            Math.Clamp(OceanNPC.ActiveTime, 0f, 360f) / 240f + TOMathHelper.GetTimeSin(0.5f, 1f, TOMathHelper.PiOver3, true) + NPC.MissingLifeRatio / 2f);
+            Math.Clamp(OceanNPC.ActiveTime, 0f, 360f) / 240f + TOMathHelper.GetTimeSin(0.5f, 1f, TOMathHelper.PiOver3, true) + NPC.LostLifeRatio / 2f);
         newBar.DrawBigLifeText(spriteBatch, x, y);
         newBar.DrawExtraSmallText(spriteBatch, x, y);
 

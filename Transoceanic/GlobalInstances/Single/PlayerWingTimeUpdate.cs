@@ -2,6 +2,8 @@
 
 public sealed class PlayerWingTimeUpdate : TOPlayerBehavior
 {
+    public override decimal Priority => -1000m;
+
     public override void ResetEffects()
     {
         for (int i = 0; i < OceanPlayer.WingTimeMaxMultipliers.Length; i++)
