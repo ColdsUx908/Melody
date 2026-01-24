@@ -2,6 +2,8 @@
 
 public static class TOAssetUtils
 {
+    public static string FormatVanillaNPCTexturePath(int type) => $"Terraria/Images/NPC{type}";
+    public static string FormatVanillaProjectileTexturePath(int type) => $"Terraria/Images/Projectile_{type}";
     public static string FormatVanillaItemTexturePath(int type) => $"Terraria/Images/Item_{type}";
 
     public static Texture2D GetItemTexture(int type)

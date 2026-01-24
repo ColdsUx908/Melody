@@ -563,8 +563,8 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
         {
             Projectile.Center = Target.Center;
             Projectile.timeLeft = LifeTime;
-            if (!Target.active || (Target is NPC npc && npc.life <= 0) || (Target is Player player && (player.dead || player.ghost)) || Timer2 > 0)
-                Timer2++;
+            if (Timer2 > 0 || !Target.active || (Target is NPC npc && npc.life <= 0) || (Target is Player player && (player.dead || player.ghost)) || Timer1 > 6000)
+                Timer2 = Math.Max(Timer2 + 1, 100 - Timer1 / 3);
             if (Timer2 >= 100)
                 Projectile.Kill();
         }
@@ -624,30 +624,27 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
             Main.Rasterizer.ScissorTestEnable = true;
             Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
             Main.instance.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
-            if (Timer1 < 300)
+            float radius = 40f; //圆心半径
+            Vector2 origin = CalamityTextureHandler.GlowOrbParticle.Size() * 0.5f;
+            for (int j = 0; j < 6; j++)
             {
-                float radius = 40f; //圆心半径
-                Vector2 origin = CalamityTextureHandler.GlowOrbParticle.Size() * 0.5f;
-                for (int j = 0; j < 6; j++)
+                int localTimer = TOMathHelper.Min(Timer2 > 0 ? (100 - Timer2) / 2 : 100, Timer1 - j * 10, LifeTime);
+                for (int i = 0; i <= localTimer * 10; i++)
                 {
-                    int localTimer = Timer2 > 0 ? (100 - Timer2) / 2 : Math.Min(Timer1 - j * 10, LifeTime);
-                    for (int i = 0; i <= localTimer * 10; i++)
+                    float a = radius * EllipseData.AMultiplier; //椭圆半长轴
+                    float b = radius * EllipseData.BMultiplier; //椭圆半短轴
+                    float amount = i * 1.83f / (LifeTime * 10);
+                    if (amount > 1f)
                     {
-                        float a = radius * EllipseData.AMultiplier; //椭圆半长轴
-                        float b = radius * EllipseData.BMultiplier; //椭圆半短轴
-                        float amount = i * 1.83f / (LifeTime * 10);
-                        if (amount > 1f)
-                        {
-                            float multiplier = MathHelper.Lerp(0.4f, 1f, 2f - amount);
-                            a *= multiplier;
-                            b *= multiplier;
-                        }
-                        float angle = TOMathHelper.PiOver6 + TOMathHelper.PiOver3 * (j - 2);
-                        Vector2 circleCenter = Projectile.Center + new PolarVector2(radius, angle);
-                        (float sin, float cos) = MathF.SinCos(MathHelper.Lerp(-EllipseData.MaxAngleOffset, EllipseData.MaxAngleOffset, amount));
-                        Vector2 position = circleCenter + new Vector2(a * cos, b * sin).RotatedBy(angle);
-                        Main.spriteBatch.DrawFromCenter(CalamityTextureHandler.GlowOrbParticle, position - Main.screenPosition, Color.White with { A = 0 }, null, 0f, 0.3f * Utils.Remap(amount, 0f, 1.83f, 0.4f, 1.2f));
+                        float multiplier = MathHelper.Lerp(0.4f, 1f, 2f - amount);
+                        a *= multiplier;
+                        b *= multiplier;
                     }
+                    float angle = TOMathHelper.PiOver6 + TOMathHelper.PiOver3 * (j - 2);
+                    Vector2 circleCenter = Projectile.Center + new PolarVector2(radius, angle);
+                    (float sin, float cos) = MathF.SinCos(MathHelper.Lerp(-EllipseData.MaxAngleOffset, EllipseData.MaxAngleOffset, amount));
+                    Vector2 position = circleCenter + new Vector2(a * cos, b * sin).RotatedBy(angle);
+                    Main.spriteBatch.DrawFromCenter(CalamityTextureHandler.GlowOrbParticle, position - Main.screenPosition, Color.White with { A = 0 }, null, 0f, 0.3f * Utils.Remap(amount, 0f, 1.83f, 0.4f, 1.2f));
                 }
             }
         }

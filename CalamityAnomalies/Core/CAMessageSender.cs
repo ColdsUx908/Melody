@@ -5,6 +5,6 @@ public sealed class CAMessageSender : ModSystem
     public override void PreUpdateEntities()
     {
         if (TOWorld.GameTimer == 360)
-            TOLocalizationUtils.ChatLocalizedText(CAMain.ModLocalizationPrefix + "Core.EnterWorldMessage." + (CAServerConfig.Instance.Contents ? "True" : "False"), CAMain.MainColor, Main.LocalPlayer);
+            TOLocalizationUtils.ChatLocalizedText(CAMain.ModLocalizationPrefix + "Core.EnterWorldMessage.True", CAMain.MainColor, Main.LocalPlayer);
     }
 }

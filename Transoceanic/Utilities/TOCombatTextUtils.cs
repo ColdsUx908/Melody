@@ -14,7 +14,7 @@ public static class TOCombatTextUtils
         for (int i = Main.maxCombatText - 1; i >= 0; i--)
         {
             CombatText current = Main.combatText[i];
-            if (current is { crit: true, lifeTime: 120, alpha: 1f } or { crit: false, lifeTime: 60, alpha: 1f })
+            if (current is { crit: true, lifeTime: 120, alpha: 1f } or { crit: false, lifeTime: 60, alpha: 1f } && int.TryParse(current.text, out _))
             {
                 text = current;
                 break;

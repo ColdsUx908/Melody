@@ -216,11 +216,11 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
 /// </summary>
 public class BetterBossHPUI : BossHPUI
 {
+#pragma warning disable CA1822
     public new NPC AssociatedNPC => throw new InvalidOperationException("BetterBossHPUI.AssociatedNPC should not be used. Use BetterBossHPUI.NPC instead.");
-
-    public new void Update() => throw new NotImplementedException($"BetterBossHPUI.Update() should not be used. Use BetterBossHPUI.Update(bool) instead.");
-
-    public new void Draw(SpriteBatch spriteBatch, int x, int y) => throw new NotImplementedException($"BetterBossHPUI.Draw(SpriteBatch, int, int) should not be used. Use BetterBossHPUI.Draw(SpriteBatch, ref int, ref int) instead.");
+    public new void Update() => throw new InvalidOperationException($"BetterBossHPUI.Update() should not be used. Use BetterBossHPUI.Update(bool) instead.");
+    public new void Draw(SpriteBatch spriteBatch, int x, int y) => throw new InvalidOperationException($"BetterBossHPUI.Draw(SpriteBatch, int, int) should not be used. Use BetterBossHPUI.Draw(SpriteBatch, ref int, ref int) instead.");
+#pragma warning restore CA1822
 
     public static readonly Color BaseColor = new(240, 240, 255);
 

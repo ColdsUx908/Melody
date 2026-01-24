@@ -35,6 +35,47 @@ public abstract class TOModNPC : ModNPC, ITOModNPC
         get => OceanNPC.Timer5;
         set => OceanNPC.Timer5 = value;
     }
+
+    public Union32 AI_Union_0
+    {
+        get => (Union32)NPC.ai[0];
+        set => NPC.ai[0] = value.f;
+    }
+    public Union32 AI_Union_1
+    {
+        get => (Union32)NPC.ai[1];
+        set => NPC.ai[1] = value.f;
+    }
+    public Union32 AI_Union_2
+    {
+        get => (Union32)NPC.ai[2];
+        set => NPC.ai[2] = value.f;
+    }
+    public Union32 AI_Union_3
+    {
+        get => (Union32)NPC.ai[3];
+        set => NPC.ai[3] = value.f;
+    }
+    public Union32 LocalAI_Union_0
+    {
+        get => (Union32)NPC.localAI[0];
+        set => NPC.localAI[0] = value.f;
+    }
+    public Union32 LocalAI_Union_1
+    {
+        get => (Union32)NPC.localAI[1];
+        set => NPC.localAI[1] = value.f;
+    }
+    public Union32 LocalAI_Union_2
+    {
+        get => (Union32)NPC.localAI[2];
+        set => NPC.localAI[2] = value.f;
+    }
+    public Union32 LocalAI_Union_3
+    {
+        get => (Union32)NPC.localAI[3];
+        set => NPC.localAI[3] = value.f;
+    }
 }
 
 public interface ITOModProjectile
@@ -71,6 +112,37 @@ public abstract class TOModProjectile : ModProjectile, ITOModProjectile
     {
         get => OceanProjectile.Timer5;
         set => OceanProjectile.Timer5 = value;
+    }
+
+    public Union32 AI_Union_0
+    {
+        get => (Union32)Projectile.ai[0];
+        set => Projectile.ai[0] = value.f;
+    }
+    public Union32 AI_Union_1
+    {
+        get => (Union32)Projectile.ai[0];
+        set => Projectile.ai[0] = value.f;
+    }
+    public Union32 AI_Union_2
+    {
+        get => (Union32)Projectile.ai[0];
+        set => Projectile.ai[0] = value.f;
+    }
+    public Union32 LocalAI_Union_0
+    {
+        get => (Union32)Projectile.localAI[0];
+        set => Projectile.localAI[0] = value.f;
+    }
+    public Union32 LocalAI_Union_1
+    {
+        get => (Union32)Projectile.localAI[1];
+        set => Projectile.localAI[1] = value.f;
+    }
+    public Union32 LocalAI_Union_2
+    {
+        get => (Union32)Projectile.localAI[2];
+        set => Projectile.localAI[2] = value.f;
     }
 }
 

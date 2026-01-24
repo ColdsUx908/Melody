@@ -56,7 +56,7 @@ public sealed class AscendantInsignia_Tweak : CAItemTweak<AscendantInsignia>
     }
 }
 
-public sealed class AscendantInsignia_Player : CAPlayerBehavior2
+public sealed class AscendantInsignia_Player : CAPlayerBehavior
 {
     public override void PostUpdateMiscEffects()
     {
@@ -80,7 +80,7 @@ public sealed class AscendantInsignia_Player : CAPlayerBehavior2
     }
 }
 
-public sealed class AscendantInsignia_CalamityPlayer : CACalamityPlayerDetour
+public sealed class AscendantInsignia_CalamityPlayer : CalamityPlayerDetour
 {
     public override void Detour_ProcessTriggers(Orig_ProcessTriggers orig, CalamityPlayer self, TriggersSet triggersSet)
     {

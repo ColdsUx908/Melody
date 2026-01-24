@@ -1629,8 +1629,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
             if (increasedLifeMax > 0)
                 NPC.lifeMax += increasedLifeMax;
 
-            //对数插值: y = ln((e - 1)x / 900 + 1)
-            int newLife = (int)MathHelper.Lerp(NPC.life, NPC.lifeMax * MathHelper.Lerp(0.1f, 1f, invincibleRatio), MathF.Log((MathF.E - 1) * invincibleRatio + 1));
+            int newLife = (int)MathHelper.Lerp(NPC.life, NPC.lifeMax * MathHelper.Lerp(0.1f, 1f, invincibleRatio), TOMathHelper.LogarithmicInterpolation(invincibleRatio));
             int increasedLife = Math.Clamp(newLife - NPC.life, 0, NPC.lifeMax - NPC.life);
 
             if (increasedLife > 0)
@@ -2645,7 +2644,7 @@ public sealed class Yharon_Tweak : CANPCTweak<Yharon>
     }
 }
 
-public sealed class Yharon_Detour : CAModNPCDetour<Yharon>
+public sealed class Yharon_Detour : ModNPCDetour<Yharon>
 {
     public override void Detour_SetDefaults(Orig_SetDefaults orig, Yharon self)
     {

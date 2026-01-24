@@ -4,6 +4,32 @@ namespace Transoceanic.Utilities;
 
 public static class TOReflectionUtils
 {
+    public static Assembly Assembly => field ??= TOMain.Instance.Code;
+    public static Assembly TerrariaAssembly => field ??= typeof(Main).Assembly;
+    public static Dictionary<string, Type[]> TerrariaTypes => field ??= TerrariaAssembly.GetTypes().GroupBy(t => t.Name).ToDictionary(g => g.Key, g => g.ToArray());
+    public static Dictionary<string, Type> TerrariaTypesByFullName => field ??= TerrariaAssembly.GetTypes().ToDictionary(t => t.FullName, t => t);
+
+    public static Type GetTerrariaType(string typeName)
+    {
+        if (TerrariaTypes.TryGetValue(typeName, out Type[] types))
+        {
+            if (types.Length == 1)
+                return types[0];
+            else
+                throw new ArgumentException($"More than one Terraria types '{typeName}' has been found.", nameof(typeName));
+        }
+        else
+            throw new ArgumentException($"Type '{typeName}' not found in Terraria types.", nameof(typeName));
+    }
+
+    public static Type GetTerrariaTypeByFullName(string fullTypeName)
+    {
+        if (TerrariaTypesByFullName.TryGetValue(fullTypeName, out Type type))
+            return type;
+        else
+            throw new ArgumentException($"Type '{fullTypeName}' not found in Terraria types.", nameof(fullTypeName));
+    }
+
     /// <summary>
     /// 包含所有所需Flag。
     /// </summary>
@@ -173,19 +199,6 @@ public static class TOReflectionUtils
         where attribute is not null
         select (method, attribute);
 
-    public static Type GetTerrariaType(string typeName)
-    {
-        if (TOMain.TerrariaTypes.TryGetValue(typeName, out Type[] types))
-        {
-            if (types.Length == 1)
-                return types[0];
-            else
-                throw new ArgumentException($"More than one Terraria types '{typeName}' has been found.", nameof(typeName));
-        }
-        else
-            throw new ArgumentException($"Type '{typeName}' not found in Terraria types.", nameof(typeName));
-    }
-
     public static void SetStructField<T>(ref T target, FieldInfo field, object value) where T : struct
     {
         object boxed = target;
@@ -211,4 +224,53 @@ public static class TOReflectionUtils
     }
 
     public static Delegate CreateMethodDelegate(MethodInfo method) => Delegate.CreateDelegate(GetDelegateType(method), method);
+
+    public static object GetDefaultValue(Type type)
+    {
+        return (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)) || !type.IsValueType ? null : Activator.CreateInstance(type);
+    }
+
+    public static bool TryAssignSingleInstance(object instance)
+    {
+        ArgumentNullException.ThrowIfNull(instance);
+
+        Type instanceType = instance.GetType();
+
+        FieldInfo instanceField = instanceType.GetField("Instance", StaticBindingFlags);
+        if (instanceField is not null && instanceField.FieldType.IsAssignableFrom(instanceType))
+        {
+            instanceField.SetValue(null, instance);
+            return true;
+        }
+
+        PropertyInfo instanceProperty = instanceType.GetProperty("Instance", StaticBindingFlags);
+        if (instanceProperty is not null && instanceProperty.CanWrite && instanceProperty.PropertyType.IsAssignableFrom(instanceType))
+        {
+            instanceProperty.SetValue(null, instance);
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool TryResetSingleInstance(Type type)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+
+        FieldInfo instanceField = type.GetField("Instance", StaticBindingFlags);
+        if (instanceField is not null)
+        {
+            instanceField.SetValue(null, GetDefaultValue(instanceField.FieldType));
+            return true;
+        }
+
+        PropertyInfo instanceProperty = type.GetProperty("Instance", StaticBindingFlags);
+        if (instanceProperty is not null)
+        {
+            instanceProperty.SetValue(null, GetDefaultValue(instanceProperty.PropertyType));
+            return true;
+        }
+
+        return false;
+    }
 }

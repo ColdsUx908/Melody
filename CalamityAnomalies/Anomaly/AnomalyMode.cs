@@ -135,11 +135,8 @@ public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizati
 
     void IResourceLoader.PostSetupContent()
     {
-        if (CAServerConfig.Instance.Contents)
-        {
-            DifficultyModeSystem.Difficulties.Add(AnomalyMode.Instance = new());
-            DifficultyModeSystem.CalculateDifficultyData();
-        }
+        DifficultyModeSystem.Difficulties.Add(AnomalyMode.Instance = new());
+        DifficultyModeSystem.CalculateDifficultyData();
     }
 
     void IResourceLoader.OnModUnload()
@@ -150,7 +147,7 @@ public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizati
     }
 }
 
-public sealed class AnomalyModePlayerSync : CAPlayerBehavior2
+public sealed class AnomalyModePlayerSync : CAPlayerBehavior
 {
     public override decimal Priority => 100m;
 

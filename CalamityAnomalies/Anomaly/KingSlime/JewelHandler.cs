@@ -1,11 +1,12 @@
 ﻿using CalamityAnomalies.Assets.Textures;
 using CalamityAnomalies.GameContents;
+using CalamityAnomalies.Publicizer.CalamityMod;
 using CalamityMod.NPCs.NormalNPCs;
 using CalamityMod.Particles;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
-public static class JewelHandler
+public sealed class JewelHandler : IResourceLoader
 {
     public const string JewelTexturePath = "CalamityMod/NPCs/NormalNPCs/KingSlimeJewel";
 
@@ -199,4 +200,31 @@ public static class JewelHandler
         6 => DustID.GemAmber,
         _ => DustID.TintableDust
     };
+
+    void IResourceLoader.PostSetupContent()
+    {
+        SortedDictionary<Tuple<int, int>, int[]> damageValues = NPCStats_EnemyStats_Publicizer.ProjectileDamageValues;
+
+        damageValues.Add(Tuple.Create(ModContent.NPCType<KingSlimeJewelEmerald>(), ModContent.ProjectileType<KingSlimeJewelEmeraldClone>()), [30, 44, 60, 76, 114]);
+        damageValues.Add(Tuple.Create(ModContent.NPCType<KingSlimeJewelRuby>(), ModContent.ProjectileType<KingSlimeJewelEmeraldClone>()), [30, 44, 60, 76, 114]);
+        damageValues.Add(Tuple.Create(ModContent.NPCType<KingSlimeJewelRainbow>(), ModContent.ProjectileType<JewelProjectileRainbow>()), [32, 45, 55, 65, 105]);
+        damageValues.Add(Tuple.Create(ModContent.NPCType<KingSlimeJewelRainbow>(), ModContent.ProjectileType<RainbowExplosion>()), [1, 2, 3, 4, 5]);
+    }
+}
+
+public abstract class KingSlimeJewel_Anomaly<TJewel> : AnomalyNPCBehavior<TJewel> where TJewel : ModNPC
+{
+    public const float DespawnDistance = 5000f;
+
+    public bool HasEnteredPhase2
+    {
+        get => NPC.ai[2] == 1f;
+        set => NPC.ai[2] = value.ToInt();
+    }
+
+    public bool CanAttack
+    {
+        get => NPC.ai[3] != 1f;
+        set => NPC.ai[3] = (!value).ToInt();
+    }
 }

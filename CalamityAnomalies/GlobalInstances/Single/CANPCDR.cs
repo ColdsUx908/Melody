@@ -3,7 +3,7 @@ using CalamityMod.NPCs.Providence;
 
 namespace CalamityAnomalies.GlobalInstances.Single;
 
-public sealed class CANPCDR : CAGlobalNPCBehavior2, IResourceLoader
+public sealed class CANPCDR : CAGlobalNPCBehavior, IResourceLoader
 {
     public delegate void Orig_ApplyDR(CalamityGlobalNPC self, NPC npc, ref NPC.HitModifiers modifiers);
 
@@ -87,8 +87,7 @@ public sealed class CANPCDR : CAGlobalNPCBehavior2, IResourceLoader
     void IResourceLoader.PostSetupContent()
     {
         Type type = typeof(CalamityGlobalNPC);
-        if (CAServerConfig.Instance.Contents)
-            TODetourUtils.Modify(type, "ApplyDR", Detour_ApplyDR);
+        TODetourUtils.Modify(type, "ApplyDR", Detour_ApplyDR);
         OrigMethod_CustomDRMath = type.GetMethod("CustomDRMath", TOReflectionUtils.UniversalBindingFlags).CreateDelegate<Orig_DRMath>();
         OrigMethod_DefaultDRMath = type.GetMethod("DefaultDRMath", TOReflectionUtils.UniversalBindingFlags).CreateDelegate<Orig_DRMath>();
     }

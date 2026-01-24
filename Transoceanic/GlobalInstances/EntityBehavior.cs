@@ -13,9 +13,19 @@ namespace Transoceanic.GlobalInstances;
 [AttributeUsage(AttributeTargets.Class, Inherited = true)]
 public sealed class CriticalBehaviorAttribute : Attribute;
 
-public abstract class EntityBehavior<TEntity> where TEntity : Entity
+public abstract class EntityBehavior;
+
+public abstract class EntityBehavior<TEntity> : EntityBehavior where TEntity : Entity
 {
-    protected internal TEntity _entity;
+    /// <summary>
+    /// 存储当前行为所连接的实体实例。
+    /// </summary>
+    /// <remarks>
+    /// 注意：正常情况下，此字段仅在通过 <see cref="SimpleEntityBehaviorSet{TEntity, TBehavior}.GetBehaviors(TEntity, string)"/> 等方法获取行为实例时被赋值。
+    /// <br/>如果直接实例化行为类，则需要手动为此字段赋值，否则在行为方法中访问此字段会导致 <see cref="NullReferenceException"/> 异常。
+    /// <br/>如果须在外部对此字段赋值，请务必谨慎。
+    /// </remarks>
+    public TEntity _entity;
 
     public abstract Mod Mod { get; }
 
@@ -55,149 +65,168 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
     where TEntity : Entity
     where TBehavior : EntityBehavior<TEntity>
 {
-    public readonly ref struct BehaviorFilter
+    public readonly ref struct BehaviorProcesser
     {
-        public static BehaviorFilter Empty => new([]);
+        public static BehaviorProcesser Empty => new([]);
 
         private readonly Span<TBehavior> _span;
 
-        public BehaviorFilter(Span<TBehavior> span) => _span = span;
+        public BehaviorProcesser(Span<TBehavior> span) => _span = span;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Enumerator GetEnumerator() => new(this);
 
         public ref struct Enumerator
         {
             private Span<TBehavior>.Enumerator _enumerator;
+            private TBehavior _current;
+            public readonly TBehavior Current { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _current; }
 
-            public Enumerator(BehaviorFilter filter) => _enumerator = filter._span.GetEnumerator();
-
-            public ref TBehavior Current => ref _enumerator.Current;
+            public Enumerator(BehaviorProcesser processer) => _enumerator = processer._span.GetEnumerator();
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool MoveNext()
             {
                 while (_enumerator.MoveNext())
                 {
-                    if (Current.ShouldProcess)
-                        return true;
-                }
-                return false;
-            }
-        }
-    }
-
-    public readonly ref struct ConnectedBehaviorFilter //这个直接设置_entity字段的行为很丑陋，但是性能要求不得不这样做，下同
-    {
-        public static ConnectedBehaviorFilter Empty => new([], null);
-
-        private readonly Span<TBehavior> _span;
-        private readonly TEntity _entity;
-
-        public ConnectedBehaviorFilter(Span<TBehavior> span, TEntity entity)
-        {
-            _span = span;
-            _entity = entity;
-        }
-
-        public Enumerator GetEnumerator() => new(this);
-
-        public ref struct Enumerator
-        {
-            private Span<TBehavior>.Enumerator _enumerator;
-            private readonly TEntity _entity;
-
-            public Enumerator(ConnectedBehaviorFilter filter)
-            {
-                _enumerator = filter._span.GetEnumerator();
-                _entity = filter._entity;
-            }
-
-            public ref TBehavior Current => ref _enumerator.Current;
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool MoveNext()
-            {
-                while (_enumerator.MoveNext())
-                {
-                    Current._entity = _entity;
-                    if (Current.ShouldProcess)
-                        return true;
-                }
-                return false;
-            }
-        }
-    }
-
-    public readonly ref struct TypedBehaviorFilter<T> where T : TBehavior
-    {
-        public static TypedBehaviorFilter<T> Empty => new([]);
-
-        private readonly Span<TBehavior> _span;
-
-        public TypedBehaviorFilter(Span<TBehavior> span) => _span = span;
-
-        public Enumerator GetEnumerator() => new(this);
-
-        public ref struct Enumerator
-        {
-            private Span<TBehavior>.Enumerator _enumerator;
-
-            public Enumerator(TypedBehaviorFilter<T> filter) => _enumerator = filter._span.GetEnumerator();
-
-            public T Current => _enumerator.Current as T;
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool MoveNext()
-            {
-                while (_enumerator.MoveNext())
-                {
-                    if (Current?.ShouldProcess == true)
-                        return true;
-                }
-                return false;
-            }
-        }
-    }
-
-    public readonly ref struct TypedConnectedBehaviorFilter<T> where T : TBehavior
-    {
-        public static TypedConnectedBehaviorFilter<T> Empty => new([], null);
-
-        private readonly Span<TBehavior> _span;
-        private readonly TEntity _entity;
-
-        public TypedConnectedBehaviorFilter(Span<TBehavior> span, TEntity entity)
-        {
-            _span = span;
-            _entity = entity;
-        }
-
-        public Enumerator GetEnumerator() => new(this);
-
-        public ref struct Enumerator
-        {
-            private Span<TBehavior>.Enumerator _enumerator;
-            private readonly TEntity _entity;
-
-            public Enumerator(TypedConnectedBehaviorFilter<T> filter)
-            {
-                _enumerator = filter._span.GetEnumerator();
-                _entity = filter._entity;
-            }
-
-            public TBehavior Current => _enumerator.Current as T;
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool MoveNext()
-            {
-                while (_enumerator.MoveNext())
-                {
-                    TBehavior current = Current;
-                    if (current is not null)
+                    TBehavior temp = _enumerator.Current;
+                    if (temp.ShouldProcess)
                     {
-                        current._entity = _entity;
-                        if (current.ShouldProcess)
+                        _current = temp;
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+    }
+
+    public readonly ref struct ConnectedBehaviorProcesser //这个直接设置_entity字段的行为很丑陋，但是性能要求不得不这样做，下同
+    {
+        public static ConnectedBehaviorProcesser Empty => new([], null);
+
+        private readonly Span<TBehavior> _span;
+        private readonly TEntity _entity;
+
+        public ConnectedBehaviorProcesser(Span<TBehavior> span, TEntity entity)
+        {
+            _span = span;
+            _entity = entity;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Enumerator GetEnumerator() => new(this);
+
+        public ref struct Enumerator
+        {
+            private Span<TBehavior>.Enumerator _enumerator;
+            private readonly TEntity _entity;
+            private TBehavior _current;
+            public readonly TBehavior Current { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _current; }
+
+            public Enumerator(ConnectedBehaviorProcesser processer)
+            {
+                _enumerator = processer._span.GetEnumerator();
+                _entity = processer._entity;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                while (_enumerator.MoveNext())
+                {
+                    TBehavior temp = _enumerator.Current;
+                    temp._entity = _entity;
+                    if (temp.ShouldProcess)
+                    {
+                        _current = temp;
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+    }
+
+    public readonly ref struct TypedBehaviorProcesser<T> where T : TBehavior
+    {
+        public static TypedBehaviorProcesser<T> Empty => new([]);
+
+        private readonly Span<TBehavior> _span;
+
+        public TypedBehaviorProcesser(Span<TBehavior> span) => _span = span;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Enumerator GetEnumerator() => new(this);
+
+        public ref struct Enumerator
+        {
+            private Span<TBehavior>.Enumerator _enumerator;
+            private T _current;
+            public readonly T Current { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _current; }
+
+            public Enumerator(TypedBehaviorProcesser<T> processer) => _enumerator = processer._span.GetEnumerator();
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                while (_enumerator.MoveNext())
+                {
+                    T temp = _enumerator.Current as T;
+                    if (temp?.ShouldProcess == true)
+                    {
+                        _current = temp;
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+    }
+
+    public readonly ref struct TypedConnectedBehaviorProcesser<T> where T : TBehavior
+    {
+        public static TypedConnectedBehaviorProcesser<T> Empty => new([], null);
+
+        private readonly Span<TBehavior> _span;
+        private readonly TEntity _entity;
+
+        public TypedConnectedBehaviorProcesser(Span<TBehavior> span, TEntity entity)
+        {
+            _span = span;
+            _entity = entity;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Enumerator GetEnumerator() => new(this);
+
+        public ref struct Enumerator
+        {
+            private Span<TBehavior>.Enumerator _enumerator;
+            private readonly TEntity _entity;
+            private T _current;
+            public readonly T Current { [MethodImpl(MethodImplOptions.AggressiveInlining)] get => _current; }
+
+            public Enumerator(TypedConnectedBehaviorProcesser<T> processer)
+            {
+                _enumerator = processer._span.GetEnumerator();
+                _entity = processer._entity;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                while (_enumerator.MoveNext())
+                {
+                    T temp = _enumerator.Current as T;
+                    if (temp is not null)
+                    {
+                        temp._entity = _entity;
+                        if (temp.ShouldProcess)
+                        {
+                            _current = temp;
                             return true;
+                        }
                     }
                 }
                 return false;
@@ -209,23 +238,25 @@ public class SimpleEntityBehaviorSet<TEntity, TBehavior>
 
     public void Clear() => _data.Clear();
 
+    public void FillSet(IEnumerable<TBehavior> behaviors) => Initialize(behaviors);
+
     public void FillSet() => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>());
 
     public void FillSet(Assembly assemblyToSearch) => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>(assemblyToSearch));
 
     public void FillSet<T>() where T : Mod => Initialize(TOReflectionUtils.GetTypeInstancesDerivedFrom<TBehavior>().Where(b => b.Mod is T));
 
-    public BehaviorFilter GetBehaviors([CallerMemberName] string methodName = null) =>
-        _data.TryGetValue(methodName, out TBehavior[] behaviors) ? new(behaviors) : BehaviorFilter.Empty;
+    public BehaviorProcesser GetBehaviors([CallerMemberName] string methodName = null) =>
+        _data.TryGetValue(methodName, out TBehavior[] behaviors) ? new(behaviors) : BehaviorProcesser.Empty;
 
-    public ConnectedBehaviorFilter GetBehaviors(TEntity entity, [CallerMemberName] string methodName = null) =>
-        _data.TryGetValue(methodName, out TBehavior[] behaviors) ? new(behaviors, entity) : ConnectedBehaviorFilter.Empty;
+    public ConnectedBehaviorProcesser GetBehaviors(TEntity entity, [CallerMemberName] string methodName = null) =>
+        _data.TryGetValue(methodName, out TBehavior[] behaviors) ? new(behaviors, entity) : ConnectedBehaviorProcesser.Empty;
 
-    public TypedBehaviorFilter<T> GetBehaviors<T>([CallerMemberName] string methodName = null) where T : TBehavior =>
-        _data.TryGetValue(methodName, out TBehavior[] behaviors) ? new(behaviors) : TypedBehaviorFilter<T>.Empty;
+    public TypedBehaviorProcesser<T> GetBehaviors<T>([CallerMemberName] string methodName = null) where T : TBehavior =>
+        _data.TryGetValue(methodName, out TBehavior[] behaviors) ? new(behaviors) : TypedBehaviorProcesser<T>.Empty;
 
-    public TypedConnectedBehaviorFilter<T> GetBehaviors<T>(TEntity entity, [CallerMemberName] string methodName = null) where T : TBehavior =>
-        _data.TryGetValue(methodName, out TBehavior[] behaviors) ? new(behaviors, entity) : TypedConnectedBehaviorFilter<T>.Empty;
+    public TypedConnectedBehaviorProcesser<T> GetBehaviors<T>(TEntity entity, [CallerMemberName] string methodName = null) where T : TBehavior =>
+        _data.TryGetValue(methodName, out TBehavior[] behaviors) ? new(behaviors, entity) : TypedConnectedBehaviorProcesser<T>.Empty;
 
     /// <summary>
     /// 按照 <see cref="EntityBehavior{TEntity}.Priority"/> 降序寻找通过 <see cref="SingleEntityBehavior{TEntity}.ShouldProcess"/> 检测且实现了指定方法的Override实例。
@@ -1521,29 +1552,66 @@ public abstract class SingleNPCBehavior : SingleEntityBehavior<NPC>
         get => OceanNPC.Timer1;
         set => OceanNPC.Timer1 = value;
     }
-
     public int Timer2
     {
         get => OceanNPC.Timer2;
         set => OceanNPC.Timer2 = value;
     }
-
     public int Timer3
     {
         get => OceanNPC.Timer3;
         set => OceanNPC.Timer3 = value;
     }
-
     public float Timer4
     {
         get => OceanNPC.Timer4;
         set => OceanNPC.Timer4 = value;
     }
-
     public float Timer5
     {
         get => OceanNPC.Timer5;
         set => OceanNPC.Timer5 = value;
+    }
+
+    public Union32 AI_Union_0
+    {
+        get => (Union32)NPC.ai[0];
+        set => NPC.ai[0] = value.f;
+    }
+    public Union32 AI_Union_1
+    {
+        get => (Union32)NPC.ai[1];
+        set => NPC.ai[1] = value.f;
+    }
+    public Union32 AI_Union_2
+    {
+        get => (Union32)NPC.ai[2];
+        set => NPC.ai[2] = value.f;
+    }
+    public Union32 AI_Union_3
+    {
+        get => (Union32)NPC.ai[3];
+        set => NPC.ai[3] = value.f;
+    }
+    public Union32 LocalAI_Union_0
+    {
+        get => (Union32)NPC.localAI[0];
+        set => NPC.localAI[0] = value.f;
+    }
+    public Union32 LocalAI_Union_1
+    {
+        get => (Union32)NPC.localAI[1];
+        set => NPC.localAI[1] = value.f;
+    }
+    public Union32 LocalAI_Union_2
+    {
+        get => (Union32)NPC.localAI[2];
+        set => NPC.localAI[2] = value.f;
+    }
+    public Union32 LocalAI_Union_3
+    {
+        get => (Union32)NPC.localAI[3];
+        set => NPC.localAI[3] = value.f;
     }
 
     #region 虚成员
@@ -1815,6 +1883,37 @@ public abstract class SingleProjectileBehavior : SingleEntityBehavior<Projectile
     {
         get => OceanProjectile.Timer5;
         set => OceanProjectile.Timer5 = value;
+    }
+
+    public Union32 AI_Union_0
+    {
+        get => (Union32)Projectile.ai[0];
+        set => Projectile.ai[0] = value.f;
+    }
+    public Union32 AI_Union_1
+    {
+        get => (Union32)Projectile.ai[0];
+        set => Projectile.ai[0] = value.f;
+    }
+    public Union32 AI_Union_2
+    {
+        get => (Union32)Projectile.ai[0];
+        set => Projectile.ai[0] = value.f;
+    }
+    public Union32 LocalAI_Union_0
+    {
+        get => (Union32)Projectile.localAI[0];
+        set => Projectile.localAI[0] = value.f;
+    }
+    public Union32 LocalAI_Union_1
+    {
+        get => (Union32)Projectile.localAI[1];
+        set => Projectile.localAI[1] = value.f;
+    }
+    public Union32 LocalAI_Union_2
+    {
+        get => (Union32)Projectile.localAI[2];
+        set => Projectile.localAI[2] = value.f;
     }
 
     #region 虚成员
@@ -3865,7 +3964,7 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
 #endregion Single Behavior Handler
 
 #region General Behavior Handler
-public sealed class PlayerBehaviorHandler : ModPlayer, IResourceLoader
+public sealed class PlayerBehaviorHandler : ModPlayer
 {
     public static readonly GeneralEntityBehaviorSet<Player, PlayerBehavior> BehaviorSet = new();
 
@@ -4767,13 +4866,9 @@ public sealed class PlayerBehaviorHandler : ModPlayer, IResourceLoader
         foreach (PlayerBehavior behavior in BehaviorSet.GetBehaviors(Player))
             behavior.OnEquipmentLoadoutSwitched(oldLoadoutIndex, loadoutIndex);
     }
-
-    void IResourceLoader.PostSetupContent() => BehaviorSet.FillSet();
-
-    void IResourceLoader.OnModUnload() => BehaviorSet.Clear();
 }
 
-public sealed class GlobalNPCBehaviorHandler : GlobalNPC, IResourceLoader
+public sealed class GlobalNPCBehaviorHandler : GlobalNPC
 {
     public override bool InstancePerEntity => true;
 
@@ -4825,6 +4920,14 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC, IResourceLoader
     {
         foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
             behavior.ModifyHoverBoundingBox(npc, ref boundingBox);
+    }
+
+    public override bool PreHoverInteract(NPC npc, bool mouseIntersects)
+    {
+        bool result = true;
+        foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
+            result &= behavior.PreHoverInteract(npc, mouseIntersects);
+        return result;
     }
 
     public override ITownNPCProfile ModifyTownNPCProfile(NPC npc)
@@ -5379,13 +5482,9 @@ public sealed class GlobalNPCBehaviorHandler : GlobalNPC, IResourceLoader
         foreach (GlobalNPCBehavior behavior in BehaviorSet.GetBehaviors())
             behavior.EmoteBubblePosition(npc, ref position, ref spriteEffects);
     }
-
-    void IResourceLoader.PostSetupContent() => BehaviorSet.FillSet();
-
-    void IResourceLoader.OnModUnload() => BehaviorSet.Clear();
 }
 
-public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile, IResourceLoader
+public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile
 {
     public override bool InstancePerEntity => true;
 
@@ -5694,13 +5793,9 @@ public sealed class GlobalProjectileBehaviorHandler : GlobalProjectile, IResourc
         foreach (GlobalProjectileBehavior behavior in BehaviorSet.GetBehaviors())
             behavior.EmitEnchantmentVisualsAt(projectile, boxPosition, boxWidth, boxHeight);
     }
-
-    void IResourceLoader.PostSetupContent() => BehaviorSet.FillSet();
-
-    void IResourceLoader.OnModUnload() => BehaviorSet.Clear();
 }
 
-public sealed class GlobalItemBehaviorHandler : GlobalItem, IResourceLoader
+public sealed class GlobalItemBehaviorHandler : GlobalItem
 {
     public override bool InstancePerEntity => true;
 
@@ -6552,9 +6647,29 @@ public sealed class GlobalItemBehaviorHandler : GlobalItem, IResourceLoader
             //    behavior.NetReceive(item, reader);
         }
     }
+}
 
-    void IResourceLoader.PostSetupContent() => BehaviorSet.FillSet();
+public sealed class BehaviorLoader : IResourceLoader
+{
+    private static IEnumerable<EntityBehavior> _allBehaviors;
 
-    void IResourceLoader.OnModUnload() => BehaviorSet.Clear();
+    void IResourceLoader.PostSetupContent()
+    {
+        _allBehaviors = TOReflectionUtils.GetTypeInstancesDerivedFrom<EntityBehavior>();
+
+        PlayerBehaviorHandler.BehaviorSet.FillSet(_allBehaviors.OfType<PlayerBehavior>());
+        GlobalNPCBehaviorHandler.BehaviorSet.FillSet(_allBehaviors.OfType<GlobalNPCBehavior>());
+        GlobalProjectileBehaviorHandler.BehaviorSet.FillSet(_allBehaviors.OfType<GlobalProjectileBehavior>());
+        GlobalItemBehaviorHandler.BehaviorSet.FillSet(_allBehaviors.OfType<GlobalItemBehavior>());
+    }
+    void IResourceLoader.OnModUnload()
+    {
+        PlayerBehaviorHandler.BehaviorSet.Clear();
+        GlobalNPCBehaviorHandler.BehaviorSet.Clear();
+        GlobalProjectileBehaviorHandler.BehaviorSet.Clear();
+        GlobalItemBehaviorHandler.BehaviorSet.Clear();
+
+        _allBehaviors = null;
+    }
 }
 #endregion General Behavior Handler

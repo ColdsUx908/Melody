@@ -51,7 +51,7 @@ public sealed class CelestialOnion_Tweak : CAItemTweak<CelestialOnion>
 
 public sealed class CelestialOnion_AccessorySlot : ModAccessorySlot
 {
-    public override bool IsEnabled() => CAServerConfig.Instance.Contents && !Main.gameMenu && Player.Calamity().extraAccessoryML;
+    public override bool IsEnabled() => !Main.gameMenu && Player.Calamity().extraAccessoryML;
 
     public override bool IsHidden() => IsEmpty && !IsEnabled();
 }

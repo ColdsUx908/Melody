@@ -40,6 +40,14 @@ public static class TOMathHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float ParabolicInterpolation(float ratio) => ratio * (2f - ratio);
 
+    /// <summary>
+    /// 对数插值。
+    /// <br/>计算公式为：<c>y = ln((e - 1) * x + 1)</c>
+    /// </summary>
+    /// <param name="ratio">输入的自变量x。</param>
+    /// <returns>对数插值结果y。</returns>
+    public static float LogarithmicInterpolation(float ratio) => MathF.Log((MathF.E - 1f) * ratio + 1f);
+
     public static T Min<T>(T value, params ReadOnlySpan<T> values) where T : INumber<T>
     {
         foreach (T temp in values)

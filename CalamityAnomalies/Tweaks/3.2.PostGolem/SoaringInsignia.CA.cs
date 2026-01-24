@@ -23,7 +23,7 @@ public sealed class SoaringInsignia_Tweak : CAItemTweak
     }
 }
 
-public sealed class SoaringInsignia_Player : CAPlayerBehavior2
+public sealed class SoaringInsignia_Player : CAPlayerBehavior
 {
     public override void PostUpdateMiscEffects()
     {
@@ -38,7 +38,7 @@ public sealed class SoaringInsignia_Player : CAPlayerBehavior2
     }
 }
 
-public sealed class SoaringInsignia_CalamityPlayer : CACalamityPlayerDetour
+public sealed class SoaringInsignia_CalamityPlayer : CalamityPlayerDetour
 {
     public override void Detour_OtherBuffEffects(Orig_OtherBuffEffects orig, CalamityPlayer self)
     {

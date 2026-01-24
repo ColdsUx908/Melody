@@ -1,10 +1,10 @@
 ﻿using CalamityMod.NPCs.NormalNPCs;
+using CalamityMod.Projectiles.Boss;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
-public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEmerald>
+public class KingSlimeJewelEmerald_Anomaly : KingSlimeJewel_Anomaly<KingSlimeJewelEmerald>
 {
-    #region 数据
     public enum Behavior
     {
         Despawn = -1,
@@ -13,11 +13,10 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
         Charge = 1,
     }
 
-    public const float DespawnDistance = 5000f;
     public int ChargeCooldownTime => HasEnteredPhase2 ? 210 : 150;
     public int ChargePreparationTime => HasEnteredPhase2 ? 75 : 60;
     public static int ChargeTime => 60;
-    public float ChargeSpeed => HasEnteredPhase2 ? 24f : 28f;
+    public float ChargeSpeed => CAWorld.AnomalyUltramundane ? (HasEnteredPhase2 ? 24f : 28f) : (HasEnteredPhase2 ? 18f : 22f);
 
     public Behavior CurrentAttack
     {
@@ -31,19 +30,6 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
         set => NPC.ai[1] = value;
     }
 
-    public bool HasEnteredPhase2
-    {
-        get => NPC.ai[2] == 1f;
-        set => NPC.ai[2] = value.ToInt();
-    }
-
-    public bool CanAttack
-    {
-        get => NPC.ai[3] != 1f;
-        set => NPC.ai[3] = (!value).ToInt();
-    }
-    #endregion 数据
-
     public override void SetDefaults()
     {
         NPC.lifeMax = (int)(NPC.lifeMax * 0.5f);
@@ -55,7 +41,6 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
     {
         if (!OceanNPC.TryGetMaster(NPCID.KingSlime, out NPC master))
         {
-            CurrentAttack = Behavior.Despawn;
             JewelHandler.Despawn(NPC);
             return false;
         }
@@ -66,9 +51,8 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
             return false;
         }
 
-        Lighting.AddLight(NPC.Center, 0f, 1f, 0f);
-
         NPC.damage = 0;
+        Lighting.AddLight(NPC.Center, 0f, 1f, 0f);
 
         switch (CurrentAttack)
         {
@@ -131,14 +115,7 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
                     else //冲刺
                     {
                         Timer1 = 0;
-                        for (int i = 0; i < 10; i++)
-                            JewelHandler.SpawnParticle(NPC, Main.rand.NextFloat(4f, 7f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
-                        SoundEngine.PlaySound(SoundID.Item38, NPC.Center);
-                        NPC.damage = NPC.defDamage;
-                        NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, ChargeSpeed), MathHelper.PiOver2);
-                        NPC.netSpam = 0;
-                        CurrentAttackPhase = 1;
-                        NPC.netUpdate = true;
+                        ChargeBehavior();
                     }
                     break;
                 case 1: //冲刺中
@@ -164,6 +141,55 @@ public class KingSlimeJewelEmerald_Anomaly : AnomalyNPCBehavior<KingSlimeJewelEm
                     else
                         NPC.damage = NPC.defDamage;
                     break;
+            }
+
+            void ChargeBehavior()
+            {
+                KingSlime_Anomaly kingSlimeBehavior = new() { _entity = master };
+                bool validSapphire = !HasEnteredPhase2 && kingSlimeBehavior.JewelSapphireAlive;
+                NPC sapphire = validSapphire ? kingSlimeBehavior.JewelSapphire : null;
+
+                SoundEngine.PlaySound(SoundID.Item38, NPC.Center);
+                int particleAmount = HasEnteredPhase2 ? 10 : 15;
+                if (validSapphire)
+                    particleAmount += 25;
+                for (int i = 0; i < particleAmount; i++)
+                    JewelHandler.SpawnParticle(NPC, Main.rand.NextFloat(4f, 7f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
+
+                NPC.damage = NPC.defDamage;
+
+                float chargeSpeed = ChargeSpeed;
+                if (validSapphire)
+                    chargeSpeed *= 1.2f;
+
+                NPC.SetVelocityandRotation(NPC.GetVelocityTowards(Target, chargeSpeed), MathHelper.PiOver2);
+                NPC.netSpam = 0;
+
+                if (TOWorld.GeneralClient && validSapphire)
+                {
+                    JewelHandler.CreateDustFromJewelTo(sapphire, NPC.Center, Main.zenithWorld ? DustID.GemTopaz : DustID.GemSapphire);
+
+                    int type = Main.zenithWorld ? ModContent.ProjectileType<JewelProjectile>() : ModContent.ProjectileType<KingSlimeJewelEmeraldClone>();
+                    int damage = NPC.GetProjectileDamage(type);
+                    if (CAWorld.AnomalyUltramundane)
+                        damage *= 2;
+                    Vector2 velocityUnit = NPC.GetVelocityTowards(NPC.PlayerTarget, 1f);
+                    Vector2 offset = velocityUnit.RotatedBy(MathHelper.PiOver2);
+                    int amount = CAWorld.AnomalyUltramundane ? 4 : 3;
+                    for (int i = -amount; i <= amount; i++)
+                    {
+                        Projectile.NewProjectileAction(NPC.GetSource_FromAI(), NPC.Center + offset * 24f * i + velocityUnit * (60f - 20f * Math.Abs(i)), velocityUnit * chargeSpeed, type, damage, 0f, Main.myPlayer, p =>
+                        {
+                            if (Main.zenithWorld)
+                                p.timeLeft = 60;
+                            else
+                                p.VelocityToRotation(MathHelper.PiOver2);
+                        });
+                    }
+                }
+
+                CurrentAttackPhase = 1;
+                NPC.netUpdate = true;
             }
         }
     }

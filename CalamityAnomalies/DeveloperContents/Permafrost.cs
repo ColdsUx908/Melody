@@ -102,7 +102,7 @@ public sealed class Permafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocaliz
 
     public override decimal Priority => 935m; //ICE
 
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents && (ModNPC?.permafrost ?? false);
+    public override bool ShouldProcess => ModNPC?.permafrost ?? false;
 
     public override void OnSpawn(IEntitySource source)
     {
@@ -444,7 +444,7 @@ public sealed class PermafrostRitualDrama : CASingleProjectileBehavior<SCalRitua
 
     public override decimal Priority => 935m; //ICE
 
-    public override bool ShouldProcess => CAServerConfig.Instance.Contents && Projectile.ai[1] == 1f; //将召唤永冻的弹幕
+    public override bool ShouldProcess => Projectile.ai[1] == 1f; //将召唤永冻的弹幕
 
     public override bool PreAI()
     {

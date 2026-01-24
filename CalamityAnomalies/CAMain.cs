@@ -77,7 +77,7 @@ public sealed class CAMain : Mod, IResourceLoader
 
     public override void PostSetupContent()
     {
-        //TOMain.SyncEnabled = true;
+        TOMain.SyncEnabled = true;
     }
 
     public override void Unload()

@@ -5,7 +5,7 @@
  * NPC具有此减益时视为对所有属性减益具有弱性。
  */
 
-public sealed class MiracleBlight_GlobalNPC : CAGlobalNPCDetour<CalamityGlobalNPC>
+public sealed class MiracleBlight_GlobalNPC : GlobalNPCDetour<CalamityGlobalNPC>
 {
     public override void Detour_UpdateLifeRegen(Orig_UpdateLifeRegen orig, CalamityGlobalNPC self, NPC npc, ref int damage)
     {

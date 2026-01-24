@@ -27,6 +27,11 @@ AnomalyMode: {
 KingSlime: {
 	GFBSummon: 史莱姆王克隆了自己！
 	KingSlimeJewelRainbow.DisplayName: 王冠彩虹宝石
-	RainbowShield.DisplayName: 彩虹护盾
+	RainbowExplosion.DisplayName: 彩虹冲击波
 	JewelProjectileRainbow.DisplayName: 彩虹弹幕
+}
+
+EyeofCthulhu: {
+	GFBBlood: ""
+	BloodlettingServantNew.DisplayName: 流血仆从
 }

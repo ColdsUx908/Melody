@@ -25,7 +25,6 @@ public sealed class CalamityILChangesDetour : ICALoader
 
     void ICALoader.Load()
     {
-        if (CAServerConfig.Instance.Contents)
-            TODetourUtils.ApplyAllStaticMethodDetoursOfType(GetType(), typeof(ILChanges));
+        TODetourUtils.ApplyAllStaticMethodDetoursOfType(GetType(), typeof(ILChanges));
     }
 }

@@ -106,7 +106,7 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
 
     public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, Color newColor) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_nextCATooltipIndex}"), newColor);
 
-    public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, Color newColor, params object[] args) => AddCATooltip(localizationPrefixProvider.GetTextFormat($"{CATooltip}{_nextCATooltipIndex}", args), newColor);
+    public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, Color newColor, params object[] args) => AddCATooltip(localizationPrefixProvider.GetTextFormat($"{CATooltip}{_nextCATooltipNum}", args), newColor);
 
     public CAItemTooltipModifier AddCATweakTooltip(string text) => AddCATooltip(text, CAMain.GetGradientColor(0.25f));
 

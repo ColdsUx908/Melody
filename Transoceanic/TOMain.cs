@@ -58,7 +58,7 @@ public sealed class TOMain : Mod
             Instance = this;
 
             foreach (ITOLoader loader in
-                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(Assembly).AsValueEnumerable()
+                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<ITOLoader>(TOReflectionUtils.Assembly).AsValueEnumerable()
                 orderby pair.Type.GetMethod(nameof(ITOLoader.Load), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                 select pair.Instance)
             {
@@ -135,10 +135,6 @@ public sealed class TOMain : Mod
             field = value;
         }
     }
-
-    public static Assembly Assembly => field ??= Instance.Code;
-    public static Assembly TerrariaAssembly => field ??= typeof(Main).Assembly;
-    public static Dictionary<string, Type[]> TerrariaTypes => field ??= TerrariaAssembly.GetTypes().GroupBy(t => t.Name).ToDictionary(g => g.Key, g => g.ToArray());
 
     #region Constant
     public const string ModLocalizationPrefix = "Mods.Transoceanic.";

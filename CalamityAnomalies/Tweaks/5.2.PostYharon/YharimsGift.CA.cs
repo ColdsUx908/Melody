@@ -86,7 +86,7 @@ public sealed class YharimsGift_Tweak : CAItemTweak<YharimsGift>
     }
 }
 
-public sealed class YharimsGift_Player : CAPlayerBehavior2, ICALocalizationPrefix
+public sealed class YharimsGift_Player : CAPlayerBehavior, ICALocalizationPrefix
 {
     CAGamePhase ICALocalizationPrefix.Phase => CAGamePhase.PostYharon;
 
