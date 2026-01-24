@@ -13,9 +13,25 @@ namespace Transoceanic.GlobalInstances;
 [AttributeUsage(AttributeTargets.Class, Inherited = true)]
 public sealed class CriticalBehaviorAttribute : Attribute;
 
-public abstract class EntityBehavior;
+public interface IEntityBehavior
+{
+    public abstract Mod Mod { get; }
 
-public abstract class EntityBehavior<TEntity> : EntityBehavior where TEntity : Entity
+    /// <summary>
+    /// 优先级，越大越先应用。
+    /// <br/>设计规范：对于需优先应用的行为，建议设置为正值；对于需最后应用的行为，建议设置为负值。
+    /// </summary>
+    public abstract decimal Priority { get; }
+
+    public abstract bool ShouldProcess { get; }
+
+    /// <summary>
+    /// <inheritdoc cref="ModType.SetStaticDefaults"/>
+    /// </summary>
+    public abstract void SetStaticDefaults();
+}
+
+public abstract class EntityBehavior<TEntity> : IEntityBehavior where TEntity : Entity
 {
     /// <summary>
     /// 存储当前行为所连接的实体实例。
@@ -29,17 +45,10 @@ public abstract class EntityBehavior<TEntity> : EntityBehavior where TEntity : E
 
     public abstract Mod Mod { get; }
 
-    /// <summary>
-    /// 优先级，越大越先应用。
-    /// <br/>设计规范：对于需优先应用的行为，建议设置为正值；对于需最后应用的行为，建议设置为负值。
-    /// </summary>
     public virtual decimal Priority => 0m;
 
     public virtual bool ShouldProcess => true;
 
-    /// <summary>
-    /// <inheritdoc cref="ModType.SetStaticDefaults"/>
-    /// </summary>
     public virtual void SetStaticDefaults() { }
 }
 
@@ -6651,11 +6660,11 @@ public sealed class GlobalItemBehaviorHandler : GlobalItem
 
 public sealed class BehaviorLoader : IResourceLoader
 {
-    private static IEnumerable<EntityBehavior> _allBehaviors;
+    private static IEnumerable<IEntityBehavior> _allBehaviors;
 
     void IResourceLoader.PostSetupContent()
     {
-        _allBehaviors = TOReflectionUtils.GetTypeInstancesDerivedFrom<EntityBehavior>();
+        _allBehaviors = TOReflectionUtils.GetTypeInstancesDerivedFrom<IEntityBehavior>();
 
         PlayerBehaviorHandler.BehaviorSet.FillSet(_allBehaviors.OfType<PlayerBehavior>());
         GlobalNPCBehaviorHandler.BehaviorSet.FillSet(_allBehaviors.OfType<GlobalNPCBehavior>());

@@ -15,8 +15,10 @@ using Terraria.WorldBuilding;
 
 namespace Transoceanic.RuntimeEditing;
 
-public abstract class TypeDetour : ITODetourProvider
+public abstract class TypeDetour<T> : ITODetourProvider
 {
+    public static readonly Type SourceType = typeof(T);
+
     void ITODetourProvider.ApplyDetour()
     {
         if (ShouldApplyDetour)
@@ -30,11 +32,6 @@ public abstract class TypeDetour : ITODetourProvider
     /// 如果需要重载方法，使用 <c>Detour_{methodName}__{paramNames}</c> 方法名格式。
     /// </summary>
     public virtual void ApplyDetour() { }
-}
-
-public abstract class TypeDetour<T> : TypeDetour
-{
-    public static readonly Type SourceType = typeof(T);
 
     /// <summary>
     /// 尝试将指定的Detour应用到 <see cref="T"/> 类型。

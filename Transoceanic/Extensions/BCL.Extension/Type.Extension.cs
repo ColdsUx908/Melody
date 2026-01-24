@@ -76,5 +76,10 @@ public static partial class TOExtensions
         public bool HasAttribute<T>(bool inherit = true) where T : Attribute => type.Attribute<T>(inherit) is not null;
 
         public bool TryGetAttribute<T>([NotNullWhen(true)] out T attribute, bool inherit = true) where T : Attribute => (attribute = type.Attribute<T>(inherit)) is not null;
+
+        /// <summary>
+        /// 类型是否具有无参数构造函数。
+        /// </summary>
+        public bool HasParameterlessConstructor => type.GetConstructor(TOReflectionUtils.UniversalBindingFlags, []) is not null;
     }
 }

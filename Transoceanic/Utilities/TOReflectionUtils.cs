@@ -109,8 +109,8 @@ public static class TOReflectionUtils
     /// <returns></returns>
     public static IEnumerable<T> GetTypeInstancesDerivedFrom<T>(Assembly assemblyToSearch) =>
         from type in AssemblyManager.GetLoadableTypes(assemblyToSearch)
-        where type.IsAssignableTo(typeof(T)) && !type.IsAbstract
-        select (T)Activator.CreateInstance(type);
+        where type.IsAssignableTo(typeof(T)) && !type.IsAbstract && type.HasParameterlessConstructor
+        select (T)Activator.CreateInstance(type, true);
 
     /// <summary>
     /// 获取指定基类型的所有派生类或实现类（非抽象）的对应实例。
@@ -121,8 +121,8 @@ public static class TOReflectionUtils
     /// <returns></returns>
     public static IEnumerable<T> GetTypeInstancesDerivedFrom<T>() =>
         from type in GetAllTypes()
-        where type.IsAssignableTo(typeof(T)) && !type.IsAbstract
-        select (T)Activator.CreateInstance(type);
+        where type.IsAssignableTo(typeof(T)) && !type.IsAbstract && type.HasParameterlessConstructor
+        select (T)Activator.CreateInstance(type, true);
 
     /// <summary>
     /// 获取指定基类型在指定程序集中的所有派生类或实现类（非抽象）及其对应实例。
@@ -132,8 +132,8 @@ public static class TOReflectionUtils
     /// <returns></returns>
     public static IEnumerable<(Type Type, T Instance)> GetTypesAndInstancesDerivedFrom<T>(Assembly assemblyToSearch) =>
         from type in AssemblyManager.GetLoadableTypes(assemblyToSearch)
-        where type.IsAssignableTo(typeof(T)) && !type.IsAbstract
-        select (type, (T)Activator.CreateInstance(type));
+        where type.IsAssignableTo(typeof(T)) && !type.IsAbstract && type.HasParameterlessConstructor
+        select (type, (T)Activator.CreateInstance(type, true));
 
     /// <summary>
     /// 获取指定基类型的所有派生类或实现类（非抽象）及其对应实例。
@@ -144,8 +144,8 @@ public static class TOReflectionUtils
     /// <returns></returns>
     public static IEnumerable<(Type type, T instance)> GetTypesAndInstancesDerivedFrom<T>() =>
         from type in GetAllTypes()
-        where type.IsAssignableTo(typeof(T)) && !type.IsAbstract
-        select (type, (T)Activator.CreateInstance(type));
+        where type.IsAssignableTo(typeof(T)) && !type.IsAbstract && type.HasParameterlessConstructor
+        select (type, (T)Activator.CreateInstance(type, true));
 
     /// <summary>
     /// 获取指定程序集中所有指定特性修饰的类型及对应特性实例。
