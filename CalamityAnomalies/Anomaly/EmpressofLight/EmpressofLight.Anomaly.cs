@@ -47,8 +47,8 @@ public sealed partial class AnomalyEmpressofLight : AnomalyNPCBehavior
     }
 
     public const float DespawnDistance = 6400f;
-    public static float Phase2LifeRatio => CAWorld.AnomalyUltramundane ? 0.75f : 0.65f;
-    public static float Phase3LifeRatio => CAWorld.AnomalyUltramundane ? 0.4f : 0.3f;
+    public static float Phase2LifeRatio => CASharedData.AnomalyUltramundane ? 0.75f : 0.65f;
+    public static float Phase3LifeRatio => CASharedData.AnomalyUltramundane ? 0.4f : 0.3f;
 
     public Vector2 RainbowStreakDistance => new Vector2(-250f, -350f) * (Enrage ? 1.1f : 1f);
     public Vector2 EverlastingRainbowDistance => new Vector2(0f, -450f) * (Enrage ? 1.1f : 1f);
@@ -257,9 +257,9 @@ public sealed partial class AnomalyEmpressofLight : AnomalyNPCBehavior
 
     public override int ApplyingType => NPCID.HallowBoss;
 
-    public override bool AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC method) => method switch
+    public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior method) => method switch
     {
-        OrigMethodType_CalamityGlobalNPC.PreAI => false,
+        CalamityLogicType_NPCBehavior.VanillaOverrideAI => false,
         _ => true,
     };
 
@@ -573,10 +573,10 @@ public sealed partial class AnomalyEmpressofLight : AnomalyNPCBehavior
 
             void SpawnRainbowStreaks()
             {
-                if ((int)Timer1 % streakSpawnFrequency == 0 && Timer1 < 60f)
+                if (Timer1 % streakSpawnFrequency == 0 && Timer1 < 60f)
                 {
                     int projectileType = ProjectileID.HallowBossRainbowStreak;
-                    int projectileDamage = NPC.GetProjectileDamage(projectileType) * ProjectileDamageMultiplier;
+                    int projectileDamage = (int)(NPC.damage * 0.5f) * ProjectileDamageMultiplier;
 
                     float ai3 = Timer1 / 60f;
                     Vector2 rainbowStreakVelocity = new Vector2(0f, -10f).RotatedBy(MathHelper.PiOver2 * Main.rand.NextFloatDirection());
@@ -686,7 +686,7 @@ public sealed partial class AnomalyEmpressofLight : AnomalyNPCBehavior
                         }
 
                         int projectileType = ProjectileID.FairyQueenLance;
-                        int projectileDamage = NPC.GetProjectileDamage(projectileType) * ProjectileDamageMultiplier;
+                        int projectileDamage = (int)(NPC.damage * 0.5f) * ProjectileDamageMultiplier;
 
                         Vector2 v3 = targetHoverPos - spawnLocation;
                         if (Main.netMode != NetmodeID.MultiplayerClient)
@@ -764,9 +764,9 @@ public sealed partial class AnomalyEmpressofLight : AnomalyNPCBehavior
                     for (float i = 0f; i < 1f; i += 1f / totalProjectiles)
                     {
                         int projectileType = ProjectileID.HallowBossLastingRainbow;
-                        int projectileDamage = NPC.GetProjectileDamage(projectileType) * ProjectileDamageMultiplier;
+                        int projectileDamage = (int)(NPC.damage * 0.5f) * ProjectileDamageMultiplier;
                         int projectileType2 = ProjectileID.HallowBossRainbowStreak;
-                        int projectileDamage2 = NPC.GetProjectileDamage(projectileType2) * ProjectileDamageMultiplier;
+                        int projectileDamage2 = (int)(NPC.damage * 0.5f) * ProjectileDamageMultiplier;
 
                         float projRotationMultiplier = i;
                         Vector2 spinningpoint = Vector2.UnitY.RotatedBy(MathHelper.PiOver2 + MathHelper.TwoPi * projRotationMultiplier + projRotation);
@@ -834,7 +834,7 @@ public sealed partial class AnomalyEmpressofLight : AnomalyNPCBehavior
                 if (Timer1 % sunDanceGateValue == 0f && Timer1 < totalSunDancePhaseTime)
                 {
                     int projectileType = ProjectileID.FairyQueenSunDance;
-                    int projectileDamage = NPC.GetProjectileDamage(projectileType) * ProjectileDamageMultiplier;
+                    int projectileDamage = (int)(NPC.damage * 0.5f) * ProjectileDamageMultiplier;
 
                     int sunDanceExtension = (int)(Timer1 / sunDanceGateValue);
                     int targetFloatDirection = (targetData2.Center.X > NPC.Center.X) ? 1 : 0;
@@ -950,7 +950,7 @@ public sealed partial class AnomalyEmpressofLight : AnomalyNPCBehavior
                         }
 
                         int projectileType = ProjectileID.FairyQueenLance;
-                        int projectileDamage = NPC.GetProjectileDamage(projectileType) * ProjectileDamageMultiplier;
+                        int projectileDamage = (int)(NPC.damage * 0.5f) * ProjectileDamageMultiplier;
 
                         for (float i = 0f; i <= 1f; i += 1f / totalProjectiles)
                         {
@@ -1049,7 +1049,7 @@ public sealed partial class AnomalyEmpressofLight : AnomalyNPCBehavior
                 if ((Timer1 - 1f) % rainbowStreakGateValue == 0f)
                 {
                     int projectileType = ProjectileID.HallowBossRainbowStreak;
-                    int projectileDamage = NPC.GetProjectileDamage(projectileType) * ProjectileDamageMultiplier;
+                    int projectileDamage = (int)(NPC.damage * 0.5f) * ProjectileDamageMultiplier;
 
                     float ai3 = (Timer1 - chargeGateValue - 1f) / chargeDuration;
                     Vector2 rainbowStreakVelocity = new Vector2(0f, -5f).RotatedBy(MathHelper.PiOver2 * Main.rand.NextFloatDirection());
@@ -1179,7 +1179,7 @@ public sealed partial class AnomalyEmpressofLight : AnomalyNPCBehavior
                         }
 
                         int projectileType = ProjectileID.FairyQueenLance;
-                        int projectileDamage = NPC.GetProjectileDamage(projectileType) * ProjectileDamageMultiplier;
+                        int projectileDamage = (int)(NPC.damage * 0.5f) * ProjectileDamageMultiplier;
 
                         Vector2 v = straightLanceSpawnPredict - straightLanceSpawnDirection;
                         if (Main.netMode != NetmodeID.MultiplayerClient)
@@ -1258,7 +1258,7 @@ public sealed partial class AnomalyEmpressofLight : AnomalyNPCBehavior
                 if ((int)Timer1 % stationaryStreakSpawnFrequency == 0 && shouldSpawnStreaks)
                 {
                     int projectileType = ProjectileID.HallowBossRainbowStreak;
-                    int projectileDamage = NPC.GetProjectileDamage(projectileType) * ProjectileDamageMultiplier;
+                    int projectileDamage = (int)(NPC.damage * 0.5f) * ProjectileDamageMultiplier;
 
                     Vector2 vector = new Vector2(0f, -24f - (Phase3 ? (6f * streakHomeTime) : 0f)).RotatedBy(MathHelper.TwoPi * streakHomeTime);
                     if (Main.netMode != NetmodeID.MultiplayerClient)

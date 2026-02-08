@@ -55,7 +55,7 @@ public sealed class TOGeneralChatCommand : ModCommand, ILocalizationPrefix
 
     public override string Command => "/chat"; //需要使用的指令是"//chat"（两个斜杠）
 
-    public string LocalizationPrefix => TOMain.ModLocalizationPrefix + "Commands.GeneralCommand";
+    public string LocalizationPrefix => TOSharedData.ModLocalizationPrefix + "Commands.GeneralCommand";
 
     public override void Action(CommandCaller caller, string input, string[] args)
     {
@@ -69,7 +69,7 @@ public sealed class TOGeneralChatCommand : ModCommand, ILocalizationPrefix
                 caller.ReplyLocalizedText(this, "Helper");
                 break;
             case "redo":
-                CommandCallInfo commandCallInfo = caller.Player.Ocean().CommandCallInfo;
+                CommandCallInfo commandCallInfo = caller.Player.Ocean.CommandCallInfo;
                 if (commandCallInfo is not null && commandCallInfo.CommandType == CommandType.Chat)
                     TOCommandHelper.Instance.TryExecute(caller, commandCallInfo.Command, CommandType.Chat, commandCallInfo.Args);
                 break;
@@ -86,7 +86,7 @@ public sealed class TOCommandHelper : IResourceLoader, ILocalizationPrefix
 
     internal static readonly Dictionary<string, TOCommand> CommandSet = [];
 
-    public string LocalizationPrefix => TOMain.ModLocalizationPrefix + "Commands.GeneralCommand";
+    public string LocalizationPrefix => TOSharedData.ModLocalizationPrefix + "Commands.GeneralCommand";
 
     void IResourceLoader.PostSetupContent()
     {
@@ -107,7 +107,7 @@ public sealed class TOCommandHelper : IResourceLoader, ILocalizationPrefix
         {
             try
             {
-                caller.Player.Ocean().CommandCallInfo = new(commandType, command, caller, args);
+                caller.Player.                Ocean.CommandCallInfo = new(commandType, command, caller, args);
                 value.Action(caller, args);
             }
             catch (CommandArgumentException e)

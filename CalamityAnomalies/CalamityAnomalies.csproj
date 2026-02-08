@@ -9,6 +9,12 @@
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
 	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <NoWarn>1701;1702;649</NoWarn>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <NoWarn>1701;1702;649</NoWarn>
+	</PropertyGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\Transoceanic\Transoceanic.csproj" />
 	</ItemGroup>

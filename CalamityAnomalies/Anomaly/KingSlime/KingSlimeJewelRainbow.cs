@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.Anomaly.KingSlime;
+﻿using Transoceanic;
+
+namespace CalamityAnomalies.Anomaly.KingSlime;
 
 public sealed class KingSlimeJewelRainbow : CAModNPC
 {
@@ -120,11 +122,12 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
 
         if (!HasInitialized)
         {
-            Projectile.NewProjectileAction<RainbowExplosion>(NPC.GetSource_FromAI(), NPC.Center, Vector2.Zero, NPC.GetProjectileDamage<RainbowExplosion>(), 0f, action: p =>
+            Projectile.NewProjectileAction<RainbowExplosion>(NPC.GetSource_FromAI(), NPC.Center, Vector2.Zero, (int)(NPC.defDamage * 0.5f), 0f, action: p =>
             {
-                RainbowExplosion rainbowExplosion = p.GetModProjectile<RainbowExplosion>();
-                rainbowExplosion.Jewel = NPC;
-                rainbowExplosion.Master = master;
+                p.scale = 0f;
+                RainbowExplosion modP = p.GetModProjectile<RainbowExplosion>();
+                modP.Jewel = NPC;
+                modP.Master = master;
             });
 
             HasInitialized = true;
@@ -215,39 +218,39 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
 
         void NormalAttack()
         {
-            if (!TOWorld.GeneralClient)
+            if (!TOSharedData.GeneralClient)
                 return;
 
             int amount = 7;
             float singleRadian = MathHelper.ToRadians(15f);
             float radian = singleRadian * (amount - 1);
             float initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
-            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(15f, initialRotation), NPC.GetProjectileDamage<JewelProjectileRainbow>(), 0f);
+            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(15f, initialRotation), (int)(NPC.defDamage * 0.5f), 0f);
 
             IsAttacking = false;
         }
 
         void CrossingAttack()
         {
-            if (!TOWorld.GeneralClient)
+            if (!TOSharedData.GeneralClient)
                 return;
 
             int amount = 11;
             float singleRadian = MathHelper.ToRadians(17.5f);
             float radian = singleRadian * (amount - 1);
             float initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
-            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(17.5f, initialRotation), NPC.GetProjectileDamage<JewelProjectileRainbow>(), 0f);
+            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(17.5f, initialRotation), (int)(NPC.defDamage * 0.5f), 0f);
             amount--;
             radian = singleRadian * (amount - 1);
             initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
-            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(15f, initialRotation), NPC.GetProjectileDamage<JewelProjectileRainbow>(), 0f);
+            Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(15f, initialRotation), (int)(NPC.defDamage * 0.5f), 0f);
 
             IsAttacking = false;
         }
 
         void RingAttack()
         {
-            if (!TOWorld.GeneralClient)
+            if (!TOSharedData.GeneralClient)
                 return;
 
             if (Timer1 % 4 == 0)
@@ -265,7 +268,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
                 float singleRadian = MathHelper.TwoPi / amount;
                 float radian = singleRadian * (amount - 1);
                 float initialRotation = (Target.Center - NPC.Center).ToRotation() + attackNum * TOMathHelper.PiOver5 + Main.rand.NextFloat(TOMathHelper.PiOver12);
-                Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(18f - attackNum / 2f, initialRotation), NPC.GetProjectileDamage<JewelProjectileRainbow>(), 0f);
+                Projectile.RotatedProj<JewelProjectileRainbow>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(18f - attackNum / 2f, initialRotation), (int)(NPC.defDamage * 0.5f), 0f);
             }
 
             Timer1++;
@@ -276,7 +279,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
 
         void RainbowRain()
         {
-            if (!TOWorld.GeneralClient)
+            if (!TOSharedData.GeneralClient)
                 return;
 
             if (Timer1 == 0)
@@ -285,7 +288,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC
                 IsAttacking = true;
             }
             if (Timer1 % 3 == 0)
-                Projectile.NewProjectileAction<JewelProjectileRainbow>(NPC.GetSource_FromAI(), Target.Center + new Vector2(Main.rand.NextFloat(-2000f, 2000f), Main.rand.NextFloat(-1500f, -1000f)), new PolarVector2(Main.rand.NextFloat(10f, 14f), MathHelper.PiOver2 + Main.rand.NextFloat(-TOMathHelper.PiOver8, TOMathHelper.PiOver8)), NPC.GetProjectileDamage<JewelProjectileRainbow>(), 0f);
+                Projectile.NewProjectileAction<JewelProjectileRainbow>(NPC.GetSource_FromAI(), Target.Center + new Vector2(Main.rand.NextFloat(-2000f, 2000f), Main.rand.NextFloat(-1500f, -1000f)), new PolarVector2(Main.rand.NextFloat(10f, 14f), MathHelper.PiOver2 + Main.rand.NextFloat(-TOMathHelper.PiOver8, TOMathHelper.PiOver8)), (int)(NPC.defDamage * 0.5f), 0f);
 
             Timer1++;
 

@@ -6,19 +6,19 @@ public sealed class NPCLifeTimeManager : TOGlobalNPCBehavior
 
     public override void SetDefaults(NPC npc)
     {
-        TOGlobalNPC oceanNPC = npc.Ocean();
+        TOGlobalNPC oceanNPC = npc.Ocean;
         oceanNPC.Master = null;
     }
 
     public override void OnSpawn(NPC npc, IEntitySource source)
     {
-        TOGlobalNPC oceanNPC = npc.Ocean();
-        oceanNPC.SpawnTime = TOWorld.GameTimer.TotalTicks;
+        TOGlobalNPC oceanNPC = npc.Ocean;
+        oceanNPC.SpawnTime = TOSharedData.GameTimer.TotalTicks;
     }
 
     public override bool PreAI(NPC npc)
     {
-        TOGlobalNPC oceanNPC = npc.Ocean();
+        TOGlobalNPC oceanNPC = npc.Ocean;
         oceanNPC.ActiveTime++;
         return true;
     }

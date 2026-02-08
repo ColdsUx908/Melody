@@ -2,64 +2,81 @@
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.Systems;
 using CalamityMod.World;
+using Transoceanic;
 
 namespace CalamityAnomalies.Anomaly;
 
 public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
 {
-    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "Anomaly.AnomalyMode";
+    public string LocalizationPrefix => CASharedData.ModLocalizationPrefix + "Anomaly.AnomalyMode";
 
     internal static AnomalyMode Instance;
 
     public override bool Enabled
     {
-        get => CAWorld.Anomaly;
+        get => CASharedData.Anomaly;
         set
         {
-            bool temp = CAWorld.Anomaly;
-            CAWorld.Anomaly = value;
-            if (temp ^ value)
+            if (CASharedData.Anomaly ^ value)
+            {
+                CASharedData.Anomaly = value;
                 CANetSync.SyncAnomalyMode();
+            }
         }
     }
 
-    public override Asset<Texture2D> Texture { get; }
+    public override Asset<Texture2D> Texture => _texture ??= CATextures._anomalyModeIndicator;
+    public override Asset<Texture2D> OutlineTexture => _outlineTexture ??= CATextures._anomalyModeIndicator_Border;
+    public override Asset<Texture2D> TextureDisabled => _textureDisabled ??= CATextures._anomalyModeIndicator_Off;
 
+    public override SoundStyle ActivationSound => _activationSound ??= SupremeCalamitas.BulletHellEndSound;
+
+    public override int BackBoneGameModeID => GameModeID.Master;
+
+    public override bool IsBasedOn(DifficultyMode mode)
+    {
+        if (mode is MasterDifficulty or DeathDifficulty or MaliceDifficulty)
+            return true;
+        return false;
+    }
+
+    public override float DifficultyScale => 10000f;
+
+    public override LocalizedText Name => this.GetText("Anomaly");
+
+    public override Color ChatTextColor => CASharedData.MainColor;
+
+    public override LocalizedText ShortDescription => this.GetText("AnomalyShortInfo");
     public override LocalizedText ExpandedDescription => this.GetText("AnomalyExpandedInfo");
 
-    public override int FavoredDifficultyAtTier(int tier)
+    public override int[] FavoredDifficultyAtTier(int tier)
     {
         DifficultyMode[] tierList = DifficultyModeSystem.DifficultyTiers[tier];
+
+        List<int> difficulties = [];
+
         for (int i = 0; i < tierList.Length; i++)
         {
-            if (tierList[i].Name == CalamityUtils.GetText("UI.Death"))
-                return i;
+            if (tierList[i] is MasterDifficulty or DeathDifficulty)
+                difficulties.Add(i);
         }
-        return 0;
-    }
 
-    public AnomalyMode()
-    {
-        Texture = CATextures._anomalyModeIndicator;
-        DifficultyScale = 10000f;
-        Name = this.GetText("Anomaly");
-        ShortDescription = this.GetText("AnomalyShortInfo");
-        ActivationTextKey = this.GetKey("AnomalyActivate");
-        DeactivationTextKey = this.GetKey("AnomalyDeactivate");
-        ActivationSound = SupremeCalamitas.BulletHellEndSound;
-        ChatTextColor = CAMain.MainColor;
+        if (difficulties.Count <= 0)
+            difficulties.Add(0);
+
+        return [.. difficulties];
     }
 }
 
 public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizationPrefix
 {
-    public string LocalizationPrefix => CAMain.ModLocalizationPrefix + "Anomaly.AnomalyMode";
+    public string LocalizationPrefix => CASharedData.ModLocalizationPrefix + "Anomaly.AnomalyMode";
 
     public override void PreUpdateWorld()
     {
-        if (CAWorld.Anomaly)
+        if (CASharedData.Anomaly)
         {
-            if (!TOWorld.MasterMode)
+            if (!TOSharedData.MasterMode)
             {
                 DisableAnomaly();
                 return;
@@ -68,22 +85,22 @@ public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizati
             CalamityWorld.revenge = true;
             CalamityWorld.death = true;
 
-            switch (TOWorld.LegendaryMode, !Main.zenithWorld)
+            switch (TOSharedData.LegendaryMode, !Main.zenithWorld)
             {
-                case (false, true) when CAWorld.AnomalyUltramundane: //不是传奇难度，不在GFB世界
+                case (false, true) when CASharedData.AnomalyUltramundane: //不是传奇难度，不在GFB世界
                     NotLegendaryInfo();
                     DisableUltra();
                     break;
-                case (true, false) when CAWorld.AnomalyUltramundane: //是传奇难度，在GFB世界
+                case (true, false) when CASharedData.AnomalyUltramundane: //是传奇难度，在GFB世界
                     ZenithInfo();
                     DisableUltra();
                     break;
-                case (false, false) when CAWorld.AnomalyUltramundane: //不是传奇难度，且在GFB世界
+                case (false, false) when CASharedData.AnomalyUltramundane: //不是传奇难度，且在GFB世界
                     NotLegendaryInfo();
                     ZenithInfo();
                     DisableUltra();
                     break;
-                case (true, true) when !CAWorld.AnomalyUltramundane: //是传奇难度，且不在GFB世界，应开启异象超凡
+                case (true, true) when !CASharedData.AnomalyUltramundane: //是传奇难度，且不在GFB世界，应开启异象超凡
                     EnableUltra();
                     break;
                 default:
@@ -92,43 +109,43 @@ public sealed class AnomalyModeHandler : ModSystem, IResourceLoader, ILocalizati
         }
         else
         {
-            if (CAWorld.AnomalyUltramundane)
+            if (CASharedData.AnomalyUltramundane)
                 DisableUltra();
         }
 
         void DisableAnomaly()
         {
-            if (TOWorld.GeneralClient)
+            if (TOSharedData.GeneralClient)
                 TOLocalizationUtils.ChatLocalizedText(this, "AnomalyInvalid", Color.Red);
-            if (CAWorld.AnomalyUltramundane)
+            if (CASharedData.AnomalyUltramundane)
                 DisableUltra();
-            CAWorld.Anomaly = false;
+            CASharedData.Anomaly = false;
         }
 
         void DisableUltra()
         {
-            if (TOWorld.GeneralClient)
+            if (TOSharedData.GeneralClient)
                 TOLocalizationUtils.ChatLocalizedText(this, "AnomalyUltramundaneDeactivate", Color.Red);
-            CAWorld.AnomalyUltramundane = false;
+            CASharedData.AnomalyUltramundane = false;
         }
 
         void EnableUltra()
         {
-            if (TOWorld.GeneralClient)
+            if (TOSharedData.GeneralClient)
                 TOLocalizationUtils.ChatLocalizedText(this, "AnomalyUltramundaneActivate", Color.Red);
-            CAWorld.AnomalyUltramundane = true;
+            CASharedData.AnomalyUltramundane = true;
         }
 
         void ZenithInfo()
         {
-            if (TOWorld.GeneralClient)
-                TOLocalizationUtils.ChatLocalizedText(this, "AnomalyUltraInvalidZenith", CAMain.MainColor);
+            if (TOSharedData.GeneralClient)
+                TOLocalizationUtils.ChatLocalizedText(this, "AnomalyUltraInvalidZenith", CASharedData.MainColor);
             //SoundEngine.PlaySound();
         }
 
         void NotLegendaryInfo()
         {
-            if (TOWorld.GeneralClient)
+            if (TOSharedData.GeneralClient)
                 TOLocalizationUtils.ChatLocalizedText(this, "AnomalyUltraInvalidNotLegendary", Color.Red);
         }
     }

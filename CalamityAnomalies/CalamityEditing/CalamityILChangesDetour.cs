@@ -1,5 +1,6 @@
 ﻿using CalamityMod.ILEditing;
 using MonoMod.Cil;
+using Transoceanic.Framework.RuntimeEditing;
 
 namespace CalamityAnomalies.CalamityEditing;
 

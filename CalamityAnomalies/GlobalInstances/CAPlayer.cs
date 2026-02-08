@@ -585,7 +585,7 @@ public class PlayerDownedBossCalamity : PlayerDownedBoss
             case var _ when CAUtils.IsDefeatingProfanedGuardians(npc):
                 Guardians = true;
                 break;
-            case Bumblefuck:
+            case Dragonfolly _:
                 Dragonfolly = true;
                 break;
             case Providence _:

@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.GlobalInstances;
+﻿using Transoceanic.DataStructures;
+
+namespace Transoceanic.GlobalInstances;
 
 public class TOGlobalNPC : GlobalNPC, ITOLoader
 {
@@ -46,7 +48,7 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
 
     public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
     {
-        if (!TOMain.SyncEnabled)
+        if (!TOSharedData.SyncEnabled)
             return;
 
         Dictionary<int, float> aiToSend = [];
@@ -80,7 +82,7 @@ public class TOGlobalNPC : GlobalNPC, ITOLoader
 
     public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
     {
-        if (!TOMain.SyncEnabled)
+        if (!TOSharedData.SyncEnabled)
             return;
 
         int recievedAICount = binaryReader.ReadInt32();

@@ -1,8 +1,6 @@
 ﻿using CalamityMod.Events;
-using CalamityMod.NPCs.NormalNPCs;
 using CalamityMod.World;
-//灾厄本体删除流血仆从后启用
-//using BloodlettingServant = CalamityAnomalies.Anomaly.EyeofCthulhu.BloodlettingServantNew;
+using Transoceanic;
 
 namespace CalamityAnomalies.Anomaly.EyeofCthulhu;
 
@@ -34,10 +32,10 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
     public const float DespawnDistance = 6000f;
     public const float ProjectileOffset = 50f;
-    public static float Phase2LifeRatio => CAWorld.AnomalyUltramundane ? 0.8f : 0.75f;
-    public static float Phase2_2LifeRatio => CAWorld.AnomalyUltramundane ? 0.65f : 0.4f;
-    public static float Phase2_3LifeRatio => CAWorld.AnomalyUltramundane ? 0.5f : 0.3f;
-    public static float Phase2_4LifeRatio => CAWorld.AnomalyUltramundane ? 0.35f : 0.15f;
+    public static float Phase2LifeRatio => CASharedData.AnomalyUltramundane ? 0.8f : 0.75f;
+    public static float Phase2_2LifeRatio => CASharedData.AnomalyUltramundane ? 0.65f : 0.4f;
+    public static float Phase2_3LifeRatio => CASharedData.AnomalyUltramundane ? 0.5f : 0.3f;
+    public static float Phase2_4LifeRatio => CASharedData.AnomalyUltramundane ? 0.35f : 0.15f;
     public bool Phase2_2 => NPC.LifeRatio < Phase2_2LifeRatio;
     public bool Phase2_3 => NPC.LifeRatio < Phase2_3LifeRatio;
     public bool Phase2_4 => NPC.LifeRatio < Phase2_4LifeRatio;
@@ -80,45 +78,6 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
         set => NPC.ai[3] = value;
     }
 
-    public int ChargeCounter
-    {
-        get => (int)CalamityNPC.newAI[0];
-        set
-        {
-            if (CalamityNPC.newAI[0] != value)
-            {
-                CalamityNPC.newAI[0] = value;
-                NPC.SyncExtraAI();
-            }
-        }
-    }
-
-    public float RotationSpeed
-    {
-        get => CalamityNPC.newAI[1];
-        set
-        {
-            if (CalamityNPC.newAI[1] != value)
-            {
-                CalamityNPC.newAI[1] = value;
-                NPC.SyncExtraAI();
-            }
-        }
-    }
-
-    public int Phase3ChargeCalculator
-    {
-        get => (int)CalamityNPC.newAI[2];
-        set
-        {
-            if (CalamityNPC.newAI[2] != value)
-            {
-                CalamityNPC.newAI[2] = value;
-                NPC.SyncExtraAI();
-            }
-        }
-    }
-
     public bool BuffedCharge
     {
         get => AnomalyNPC.AnomalyAI32[0].bits[0];
@@ -132,22 +91,61 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
         }
     }
 
+    public int ChargeCounter
+    {
+        get => AnomalyNPC.AnomalyAI32[1].i;
+        set
+        {
+            if (AnomalyNPC.AnomalyAI32[1].i != value)
+            {
+                AnomalyNPC.AnomalyAI32[1].i = value;
+                AnomalyNPC.AIChanged32[1] = true;
+            }
+        }
+    }
+
+    public float RotationSpeed
+    {
+        get => AnomalyNPC.AnomalyAI32[2].f;
+        set
+        {
+            if (AnomalyNPC.AnomalyAI32[2].f != value)
+            {
+                AnomalyNPC.AnomalyAI32[2].f = value;
+                AnomalyNPC.AIChanged32[2] = true;
+            }
+        }
+    }
+
+    public int Phase3ChargeCalculator
+    {
+        get => AnomalyNPC.AnomalyAI32[3].i;
+        set
+        {
+            if (AnomalyNPC.AnomalyAI32[3].i != value)
+            {
+                AnomalyNPC.AnomalyAI32[3].i = value;
+                AnomalyNPC.AIChanged32[3] = true;
+            }
+        }
+    }
+
     public float EyeRotation => TOMathHelper.NormalizeAngle(MathF.Atan2(NPC.position.Y + NPC.height - 59f - Target.Center.Y, NPC.Center.X - Target.Center.X) + MathHelper.PiOver2);
-    public static float EnrageScale => CAWorld.AnomalyUltramundane || Main.IsItDay() ? 2.5f : 1f;
+    public static float EnrageScale => CASharedData.AnomalyUltramundane || Main.IsItDay() ? 2.5f : 1f;
     public bool ShouldCharge => Vector2.Distance(Target.Center, NPC.Center) >= 320f;
     #endregion 数据
 
     public override int ApplyingType => NPCID.EyeofCthulhu;
 
-    public override bool AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC method) => method switch
+    public override bool AllowCalamityLogic(CalamityLogicType_NPCBehavior method) => method switch
     {
-        OrigMethodType_CalamityGlobalNPC.PreAI => false,
+        CalamityLogicType_NPCBehavior.VanillaOverrideAI => false,
         _ => true,
     };
 
     public override void SetDefaults()
     {
-        if (CAWorld.AnomalyUltramundane)
+        if (CASharedData.AnomalyUltramundane)
             NPC.lifeMax = (int)(NPC.lifeMax * 1.25f);
     }
 
@@ -346,7 +344,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                 float hoverSpeed = 7f + 5f * enrageScale + 7f * (1f - NPC.LifeRatio);
                 float hoverAcceleration = 0.15f + 0.1f * enrageScale + 0.15f * (1f - NPC.LifeRatio);
 
-                if (CAWorld.AnomalyUltramundane)
+                if (CASharedData.AnomalyUltramundane)
                 {
                     hoverSpeed += 3f;
                     hoverAcceleration += 0.08f;
@@ -372,7 +370,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         Timer2++;
 
                     float servantSpawnGateValue = 10f;
-                    if (CAWorld.AnomalyUltramundane)
+                    if (CASharedData.AnomalyUltramundane)
                         servantSpawnGateValue *= 0.8f;
 
                     if (Timer2 >= servantSpawnGateValue && CanShootProjectile())
@@ -389,7 +387,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         if (spawnServant)
                             SoundEngine.PlaySound(SoundID.NPCHit1, servantSpawnCenter);
 
-                        if (TOWorld.GeneralClient)
+                        if (TOSharedData.GeneralClient)
                         {
                             if (spawnServant)
                             {
@@ -400,7 +398,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                                 });
                             }
                             else
-                                Projectile.NewProjectileAction(NPC.GetSource_FromAI(), NPC.Center + servantSpawnVelocity.ToCustomLength(ProjectileOffset), servantSpawnVelocity * 2f, ProjectileID.BloodNautilusShot, NPC.GetProjectileDamage(ProjectileID.BloodNautilusShot), 0f, action: p => p.timeLeft = 600);
+                                Projectile.NewProjectileAction(NPC.GetSource_FromAI(), NPC.Center + servantSpawnVelocity.ToCustomLength(ProjectileOffset), servantSpawnVelocity * 2f, ProjectileID.BloodNautilusShot, (int)(NPC.damage * 0.5f), 0f, action: p => p.timeLeft = 600);
                         }
 
                         if (spawnServant)
@@ -423,7 +421,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
                     float enrageScale = EnrageScale;
                     float chargeSpeed = 8f + ChargeCounter * 2f + 5f * enrageScale + 10f * (1f - NPC.LifeRatio);
-                    if (CAWorld.AnomalyUltramundane)
+                    if (CASharedData.AnomalyUltramundane)
                         chargeSpeed += 4f;
 
                     NPC.velocity = NPC.SafeDirectionTo(Target.Center) * chargeSpeed;
@@ -439,7 +437,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                     NPC.damage = NPC.defDamage;
 
                     int chargeDelay = 70 - (int)Math.Round(40f * (1f - NPC.LifeRatio));
-                    if (CAWorld.AnomalyUltramundane)
+                    if (CASharedData.AnomalyUltramundane)
                         chargeDelay -= 30;
 
                     float slowDownGateValue = chargeDelay * 0.9f;
@@ -451,7 +449,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         float decelerationScalar = Utils.GetLerpValue(Phase2LifeRatio, 1f, NPC.LifeRatio, true);
 
                         NPC.velocity *= (MathHelper.Lerp(0.76f, 0.88f, decelerationScalar));
-                        if (CAWorld.AnomalyUltramundane)
+                        if (CASharedData.AnomalyUltramundane)
                             NPC.velocity *= 0.99f;
 
                         if (Math.Abs(NPC.velocity.X) < 0.1f)
@@ -497,7 +495,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
             RotationSpeed = CurrentAttackPhase == 0 ? Math.Max(RotationSpeed + 0.005f, 0.5f) : Math.Min(RotationSpeed - 0.005f, 0f);
             NPC.rotation += RotationSpeed;
 
-            float servantSpawnGateValue = CAWorld.AnomalyUltramundane ? 4f : 10f;
+            float servantSpawnGateValue = CASharedData.AnomalyUltramundane ? 4f : 10f;
             if (Timer1 >= 0 && Timer1 % servantSpawnGateValue == 0f) //召唤仆从
             {
                 float enrageScale = EnrageScale;
@@ -508,12 +506,12 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
                 Vector2 servantSpawnCenter = NPC.Center + servantSpawnVelocity.ToCustomLength(ProjectileOffset);
 
-                if (TOWorld.GeneralClient)
+                if (TOSharedData.GeneralClient)
                 {
                     int spawnType = NPCID.ServantofCthulhu;
                     if (Main.zenithWorld) //流血仆从移至GFB
                     {
-                        int maxBloodServants = TOWorld.LegendaryMode ? 3 : 2;
+                        int maxBloodServants = TOSharedData.LegendaryMode ? 3 : 2;
                         bool spawnBloodServant = NPC.CountNPCS(ModContent.NPCType<BloodlettingServant>()) < maxBloodServants;
                         if (spawnBloodServant)
                             spawnType = ModContent.NPCType<BloodlettingServant>();
@@ -528,7 +526,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                     if (CalamityWorld.LegendaryMode)
                     {
                         int type = ProjectileID.BloodNautilusShot;
-                        int damage = NPC.GetProjectileDamage(type);
+                        int damage = (int)(NPC.damage * 0.5f);
                         Vector2 projectileVelocity = Main.rand.NextVector2CircularEdge(15f, 15f);
                         int numProj = 3;
                         int spread = 20;
@@ -634,7 +632,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                     }
                 }
 
-                if (CAWorld.AnomalyUltramundane)
+                if (CASharedData.AnomalyUltramundane)
                 {
                     hoverSpeed += 1f;
                     hoverAcceleration += 0.1f;
@@ -660,10 +658,10 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                     {
                         Vector2 projectileVelocity = (Target.Center - NPC.Center).SafeNormalize(Vector2.UnitY) * ServantAndProjectileVelocity * 2f;
 
-                        if (TOWorld.GeneralClient)
+                        if (TOSharedData.GeneralClient)
                         {
                             int type = ProjectileID.BloodNautilusShot;
-                            int damage = NPC.GetProjectileDamage(type);
+                            int damage = (int)(NPC.damage * 0.5f);
                             int numProj = Main.rand.Next(4, 6);
                             int spread = numProj * 3;
                             float rotation = MathHelper.ToRadians(spread);
@@ -694,7 +692,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         chargeSpeed *= 1.15f;
                     if (ChargeCounter == 2)
                         chargeSpeed *= 1.3f;
-                    if (CAWorld.AnomalyUltramundane)
+                    if (CASharedData.AnomalyUltramundane)
                         chargeSpeed *= 1.2f;
 
                     NPC.velocity = NPC.SafeDirectionTo(Target.Center) * chargeSpeed;
@@ -738,7 +736,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
             {
                 if (CurrentAttackPhase == 0) //冲刺
                 {
-                    if (TOWorld.GeneralClient)
+                    if (TOSharedData.GeneralClient)
                     {
                         NPC.damage = SetDamage;
 
@@ -910,7 +908,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
 
                         if (Main.zenithWorld) //流血仆从移至GFB
                         {
-                            int maxBloodServants = TOWorld.LegendaryMode ? 3 : 2;
+                            int maxBloodServants = TOSharedData.LegendaryMode ? 3 : 2;
                             bool spawnBloodServant = NPC.CountNPCS(ModContent.NPCType<BloodlettingServant>()) < maxBloodServants;
                             if (spawnBloodServant)
                             {
@@ -933,7 +931,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                         if (spawnServant)
                             SoundEngine.PlaySound(SoundID.NPCDeath13, servantSpawnCenter);
 
-                        if (TOWorld.GeneralClient)
+                        if (TOSharedData.GeneralClient)
                         {
                             if (spawnServant)
                             {
@@ -946,14 +944,14 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                             else if (!CalamityWorld.LegendaryMode)
                             {
                                 int type = ProjectileID.BloodNautilusShot;
-                                int damage = NPC.GetProjectileDamage(type);
+                                int damage = (int)(NPC.damage * 0.5f);
                                 Projectile.NewProjectileAction(NPC.GetSource_FromAI(), NPC.Center + servantSpawnVelocity.ToCustomLength(ProjectileOffset), servantSpawnVelocity * 2f, type, damage, 0f, action: p => p.timeLeft = 600);
                             }
 
                             if (CalamityWorld.LegendaryMode)
                             {
                                 int type = ProjectileID.BloodNautilusShot;
-                                int damage = NPC.GetProjectileDamage(type);
+                                int damage = (int)(NPC.damage * 0.5f);
                                 Vector2 projectileVelocity = servantSpawnVelocity * 3f;
                                 int numProj = 3;
                                 int spread = 20;
@@ -981,7 +979,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
                 {
                     NPC.damage = SetDamage;
 
-                    if (TOWorld.GeneralClient)
+                    if (TOSharedData.GeneralClient)
                     {
                         float enrageScale = EnrageScale;
                         float speedBoost = 15f * (Phase2_2LifeRatio - NPC.LifeRatio);

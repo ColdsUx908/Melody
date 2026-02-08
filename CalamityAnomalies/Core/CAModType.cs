@@ -1,4 +1,6 @@
-﻿namespace CalamityAnomalies.Core;
+﻿using CalamityAnomalies.Visuals;
+
+namespace CalamityAnomalies.Core;
 
 public interface ICAModNPC
 {
@@ -31,7 +33,7 @@ public interface ICAModNPC
 
 public abstract class CAModNPC : TOModNPC, ICAModNPC
 {
-    public CAGlobalNPC AnomalyNPC => NPC.Anomaly();
+    public CAGlobalNPC AnomalyNPC => NPC.Anomaly;
     public CalamityGlobalNPC CalamityNPC => NPC.Calamity();
 
     public virtual bool PreUpdateCalBossBar(BetterBossHPUI newBar) => true;
@@ -47,7 +49,7 @@ public interface ICAModProjectile
 
 public abstract class CAModProjectile : TOModProjectile, ICAModProjectile
 {
-    public CAGlobalProjectile AnomalyProjectile => Projectile.Anomaly();
+    public CAGlobalProjectile AnomalyProjectile => Projectile.Anomaly;
     public CalamityGlobalProjectile CalamityProjectile => Projectile.Calamity();
 
     public virtual void ModifyHitNPC_DR(NPC target, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }
@@ -60,7 +62,7 @@ public interface ICAModItem
 
 public abstract class CAModItem : TOModItem, ICAModItem
 {
-    public CAGlobalItem AnomalyItem => Item.Anomaly();
+    public CAGlobalItem AnomalyItem => Item.Anomaly;
     public CalamityGlobalItem CalamityItem => Item.Calamity();
 
     public virtual void ModifyHitNPC_DR(NPC target, Player player, ref NPC.HitModifiers modifiers, float baseDR, ref StatModifier baseDRModifier, ref StatModifier standardDRModifier, ref StatModifier timedDRModifier) { }

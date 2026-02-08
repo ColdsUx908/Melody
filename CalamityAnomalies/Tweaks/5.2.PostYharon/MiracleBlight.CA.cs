@@ -9,7 +9,7 @@ public sealed class MiracleBlight_GlobalNPC : GlobalNPCDetour<CalamityGlobalNPC>
 {
     public override void Detour_UpdateLifeRegen(Orig_UpdateLifeRegen orig, CalamityGlobalNPC self, NPC npc, ref int damage)
     {
-        if (self.miracleBlight > 0)
+        if (self.miracleBlight)
         {
             bool? vulnerableToHeat = self.VulnerableToHeat;
             bool? vulnerableToCold = self.VulnerableToCold;

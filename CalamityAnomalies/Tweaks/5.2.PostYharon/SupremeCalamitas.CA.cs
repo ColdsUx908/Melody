@@ -1,7 +1,7 @@
 ﻿using CalamityMod.NPCs.SupremeCalamitas;
-using CalamityMod.Particles;
 using CalamityMod.Projectiles.Boss;
 using CalamityMod.Skies;
+using Transoceanic.Framework.Helpers.AbstractionHelpers;
 using static CalamityMod.Projectiles.Boss.SCalRitualDrama;
 
 namespace CalamityAnomalies.Tweaks;
@@ -17,12 +17,12 @@ public sealed class ScalRitualDrama_Tweak : CAProjectileTweak<SCalRitualDrama>
         if (Projectile.timeLeft == 689)
         {
             for (int i = 0; i < 2; i++)
-                GeneralParticleHandler.SpawnParticle(new BloomParticle(Projectile.Center, Vector2.Zero, Color.Lerp(Color.Red, Color.Magenta, 0.3f), 0f, 0.55f, 270, false));
-            GeneralParticleHandler.SpawnParticle(new BloomParticle(Projectile.Center, Vector2.Zero, Color.White, 0f, 0.5f, 270, false));
+                Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new BloomParticle1(Projectile.Center, Vector2.Zero, Color.Lerp(Color.Red, Color.Magenta, 0.3f), 0f, 0.55f, 270, false));
+            Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new BloomParticle1(Projectile.Center, Vector2.Zero, Color.White, 0f, 0.5f, 270, false));
         }
 
         if (Projectile.timeLeft == 689 - 180)
-            GeneralParticleHandler.SpawnParticle(new BloomParticle(Projectile.Center, Vector2.Zero, new Color(121, 21, 77), 0f, 0.85f, 90, false));
+            Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new BloomParticle1(Projectile.Center, Vector2.Zero, new Color(121, 21, 77), 0f, 0.85f, 90, false));
 
         // If needed, these effects may continue after the ritual timer, to ensure that there are no awkward
         // background changes between the time it takes for SCal to appear after this projectile is gone.

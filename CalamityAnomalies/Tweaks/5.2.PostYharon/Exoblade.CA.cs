@@ -1,7 +1,7 @@
 ﻿using CalamityMod.Dusts;
 using CalamityMod.Items.Weapons.Melee;
 using CalamityMod.Projectiles.Melee;
-using Transoceanic.Data.Geometry;
+using Transoceanic;
 using static CalamityMod.Items.Weapons.Melee.Exoblade;
 
 namespace CalamityAnomalies.Tweaks;
@@ -191,7 +191,7 @@ public sealed class ExobladeProj_Override : CAProjectileOverride<ExobladeProj>
 
     public static void AprilFoolProj(Projectile p)
     {
-        if (TOWorld.AprilFools)
+        if (TOSharedData.AprilFools)
         {
             p.damage *= 3;
             p.scale *= 1.5f;

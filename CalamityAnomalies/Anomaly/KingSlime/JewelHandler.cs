@@ -1,14 +1,14 @@
 ﻿using CalamityAnomalies.Assets.Textures;
-using CalamityAnomalies.GameContents;
-using CalamityAnomalies.Publicizer.CalamityMod;
+using CalamityAnomalies.Publicizers.CalamityMod;
 using CalamityMod.NPCs.NormalNPCs;
-using CalamityMod.Particles;
+using Transoceanic.DataStructures.Particles;
+using Transoceanic.Framework.Helpers.AbstractionHelpers;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
 public sealed class JewelHandler : IResourceLoader
 {
-    public const string JewelTexturePath = "CalamityMod/NPCs/NormalNPCs/KingSlimeJewel";
+    public const string JewelTexturePath = "CalamityMod/NPCs/NormalNPCs/KingSlimeJewelRuby";
 
     public static Color EmeraldColor => Main.zenithWorld ? Color.Purple : Color.FullGreen;
     public static Color RubyColor => Main.zenithWorld ? Color.Cyan : Color.Red;
@@ -114,13 +114,13 @@ public sealed class JewelHandler : IResourceLoader
     {
         bool isRainbowJewel = jewel.ModNPC is KingSlimeJewelRainbow;
         Color color = GetColor(jewel) with { A = 0 } * ratio * 1.5f;
-        float interpolation = TOMathHelper.ParabolicInterpolation(1f - ratio);
-        float interpolation2 = TOMathHelper.ParabolicInterpolation(Math.Clamp(1f - ratio, 0f, 0.2f) * 5f);
+        float interpolation = TOMathHelper.QuadraticEaseOut(1f - ratio);
+        float interpolation2 = TOMathHelper.QuadraticEaseOut(Math.Clamp(1f - ratio, 0f, 0.2f) * 5f);
         for (int i = 0; i < 300; i++)
         {
             if (isRainbowJewel)
                 color = Color.LerpMany(Color.RainbowColors, (ratio + i / 300f + TOMathHelper.GetTimeSin(0.5f, 0.5f, 0f, true)) % 1f) with { A = 0 } * ratio * 1.5f;
-            spriteBatch.DrawFromCenter(CalamityTextureHandler.GlowOrbParticle, jewel.Center + new PolarVector2(radius * interpolation, MathHelper.TwoPi / 300 * i) - screenPos, color, null, 0f, scale * interpolation2);
+            spriteBatch.DrawFromCenter(OrbParticle.Texture, jewel.Center + new PolarVector2(radius * interpolation, MathHelper.TwoPi / 300 * i) - screenPos, color, null, 0f, scale * interpolation2);
         }
     }
 
@@ -138,7 +138,7 @@ public sealed class JewelHandler : IResourceLoader
             KingSlimeJewelRainbow => Color.GetRandomRainbowColor(),
             _ => GetColor(jewel)
         };
-        GeneralParticleHandler.SpawnParticle(new FadingGlowOrbParticle(jewel.Center, Main.rand.NextPolarVector2(velocity), 0f, lifetime, 0.925f, scale, color));
+        Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new OrbParticle(jewel.Center, Main.rand.NextPolarVector2(velocity), lifetime, scale, color, lifeEndRatio: 0.925f));
     }
 
     public static void CreateDustFromJewelTo(NPC jewel, Vector2 destination, int type)
@@ -200,31 +200,4 @@ public sealed class JewelHandler : IResourceLoader
         6 => DustID.GemAmber,
         _ => DustID.TintableDust
     };
-
-    void IResourceLoader.PostSetupContent()
-    {
-        SortedDictionary<Tuple<int, int>, int[]> damageValues = NPCStats_EnemyStats_Publicizer.ProjectileDamageValues;
-
-        damageValues.Add(Tuple.Create(ModContent.NPCType<KingSlimeJewelEmerald>(), ModContent.ProjectileType<KingSlimeJewelEmeraldClone>()), [30, 44, 60, 76, 114]);
-        damageValues.Add(Tuple.Create(ModContent.NPCType<KingSlimeJewelRuby>(), ModContent.ProjectileType<KingSlimeJewelEmeraldClone>()), [30, 44, 60, 76, 114]);
-        damageValues.Add(Tuple.Create(ModContent.NPCType<KingSlimeJewelRainbow>(), ModContent.ProjectileType<JewelProjectileRainbow>()), [32, 45, 55, 65, 105]);
-        damageValues.Add(Tuple.Create(ModContent.NPCType<KingSlimeJewelRainbow>(), ModContent.ProjectileType<RainbowExplosion>()), [1, 2, 3, 4, 5]);
-    }
-}
-
-public abstract class KingSlimeJewel_Anomaly<TJewel> : AnomalyNPCBehavior<TJewel> where TJewel : ModNPC
-{
-    public const float DespawnDistance = 5000f;
-
-    public bool HasEnteredPhase2
-    {
-        get => NPC.ai[2] == 1f;
-        set => NPC.ai[2] = value.ToInt();
-    }
-
-    public bool CanAttack
-    {
-        get => NPC.ai[3] != 1f;
-        set => NPC.ai[3] = (!value).ToInt();
-    }
 }

@@ -28,7 +28,7 @@ public sealed class AscendantInsignia_Tweak : CAItemTweak<AscendantInsignia>
     {
         get
         {
-            CAPlayer anomalyPlayer = Main.LocalPlayer.Anomaly();
+            CAPlayer anomalyPlayer = Main.LocalPlayer.Anomaly;
             return anomalyPlayer.YharimsGift && anomalyPlayer.YharimsGift_Blessing == YharimsGift_CurrentBlessing.AscendantInsignia;
         }
     }
@@ -108,7 +108,6 @@ public sealed class AscendantInsignia_CalamityPlayer : CalamityPlayerDetour
         self.ascendantInsignia = temp;
         if (self.ascendantInsignia && self.ascendantInsigniaBuffTime > 0)
         {
-            self.ascendantTrail = true;
             self.infiniteFlight = true;
             if (self.ascendantInsigniaBuffTime == 1)
                 self.Player.AddCooldown(AscendEffect.ID, 1500);

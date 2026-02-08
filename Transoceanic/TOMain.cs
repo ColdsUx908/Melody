@@ -26,12 +26,10 @@ global using Terraria.ModLoader.Core;
 global using Terraria.ModLoader.IO;
 global using Terraria.Utilities;
 global using Transoceanic.Commands;
-global using Transoceanic.Core;
-global using Transoceanic.Data;
-global using Transoceanic.Extensions;
+global using Transoceanic.Framework.Abstractions;
+global using Transoceanic.Framework.Helpers;
+global using Transoceanic.Framework.Helpers.AbstractionHelpers;
 global using Transoceanic.GlobalInstances;
-global using Transoceanic.Localization;
-global using Transoceanic.Utilities;
 global using ZLinq;
 
 namespace Transoceanic;
@@ -97,7 +95,8 @@ public sealed class TOMain : Mod
                 {
                     loader.Unload();
                 }
-                SyncEnabled = false;
+
+                TOSharedData.SyncEnabled = false;
                 Instance = null;
             }
         }
@@ -108,43 +107,4 @@ public sealed class TOMain : Mod
             Unloading = false;
         }
     }
-
-    public static bool DEBUG { get; internal set; } =
-#if DEBUG
-        true;
-#else
-        false;
-#endif
-
-
-    private const string DEBUGPlayerName = "~ColdsUx";
-
-    public static bool IsDEBUGPlayer(Player player) => DEBUG && player.name == DEBUGPlayerName;
-
-    /// <summary>
-    /// 是否启用Transoceanic模组内置的网络同步。
-    /// <br/>由于Transoceanic为客户端模组，该选项必须由依赖模组手动开启。
-    /// </summary>
-    public static bool SyncEnabled
-    {
-        get;
-        set
-        {
-            if (field && !value && !Unloading)
-                throw new InvalidOperationException("SyncEnabled cannot be set to false after it has been set to true, unless unloading.");
-            field = value;
-        }
-    }
-
-    #region Constant
-    public const string ModLocalizationPrefix = "Mods.Transoceanic.";
-    public const string DebugPrefix = ModLocalizationPrefix + "DEBUG.";
-    public const string DebugErrorMessageKey = ModLocalizationPrefix + "DEBUG.ErrorMessage";
-    public const string StringEmptyError = "String cannot be null or whitespace.";
-
-    public static readonly Color TODebugWarnColor = Color.Orange;
-    public static readonly Color TODebugErrorColor = new(0xFF, 0x00, 0x00);
-    public static readonly Color CelestialColor = new(0xAF, 0xFF, 0xFF);
-
-    #endregion Constant
 }

@@ -26,6 +26,8 @@ AnomalyMode: {
 
 KingSlime: {
 	GFBSummon: King Slime has cloned itself!
+	KingSlimeJewelEmerald.DisplayName: Emerald Jewel
+	KingSlimeJewelSapphire.DisplayName: Sapphire Jewel
 	KingSlimeJewelRainbow.DisplayName: Rainbow Jewel
 	RainbowExplosion.DisplayName: Rainbow Explosion
 	JewelProjectileRainbow.DisplayName: Rainbow Bolt
@@ -34,4 +36,5 @@ KingSlime: {
 EyeofCthulhu: {
 	GFBBlood: ""
 	BloodlettingServantNew.DisplayName: Bloodletting Servant
+	BloodlettingServant.DisplayName: Bloodletting Servant
 }

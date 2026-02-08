@@ -17,8 +17,7 @@ public static class CAExtensions
 {
     extension(Item item)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CAGlobalItem Anomaly() => item.GetGlobalItem<CAGlobalItem>();
+        public CAGlobalItem Anomaly => item?.GetGlobalItem<CAGlobalItem>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetBehavior(out CASingleItemBehavior itemBehavior, [CallerMemberName] string methodName = null!) => CAEntityChangeHelper.ItemBehaviors.TryGetBehavior(item, methodName, out itemBehavior);
@@ -26,13 +25,12 @@ public static class CAExtensions
 
     extension(CAItemTooltipModifier modifier)
     {
-        public void ApplyCATweakColorToDamage() => modifier.Modify(null, "Damage", l => l.OverrideColor = CAMain.GetGradientColor(0.25f));
+        public void ApplyCATweakColorToDamage() => modifier.Modify(null, "Damage", l => l.OverrideColor = CASharedData.GetGradientColor(0.25f));
     }
 
     extension(NPC npc)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CAGlobalNPC Anomaly() => npc.GetGlobalNPC<CAGlobalNPC>();
+        public CAGlobalNPC Anomaly => npc?.GetGlobalNPC<CAGlobalNPC>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetBehavior(out CASingleNPCBehavior npcBehavior, [CallerMemberName] string methodName = null!) => CAEntityChangeHelper.NPCBehaviors.TryGetBehavior(npc, methodName, out npcBehavior);
@@ -57,8 +55,6 @@ public static class CAExtensions
 
         public bool DoG => npc.ModNPC is DevourerofGodsHead or DevourerofGodsBody or DevourerofGodsTail;
 
-        public bool CosmicGuardian => npc.ModNPC is CosmicGuardianHead or CosmicGuardianBody or CosmicGuardianTail;
-
         public bool Thanatos => npc.active && npc.ModNPC is ThanatosHead or ThanatosBody1 or ThanatosBody2 or ThanatosTail;
 
         public bool ThanatosHead => npc.ModNPC is ThanatosHead;
@@ -70,20 +66,16 @@ public static class CAExtensions
         public bool ExoMechs => npc.Thanatos || npc.ExoTwins || npc.Ares;
 
         public void ApplyCalamityBossHealthBoost() => npc.lifeMax += (int)(npc.lifeMax * CalamityServerConfig.Instance.BossHealthBoost * 0.01f);
-
-        public int GetProjectileDamage<T>() where T : ModProjectile => npc.GetProjectileDamage(ModContent.ProjectileType<T>());
     }
 
     extension(Player player)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CAPlayer Anomaly() => player.GetModPlayer<CAPlayer>();
+        public CAPlayer Anomaly => player?.GetModPlayer<CAPlayer>();
     }
 
     extension(Projectile projectile)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CAGlobalProjectile Anomaly() => projectile.GetGlobalProjectile<CAGlobalProjectile>();
+        public CAGlobalProjectile Anomaly => projectile?.GetGlobalProjectile<CAGlobalProjectile>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetBehavior(out CASingleProjectileBehavior projectileBehavior, [CallerMemberName] string methodName = null!) => CAEntityChangeHelper.ProjectileBehaviors.TryGetBehavior(projectile, methodName, out projectileBehavior);

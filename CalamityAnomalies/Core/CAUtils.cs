@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using CalamityAnomalies.Publicizer.CalamityMod;
-using CalamityMod.Particles;
+using CalamityAnomalies.Publicizers.CalamityMod;
 
 namespace CalamityAnomalies.Core;
 
@@ -28,12 +27,6 @@ public static class CAUtils
             return type;
         else
             throw new ArgumentException($"Type '{fullTypeName}' not found in Calamity types.", nameof(fullTypeName));
-    }
-
-    public static void StopRain(bool force = false)
-    {
-        if (CalamityServerConfig.Instance.BossesStopWeather || force)
-            CalamityMod_.StopRain();
     }
 
     public static bool IsDefeatingLeviathan(NPC npc) => npc.LeviathanBoss && !TOIteratorFactory.NewActiveNPCIterator(n => n.LeviathanBoss, npc).Any();
@@ -70,13 +63,4 @@ public static class CAUtils
         CAMain.Instance.Assets.Request<Texture2D>("Assets/Textures/" + suffix, mode);
 
     public static bool Focus => DownedBossSystem.downedExoMechs && DownedBossSystem.downedCalamitas;
-
-    public static void ForceSpawnParticle(Particle particle)
-    {
-        if (!Main.gamePaused && !Main.dedServ && GeneralParticleHandler_Publicizer.particles is not null)
-        {
-            GeneralParticleHandler_Publicizer.particles.Add(particle);
-            particle.Type = GeneralParticleHandler_Publicizer.particleTypes[particle.GetType()];
-        }
-    }
 }

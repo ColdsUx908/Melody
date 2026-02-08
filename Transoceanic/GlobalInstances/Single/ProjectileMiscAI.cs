@@ -6,7 +6,7 @@ public sealed class ProjectileMiscAI : TOGlobalProjectileBehavior
 
     public override bool PreAI(Projectile projectile)
     {
-        TOGlobalProjectile oceanProjectile = projectile.Ocean();
+        TOGlobalProjectile oceanProjectile = projectile.Ocean;
         if (oceanProjectile.AlwaysRotating)
             projectile.VelocityToRotation(oceanProjectile.RotationOffset);
         return true;

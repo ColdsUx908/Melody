@@ -1,10 +1,12 @@
-﻿namespace CalamityAnomalies.Core;
+﻿using Transoceanic;
+
+namespace CalamityAnomalies.Core;
 
 public sealed class CAMessageSender : ModSystem
 {
     public override void PreUpdateEntities()
     {
-        if (TOWorld.GameTimer == 360)
-            TOLocalizationUtils.ChatLocalizedText(CAMain.ModLocalizationPrefix + "Core.EnterWorldMessage.True", CAMain.MainColor, Main.LocalPlayer);
+        if (TOSharedData.GameTimer == 360)
+            TOLocalizationUtils.ChatLocalizedText(CASharedData.ModLocalizationPrefix + "Core.EnterWorldMessage.True", CASharedData.MainColor, Main.LocalPlayer);
     }
 }

@@ -3,7 +3,7 @@
 #if TEST_DEV
 using CalamityAnomalies.Anomaly.KingSlime;
 using CalamityAnomalies.GameContents;
-using CalamityAnomalies.Publicizer.CalamityMod;
+using CalamityAnomalies.Publicizers.CalamityMod;
 
 namespace CalamityAnomalies.DeveloperContents;
 

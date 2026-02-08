@@ -1,4 +1,6 @@
-﻿namespace Transoceanic.GlobalInstances;
+﻿using Transoceanic.DataStructures;
+
+namespace Transoceanic.GlobalInstances;
 
 public class TOGlobalProjectile : GlobalProjectile
 {
@@ -26,7 +28,7 @@ public class TOGlobalProjectile : GlobalProjectile
 
     public override void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter)
     {
-        if (!TOMain.SyncEnabled)
+        if (!TOSharedData.SyncEnabled)
             return;
 
         Dictionary<int, float> aiToSend = [];
@@ -60,7 +62,7 @@ public class TOGlobalProjectile : GlobalProjectile
 
     public override void ReceiveExtraAI(Projectile projectile, BitReader bitReader, BinaryReader binaryReader)
     {
-        if (!TOMain.SyncEnabled)
+        if (!TOSharedData.SyncEnabled)
             return;
 
         int recievedAICount = binaryReader.ReadInt32();

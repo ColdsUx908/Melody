@@ -1,7 +1,12 @@
 ﻿using System.Collections.ObjectModel;
+using CalamityAnomalies.Visuals;
+using CalamityMod.NPCs.VanillaNPCAIOverrides;
 using MonoMod.RuntimeDetour;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
+using Transoceanic;
+using Transoceanic.Framework.Helpers.AbstractionHelpers;
+using Transoceanic.Framework.RuntimeEditing;
 
 namespace CalamityAnomalies.Core;
 
@@ -10,7 +15,7 @@ public abstract class CAPlayerBehavior : PlayerBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public CAPlayer AnomalyPlayer => _entity.Anomaly();
+    public CAPlayer AnomalyPlayer => _entity.Anomaly;
 
     public CalamityPlayer CalamityPlayer => _entity.Calamity();
 }
@@ -70,8 +75,10 @@ public abstract class CAGlobalItemBehavior : GlobalItemBehavior
 #endregion General Behavior
 
 #region Single Behavior
-public enum OrigMethodType_CalamityGlobalNPC
+public enum CalamityLogicType_NPCBehavior
 {
+    VanillaOverrideAI,
+
     PreAI,
     GetAlpha,
     PreDraw,
@@ -81,14 +88,14 @@ public abstract class CASingleNPCBehavior : SingleNPCBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public CAGlobalNPC AnomalyNPC => _entity.Anomaly();
+    public CAGlobalNPC AnomalyNPC => _entity.Anomaly;
     public CalamityGlobalNPC CalamityNPC => _entity.Calamity();
 
     /// <summary>
-    /// 是否允许灾厄的相关方法执行。
+    /// 是否允许灾厄的相关逻辑执行。
     /// <br/>默认返回 <see langword="true"/>，即全部允许。
     /// </summary>
-    public virtual bool AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC method) => true;
+    public virtual bool AllowCalamityLogic(CalamityLogicType_NPCBehavior method) => true;
 
     /// <summary>
     /// 在更新灾厄的Boss血条之前调用。
@@ -130,14 +137,14 @@ public abstract class AnomalyNPCBehavior : CASingleNPCBehavior
 {
     public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => CAWorld.Anomaly && (AnomalyNPC?.ShouldRunAnomalyAI ?? false);
+    public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyNPC?.ShouldRunAnomalyAI ?? false);
 }
 
 public abstract class AnomalyNPCBehavior<T> : CASingleNPCBehavior<T> where T : ModNPC
 {
     public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => CAWorld.Anomaly && (AnomalyNPC?.ShouldRunAnomalyAI ?? false);
+    public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyNPC?.ShouldRunAnomalyAI ?? false);
 }
 
 public enum OrigMethodType_CalamityGlobalProjectile
@@ -151,7 +158,7 @@ public abstract class CASingleProjectileBehavior : SingleProjectileBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public CAGlobalProjectile AnomalyProjectile => _entity.Anomaly();
+    public CAGlobalProjectile AnomalyProjectile => _entity.Anomaly;
 
     public CalamityGlobalProjectile CalamityProjectile => _entity.Calamity();
 
@@ -181,21 +188,21 @@ public abstract class AnomalyProjectileBehavior : CASingleProjectileBehavior
 {
     public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => CAWorld.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
+    public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
 }
 
 public abstract class AnomalyProjecileBehavior<T> : CASingleProjectileBehavior<T> where T : ModProjectile
 {
     public override decimal Priority => 100m;
 
-    public override bool ShouldProcess => CAWorld.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
+    public override bool ShouldProcess => CASharedData.Anomaly && (AnomalyProjectile?.ShouldRunAnomalyAI ?? false);
 }
 
 public abstract class CASingleItemBehavior : SingleItemBehavior
 {
     public sealed override CAMain Mod => CAMain.Instance;
 
-    public CAGlobalItem AnomalyItem => _entity.Anomaly();
+    public CAGlobalItem AnomalyItem => _entity.Anomaly;
 
     public CalamityGlobalItem CalamityItem => _entity.Calamity();
 
@@ -227,7 +234,7 @@ public abstract class CANPCTweak : CASingleNPCBehavior, ICALocalizationPrefix, I
     public abstract CAGamePhase Phase { get; }
     public abstract string LocalizationName { get; }
 
-    void ICATweak.RegisterTweak() => CASet.TweakedNPCs[ApplyingType] = true;
+    void ICATweak.RegisterTweak() => CASharedData.TweakedNPCs[ApplyingType] = true;
 
     public override decimal Priority => 5m;
 }
@@ -237,7 +244,7 @@ public abstract class CANPCTweak<T> : CASingleNPCBehavior<T>, ICALocalizationPre
     public abstract CAGamePhase Phase { get; }
     public virtual string LocalizationName => Type.Name;
 
-    void ICATweak.RegisterTweak() => CASet.TweakedNPCs[ApplyingType] = true;
+    void ICATweak.RegisterTweak() => CASharedData.TweakedNPCs[ApplyingType] = true;
 
     public override decimal Priority => 5m;
 }
@@ -247,7 +254,7 @@ public abstract class CAProjectileTweak : CASingleProjectileBehavior, ICALocaliz
     public abstract CAGamePhase Phase { get; }
     public abstract string LocalizationName { get; }
 
-    void ICATweak.RegisterTweak() => CASet.TweakedProjectiles[ApplyingType] = true;
+    void ICATweak.RegisterTweak() => CASharedData.TweakedProjectiles[ApplyingType] = true;
 
     public override decimal Priority => 5m;
 }
@@ -270,11 +277,11 @@ public abstract class CAProjectileTweak<T> : CASingleProjectileBehavior<T>, ICAL
 
     void ICATweak.RegisterTweak()
     {
-        CASet.TweakedProjectiles[ApplyingType] = true;
+        CASharedData.TweakedProjectiles[ApplyingType] = true;
         foreach (int npcType in RelatedNPCs)
-            CASet.TweakedNPCs[npcType] = true;
+            CASharedData.TweakedNPCs[npcType] = true;
         foreach (int itemType in RelatedItems)
-            CASet.TweakedItems[itemType] = true;
+            CASharedData.TweakedItems[itemType] = true;
     }
 
     public override decimal Priority => 5m;
@@ -285,7 +292,7 @@ public abstract class CAItemTweak : CASingleItemBehavior, ICALocalizationPrefix,
     public abstract CAGamePhase Phase { get; }
     public abstract string LocalizationName { get; }
 
-    void ICATweak.RegisterTweak() => CASet.TweakedItems[ApplyingType] = true;
+    void ICATweak.RegisterTweak() => CASharedData.TweakedItems[ApplyingType] = true;
 
     public override decimal Priority => 5m;
 }
@@ -295,7 +302,7 @@ public abstract class CAItemTweak<T> : CASingleItemBehavior<T>, ICALocalizationP
     public abstract CAGamePhase Phase { get; }
     public virtual string LocalizationName => Type.Name;
 
-    void ICATweak.RegisterTweak() => CASet.TweakedItems[ApplyingType] = true;
+    void ICATweak.RegisterTweak() => CASharedData.TweakedItems[ApplyingType] = true;
 
     public override decimal Priority => 5m;
 }
@@ -318,7 +325,7 @@ public abstract class CANPCOverride<TSource> : ModNPCDetour<TSource>, ICALocaliz
     public abstract CAGamePhase Phase { get; }
     public virtual string LocalizationName => Name ?? SourceType.Name;
 
-    void ICATweak.RegisterTweak() => CASet.TweakedNPCs[ContentType] = true;
+    void ICATweak.RegisterTweak() => CASharedData.TweakedNPCs[ContentType] = true;
 
     protected override Hook ApplySingleDetour<TDelegate>(TDelegate detour, bool hasThis = true)
     {
@@ -1326,11 +1333,11 @@ public abstract class CAProjectileOverride<TSource> : ModProjectileDetour<TSourc
 
     void ICATweak.RegisterTweak()
     {
-        CASet.TweakedProjectiles[ContentType] = true;
+        CASharedData.TweakedProjectiles[ContentType] = true;
         foreach (int npcType in RelatedNPCs)
-            CASet.TweakedNPCs[npcType] = true;
+            CASharedData.TweakedNPCs[npcType] = true;
         foreach (int itemType in RelatedItems)
-            CASet.TweakedItems[itemType] = true;
+            CASharedData.TweakedItems[itemType] = true;
     }
 
     protected override Hook ApplySingleDetour<TDelegate>(TDelegate detour, bool hasThis = true)
@@ -1900,7 +1907,7 @@ public abstract class CAItemOverride<TSource> : ModItemDetour<TSource>, ICALocal
     public abstract CAGamePhase Phase { get; }
     public virtual string LocalizationName => Name ?? SourceType.Name;
 
-    void ICATweak.RegisterTweak() => CASet.TweakedItems[ContentType] = true;
+    void ICATweak.RegisterTweak() => CASharedData.TweakedItems[ContentType] = true;
 
     protected override Hook ApplySingleDetour<TDelegate>(TDelegate detour, bool hasThis = true)
     {
@@ -3212,12 +3219,12 @@ public sealed class CAEntityChangeHelper : IResourceLoader
 
     void IResourceLoader.PostSetupContent()
     {
-        Assembly assembly = CAMain.Assembly;
+        Assembly assembly = CASharedData.Assembly;
         NPCBehaviors.FillSet(assembly);
         ProjectileBehaviors.FillSet(assembly);
         ItemBehaviors.FillSet(assembly);
 
-        foreach (ICATweak caOverride in TOReflectionUtils.GetTypeInstancesDerivedFrom<ICATweak>(CAMain.Assembly))
+        foreach (ICATweak caOverride in TOReflectionUtils.GetTypeInstancesDerivedFrom<ICATweak>(CASharedData.Assembly))
             caOverride.RegisterTweak();
     }
 
@@ -3233,8 +3240,8 @@ public sealed class CAItemTweakTooltip : CAGlobalItemBehavior
 {
     public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
     {
-        if (CASet.TweakedItems[item.type])
-            tooltips.ModifyVanillaTooltipByName("ItemName", l => l.Text += TOMain.CelestialColor.FormatString(" " + Language.GetTextValue(CAMain.TweakLocalizationPrefix + "TweakIdentifier")));
+        if (CASharedData.TweakedItems[item.type])
+            tooltips.ModifyVanillaTooltipByName("ItemName", l => l.Text += TOSharedData.CelestialColor.FormatString(" " + Language.GetTextValue(CASharedData.TweakLocalizationPrefix + "TweakIdentifier")));
     }
 }
 #endregion Handler
@@ -3245,7 +3252,7 @@ public sealed class CalamityGlobalNPCBehaviorDetour : CalamityGlobalNPCDetour
     public override bool Detour_PreAI(Orig_PreAI orig, CalamityGlobalNPC self, NPC npc)
     {
         if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreAI)) &&
-            !npcBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.PreAI))
+            !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.PreAI))
             return true;
 
         return orig(self, npc);
@@ -3254,7 +3261,7 @@ public sealed class CalamityGlobalNPCBehaviorDetour : CalamityGlobalNPCDetour
     public override Color? Detour_GetAlpha(Orig_GetAlpha orig, CalamityGlobalNPC self, NPC npc, Color drawColor)
     {
         if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.GetAlpha)) &&
-            !npcBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.GetAlpha))
+            !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.GetAlpha))
             return null;
 
         return orig(self, npc, drawColor);
@@ -3263,10 +3270,22 @@ public sealed class CalamityGlobalNPCBehaviorDetour : CalamityGlobalNPCDetour
     public override bool Detour_PreDraw(Orig_PreDraw orig, CalamityGlobalNPC self, NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreDraw))
-            && npcBehavior.AllowOrigCalMethod(OrigMethodType_CalamityGlobalNPC.PreDraw))
+            && npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.PreDraw))
             return true;
 
         return orig(self, npc, spriteBatch, screenPos, drawColor);
+    }
+}
+
+public sealed class CalamityVanillaAIOverrideDetour : GlobalNPCDetour<CalamityVanillaAIOverrideNPC>
+{
+    public override bool Detour_PreAI(Orig_PreAI orig, CalamityVanillaAIOverrideNPC self, NPC npc)
+    {
+        if (npc.TryGetBehavior(out CASingleNPCBehavior npcBehavior, nameof(CASingleNPCBehavior.PreAI)) &&
+            !npcBehavior.AllowCalamityLogic(CalamityLogicType_NPCBehavior.VanillaOverrideAI))
+            return true;
+
+        return orig(self, npc);
     }
 }
 

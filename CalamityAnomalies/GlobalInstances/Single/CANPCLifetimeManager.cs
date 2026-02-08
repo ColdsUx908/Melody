@@ -6,19 +6,19 @@ public sealed class CANPCLifetimeManager : CAGlobalNPCBehavior
 
     public override void SetDefaults(NPC npc)
     {
-        CAGlobalNPC anomalyNPC = npc.Anomaly();
+        CAGlobalNPC anomalyNPC = npc.Anomaly;
 
         anomalyNPC.ShouldRunAnomalyAI = true;
     }
 
     public override bool PreAI(NPC npc)
     {
-        CAGlobalNPC anomalyNPC = npc.Anomaly();
+        CAGlobalNPC anomalyNPC = npc.Anomaly;
 
-        if (CAWorld.Anomaly)
+        if (CASharedData.Anomaly)
         {
             anomalyNPC.AnomalyAITimer++;
-            if (CAWorld.AnomalyUltramundane)
+            if (CASharedData.AnomalyUltramundane)
             {
                 anomalyNPC.AnomalyUltraAITimer++;
                 anomalyNPC.AnomalyUltraBarTimer = Math.Clamp(anomalyNPC.AnomalyUltraBarTimer + 1, 0, 120);

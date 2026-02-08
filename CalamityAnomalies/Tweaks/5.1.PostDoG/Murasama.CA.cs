@@ -1,5 +1,5 @@
-﻿using CalamityAnomalies.Publicizer.CalamityMod;
-using CalamityAnomalies.Publicizer.CalamityMod.NPCs;
+﻿using CalamityAnomalies.Publicizers.CalamityMod;
+using CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 using CalamityMod.Events;
 using CalamityMod.Items.Weapons.Melee;
 using CalamityMod.NPCs.AstrumAureus;
@@ -11,12 +11,14 @@ using CalamityMod.NPCs.Crabulon;
 using CalamityMod.NPCs.Cryogen;
 using CalamityMod.NPCs.HiveMind;
 using CalamityMod.NPCs.Leviathan;
+using CalamityMod.NPCs.NormalNPCs;
 using CalamityMod.NPCs.OldDuke;
 using CalamityMod.NPCs.Polterghast;
 using CalamityMod.NPCs.ProfanedGuardians;
 using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.NPCs.Yharon;
 using CalamityMod.Projectiles.Melee;
+using Transoceanic;
 
 namespace CalamityAnomalies.Tweaks;
 
@@ -110,32 +112,29 @@ public sealed class Murasama_Handler : IResourceLoader
 {
     public static bool IsSam(Player player) => player.name == "Jetstream Sam";
 
-    public static int UnlockedStatus(Player player) => DownedBossSystem.downedDoG || IsSam(player) ? 1 : TOMain.IsDEBUGPlayer(player) ? 2 : 0;
+    public static int UnlockedStatus(Player player) => DownedBossSystem.downedDoG || IsSam(player) ? 1 : TOSharedData.IsDEBUGPlayer(player) ? 2 : 0;
 
     public static bool Unlocked(Player player) => UnlockedStatus(player) > 0;
 
     private static Asset<Texture2D> _texture;
     public static Texture2D Texture => _texture?.Value;
 
+    [LoadTexture("CalamityMod/Items/Weapons/Melee/MurasamaSheathed")]
     private static Asset<Texture2D> _steathedTexture;
     public static Texture2D SteathedTexture => _steathedTexture?.Value;
 
+    [LoadTexture("CalamityMod/Items/Weapons/Melee/MurasamaGlow")]
     private static Asset<Texture2D> _glowTexture;
     public static Texture2D GlowTexture => _glowTexture?.Value;
 
     void IResourceLoader.PostSetupContent()
     {
         _texture = TextureAssets.Item[ModContent.ItemType<Murasama>()];
-        AssetRepository assets = CalamityMod_Publicizer.Instance.Assets;
-        _steathedTexture = assets.Request<Texture2D>("Items/Weapons/Melee/MurasamaSheathed");
-        _glowTexture = assets.Request<Texture2D>("Items/Weapons/Melee/MurasamaGlow");
     }
 
     void IResourceLoader.OnModUnload()
     {
         _texture = null;
-        _steathedTexture = null;
-        _glowTexture = null;
     }
 }
 
@@ -160,7 +159,7 @@ public sealed class Murasama_Tweak : CAItemTweak<Murasama>
             finalDamage = 20001f;
         else
         {
-            float baseDamage = CAWorld.LR ? 20f : 15f;
+            float baseDamage = CASharedData.LR ? 20f : 15f;
             float multiplier = 1f;
             if (NPC.downedBoss1)
                 multiplier += 0.2f;
@@ -205,7 +204,7 @@ public sealed class Murasama_Tweak : CAItemTweak<Murasama>
 
     public override void ModifyWeaponKnockback(Player player, ref StatModifier knockback)
     {
-        if (Murasama_Handler.IsSam(player) && CAWorld.LR)
+        if (Murasama_Handler.IsSam(player) && CASharedData.LR)
             knockback *= 2f;
     }
 
@@ -290,7 +289,7 @@ public sealed class MurasamaSlash_Tweak : CAProjectileTweak<MurasamaSlash>
         bool rageModeActive = calamityPlayer.rageModeActive;
         bool adrenalineModeActive = calamityPlayer.adrenalineModeActive;
 
-        Projectile.scale = isSam ? CAWorld.LR && rageModeActive && adrenalineModeActive ? 4f : 2f : DownedBossSystem.downedYharon ? 1.5f : 1f;
+        Projectile.scale = isSam ? CASharedData.LR && rageModeActive && adrenalineModeActive ? 4f : 2f : DownedBossSystem.downedYharon ? 1.5f : 1f;
         Projectile.extraUpdates = rageModeActive || adrenalineModeActive ? 1 : 0;
 
         if (ModProjectile.time == 0)
@@ -401,7 +400,7 @@ public sealed class MurasamaSlash_Tweak : CAProjectileTweak<MurasamaSlash>
         if (target.Ravager)
             modifiers.SourceDamage *= 3f;
 
-        if (!CAWorld.LR)
+        if (!CASharedData.LR)
             return;
 
         switch (target.ModNPC)
@@ -440,12 +439,12 @@ public sealed class MurasamaSlash_Tweak : CAProjectileTweak<MurasamaSlash>
                 }
                 break;
             case CrabShroom:
-            case HiveBlob or HiveBlob2 or DankCreeper or DarkHeart:
+            case HiveBlob or DankCreeper or DarkHeart:
             case CryogenShield:
             case AnahitasIceShield:
             case AureusSpawn:
-            case Bumblefuck when CAWorld.PermaFrostActive || NPC.AnyNPCs(out _, out Yharon yharon) && new Yharon_Publicizer(yharon).startSecondAI:
-            case Bumblefuck2:
+            case Dragonfolly when CASharedData.PermaFrostActive || NPC.AnyNPCs(out _, out Yharon yharon) && new Yharon_Publicizer(yharon).startSecondAI:
+            case WildBumblebirb:
             case CeaselessVoid when target.LifeRatio < 0.2f:
             case PhantomFuckYou:
                 modifiers.SetInstantKillBetter(target);
@@ -498,9 +497,6 @@ public sealed class MurasamaSlash_Tweak : CAProjectileTweak<MurasamaSlash>
                 break;
             case var _ when target.DoG:
                 modifiers.SourceDamage *= 2f;
-                break;
-            case var _ when target.CosmicGuardian:
-                modifiers.SourceDamage *= 6f;
                 break;
             case var _ when target.Thanatos:
                 modifiers.SourceDamage *= 1.5f;

@@ -9,7 +9,7 @@ namespace CalamityAnomalies.Tweaks;
  * 近战暴击率提升10%（原灾厄：5%）。
  */
 
-public sealed class ElementalGauntlet_Tweak : CAItemTweak<ElementalGauntlet>, ICALocalizationPrefix
+public sealed class ElementalGauntlet_Tweak : CAItemTweak<ElementalGauntlet>
 {
     public override CAGamePhase Phase => CAGamePhase.PostDoG;
 

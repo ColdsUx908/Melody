@@ -1,6 +1,6 @@
 ﻿using CalamityMod.NPCs.NormalNPCs;
-using CalamityMod.Particles;
-using Transoceanic.Data.Geometry;
+using Transoceanic.DataStructures.Particles;
+using Transoceanic.Framework.Helpers.AbstractionHelpers;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
@@ -26,11 +26,10 @@ public sealed class RainbowExplosion : CAModProjectile, IResourceLoader
         }
         set => Projectile.ai[1] = value?.whoAmI ?? Main.maxNPCs;
     }
-    private RainbowDirectionalPulseRing _particle;
 
-    public const float OriginalRadius = 78f;
+    public float LifeCompletion => Timer1 / 150f;
 
-    public override string Texture => CAMain.CalamityInvisibleProj;
+    public override string Texture => ParticleHelper.BaseParticleTexturePath + "HollowCircleHardEdge";
     public override string LocalizationCategory => "Anomaly.KingSlime";
 
     public override void SetDefaults()
@@ -49,33 +48,28 @@ public sealed class RainbowExplosion : CAModProjectile, IResourceLoader
         if (Jewel is not null && Jewel.active && Jewel.ModNPC is KingSlimeJewelRainbow)
             Projectile.Center = Jewel.Center;
 
-        switch (Timer1++)
-        {
-            case 0:
-                GeneralParticleHandler.SpawnParticle(_particle = new(Jewel.Center, Vector2.Zero, new Vector2(1f), 0, 0.05f, 45f, 150));
-                break;
-        }
+        Timer1++;
+
+        Projectile.scale = MathHelper.Lerp(0.05f, 25f, TOMathHelper.ExponentialEaseOut(LifeCompletion, 4f));
+    }
+
+    public override bool PreDraw(ref Color lightColor)
+    {
+        SpriteBatch spriteBatch = Main.spriteBatch;
+        Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.EnterDrawRegion_AdditiveBlend(spriteBatch);
+        spriteBatch.DrawFromCenter(Projectile.Texture, Projectile.Center - Main.screenPosition, Color.LerpMany(Color.RainbowColors, TOMathHelper.QuadraticEaseOut(LifeCompletion)) * (1f - TOMathHelper.SineEaseIn(LifeCompletion)), null, 0f, Projectile.scale);
+        Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.ExitParticleDrawRegion(spriteBatch);
+        return false;
     }
 
     public override bool? CanHitNPC(NPC target) =>
-        target.Ocean().TryGetMaster(NPCID.KingSlime, out NPC master)
+          target.Ocean.TryGetMaster(NPCID.KingSlime, out NPC master)
         && master == Master
         && _slimeTypesToClear.Contains(target.type);
 
-    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => new Circle(_particle.Position, OriginalRadius * _particle.Scale).Collides(targetHitbox);
+    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => new Circle(Projectile.Center, PulseRing.TextureRadius * Projectile.scale).Collides(targetHitbox);
 
     public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) => modifiers.SetInstantKillBetter(target);
-
-    public sealed class RainbowDirectionalPulseRing : DirectionalPulseRing
-    {
-        public RainbowDirectionalPulseRing(Vector2 position, Vector2 velocity, Vector2 squish, float rotation, float originalScale, float finalScale, int lifeTime) : base(position, velocity, Color.White, squish, rotation, originalScale, finalScale, lifeTime) { }
-
-        public override void Update()
-        {
-            base.Update();
-            Color = Color.LerpMany(Color.RainbowColors, TOMathHelper.ParabolicInterpolation(LifetimeCompletion));
-        }
-    }
 
     void IResourceLoader.PostSetupContent()
     {
@@ -103,6 +97,6 @@ public sealed class RainbowExplosion : CAModProjectile, IResourceLoader
 
     void IResourceLoader.OnModUnload()
     {
-        _slimeTypesToClear.Clear();
+        _slimeTypesToClear = null;
     }
 }

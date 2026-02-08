@@ -1,0 +1,14 @@
+Mods: {
+	CalamityAnomalies: {
+		Mods: {
+			CalamityAnomalies: {
+				Anomaly: {
+					KingSlime: {
+						KingSlimeJewelEmerald.DisplayName: King Slime Jewel Emerald
+						KingSlimeJewelSapphire.DisplayName: King Slime Jewel Sapphire
+					}
+				}
+			}
+		}
+	}
+}

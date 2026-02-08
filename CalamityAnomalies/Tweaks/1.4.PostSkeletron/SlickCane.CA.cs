@@ -13,7 +13,7 @@ public sealed class SlickCaneProjectile_Tweak : CAProjectileTweak<SlickCaneProje
 
     public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
     {
-        if (CAWorld.LR && target.type == NPCID.WallofFleshEye)
+        if (CASharedData.LR && target.type == NPCID.WallofFleshEye)
             modifiers.SetCrit();
     }
 }
