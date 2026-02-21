@@ -1,6 +1,5 @@
 ﻿using CalamityMod.NPCs.NormalNPCs;
-using Transoceanic.DataStructures.Particles;
-using Transoceanic.Framework.Helpers.AbstractionHelpers;
+using Transoceanic.Framework.Helpers.AbstractionHandlers;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
@@ -29,7 +28,7 @@ public sealed class RainbowExplosion : CAModProjectile, IResourceLoader
 
     public float LifeCompletion => Timer1 / 150f;
 
-    public override string Texture => ParticleHelper.BaseParticleTexturePath + "HollowCircleHardEdge";
+    public override string Texture => ParticleHandler.BaseParticleTexturePath + "HollowCircleHardEdgeHD";
     public override string LocalizationCategory => "Anomaly.KingSlime";
 
     public override void SetDefaults()
@@ -50,15 +49,15 @@ public sealed class RainbowExplosion : CAModProjectile, IResourceLoader
 
         Timer1++;
 
-        Projectile.scale = MathHelper.Lerp(0.05f, 25f, TOMathHelper.ExponentialEaseOut(LifeCompletion, 4f));
+        Projectile.scale = MathHelper.Lerp(0f, 4f, TOMathUtils.ExponentialEaseOut(LifeCompletion, 4f)); //有效杀伤半径：185格
     }
 
     public override bool PreDraw(ref Color lightColor)
     {
         SpriteBatch spriteBatch = Main.spriteBatch;
-        Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.EnterDrawRegion_AdditiveBlend(spriteBatch);
-        spriteBatch.DrawFromCenter(Projectile.Texture, Projectile.Center - Main.screenPosition, Color.LerpMany(Color.RainbowColors, TOMathHelper.QuadraticEaseOut(LifeCompletion)) * (1f - TOMathHelper.SineEaseIn(LifeCompletion)), null, 0f, Projectile.scale);
-        Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.ExitParticleDrawRegion(spriteBatch);
+        ParticleHandler.EnterDrawRegion_AdditiveBlend(spriteBatch);
+        spriteBatch.DrawFromCenter(Projectile.Texture, Projectile.Center - Main.screenPosition, Color.LerpMany(Color.RainbowColors, TOMathUtils.QuadraticEaseOut(LifeCompletion)), null, 0f, Projectile.scale);
+        ParticleHandler.ExitParticleDrawRegion(spriteBatch);
         return false;
     }
 
@@ -67,7 +66,7 @@ public sealed class RainbowExplosion : CAModProjectile, IResourceLoader
         && master == Master
         && _slimeTypesToClear.Contains(target.type);
 
-    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => new Circle(Projectile.Center, PulseRing.TextureRadius * Projectile.scale).Collides(targetHitbox);
+    public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => new Circle(Projectile.Center, PulseRing.TextureRadiusHD * Projectile.scale).Collides(targetHitbox);
 
     public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) => modifiers.SetInstantKillBetter(target);
 

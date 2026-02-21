@@ -22,6 +22,9 @@ public static partial class TOExtensions
             return false;
         }
 
+        public bool TryFindVanillaTooltipByName(string name, out int index, out TooltipLine tooltip) =>
+            tooltips.TryFindTooltip(l => l.Mod == "Terraria" && l.Name == name, out index, out tooltip);
+
         public void ModifyTooltip(Func<TooltipLine, bool> match, Action<TooltipLine> action)
         {
             ArgumentNullException.ThrowIfNull(action);

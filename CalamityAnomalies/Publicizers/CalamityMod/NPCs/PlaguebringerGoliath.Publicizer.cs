@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record PlaguebringerGoliath_Publicizer(PlaguebringerGoliath Source) : PublicizerBase<PlaguebringerGoliath>(Source)
+public record PlaguebringerGoliath_Publicizer(PlaguebringerGoliath Source) : Publicizer<PlaguebringerGoliath>(Source)
 {
     // biomeEnrageTimer (instance field)
     public static readonly FieldInfo i_f_biomeEnrageTimer = GetInstanceField("biomeEnrageTimer");

@@ -4,8 +4,7 @@ public static partial class TOExtensions
 {
     private static class Color_Extension
     {
-        public static readonly Color _fullGreen = new(0, 255, 0);
-        public static readonly List<Color> _rainbowColors = [Color.Red, Color.FullGreen, Color.Blue, Color.Red];
+        public static readonly List<Color> _rainbowColors = [Color.Red, Color.Lime, Color.Blue, Color.Red];
     }
 
     extension(Color color)
@@ -17,7 +16,6 @@ public static partial class TOExtensions
 
     extension(Color)
     {
-        public static Color FullGreen => Color_Extension._fullGreen;
         public static List<Color> RainbowColors => Color_Extension._rainbowColors;
         public static Color GetRandomRainbowColor() => Color.LerpMany(Color.RainbowColors, Main.rand.NextFloat());
         public static Color GetRandomRainbowColor(float minValue, float maxValue) => Color.LerpMany(Color.RainbowColors, Main.rand.NextFloat(minValue, maxValue));
@@ -42,7 +40,7 @@ public static partial class TOExtensions
                         return colors[0];
                     if (amount >= 1f)
                         return colors[^1];
-                    (int index, float localRatio) = TOMathHelper.SplitFloat(amount * (colors.Count - 1));
+                    (int index, float localRatio) = TOMathUtils.SplitFloat(amount * (colors.Count - 1));
                     return Color.Lerp(colors[index], colors[index + 1], localRatio);
             }
         }

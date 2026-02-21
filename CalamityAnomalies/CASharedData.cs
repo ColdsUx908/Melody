@@ -24,7 +24,9 @@ public sealed class CASharedData : ModSystem
 
     public static string ModName => field ??= CAMain.Instance.Name;
 
-    public static Color GetGradientColor(float ratio = 0.5f) => Color.LerpMany(ColorList, TOMathHelper.GetTimeSin(ratio / 2f, unsigned: true));
+    public static Color GetGradientColor(float ratio = 0.5f) => Color.LerpMany(ColorList, TOMathUtils.GetTimeSin(ratio / 2f, unsigned: true));
+
+    public static SoundStyle MetalPipeFalling = new("CalamityMod/Sounds/Custom/MetalPipeFalling");
 
     #region Sets
     public static bool[] TweakedNPCs { get; private set; }

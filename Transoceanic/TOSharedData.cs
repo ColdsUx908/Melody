@@ -18,8 +18,10 @@ true;
     public const string DebugErrorMessageKey = ModLocalizationPrefix + "DEBUG.ErrorMessage";
     public const string StringEmptyError = "String cannot be null or whitespace.";
 
+    public const string InvisibleProj = "Transoceanic/DataStructures/Textures/InvisibleProj";
+
     private const string DEBUGPlayerName = "~ColdsUx";
-    public static bool IsDEBUGPlayer(Player player) => DEBUG && player.name == DEBUGPlayerName;
+    public static bool IsDEBUGPlayer(Player player) => DEBUG && player?.name == DEBUGPlayerName;
 
     public static readonly Color TODebugWarnColor = Color.Orange;
     public static readonly Color TODebugErrorColor = new(0xFF, 0x00, 0x00);

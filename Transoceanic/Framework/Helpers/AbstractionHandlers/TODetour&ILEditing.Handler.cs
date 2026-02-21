@@ -4,7 +4,7 @@ using MonoMod.RuntimeDetour;
 
 namespace Transoceanic.Framework.RuntimeEditing;
 
-public sealed class TODetourHelper : IResourceLoader
+public sealed partial class TODetourHandler : IResourceLoader
 {
     public sealed class DetourSet : IEnumerable<Hook>
     {
@@ -117,27 +117,24 @@ public sealed class TODetourHelper : IResourceLoader
         Detours.Clear();
 
         foreach ((Type type, DetourClassToAttribute attribute) in TOReflectionUtils.GetTypesWithAttribute<DetourClassToAttribute>())
-            TODetourUtils.ApplyAllStaticMethodDetoursOfType(type, attribute.SourceType);
+            ApplyAllStaticMethodDetoursOfType(type, attribute.SourceType);
 
         foreach ((Type type, DetourClassTo_MultiSourceAttribute attribute) in TOReflectionUtils.GetTypesWithAttribute<DetourClassTo_MultiSourceAttribute>())
         {
             Type[] sourceTypes = attribute.SourceTypes;
             foreach (MethodInfo detour in type.GetRealMethods(TOReflectionUtils.StaticBindingFlags))
-                TODetourUtils.ApplyTypedStaticMethodDetour(detour, sourceTypes);
+                ApplyTypedStaticMethodDetour(detour, sourceTypes);
         }
 
         foreach ((MethodInfo detour, DetourMethodToAttribute attribute) in TOReflectionUtils.GetMethodsWithAttribute<DetourMethodToAttribute>())
-            TODetourUtils.ApplyStaticMethodDetour(detour, attribute.SourceType, attribute.ParamOffset < 0 ? null : attribute.ParamOffset);
+            ApplyStaticMethodDetour(detour, attribute.SourceType, attribute.ParamOffset < 0 ? null : attribute.ParamOffset);
 
         foreach (ITODetourProvider detourProvider in TOReflectionUtils.GetTypeInstancesDerivedFrom<ITODetourProvider>().OrderByDescending(d => d.LoadPriority))
             detourProvider.ApplyDetour();
     }
 
     void IResourceLoader.OnModUnload() => Detours.Clear();
-}
 
-public static partial class TODetourUtils
-{
     private const string DefaultPrefix = "Detour_";
     [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern = """^{0}(?<methodName>[\S]*?)(?:__[\S]*)?$""";
     [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern2 = """^{0}(?<typeName>[\S]*?)__(?<methodName>[\S]*?)(?:__[\S]*)?$""";
@@ -217,7 +214,7 @@ public static partial class TODetourUtils
         ArgumentNullException.ThrowIfNull(detour);
         DetourConfig detourConfig = detour.Attribute<CustomDetourConfigAttribute>()?.DetourConfig;
         Hook hook = detourConfig is not null ? new(source, detour, detourConfig, true) : new(source, detour, true);
-        TODetourHelper.Detours.Add(hook);
+        Detours.Add(hook);
         return hook;
     }
 
@@ -231,7 +228,7 @@ public static partial class TODetourUtils
         ArgumentNullException.ThrowIfNull(detour);
         DetourConfig detourConfig = detour.Method.Attribute<CustomDetourConfigAttribute>()?.DetourConfig;
         Hook hook = detourConfig is not null ? new(source, detour, detourConfig, true) : new(source, detour, true);
-        TODetourHelper.Detours.Add(hook);
+        Detours.Add(hook);
         return hook;
     }
 
@@ -357,7 +354,7 @@ public static partial class TODetourUtils
     }
 }
 
-public sealed class TOILEditingHelper : IResourceLoader
+public sealed partial class TOILEditingHandler : IResourceLoader
 {
 
     internal static readonly List<ILHook> Manipulators = [];
@@ -369,16 +366,13 @@ public sealed class TOILEditingHelper : IResourceLoader
         foreach ((MethodInfo manipulator, ILEditingMethodToAttribute attribute) in TOReflectionUtils.GetMethodsWithAttribute<ILEditingMethodToAttribute>())
         {
             Type sourceType = attribute.SourceType;
-            if (TOILEditingUtils.EvaluateManipulatorName(manipulator, out string sourceName))
-                TOILEditingUtils.Modify(sourceType, sourceName, manipulator);
+            if (EvaluateManipulatorName(manipulator, out string sourceName))
+                Modify(sourceType, sourceName, manipulator);
         }
     }
 
     void IResourceLoader.OnModUnload() => Manipulators.Clear();
-}
 
-public static partial class TOILEditingUtils
-{
     [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern = """^{0}(?<methodName>[\S]*?)(?:__[\S]*)?$""";
 
     /// <summary>
@@ -438,7 +432,7 @@ public static partial class TOILEditingUtils
     {
         DetourConfig detourConfig = manipMethod.Attribute<CustomDetourConfigAttribute>()?.DetourConfig;
         ILHook hook = detourConfig is not null ? new ILHook(source, manip, detourConfig, true) : new ILHook(source, manip, true);
-        TOILEditingHelper.Manipulators.Add(hook);
+        Manipulators.Add(hook);
         return hook;
     }
 }

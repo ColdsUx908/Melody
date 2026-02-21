@@ -26,7 +26,7 @@ public struct PolarVector2 : IEquatable<PolarVector2>
     public float Angle
     {
         readonly get => Radius == 0f ? 0f : field;
-        set => field = Radius == 0f ? 0f : TOMathHelper.NormalizeAngle(value); //零向量的角度强制为0
+        set => field = Radius == 0f ? 0f : TOMathUtils.NormalizeAngle(value); //零向量的角度强制为0
     }
 
     /// <summary>
@@ -256,27 +256,27 @@ public struct PolarVector2 : IEquatable<PolarVector2>
         //0点钟方向（同12点钟方向）
         -UnitY,
         //1点钟方向 (5π/3)
-        new(TOMathHelper.PiOver3 * 5f), 
+        new(TOMathUtils.PiOver3 * 5f), 
         //2点钟方向 (11π/6)
-        new(TOMathHelper.PiOver6 * 11f),
+        new(TOMathUtils.PiOver6 * 11f),
         //3点钟方向 (0)
         UnitX,
         //4点钟方向 (π/6)
-        new(TOMathHelper.PiOver6),
+        new(TOMathUtils.PiOver6),
         //5点钟方向 (π/3)
-        new(TOMathHelper.PiOver3),
+        new(TOMathUtils.PiOver3),
         //6点钟方向 (π/2)
         UnitY,
         //7点钟方向 (2π/3)
-        new(TOMathHelper.PiOver3 * 2f),
+        new(TOMathUtils.PiOver3 * 2f),
         //8点钟方向 (5π/6)
-        new(TOMathHelper.PiOver6 * 5f),
+        new(TOMathUtils.PiOver6 * 5f),
         //9点钟方向 (π)
         -UnitX,
         //10点钟方向 (7π/6)
-        new(TOMathHelper.PiOver6 * 7f),
+        new(TOMathUtils.PiOver6 * 7f),
         //11点钟方向 (4π/3)
-        new(TOMathHelper.PiOver3 * 4f),
+        new(TOMathUtils.PiOver3 * 4f),
     ];
     #endregion 预定义量
 }

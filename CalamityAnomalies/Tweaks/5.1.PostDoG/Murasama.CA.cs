@@ -1,5 +1,4 @@
-﻿using CalamityAnomalies.Publicizers.CalamityMod;
-using CalamityAnomalies.Publicizers.CalamityMod.NPCs;
+﻿using CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 using CalamityMod.Events;
 using CalamityMod.Items.Weapons.Melee;
 using CalamityMod.NPCs.AstrumAureus;
@@ -110,7 +109,7 @@ namespace CalamityAnomalies.Tweaks;
 
 public sealed class Murasama_Handler : IResourceLoader
 {
-    public static bool IsSam(Player player) => player.name == "Jetstream Sam";
+    public static bool IsSam(Player player) => player?.name == "Jetstream Sam";
 
     public static int UnlockedStatus(Player player) => DownedBossSystem.downedDoG || IsSam(player) ? 1 : TOSharedData.IsDEBUGPlayer(player) ? 2 : 0;
 

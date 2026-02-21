@@ -1,4 +1,4 @@
-﻿//#define CELESS_DEV
+﻿#define CELESS_DEV
 
 using CalamityAnomalies.Assets.Textures;
 using CalamityAnomalies.GameContents;
@@ -8,8 +8,7 @@ using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework.Input;
 using Terraria.GameContent.ItemDropRules;
 using Transoceanic;
-using Transoceanic.DataStructures.Particles;
-using Transoceanic.Framework.Helpers.AbstractionHelpers;
+using Transoceanic.Framework.Helpers.AbstractionHandlers;
 
 namespace CalamityAnomalies.DeveloperContents;
 
@@ -425,7 +424,7 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
     public const int LifeTime = 50;
 #endif
 
-    public override string Texture => CASharedData.CalamityInvisibleProj;
+    public override string Texture => TOSharedData.InvisibleProj;
 
     public override string LocalizationCategory => "DeveloperContents";
 
@@ -473,16 +472,16 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
             case BehaviorType.Dream:
                 Projectile.Center = Projectile.Owner.Center;
                 Projectile.timeLeft = LifeTime;
-                float interpolation = TOMathHelper.QuadraticEaseOut(Timer1 > 2398 ? (2598 - Timer1) / 200f : Math.Clamp(Timer1 / 240f, 0f, 1f));
+                float interpolation = TOMathUtils.QuadraticEaseOut(Timer1 > 2398 ? (2598 - Timer1) / 200f : Math.Clamp(Timer1 / 240f, 0f, 1f));
                 if (Main.rand.NextProbability((float)(Timer1 > 2398 ? (2598 - Timer1) / 200f : Math.Clamp(Timer1 / 240f, 0f, 1f)) * 0.8f))
-                    TOParticleHandler.SpawnParticle(new OrbParticle(SnowflakeCenter, Main.rand.NextVector2Circular(6f, 4f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.4f, 0.7f), Color.White, Main.rand.NextFloat(0.9f, 1.4f), 0.8f, needed: true));
+                    ParticleHandler.SpawnParticle(new OrbParticle(SnowflakeCenter, Main.rand.NextVector2Circular(6f, 4f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.4f, 0.7f), Color.White, Main.rand.NextFloat(0.9f, 1.4f), 0.8f, important: true));
                 SnowflakeScale = 0.7f * interpolation;
                 SnowflakeRotation += 0.03f * interpolation * interpolation;
                 if (!ShouldStopRotating)
                 {
-                    Projectile.rotation += TOMathHelper.PiOver3 / LifeTime2 * interpolation;
+                    Projectile.rotation += TOMathUtils.PiOver3 / LifeTime2 * interpolation;
                     if (RealRotation > MathHelper.TwoPi - MathHelper.PiOver4)
-                        Projectile.rotation -= TOMathHelper.PiOver3 / 130f * Utils.Remap(Projectile.rotation, MathHelper.Pi * 2.25f, MathHelper.Pi * 2.5f, 0f, 1f);
+                        Projectile.rotation -= TOMathUtils.PiOver3 / 130f * Utils.Remap(Projectile.rotation, MathHelper.Pi * 2.25f, MathHelper.Pi * 2.5f, 0f, 1f);
                     if (RealRotation > MathHelper.TwoPi)
                     {
                         RealRotation = 0f;
@@ -508,10 +507,10 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
                         if (Timer1 == 1)
                         {
                             Projectile.Center = destination;
-                            Projectile.velocity = new PolarVector2(3f, MathHelper.PiOver2 + TOMathHelper.PiOver6);
+                            Projectile.velocity = new PolarVector2(3f, MathHelper.PiOver2 + TOMathUtils.PiOver6);
                         }
                         float distance = Projectile.Distance(depart);
-                        Projectile.Homing(depart, distance < 50f ? 1f : 0.075f, velocityOverride: Projectile.velocity.Length() * Utils.Remap(distance, 0f, 1000f, 0.9943f, 1f));
+                        Projectile.Homing(depart, HomingAlgorithm.SmoothStep, distance < 50f ? 1f : 0.075f, velocityOverride: Projectile.velocity.Length() * Utils.Remap(distance, 0f, 1000f, 0.9943f, 1f));
                         if (Projectile.Center == depart && Projectile.Owner.Center.X > DepartX - 88)
                         {
                             Timer1 = 0;
@@ -532,7 +531,7 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
                             Projectile.velocity = new PolarVector2(0.02f, -MathHelper.PiOver2);
                         }
                         float distance2 = Projectile.Distance(destination);
-                        Projectile.Homing(destination, distance2 < 50f ? 1f : distance2 < 200f ? 0.1f : 0.045f, velocityOverride: distance2 < 500f ? Projectile.velocity.Length() * Utils.Remap(distance2, 0f, 500f, 0.9947f, 1f) : Math.Min(Projectile.velocity.Length() + 0.01f, 1.5f));
+                        Projectile.Homing(destination, HomingAlgorithm.SmoothStep, distance2 < 50f ? 1f : distance2 < 200f ? 0.1f : 0.045f, velocityOverride: distance2 < 500f ? Projectile.velocity.Length() * Utils.Remap(distance2, 0f, 500f, 0.9947f, 1f) : Math.Min(Projectile.velocity.Length() + 0.01f, 1.5f));
                         if (Projectile.Center == destination && Projectile.Owner.Center.X > DestinationX + 256)
                         {
                             Timer1 = 0;
@@ -541,13 +540,13 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
                         break;
                     case 4:
                         if (Timer1 > 200)
-                            interpolation3 = TOMathHelper.QuadraticEaseOut((float)((700 - Timer1) / 500f));
+                            interpolation3 = TOMathUtils.QuadraticEaseOut((float)((700 - Timer1) / 500f));
                         if (Timer1 > 100)
-                            interpolation4 = TOMathHelper.QuadraticEaseOut((float)((700 - Timer1) / 600f));
+                            interpolation4 = TOMathUtils.QuadraticEaseOut((float)((700 - Timer1) / 600f));
                         if (Timer1 == 500)
                         {
                             for (int i = 0; i < 2000; i++)
-                                TOParticleHandler.SpawnParticle(new OrbParticle(Projectile.Owner.Center + new Vector2(Main.rand.NextFloat(-1600f, 1600f), -1300f - Main.rand.NextFloat(3700f)), Main.rand.NextVector2Circular(8f, 6f), Main.rand.Next(370, 660), Main.rand.NextFloat(0.4f, 0.7f), Color.White, Main.rand.NextFloat(0.25f, 0.7f), 0.8f, needed: true));
+                                ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Owner.Center + new Vector2(Main.rand.NextFloat(-1600f, 1600f), -1300f - Main.rand.NextFloat(3700f)), Main.rand.NextVector2Circular(8f, 6f), Main.rand.Next(370, 660), Main.rand.NextFloat(0.4f, 0.7f), Color.White, Main.rand.NextFloat(0.25f, 0.7f), 0.8f, important: true));
                         }
                         if (Timer1 > 700)
                             Projectile.Kill();
@@ -600,7 +599,7 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
                                 a *= multiplier;
                                 b *= multiplier;
                             }
-                            float angle = TOMathHelper.PiOver6 + TOMathHelper.PiOver3 * (j - 2);
+                            float angle = TOMathUtils.PiOver6 + TOMathUtils.PiOver3 * (j - 2);
                             Vector2 circleCenter = Projectile.Center + new PolarVector2(radius, angle);
                             (float sin, float cos) = MathF.SinCos(MathHelper.Lerp(-EllipseData.MaxAngleOffset, EllipseData.MaxAngleOffset, amount));
                             Vector2 position = circleCenter + new Vector2(a * cos, b * sin).RotatedBy(angle);
@@ -629,7 +628,7 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
             Vector2 origin = OrbParticle.Texture.Size() * 0.5f;
             for (int j = 0; j < 6; j++)
             {
-                int localTimer = TOMathHelper.Min(Timer2 > 0 ? (100 - Timer2) / 2 : 100, Timer1 - j * 10, LifeTime);
+                int localTimer = TOMathUtils.Min(Timer2 > 0 ? (100 - Timer2) / 2 : 100, Timer1 - j * 10, LifeTime);
                 for (int i = 0; i <= localTimer * 10; i++)
                 {
                     float a = radius * EllipseData.AMultiplier; //椭圆半长轴
@@ -641,7 +640,7 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
                         a *= multiplier;
                         b *= multiplier;
                     }
-                    float angle = TOMathHelper.PiOver6 + TOMathHelper.PiOver3 * (j - 2);
+                    float angle = TOMathUtils.PiOver6 + TOMathUtils.PiOver3 * (j - 2);
                     Vector2 circleCenter = Projectile.Center + new PolarVector2(radius, angle);
                     (float sin, float cos) = MathF.SinCos(MathHelper.Lerp(-EllipseData.MaxAngleOffset, EllipseData.MaxAngleOffset, amount));
                     Vector2 position = circleCenter + new Vector2(a * cos, b * sin).RotatedBy(angle);
@@ -682,7 +681,7 @@ public sealed class ColdheartIcicleSnowflake : CAModProjectile, ICAModProjectile
 {
     public const int LeftTime = 360;
 
-    public override string Texture => CASharedData.CalamityInvisibleProj;
+    public override string Texture => TOSharedData.InvisibleProj;
 
     public override string LocalizationCategory => "DeveloperContents";
 
@@ -707,17 +706,17 @@ public sealed class ColdheartIcicleSnowflake : CAModProjectile, ICAModProjectile
         Lighting.AddLight(Projectile.Center, Color.White.ToVector3());
 
         Timer1++;
-        float interpolation = TOMathHelper.QuadraticEaseOut(Timer1 <= 10 ? Timer1 / 10f : Timer1 >= LeftTime - 25 ? (LeftTime - Timer1) / 25f : 1f);
+        float interpolation = TOMathUtils.QuadraticEaseOut(Timer1 <= 10 ? Timer1 / 10f : Timer1 >= LeftTime - 25 ? (LeftTime - Timer1) / 25f : 1f);
         Projectile.velocity.Modulus = Utils.Remap(Timer1, 0, LeftTime, 18f, 30f) * interpolation;
         Projectile.BetterChangeScale(80, 80, 0.5f * interpolation, Projectile.Center);
         Projectile.rotation += 0.05f * interpolation;
-        Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new OrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(4f, 4f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.35f, 0.6f), Color.White, Main.rand.NextFloat(0.8f, 1.3f), 0.8f, important: true));
+        ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(4f, 4f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.35f, 0.6f), Color.White, Main.rand.NextFloat(0.8f, 1.3f), 0.8f, important: true));
         if (Projectile.timeLeft <= 25)
-            Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new OrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(5f, 5f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.35f, 0.6f), Color.White, Main.rand.NextFloat(0.8f, 1.3f), 0.8f, important: true));
+            ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(5f, 5f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.35f, 0.6f), Color.White, Main.rand.NextFloat(0.8f, 1.3f), 0.8f, important: true));
         if (Projectile.timeLeft <= 8)
         {
-            Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new OrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(6f, 6f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.35f, 0.6f), Color.White, Main.rand.NextFloat(0.8f, 1.3f), 0.8f, important: true));
-            Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new OrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(7f, 7f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.35f, 0.6f), Color.White, Main.rand.NextFloat(0.8f, 1.3f), 0.8f, important: true));
+            ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(6f, 6f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.35f, 0.6f), Color.White, Main.rand.NextFloat(0.8f, 1.3f), 0.8f, important: true));
+            ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(7f, 7f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.35f, 0.6f), Color.White, Main.rand.NextFloat(0.8f, 1.3f), 0.8f, important: true));
         }
     }
 
@@ -733,7 +732,7 @@ public sealed class ColdheartIcicleSnowflake : CAModProjectile, ICAModProjectile
         Vector2 origin = new(CATextures.Scale1.Width / 2f, CATextures.Scale1.Height);
         for (int i = 0; i < 6; i++)
         {
-            float angle = rotation + MathHelper.PiOver2 + TOMathHelper.PiOver3 * i;
+            float angle = rotation + MathHelper.PiOver2 + TOMathUtils.PiOver3 * i;
             Main.EntitySpriteDraw(CATextures.Scale1, position, null, Color.White, angle, origin, scale, SpriteEffects.None, 0f);
         }
     }

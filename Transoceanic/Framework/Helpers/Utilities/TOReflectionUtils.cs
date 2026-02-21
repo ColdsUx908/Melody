@@ -54,6 +54,46 @@ public static class TOReflectionUtils
         nameof(MemberwiseClone)
     ];
 
+    public static object CreateInstanceSafe(Type type)
+    {
+        if (!type.IsAbstract && !type.IsInterface)
+        {
+            if (type.HasParameterlessConstructor)
+            {
+                try
+                {
+                    return Activator.CreateInstance(type, true);
+                }
+                catch
+                {
+                    return RuntimeHelpers.GetUninitializedObject(type);
+                }
+            }
+            else
+                return RuntimeHelpers.GetUninitializedObject(type);
+        }
+        else
+            return null;
+    }
+
+    public static T CreateInstanceSafe<T>() where T : class => (T)CreateInstanceSafe(typeof(T));
+
+    public static bool TryCreateInstanceSafe(Type type, out object instance) => (instance = CreateInstanceSafe(type)) is not null;
+
+    public static bool TryCreateInstanceSafe<T>(out T instance) where T : class
+    {
+        if (TryCreateInstanceSafe(typeof(T), out object obj) && obj is T t)
+        {
+            instance = t;
+            return true;
+        }
+        else
+        {
+            instance = null;
+            return false;
+        }
+    }
+
     /// <summary>
     /// 获取能被tML加载的所有类型。
     /// </summary>
@@ -110,18 +150,7 @@ public static class TOReflectionUtils
     public static IEnumerable<T> GetTypeInstancesDerivedFrom<T>(Assembly assemblyToSearch) where T : class =>
         AssemblyManager.GetLoadableTypes(assemblyToSearch)
         .Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract)
-        .Select(type =>
-        {
-            if (type.HasParameterlessConstructor)
-            {
-                try
-                {
-                    return (T)Activator.CreateInstance(type, true);
-                }
-                catch { }
-            }
-            return (T)RuntimeHelpers.GetUninitializedObject(type);
-        })
+        .Select(type => (T)CreateInstanceSafe(type))
         .Where(instance => instance is not null);
 
     /// <summary>
@@ -133,18 +162,7 @@ public static class TOReflectionUtils
     /// <returns></returns>
     public static IEnumerable<T> GetTypeInstancesDerivedFrom<T>() where T : class =>
         GetAllTypes().Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract)
-        .Select(type =>
-        {
-            if (type.HasParameterlessConstructor)
-            {
-                try
-                {
-                    return (T)Activator.CreateInstance(type, true);
-                }
-                catch { }
-            }
-            return (T)RuntimeHelpers.GetUninitializedObject(type);
-        })
+        .Select(type => (T)CreateInstanceSafe(type))
         .Where(instance => instance is not null);
 
     /// <summary>
@@ -155,23 +173,7 @@ public static class TOReflectionUtils
     /// <returns></returns>
     public static IEnumerable<(Type Type, T Instance)> GetTypesAndInstancesDerivedFrom<T>(Assembly assemblyToSearch) where T : class =>
         AssemblyManager.GetLoadableTypes(assemblyToSearch).Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract)
-        .Select(type =>
-        {
-            T instance;
-            if (type.HasParameterlessConstructor)
-            {
-                try
-                {
-                    instance = (T)Activator.CreateInstance(type, true);
-                }
-                catch
-                {
-                    instance = (T)RuntimeHelpers.GetUninitializedObject(type);
-                }
-            }
-            instance = (T)RuntimeHelpers.GetUninitializedObject(type);
-            return (type, instance);
-        })
+        .Select(type => (type, instance: (T)CreateInstanceSafe(type)))
         .Where(pair => pair.instance is not null);
 
     /// <summary>
@@ -183,24 +185,7 @@ public static class TOReflectionUtils
     /// <returns></returns>
     public static IEnumerable<(Type type, T instance)> GetTypesAndInstancesDerivedFrom<T>() where T : class =>
         GetAllTypes().Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract)
-        .Select(type =>
-        {
-            T instance;
-            if (type.HasParameterlessConstructor)
-            {
-                try
-                {
-                    instance = (T)Activator.CreateInstance(type, true);
-                }
-                catch
-                {
-                    instance = (T)RuntimeHelpers.GetUninitializedObject(type);
-                }
-            }
-            instance = (T)RuntimeHelpers.GetUninitializedObject(type);
-            return (type, instance);
-        })
-        .Where(pair => pair.instance is not null);
+        .Select(type => (type, instance: (T)CreateInstanceSafe(type))).Where(pair => pair.instance is not null);
 
     /// <summary>
     /// 获取指定程序集中所有指定特性修饰的类型及对应特性实例。
@@ -245,7 +230,7 @@ public static class TOReflectionUtils
         where TMember : MemberInfo
         where TAttribute : Attribute =>
         GetAllTypes().SelectMany(type => type.GetMembers(UniversalBindingFlags)).OfType<TMember>()
-        .Select(member => (member, attribute: member.Attribute<TAttribute>(inherit))).Where(pair => pair.attribute != null);
+        .Select(member => (member, attribute: member.Attribute<TAttribute>(inherit))).Where(pair => pair.attribute is not null);
 
     public static void SetStructField<T>(ref T target, FieldInfo field, object value) where T : struct
     {

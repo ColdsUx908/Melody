@@ -1,11 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using CalamityAnomalies.Visuals;
-using CalamityMod.NPCs.VanillaNPCAIOverrides;
 using MonoMod.RuntimeDetour;
 using Terraria.GameContent.Bestiary;
 using Terraria.GameContent.UI;
-using Transoceanic;
-using Transoceanic.Framework.Helpers.AbstractionHelpers;
+using Transoceanic.Framework.Helpers.AbstractionHandlers;
 using Transoceanic.Framework.RuntimeEditing;
 
 namespace CalamityAnomalies.Core;
@@ -329,14 +327,14 @@ public abstract class CANPCOverride<TSource> : ModNPCDetour<TSource>, ICALocaliz
 
     protected override Hook ApplySingleDetour<TDelegate>(TDelegate detour, bool hasThis = true)
     {
-        if (TODetourUtils.EvaluateDetourName(detour.Method, out string sourceName) && SourceType.HasMethod(sourceName, hasThis ? TOReflectionUtils.InstanceBindingFlags : TOReflectionUtils.StaticBindingFlags, out MethodInfo sourceMethod))
+        if (TODetourHandler.EvaluateDetourName(detour.Method, out string sourceName) && SourceType.HasMethod(sourceName, hasThis ? TOReflectionUtils.InstanceBindingFlags : TOReflectionUtils.StaticBindingFlags, out MethodInfo sourceMethod))
         {
             if (_criticalDetours.Contains(sourceName))
-                return TODetourUtils.Modify(sourceMethod, detour);
+                return TODetourHandler.Modify(sourceMethod, detour);
             switch (GetType().HasRealMethod(sourceName, TOReflectionUtils.UniversalBindingFlags), sourceMethod.DeclaringType == SourceType)
             {
                 case (true, true):
-                    return TODetourUtils.Modify(sourceMethod, detour);
+                    return TODetourHandler.Modify(sourceMethod, detour);
                 case (false, true):
                     if (_exclusiveDetours.Contains(sourceName))
                         return null;
@@ -1342,14 +1340,14 @@ public abstract class CAProjectileOverride<TSource> : ModProjectileDetour<TSourc
 
     protected override Hook ApplySingleDetour<TDelegate>(TDelegate detour, bool hasThis = true)
     {
-        if (TODetourUtils.EvaluateDetourName(detour.Method, out string sourceName) && SourceType.HasMethod(sourceName, hasThis ? TOReflectionUtils.InstanceBindingFlags : TOReflectionUtils.StaticBindingFlags, out MethodInfo sourceMethod))
+        if (TODetourHandler.EvaluateDetourName(detour.Method, out string sourceName) && SourceType.HasMethod(sourceName, hasThis ? TOReflectionUtils.InstanceBindingFlags : TOReflectionUtils.StaticBindingFlags, out MethodInfo sourceMethod))
         {
             if (_criticalDetours.Contains(sourceName))
-                return TODetourUtils.Modify(sourceMethod, detour);
+                return TODetourHandler.Modify(sourceMethod, detour);
             switch (GetType().HasRealMethod(sourceName, TOReflectionUtils.UniversalBindingFlags), sourceMethod.DeclaringType == SourceType)
             {
                 case (true, true):
-                    return TODetourUtils.Modify(sourceMethod, detour);
+                    return TODetourHandler.Modify(sourceMethod, detour);
                 case (false, true):
                     if (_exclusiveDetours.Contains(sourceName))
                         return null;
@@ -1911,14 +1909,14 @@ public abstract class CAItemOverride<TSource> : ModItemDetour<TSource>, ICALocal
 
     protected override Hook ApplySingleDetour<TDelegate>(TDelegate detour, bool hasThis = true)
     {
-        if (TODetourUtils.EvaluateDetourName(detour.Method, out string sourceName) && SourceType.HasMethod(sourceName, hasThis ? TOReflectionUtils.InstanceBindingFlags : TOReflectionUtils.StaticBindingFlags, out MethodInfo sourceMethod))
+        if (TODetourHandler.EvaluateDetourName(detour.Method, out string sourceName) && SourceType.HasMethod(sourceName, hasThis ? TOReflectionUtils.InstanceBindingFlags : TOReflectionUtils.StaticBindingFlags, out MethodInfo sourceMethod))
         {
             if (_criticalDetours.Contains(sourceName))
-                return TODetourUtils.Modify(sourceMethod, detour);
+                return TODetourHandler.Modify(sourceMethod, detour);
             switch (GetType().HasRealMethod(sourceName, TOReflectionUtils.UniversalBindingFlags), sourceMethod.DeclaringType == SourceType)
             {
                 case (true, true):
-                    return TODetourUtils.Modify(sourceMethod, detour);
+                    return TODetourHandler.Modify(sourceMethod, detour);
                 case (false, true):
                     if (_exclusiveDetours.Contains(sourceName))
                         return null;
@@ -3224,8 +3222,8 @@ public sealed class CAEntityChangeHelper : IResourceLoader
         ProjectileBehaviors.FillSet(assembly);
         ItemBehaviors.FillSet(assembly);
 
-        foreach (ICATweak caOverride in TOReflectionUtils.GetTypeInstancesDerivedFrom<ICATweak>(CASharedData.Assembly))
-            caOverride.RegisterTweak();
+        foreach (ICATweak caTweak in TOReflectionUtils.GetTypeInstancesDerivedFrom<ICATweak>(CASharedData.Assembly))
+            caTweak.RegisterTweak();
     }
 
     void IResourceLoader.OnModUnload()
@@ -3233,15 +3231,6 @@ public sealed class CAEntityChangeHelper : IResourceLoader
         NPCBehaviors.Clear();
         ProjectileBehaviors.Clear();
         ItemBehaviors.Clear();
-    }
-}
-
-public sealed class CAItemTweakTooltip : CAGlobalItemBehavior
-{
-    public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
-    {
-        if (CASharedData.TweakedItems[item.type])
-            tooltips.ModifyVanillaTooltipByName("ItemName", l => l.Text += TOSharedData.CelestialColor.FormatString(" " + Language.GetTextValue(CASharedData.TweakLocalizationPrefix + "TweakIdentifier")));
     }
 }
 #endregion Handler

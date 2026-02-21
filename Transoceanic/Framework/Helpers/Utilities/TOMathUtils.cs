@@ -2,7 +2,7 @@
 
 namespace Transoceanic.Framework.Helpers;
 
-public static class TOMathHelper
+public static class TOMathUtils
 {
     public const float PiOver3 = MathHelper.Pi / 3f;
     public const float PiOver5 = MathHelper.Pi / 5f;
@@ -58,7 +58,7 @@ public static class TOMathHelper
     }
 
     /// <summary>
-    /// 确保 <paramref name="left"/> 不大于 <paramref name="right"/>，否则交换二者。
+    /// 必要时交换 <paramref name="left"/> 和 <paramref name="right"/> 的值，确保 <paramref name="left"/> 不大于 <paramref name="right"/>。
     /// </summary>
     public static void NormalizeMinMax<T>(ref T left, ref T right) where T : INumber<T>
     {
@@ -120,15 +120,9 @@ public static class TOMathHelper
     public static float QuadraticEaseOut(float ratio) => ratio * (2f - ratio);
 
     /// <summary>
-    /// 二次方缓入缓出 (Quadratic Ease-In-Out)。
-    /// <br/>计算公式为：<c>t < 0.5 ? 2 * t² : -2 * t² + 4t - 1</c>
+    /// 二次方缓入缓出。
     /// </summary>
-    public static float QuadraticEaseInOut(float ratio)
-    {
-        return ratio < 0.5f
-            ? 2f * ratio * ratio
-            : -2f * ratio * ratio + 4f * ratio - 1f;
-    }
+    public static float QuadraticEaseInOut(float ratio) => ratio < 0.5f ? 2f * ratio * ratio : -2f * ratio * ratio + 4f * ratio - 1f;
 
     /// <summary>
     /// 三次方缓入。
@@ -148,14 +142,9 @@ public static class TOMathHelper
 
     /// <summary>
     /// 三次方缓入缓出。
-    /// <br/>计算公式为：<c>t < 0.5 ? 4t³ : 4t³ - 12t² + 12t - 3</c>
     /// </summary>
-    public static float CubicEaseInOut(float ratio)
-    {
-        return ratio < 0.5f
-            ? 4f * ratio * ratio * ratio
-            : 4f * ratio * ratio * ratio - 12f * ratio * ratio + 12f * ratio - 3f;
-    }
+    public static float CubicEaseInOut(float ratio) =>
+        ratio < 0.5f ? 4f * ratio * ratio * ratio : 4f * ratio * ratio * ratio - 12f * ratio * ratio + 12f * ratio - 3f;
 
     /// <summary>
     /// 指数缓入。
@@ -169,14 +158,9 @@ public static class TOMathHelper
 
     /// <summary>
     /// 指数缓入缓出。
-    /// <br/>前半段使用指数缓入，后半段使用指数缓出。
     /// </summary>
-    public static float ExponentialEaseInOut(float ratio, float exponent)
-    {
-        return ratio < 0.5f
-            ? 0.5f * MathF.Pow(2f * ratio, exponent)
-            : 1f - 0.5f * MathF.Pow(2f * (1f - ratio), exponent);
-    }
+    public static float ExponentialEaseInOut(float ratio, float exponent) =>
+        ratio < 0.5f ? 0.5f * MathF.Pow(2f * ratio, exponent) : 1f - 0.5f * MathF.Pow(2f * (1f - ratio), exponent);
 
     /// <summary>
     /// 正弦缓入。
@@ -212,18 +196,16 @@ public static class TOMathHelper
     /// 对数缓入缓出。
     /// <br/>前半段使用对数缓入，后半段使用对数缓出。
     /// </summary>
-    public static float LogarithmicEaseInOut(float ratio)
-    {
-        return ratio < 0.5f
-            ? 0.5f * (1f - MathF.Log((MathF.E - 1f) * (1f - 2f * ratio) + 1f))
-            : 0.5f * MathF.Log((MathF.E - 1f) * (2f * ratio - 1f) + 1f) + 0.5f;
-    }
+    public static float LogarithmicEaseInOut(float ratio) =>
+        ratio < 0.5f ? 0.5f * (1f - MathF.Log((MathF.E - 1f) * (1f - 2f * ratio) + 1f)) : 0.5f * MathF.Log((MathF.E - 1f) * (2f * ratio - 1f) + 1f) + 0.5f;
 
     /// <summary>
-    /// 更平滑步进 (SmootherStep) - 使用五次方。
+    /// 更平滑插值，使用五次方。
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float SmootherStep(float ratio) => ratio * ratio * ratio * (ratio * (ratio * 6f - 15f) + 10f);
+
+    /// <inheritdoc cref="SmootherStep(float)"/>
+    public static float SmootherStep(float from, float to, float amount) => from + (to - from) * SmootherStep(amount);
     #endregion 插值
 
     #region 时间波动函数

@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record PerforatorHive_Publicizer(PerforatorHive Source) : PublicizerBase<PerforatorHive>(Source)
+public record PerforatorHive_Publicizer(PerforatorHive Source) : Publicizer<PerforatorHive>(Source)
 {
     // biomeEnrageTimer (instance field)
     public static readonly FieldInfo i_f_biomeEnrageTimer = GetInstanceField("biomeEnrageTimer");
@@ -53,7 +53,7 @@ public record PerforatorHive_Publicizer(PerforatorHive Source) : PublicizerBase<
     public void Movement(Player target, float velocity, float acceleration, float y) => i_d_Movement(Source, target, velocity, acceleration, y);
 }
 
-public record PerforatorHeadSmall_Publicizer(PerforatorHeadSmall Source) : PublicizerBase<PerforatorHeadSmall>(Source)
+public record PerforatorHeadSmall_Publicizer(PerforatorHeadSmall Source) : Publicizer<PerforatorHeadSmall>(Source)
 {
     // biomeEnrageTimer (instance field)
     public static readonly FieldInfo i_f_biomeEnrageTimer = GetInstanceField("biomeEnrageTimer");
@@ -75,7 +75,7 @@ public record PerforatorHeadSmall_Publicizer(PerforatorHeadSmall Source) : Publi
     }
 }
 
-public record PerforatorHeadLarge_Publicizer(PerforatorHeadLarge Source) : PublicizerBase<PerforatorHeadLarge>(Source)
+public record PerforatorHeadLarge_Publicizer(PerforatorHeadLarge Source) : Publicizer<PerforatorHeadLarge>(Source)
 {
     // biomeEnrageTimer (instance field)
     public static readonly FieldInfo i_f_biomeEnrageTimer = GetInstanceField("biomeEnrageTimer");

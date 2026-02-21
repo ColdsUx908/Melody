@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record Cryogen_Publicizer(Cryogen Source) : PublicizerBase<Cryogen>(Source)
+public record Cryogen_Publicizer(Cryogen Source) : Publicizer<Cryogen>(Source)
 {
     // LoadHeadIcons (static method)
     public static readonly MethodInfo s_m_LoadHeadIcons = GetStaticMethod("LoadHeadIcons");

@@ -1,8 +1,8 @@
 ﻿using Transoceanic.DataStructures.Geometry;
 
-namespace Transoceanic.Framework.Helpers.AbstractionHelpers;
+namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
 
-public static class TOCollisionHelper
+public static class CollisionHandler
 {
     public static class SingleCollision
     {

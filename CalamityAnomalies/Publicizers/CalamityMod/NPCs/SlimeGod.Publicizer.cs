@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record SlimeGodCore_Publicizer(SlimeGodCore Source) : PublicizerBase<SlimeGodCore>(Source)
+public record SlimeGodCore_Publicizer(SlimeGodCore Source) : Publicizer<SlimeGodCore>(Source)
 {
     // slimesSpawned (instance field)
     public static readonly FieldInfo i_f_slimesSpawned = GetInstanceField("slimesSpawned");
@@ -23,7 +23,7 @@ public record SlimeGodCore_Publicizer(SlimeGodCore Source) : PublicizerBase<Slim
     }
 }
 
-public record CrimulanPaladin_Publicizer(CrimulanPaladin Source) : PublicizerBase<CrimulanPaladin>(Source)
+public record CrimulanPaladin_Publicizer(CrimulanPaladin Source) : Publicizer<CrimulanPaladin>(Source)
 {
     // bossLife (instance field)
     public static readonly FieldInfo i_f_bossLife = GetInstanceField("bossLife");
@@ -34,7 +34,7 @@ public record CrimulanPaladin_Publicizer(CrimulanPaladin Source) : PublicizerBas
     }
 }
 
-public record EbonianPaladin_Publicizer(EbonianPaladin Source) : PublicizerBase<EbonianPaladin>(Source)
+public record EbonianPaladin_Publicizer(EbonianPaladin Source) : Publicizer<EbonianPaladin>(Source)
 {
     // bossLife (instance field)
     public static readonly FieldInfo i_f_bossLife = GetInstanceField("bossLife");
@@ -45,7 +45,7 @@ public record EbonianPaladin_Publicizer(EbonianPaladin Source) : PublicizerBase<
     }
 }
 
-public record SplitCrimulanPaladin_Publicizer(SplitCrimulanPaladin Source) : PublicizerBase<SplitCrimulanPaladin>(Source)
+public record SplitCrimulanPaladin_Publicizer(SplitCrimulanPaladin Source) : Publicizer<SplitCrimulanPaladin>(Source)
 {
     // bossLife (instance field)
     public static readonly FieldInfo i_f_bossLife = GetInstanceField("bossLife");
@@ -56,7 +56,7 @@ public record SplitCrimulanPaladin_Publicizer(SplitCrimulanPaladin Source) : Pub
     }
 }
 
-public record SplitEbonianPaladin_Publicizer(SplitEbonianPaladin Source) : PublicizerBase<SplitEbonianPaladin>(Source)
+public record SplitEbonianPaladin_Publicizer(SplitEbonianPaladin Source) : Publicizer<SplitEbonianPaladin>(Source)
 {
     // bossLife (instance field)
     public static readonly FieldInfo i_f_bossLife = GetInstanceField("bossLife");

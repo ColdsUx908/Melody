@@ -44,4 +44,7 @@ public static class TODrawUtils
         }
         spriteBatch.DrawString(font, text, baseDrawPosition, mainColor, rotation, Vector2.Zero, scale, SpriteEffects.None, 0f);
     }
+
+    public static void DrawBorderString(SpriteBatch spriteBatch, DynamicSpriteFont font, StringBuilder textBuilder, Vector2 baseDrawPosition, Color mainColor, Color borderColor, int way = 8, float borderWidth = 1f, float scale = 1f, float rotation = 0f) =>
+        DrawBorderString(spriteBatch, font, textBuilder.ToString(), baseDrawPosition, mainColor, borderColor, way, borderWidth, scale, rotation);
 }

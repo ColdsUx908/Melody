@@ -12,6 +12,8 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
 
     internal static AnomalyMode Instance;
 
+    public static event Action<bool> OnAnomalyModeToggled;
+
     public override bool Enabled
     {
         get => CASharedData.Anomaly;
@@ -21,6 +23,7 @@ public sealed class AnomalyMode : DifficultyMode, ILocalizationPrefix
             {
                 CASharedData.Anomaly = value;
                 CANetSync.SyncAnomalyMode();
+                OnAnomalyModeToggled?.Invoke(value);
             }
         }
     }

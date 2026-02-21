@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record KingSlimeJewelRuby_Publicizer : Publicizer<KingSlimeJewelRuby>
+public record KingSlimeJewelRuby_Publicizer : PublicizerNoSource<KingSlimeJewelRuby>
 {
     // BoltShootGateValue (const)
     public const int BoltShootGateValue = 60;

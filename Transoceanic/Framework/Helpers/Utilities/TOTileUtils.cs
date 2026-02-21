@@ -2,6 +2,14 @@
 
 public static class TOTileUtils
 {
+    /// <summary>
+    /// 尝试获取指定坐标处的 <see cref="Tile"/> 实例。
+    /// </summary>
+    /// <param name="i">横坐标。</param>
+    /// <param name="j">纵坐标。</param>
+    /// <param name="fluff">判定坐标是否在世界范围内时的容错值。坐标被视为在世界范围内当且仅当其横、纵坐标距世界边缘的距离均不小于该值。</param>
+    /// <param name="tile">输出的 <see cref="Tile"/> 实例。</param>
+    /// <returns>如果坐标不在世界范围内，返回 <see langword="false"/>，并将输出参数设置为默认值；否则返回 <see langword="true"/>，并将输出参数设置为对应坐标处的 <see cref="Tile"/> 实例。</returns>
     public static bool TryGetTile(int i, int j, int fluff, out Tile tile)
     {
         if (WorldGen.InWorld(i, j, fluff))

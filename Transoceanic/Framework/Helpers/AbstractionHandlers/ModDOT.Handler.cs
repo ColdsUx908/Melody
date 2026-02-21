@@ -1,4 +1,4 @@
-﻿namespace Transoceanic.Framework.Helpers.AbstractionHelpers;
+﻿namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
 
 public sealed class ModDOTHandler : IResourceLoader
 {

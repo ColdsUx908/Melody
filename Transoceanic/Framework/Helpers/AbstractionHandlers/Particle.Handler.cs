@@ -1,9 +1,15 @@
-﻿namespace Transoceanic.Framework.Helpers.AbstractionHelpers;
+﻿using MonoMod.Utils;
 
-public sealed class ParticleHelper : ModSystem, IResourceLoader
+namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
+
+public sealed class ParticleHandler : ModSystem, IResourceLoader
 {
     public const string BaseParticleTexturePath = "Transoceanic/DataStructures/Particles/";
 
+    /// <summary>
+    /// 粒子数量限制。
+    /// <br/>当 <see cref="_particles"/> 中的粒子数量达到该值时，除非新生成的粒子被标记为重要粒子，否则将不会被生成。
+    /// </summary>
     public static int ParticleLimit { get; set; } = 5000;
 
     private sealed record ParticleDataCache
@@ -21,13 +27,16 @@ public sealed class ParticleHelper : ModSystem, IResourceLoader
             Type = type;
             TemplateInstance = templateInstance;
             ID = _nextID++;
-            string texturePath = type.Namespace.Replace('.', '/') + "/" + type.Name;
-            if (templateInstance.TexturePath != "")
-                texturePath = templateInstance.TexturePath;
-            Asset<Texture2D> asset = ModContent.Request<Texture2D>(texturePath);
-            Asset = asset;
-            FieldInfo field = type.GetFields(TOReflectionUtils.StaticBindingFlags).AsValueEnumerable().FirstOrDefault(f => f.FieldType == typeof(Asset<Texture2D>) && f.HasAttribute<ParticleTextureAssetAttribute>() && !f.IsInitOnly && !f.IsLiteral);
-            field?.SetValue(null, asset);
+            if (templateInstance.AutoLoadTexture)
+            {
+                string texturePath = type.Namespace.Replace('.', '/') + "/" + type.Name;
+                if (templateInstance.TexturePath != "")
+                    texturePath = templateInstance.TexturePath;
+                Asset<Texture2D> asset = ModContent.Request<Texture2D>(texturePath);
+                Asset = asset;
+                FieldInfo field = type.GetFields(TOReflectionUtils.StaticBindingFlags).AsValueEnumerable().FirstOrDefault(f => f.FieldType == typeof(Asset<Texture2D>) && f.HasAttribute<ParticleTextureAssetAttribute>() && !f.IsInitOnly && !f.IsLiteral);
+                field?.SetValue(null, asset);
+            }
         }
 
         public static ParticleDataCache Create(Type type, Particle templateInstance)
@@ -45,12 +54,11 @@ public sealed class ParticleHelper : ModSystem, IResourceLoader
     }
 
     private static Dictionary<int, ParticleDataCache> _particleCache;
-    private static Dictionary<Type, int> _particleTypes;
+    internal static Dictionary<Type, int> _particleTypes;
 
     private static List<Particle> _particles;
     private static List<Particle> _particlesToKill;
 
-    //Lists used when drawing particles batched
     private static List<Particle> _particlesToDraw_AlphaBlend;
     private static List<Particle> _particlesToDraw_NonPremultiplied;
     private static List<Particle> _particlesToDraw_AdditiveBlend;
@@ -63,7 +71,7 @@ public sealed class ParticleHelper : ModSystem, IResourceLoader
         if (_particles.Count == 0)
             return;
 
-        //Batch the particles to avoid constant restarting of the spritebatch
+        //提前分类粒子以减少spriteBatch状态切换次数
         foreach (Particle particle in _particles)
         {
             if (particle is null)
@@ -88,16 +96,7 @@ public sealed class ParticleHelper : ModSystem, IResourceLoader
             EnterDrawRegion_AlphaBlend(spriteBatch);
 
             foreach (Particle particle in _particlesToDraw_AlphaBlend)
-            {
-                if (particle.UseCustomDraw)
-                    particle.CustomDraw(spriteBatch);
-                else
-                {
-                    Texture2D texture = _particleCache[particle.Type].Texture;
-                    Rectangle frame = texture.Frame(1, particle.FrameVariants, 0, particle.Variant);
-                    spriteBatch.DrawFromCenter(texture, particle.Center - Main.screenPosition, particle.Color, frame, particle.Rotation, particle.Scale, SpriteEffects.None, 0f);
-                }
-            }
+                DrawParticle(spriteBatch, particle);
         }
 
         if (_particlesToDraw_NonPremultiplied.Count > 0)
@@ -105,16 +104,7 @@ public sealed class ParticleHelper : ModSystem, IResourceLoader
             EnterDrawRegion_NonPremultiplied(spriteBatch);
 
             foreach (Particle particle in _particlesToDraw_NonPremultiplied)
-            {
-                if (particle.UseCustomDraw)
-                    particle.CustomDraw(spriteBatch);
-                else
-                {
-                    Texture2D texture = _particleCache[particle.Type].Texture;
-                    Rectangle frame = texture.Frame(1, particle.FrameVariants, 0, particle.Variant);
-                    spriteBatch.DrawFromCenter(texture, particle.Center - Main.screenPosition, particle.Color, frame, particle.Rotation, particle.Scale, SpriteEffects.None, 0f);
-                }
-            }
+                DrawParticle(spriteBatch, particle);
         }
 
         if (_particlesToDraw_AdditiveBlend.Count > 0)
@@ -122,16 +112,7 @@ public sealed class ParticleHelper : ModSystem, IResourceLoader
             EnterDrawRegion_AdditiveBlend(spriteBatch);
 
             foreach (Particle particle in _particlesToDraw_AdditiveBlend)
-            {
-                if (particle.UseCustomDraw)
-                    particle.CustomDraw(spriteBatch);
-                else
-                {
-                    Texture2D texture = _particleCache[particle.Type].Texture;
-                    Rectangle frame = texture.Frame(1, particle.FrameVariants, 0, particle.Variant);
-                    spriteBatch.DrawFromCenter(texture, particle.Center - Main.screenPosition, particle.Color, frame, particle.Rotation, particle.Scale, SpriteEffects.None, 0f);
-                }
-            }
+                DrawParticle(spriteBatch, particle);
         }
 
         _particlesToDraw_AlphaBlend.Clear();
@@ -139,6 +120,18 @@ public sealed class ParticleHelper : ModSystem, IResourceLoader
         _particlesToDraw_AdditiveBlend.Clear();
 
         ExitParticleDrawRegion(spriteBatch);
+
+        static void DrawParticle(SpriteBatch spriteBatch, Particle particle)
+        {
+            if (particle.PreDraw(spriteBatch))
+            {
+                Texture2D texture = _particleCache[particle.Type].Texture;
+                Rectangle? frame = particle.GetFrame();
+                spriteBatch.DrawFromCenter(texture, particle.Center - Main.screenPosition, particle.Color, frame, particle.Rotation, particle.Scale, SpriteEffects.None, 0f);
+            }
+
+            particle.PostDraw(spriteBatch);
+        }
     }
 
     public static void EnterDrawRegion_AlphaBlend(SpriteBatch spriteBatch)
@@ -183,13 +176,12 @@ public sealed class ParticleHelper : ModSystem, IResourceLoader
         {
             if (particle is null)
                 continue;
-            particle.Center += particle.Velocity;
-            particle.Time++;
+            particle.Timer++;
             particle.Update();
+            particle.Center += particle.Velocity;
         }
 
-        //Clear out particles whose time is up
-        _particles.RemoveAll(particle => (particle.Time >= particle.Lifetime && particle.AutoKillByLifeTime) || _particlesToKill.Contains(particle));
+        _particles.RemoveAll(particle => particle is null || (particle.Timer >= particle.Lifetime && particle.AutoKillByLifeTime) || _particlesToKill.Contains(particle));
         _particlesToKill.Clear();
     }
 
@@ -208,6 +200,7 @@ public sealed class ParticleHelper : ModSystem, IResourceLoader
         foreach ((Type type, Particle instance) in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<Particle>())
             ParticleDataCache.Create(type, instance);
 
+        //在绘制狱火药水效果前绘制粒子
         On_Main.DrawInfernoRings += (orig, self) =>
         {
             Draw(Main.spriteBatch);
@@ -219,10 +212,13 @@ public sealed class ParticleHelper : ModSystem, IResourceLoader
     {
         ParticleDataCache._nextID = 0;
 
-        foreach (Type type in _particleTypes.Keys)
+        if (_particleTypes is not null)
         {
-            FieldInfo field = type.GetFields(TOReflectionUtils.StaticBindingFlags).AsValueEnumerable().FirstOrDefault(f => f.FieldType == typeof(Asset<Texture2D>) && f.HasAttribute<ParticleTextureAssetAttribute>() && !f.IsInitOnly && !f.IsLiteral);
-            field?.SetValue(null, null);
+            foreach (Type type in _particleTypes.Keys)
+            {
+                FieldInfo field = type.GetFields(TOReflectionUtils.StaticBindingFlags).AsValueEnumerable().FirstOrDefault(f => f.FieldType == typeof(Asset<Texture2D>) && f.HasAttribute<ParticleTextureAssetAttribute>() && !f.IsInitOnly && !f.IsLiteral);
+                field?.SetValue(null, null);
+            }
         }
 
         _particleCache = null;
@@ -235,10 +231,40 @@ public sealed class ParticleHelper : ModSystem, IResourceLoader
 
     }
 
-    public static void SpawnParticle(Particle particle) => SpawnParticle_Inner(particle, false);
+    /// <summary>
+    /// 向 <see cref="_particles"/> 中添加一个粒子实例以生成该粒子。
+    /// </summary>
+    public static void SpawnParticle(Particle particle) => SpawnParticle_Inner(particle, false, out _);
 
-    private static void SpawnParticle_Inner(Particle particle, bool forceSpawn = false)
+    /// <summary>
+    /// 尝试向 <see cref="_particles"/> 中添加一个粒子实例以生成该粒子。
+    /// </summary>
+    public static bool TrySpawnParticle(Particle particle)
     {
+        SpawnParticle_Inner(particle, false, out bool success);
+        return success;
+    }
+
+    /// <summary>
+    /// 向 <see cref="_particles"/> 中添加一组粒子实例以生成这些粒子。
+    /// <br/>若需生成由多个粒子组成的效果，而不希望在粒子数量过多时生成部分粒子而破坏效果完整性，请使用该方法并将 <paramref name="onlySpawnWhenSpaceEnough"/> 设置为 true。
+    /// </summary>
+    public static void SpawnParticles(List<Particle> particles, bool onlySpawnWhenSpaceEnough) => SpawnParticles_Inner(particles, onlySpawnWhenSpaceEnough, out _);
+
+    /// <summary>
+    /// 尝试向 <see cref="_particles"/> 中添加一组粒子实例以生成这些粒子。
+    /// <br/>若需生成由多个粒子组成的效果，而不希望在粒子数量过多时生成部分粒子而破坏效果完整性，请使用该方法并将 <paramref name="onlySpawnWhenSpaceEnough"/> 设置为 true。
+    /// </summary>
+    public static bool TrySpawnParticles(List<Particle> particles, bool onlySpawnWhenSpaceEnough)
+    {
+        SpawnParticles_Inner(particles, onlySpawnWhenSpaceEnough, out bool success);
+        return success;
+    }
+
+    private static void SpawnParticle_Inner(Particle particle, bool forceSpawn, out bool success)
+    {
+        success = false;
+
         if (Main.gamePaused || Main.dedServ || _particles is null)
             return;
 
@@ -246,42 +272,30 @@ public sealed class ParticleHelper : ModSystem, IResourceLoader
             return;
 
         _particles.Add(particle);
-        particle.Type = _particleTypes[particle.GetType()];
-        return;
+        success = true;
     }
 
-    public static void RemoveParticle(Particle particle)
+    private static void SpawnParticles_Inner(List<Particle> particles, bool onlySpawnWhenSpaceEnough, out bool success)
+    {
+        success = false;
+
+        if (Main.gamePaused || Main.dedServ || _particles is null)
+            return;
+
+        int newParticlesCount = particles.Count;
+        if (onlySpawnWhenSpaceEnough && _particles.Count + newParticlesCount > ParticleLimit)
+            return;
+
+        _particles.AddRange(particles);
+
+        success = true;
+    }
+
+    public static void AddToRemoveList(Particle particle)
     {
         if (Main.dedServ)
             return;
 
         _particlesToKill.Add(particle);
-    }
-
-    /// <summary>
-    /// Gives you the amount of particle slots that are available. Useful when you need multiple particles at once to make an effect and dont want it to be only halfway drawn due to a lack of particle slots
-    /// </summary>
-    /// <returns></returns>
-    public static int FreeSpacesAvailable
-    {
-        get
-        {
-            //Safety check
-            if (Main.dedServ || _particles is null)
-                return 0;
-
-            return ParticleLimit - _particles.Count;
-        }
-    }
-
-    /// <summary>
-    /// Gives you the texture of the particle type. Useful for custom drawing
-    /// </summary>
-    public static Texture2D GetTexture(int type)
-    {
-        if (Main.dedServ)
-            return null;
-
-        return _particleCache[type].Texture;
     }
 }

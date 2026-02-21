@@ -1,6 +1,6 @@
 ﻿using CalamityMod.Events;
 using CalamityMod.NPCs.Providence;
-using Transoceanic.Framework.Helpers.AbstractionHelpers;
+using Transoceanic.Framework.Helpers.AbstractionHandlers;
 using Transoceanic.Framework.RuntimeEditing;
 
 namespace CalamityAnomalies.GlobalInstances.Single;
@@ -54,7 +54,7 @@ public sealed class CANPCDR : CAGlobalNPCBehavior, IResourceLoader
         StatModifier baseDRModifier = new();
         StatModifier standardDRModifier = new();
         StatModifier timedDRModifier = new();
-        foreach (CAGlobalItemBehavior behavior in GlobalItemBehaviorHandler.BehaviorSet.GetBehaviors<CAGlobalItemBehavior>(nameof(CAGlobalItemBehavior.ModifyHitNPC_DR)))
+        foreach (CAGlobalItemBehavior behavior in GlobalItemBehaviorHandler.BehaviorSet.Enumerate<CAGlobalItemBehavior>(nameof(CAGlobalItemBehavior.ModifyHitNPC_DR)))
             behavior.ModifyHitNPC_DR(item, npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (item.TryGetBehavior(out CASingleItemBehavior itemBehavior, nameof(CASingleItemBehavior.ModifyHitNPC_DR)))
             itemBehavior.ModifyHitNPC_DR(npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
@@ -72,7 +72,7 @@ public sealed class CANPCDR : CAGlobalNPCBehavior, IResourceLoader
         StatModifier baseDRModifier = new();
         StatModifier standardDRModifier = new();
         StatModifier timedDRModifier = new();
-        foreach (CAGlobalProjectileBehavior behavior in GlobalProjectileBehaviorHandler.BehaviorSet.GetBehaviors<CAGlobalProjectileBehavior>(nameof(CAGlobalProjectileBehavior.ModifyHitNPC_DR)))
+        foreach (CAGlobalProjectileBehavior behavior in GlobalProjectileBehaviorHandler.BehaviorSet.Enumerate<CAGlobalProjectileBehavior>(nameof(CAGlobalProjectileBehavior.ModifyHitNPC_DR)))
             behavior.ModifyHitNPC_DR(projectile, npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (projectile.TryGetBehavior(out CASingleProjectileBehavior projectileBehavior, nameof(CASingleProjectileBehavior.ModifyHitNPC_DR)))
             projectileBehavior.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
@@ -87,7 +87,7 @@ public sealed class CANPCDR : CAGlobalNPCBehavior, IResourceLoader
     void IResourceLoader.PostSetupContent()
     {
         Type type = typeof(CalamityGlobalNPC);
-        TODetourUtils.Modify(type, "ApplyDR", Detour_ApplyDR);
+        TODetourHandler.Modify(type, "ApplyDR", Detour_ApplyDR);
         OrigMethod_ApplyDRReduction = type.GetMethod("ApplyDRReduction", TOReflectionUtils.UniversalBindingFlags).CreateDelegate<Orig_ApplyDRReduction>();
     }
 

@@ -2,7 +2,7 @@
 
 #pragma warning disable IDE1006
 
-public record Main_Publicizer(Main Source) : PublicizerBase<Main>(Source)
+public record Main_Publicizer(Main Source) : Publicizer<Main>(Source)
 {
     // _currentGameModInfo (static field)
     public static readonly FieldInfo s_f__currentGameModInfo = GetStaticField("_currentGameModeInfo");

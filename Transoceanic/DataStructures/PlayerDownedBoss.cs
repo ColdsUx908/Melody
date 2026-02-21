@@ -71,7 +71,7 @@ public class PlayerDownedBoss
             SkeletronPrime = true;
         if (NPC.downedMechBossAny)
             MechBossAny = true;
-        MechBossAnyTwo = TOMathHelper.AtLeastXTrue(2, Destroyer, Twins, SkeletronPrime); //完全依靠游戏内更新
+        MechBossAnyTwo = TOMathUtils.AtLeastXTrue(2, Destroyer, Twins, SkeletronPrime); //完全依靠游戏内更新
         MechBossAll = Destroyer && Twins && SkeletronPrime; //完全依靠游戏内更新
         if (NPC.downedPlantBoss)
             Plantera = true;

@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record ProfanedGuardianCommander_Publicizer(ProfanedGuardianCommander Source) : PublicizerBase<ProfanedGuardianCommander>(Source)
+public record ProfanedGuardianCommander_Publicizer(ProfanedGuardianCommander Source) : Publicizer<ProfanedGuardianCommander>(Source)
 {
     // spearType (instance field)
     public static readonly FieldInfo i_f_spearType = GetInstanceField("spearType");
@@ -26,7 +26,7 @@ public record ProfanedGuardianCommander_Publicizer(ProfanedGuardianCommander Sou
     public const float TimeForShieldDespawn = 120f;
 }
 
-public record ProfanedGuardianDefender_Publicizer(ProfanedGuardianDefender Source) : PublicizerBase<ProfanedGuardianDefender>(Source)
+public record ProfanedGuardianDefender_Publicizer(ProfanedGuardianDefender Source) : Publicizer<ProfanedGuardianDefender>(Source)
 {
     // healTimer (instance field)
     public static readonly FieldInfo i_f_healTimer = GetInstanceField("healTimer");
@@ -40,7 +40,7 @@ public record ProfanedGuardianDefender_Publicizer(ProfanedGuardianDefender Sourc
     public const float TimeForShieldDespawn = 120f;
 }
 
-public record ProfanedGuardianHealer_Publicizer(ProfanedGuardianHealer Source) : PublicizerBase<ProfanedGuardianHealer>(Source)
+public record ProfanedGuardianHealer_Publicizer(ProfanedGuardianHealer Source) : Publicizer<ProfanedGuardianHealer>(Source)
 {
     // AIState (instance property)
     public static readonly PropertyInfo i_f_AIState = GetInstanceProperty("AIState");
@@ -59,7 +59,7 @@ public record ProfanedGuardianHealer_Publicizer(ProfanedGuardianHealer Source) :
     }
 }
 
-public record ProfanedRocks_Publicizer(ProfanedRocks Source) : PublicizerBase<ProfanedRocks>(Source)
+public record ProfanedRocks_Publicizer(ProfanedRocks Source) : Publicizer<ProfanedRocks>(Source)
 {
     // start (instance field)
     public static readonly FieldInfo i_f_start = GetInstanceField("start");

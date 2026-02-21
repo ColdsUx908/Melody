@@ -38,7 +38,7 @@ public static partial class TOExtensions
                     float t0 = Vector2.Dot(q - p, r) / Vector2.Dot(r, r);
                     float t1 = t0 + Vector2.Dot(s, r) / Vector2.Dot(r, r);
 
-                    TOMathHelper.NormalizeMinMax(ref t0, ref t1);
+                    TOMathUtils.NormalizeMinMax(ref t0, ref t1);
 
                     //检查是否有重叠部分
                     if (t0 <= 1 && t1 >= 0)

@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record RavagerBody_Publicizer(RavagerBody Source) : PublicizerBase<RavagerBody>(Source)
+public record RavagerBody_Publicizer(RavagerBody Source) : Publicizer<RavagerBody>(Source)
 {
     // velocityY (instance field)
     public static readonly FieldInfo i_f_velocityY = GetInstanceField("velocityY");

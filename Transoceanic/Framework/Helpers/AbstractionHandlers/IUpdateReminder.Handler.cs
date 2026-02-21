@@ -1,6 +1,6 @@
-﻿namespace Transoceanic.Framework.Helpers.AbstractionHelpers;
+﻿namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
 
-public sealed class UpdateReminderHelper : ModSystem, ILocalizationPrefix, IResourceLoader
+public sealed class UpdateReminderHandler : ModSystem, ILocalizationPrefix, IResourceLoader
 {
     private static event Action UpdateReminder;
     private static event Action ExternalUpdateReminder;

@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record SupremeCalamitas_Publicizer(SupremeCalamitas Source) : PublicizerBase<SupremeCalamitas>(Source)
+public record SupremeCalamitas_Publicizer(SupremeCalamitas Source) : Publicizer<SupremeCalamitas>(Source)
 {
     // PermafrostPhotonRipperDashVelocity (const)
     public const float PermafrostPhotonRipperDashVelocity = 6f;
@@ -28,7 +28,7 @@ public record SupremeCalamitas_Publicizer(SupremeCalamitas Source) : PublicizerB
     public static void LoadHeadIcons() => s_d_LoadHeadIcons();
 }
 
-public record SepulcherHead_Publicizer(SepulcherHead Source) : PublicizerBase<SepulcherHead>(Source)
+public record SepulcherHead_Publicizer(SepulcherHead Source) : Publicizer<SepulcherHead>(Source)
 {
     // minLength (const)
     public const int minLength = 51;
@@ -61,7 +61,7 @@ public record SepulcherHead_Publicizer(SepulcherHead Source) : PublicizerBase<Se
     }
 }
 
-public record SepulcherBody_Publicizer(SepulcherBody Source) : PublicizerBase<SepulcherBody>(Source)
+public record SepulcherBody_Publicizer(SepulcherBody Source) : Publicizer<SepulcherBody>(Source)
 {
     // setAlpha (instance field)
     public static readonly FieldInfo i_f_setAlpha = GetInstanceField("setAlpha");
@@ -72,7 +72,7 @@ public record SepulcherBody_Publicizer(SepulcherBody Source) : PublicizerBase<Se
     }
 }
 
-public record SepulcherBodyEnergyBall_Publicizer(SepulcherBodyEnergyBall Source) : PublicizerBase<SepulcherBodyEnergyBall>(Source)
+public record SepulcherBodyEnergyBall_Publicizer(SepulcherBodyEnergyBall Source) : Publicizer<SepulcherBodyEnergyBall>(Source)
 {
     // setAlpha (instance field)
     public static readonly FieldInfo i_f_setAlpha = GetInstanceField("setAlpha");
@@ -83,7 +83,7 @@ public record SepulcherBodyEnergyBall_Publicizer(SepulcherBodyEnergyBall Source)
     }
 }
 
-public record SepulcherTail_Publicizer(SepulcherTail Source) : PublicizerBase<SepulcherTail>(Source)
+public record SepulcherTail_Publicizer(SepulcherTail Source) : Publicizer<SepulcherTail>(Source)
 {
     // setAlpha (instance field)
     public static readonly FieldInfo i_f_setAlpha = GetInstanceField("setAlpha");
@@ -94,7 +94,7 @@ public record SepulcherTail_Publicizer(SepulcherTail Source) : PublicizerBase<Se
     }
 }
 
-public record SoulSeekerSupreme_Publicizer(SoulSeekerSupreme Source) : PublicizerBase<SoulSeekerSupreme>(Source)
+public record SoulSeekerSupreme_Publicizer(SoulSeekerSupreme Source) : Publicizer<SoulSeekerSupreme>(Source)
 {
     // timer (instance field)
     public static readonly FieldInfo i_f_timer = GetInstanceField("timer");

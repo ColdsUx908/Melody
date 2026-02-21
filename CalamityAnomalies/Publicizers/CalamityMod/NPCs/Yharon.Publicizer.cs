@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record Yharon_Publicizer(Yharon Source) : PublicizerBase<Yharon>(Source)
+public record Yharon_Publicizer(Yharon Source) : Publicizer<Yharon>(Source)
 {
     // safeBox (instance field)
     public static readonly FieldInfo i_f_safeBox = GetInstanceField("safeBox");

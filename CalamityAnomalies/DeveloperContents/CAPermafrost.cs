@@ -5,10 +5,9 @@ using CalamityMod.NPCs.SupremeCalamitas;
 using CalamityMod.NPCs.TownNPCs;
 using CalamityMod.Projectiles.Boss;
 using CalamityMod.Skies;
-using CalamityMod.Tiles;
 using Terraria.Graphics.Shaders;
 using Transoceanic;
-using Transoceanic.Framework.Helpers.AbstractionHelpers;
+using Transoceanic.Framework.Helpers.AbstractionHandlers;
 using Transoceanic.Framework.RuntimeEditing;
 using static CalamityMod.NPCs.SupremeCalamitas.SupremeCalamitas;
 using static CalamityMod.Projectiles.Boss.SCalRitualDrama;
@@ -48,7 +47,7 @@ public sealed class CAPermafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocal
 
     private static class Data
     {
-        public static Color BlueColor => Color.Lerp(Color.LightCyan, Color.Cyan, TOMathHelper.GetTimeSin(0.2f, 1f, 0f, true));
+        public static Color BlueColor => Color.Lerp(Color.LightCyan, Color.Cyan, TOMathUtils.GetTimeSin(0.2f, 1f, 0f, true));
 
         public static readonly List<Color> NameColors =
         [
@@ -59,7 +58,7 @@ public sealed class CAPermafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocal
             Color.LightSkyBlue
         ];
 
-        public static Color NameColor => Color.LerpMany(NameColors, TOMathHelper.GetTimeSin(0.5f, 0.6f, 0f, true));
+        public static Color NameColor => Color.LerpMany(NameColors, TOMathUtils.GetTimeSin(0.5f, 0.6f, 0f, true));
 
         public const float DespawnDistance = 15000f;
 
@@ -302,9 +301,9 @@ public sealed class CAPermafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocal
                     if (TOSharedData.GeneralClient)
                         TOLocalizationUtils.ChatLocalizedText(this, "Beginning", Color.LightCyan);
 
-                    Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new PulseRing(NPC.Center, Vector2.Zero, Color.Cyan, new Vector2(1f), 0, 0.1f, 7f, 30));
-                    Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new PulseRing(NPC.Center, Vector2.Zero, CASharedData.AnomalyUltramundaneColor * 0.8f, new Vector2(2f), 0, 0.05f, 6f, 36));
-                    Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new PulseRing(NPC.Center, Vector2.Zero, Color.LightCyan, new Vector2(1f), 0, 0.05f, 4f, 45));
+                    ParticleHandler.SpawnParticle(new PulseRing(NPC.Center, Vector2.Zero, Color.Cyan, new Vector2(1f), 0, 0.1f, 7f, 30));
+                    ParticleHandler.SpawnParticle(new PulseRing(NPC.Center, Vector2.Zero, CASharedData.AnomalyUltramundaneColor * 0.8f, new Vector2(2f), 0, 0.05f, 6f, 36));
+                    ParticleHandler.SpawnParticle(new PulseRing(NPC.Center, Vector2.Zero, Color.LightCyan, new Vector2(1f), 0, 0.05f, 4f, 45));
                     for (int i = 0; i < 100; i++)
                     {
                         Vector2 dustVel = new PolarVector2(15f, Main.rand.NextFloat(100f));
@@ -393,7 +392,7 @@ public sealed class CAPermafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocal
         newBar.DrawNPCName(spriteBatch, x, y, null,
             Data.BlueColor * newBar.AnimationCompletionRatio2,
             Data.NameColor * newBar.AnimationCompletionRatio2,
-            Math.Clamp(OceanNPC.ActiveTime, 0f, 360f) / 240f + TOMathHelper.GetTimeSin(0.5f, 1f, TOMathHelper.PiOver3, true) + NPC.LostLifeRatio / 2f);
+            Math.Clamp(OceanNPC.ActiveTime, 0f, 360f) / 240f + TOMathUtils.GetTimeSin(0.5f, 1f, TOMathUtils.PiOver3, true) + NPC.LostLifeRatio / 2f);
         newBar.DrawBigLifeText(spriteBatch, x, y);
         newBar.DrawExtraSmallText(spriteBatch, x, y);
 
@@ -416,12 +415,12 @@ public sealed class PermafrostRitualDrama : CASingleProjectileBehavior<SCalRitua
         if (Projectile.timeLeft == 689)
         {
             for (int i = 0; i < 2; i++)
-                Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new BloomParticle1(Projectile.Center, Vector2.Zero, Color.Lerp(Color.Blue, Color.Cyan, 0.7f), 0f, 0.55f, 270, false));
-            Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new BloomParticle1(Projectile.Center, Vector2.Zero, Color.White, 0f, 0.5f, 270, false));
+                ParticleHandler.SpawnParticle(new BloomParticle1(Projectile.Center, Vector2.Zero, Color.Lerp(Color.Blue, Color.Cyan, 0.7f), 0f, 0.55f, 270, false));
+            ParticleHandler.SpawnParticle(new BloomParticle1(Projectile.Center, Vector2.Zero, Color.White, 0f, 0.5f, 270, false));
         }
 
         if (Projectile.timeLeft == 689 - 180)
-            Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new BloomParticle1(Projectile.Center, Vector2.Zero, CASharedData.AnomalyUltramundaneColor, 0f, 0.85f, 90, false));
+            ParticleHandler.SpawnParticle(new BloomParticle1(Projectile.Center, Vector2.Zero, CASharedData.AnomalyUltramundaneColor, 0f, 0.85f, 90, false));
 
         // If needed, these effects may continue after the ritual timer, to ensure that there are no awkward
         // background changes between the time it takes for SCal to appear after this projectile is gone.
@@ -468,11 +467,11 @@ public sealed class PermafrostRitualDrama : CASingleProjectileBehavior<SCalRitua
             for (int i = 0; i < 40; i++)
             {
                 Vector2 sparkVel = new PolarVector2(Main.rand.NextFloat(2f, 22f), Main.rand.NextFloat(100f));
-                Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new OrbParticle(Projectile.Center + sparkVel * 2, sparkVel, 120, Main.rand.NextFloat(1.55f, 2.75f), Color.Cyan));
+                ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center + sparkVel * 2, sparkVel, 120, Main.rand.NextFloat(1.55f, 2.75f), Color.Cyan));
             }
-            Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new PulseRing(Projectile.Center, Vector2.Zero, Color.Cyan, new Vector2(2f), 0, 0f, 4f, 55));
-            Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new PulseRing(Projectile.Center, Vector2.Zero, CASharedData.AnomalyUltramundaneColor * 0.8f, new Vector2(2f), 0, 0f, 2.8f, 58));
-            Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new PulseRing(Projectile.Center, Vector2.Zero, Color.LightCyan, new Vector2(2f), 0, 0f, 2f, 60));
+            ParticleHandler.SpawnParticle(new PulseRing(Projectile.Center, Vector2.Zero, Color.Cyan, new Vector2(2f), 0, 0f, 4f, 55));
+            ParticleHandler.SpawnParticle(new PulseRing(Projectile.Center, Vector2.Zero, CASharedData.AnomalyUltramundaneColor * 0.8f, new Vector2(2f), 0, 0f, 2.8f, 58));
+            ParticleHandler.SpawnParticle(new PulseRing(Projectile.Center, Vector2.Zero, Color.LightCyan, new Vector2(2f), 0, 0f, 2f, 60));
         }
 
         if (ModProjectile.Time >= TotalRitualTime)

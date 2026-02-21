@@ -39,13 +39,13 @@ public abstract class TypeDetour<T> : ITODetourProvider
     /// </summary>
     /// <remarks>这个方法仅会在类型实际上重写了Detour方法时应用。</remarks>
     /// <typeparam name="TDelegate">委托类型。</typeparam>
-    /// <param name="detour">Detour逻辑的委托。该委托必须是一个与目标方法的签名匹配的具名方法，且方法名必须符合 <see cref="TODetourUtils.EvaluateDetourName(MethodInfo, out string)"/> 的要求。</param>
+    /// <param name="detour">Detour逻辑的委托。该委托必须是一个与目标方法的签名匹配的具名方法，且方法名必须符合 <see cref="TODetourHandler.EvaluateDetourName(MethodInfo, out string)"/> 的要求。</param>
     /// <param name="hasThis">目标方法是否为实例方法（有 <see langword="this"/> 指针）。
     /// <br/>会影响获取方法时的参数偏移量（<see langword="true"/> 为2，反之为1）和 <c>bindingAttr</c> 实参。
     /// </param>
     protected virtual Hook ApplySingleDetour<TDelegate>(TDelegate detour, bool hasThis = true) where TDelegate : Delegate =>
-        detour.Method.DeclaringType == GetType() && TODetourUtils.EvaluateDetourName(detour.Method, out string sourceName)
-        ? TODetourUtils.Modify(SourceType, sourceName, hasThis, detour)
+        detour.Method.DeclaringType == GetType() && TODetourHandler.EvaluateDetourName(detour.Method, out string sourceName)
+        ? TODetourHandler.Modify(SourceType, sourceName, hasThis, detour)
         : null;
 }
 
@@ -3828,6 +3828,10 @@ public abstract class ModTileDetour<T> : ModBlockTypeDetour<T> where T : ModTile
     public delegate void Orig_GetTileFlameData(T self, int i, int j, ref TileDrawing.TileFlameData tileFlameData);
     public virtual void Detour_GetTileFlameData(Orig_GetTileFlameData orig, T self, int i, int j, ref TileDrawing.TileFlameData tileFlameData) => orig(self, i, j, ref tileFlameData);
 
+    // OnTileConverted
+    public delegate void Orig_OnTileConverted(T self, int i, int j, int fromType, int toType, int conversionType);
+    public virtual void Detour_OnTileConverted(Orig_OnTileConverted orig, T self, int i, int j, int fromType, int toType, int conversionType) => orig(self, i, j, fromType, toType, conversionType);
+
     public override void ApplyDetour()
     {
         base.ApplyDetour();
@@ -3881,6 +3885,7 @@ public abstract class ModTileDetour<T> : ModBlockTypeDetour<T> where T : ModTile
         ApplySingleDetour(Detour_ReplaceTile);
         ApplySingleDetour(Detour_AdjustMultiTileVineParameters);
         ApplySingleDetour(Detour_GetTileFlameData);
+        ApplySingleDetour(Detour_OnTileConverted);
     }
 }
 
@@ -4050,6 +4055,10 @@ public abstract class ModWallDetour<T> : ModBlockTypeDetour<T> where T : ModWall
     public delegate bool Orig_CanBeTeleportedTo(T self, int i, int j, Player player, string context);
     public virtual bool Detour_CanBeTeleportedTo(Orig_CanBeTeleportedTo orig, T self, int i, int j, Player player, string context) => orig(self, i, j, player, context);
 
+    // OnWallConverted
+    public delegate void Orig_OnWallConverted(T self, int i, int j, int fromType, int toType, int conversionType);
+    public virtual void Detour_OnWallConverted(Orig_OnWallConverted orig, T self, int i, int j, int fromType, int toType, int conversionType) => orig(self, i, j, fromType, toType, conversionType);
+
     public override void ApplyDetour()
     {
         base.ApplyDetour();
@@ -4058,6 +4067,7 @@ public abstract class ModWallDetour<T> : ModBlockTypeDetour<T> where T : ModWall
         ApplySingleDetour(Detour_AnimateWall);
         ApplySingleDetour(Detour_WallFrame);
         ApplySingleDetour(Detour_CanBeTeleportedTo);
+        ApplySingleDetour(Detour_OnWallConverted);
     }
 }
 
@@ -5772,6 +5782,10 @@ public abstract class GlobalTileDetour<T> : GlobalBlockTypeDetour<T> where T : G
     public delegate bool Orig_ShakeTree(T self, int x, int y, TreeTypes treeType);
     public virtual bool Detour_ShakeTree(Orig_ShakeTree orig, T self, int x, int y, TreeTypes treeType) => orig(self, x, y, treeType);
 
+    // OnTileConverted
+    public delegate void Orig_OnTileConverted(T self, int i, int j, int fromType, int toType, int conversionType);
+    public virtual void Detour_OnTileConverted(Orig_OnTileConverted orig, T self, int i, int j, int fromType, int toType, int conversionType) => orig(self, i, j, fromType, toType, conversionType);
+
     public override void ApplyDetour()
     {
         base.ApplyDetour();
@@ -5809,6 +5823,7 @@ public abstract class GlobalTileDetour<T> : GlobalBlockTypeDetour<T> where T : G
         ApplySingleDetour(Detour_PostSetupTileMerge);
         ApplySingleDetour(Detour_PreShakeTree);
         ApplySingleDetour(Detour_ShakeTree);
+        ApplySingleDetour(Detour_OnTileConverted);
     }
 }
 
@@ -5830,6 +5845,10 @@ public abstract class GlobalWallDetour<T> : GlobalBlockTypeDetour<T> where T : G
     public delegate bool Orig_CanBeTeleportedTo(T self, int i, int j, int type, Player player, string context);
     public virtual bool Detour_CanBeTeleportedTo(Orig_CanBeTeleportedTo orig, T self, int i, int j, int type, Player player, string context) => orig(self, i, j, type, player, context);
 
+    // OnWallConverted
+    public delegate void Orig_OnWallConverted(T self, int i, int j, int fromType, int toType, int conversionType);
+    public virtual void Detour_OnWallConverted(Orig_OnWallConverted orig, T self, int i, int j, int fromType, int toType, int conversionType) => orig(self, i, j, fromType, toType, conversionType);
+
     public override void ApplyDetour()
     {
         base.ApplyDetour();
@@ -5837,6 +5856,7 @@ public abstract class GlobalWallDetour<T> : GlobalBlockTypeDetour<T> where T : G
         ApplySingleDetour(Detour_KillWall);
         ApplySingleDetour(Detour_WallFrame);
         ApplySingleDetour(Detour_CanBeTeleportedTo);
+        ApplySingleDetour(Detour_OnWallConverted);
     }
 }
 

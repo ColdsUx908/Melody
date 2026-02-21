@@ -162,6 +162,19 @@ public sealed class CAGlobalNPC : GlobalNPC, IResourceLoader
         }
     }
 
+    public bool Debuff_DimensionalRend
+    {
+        get => InternalAnomalyAI32[0].bits[1];
+        set
+        {
+            if (InternalAnomalyAI32[0].bits[1] != value)
+            {
+                InternalAnomalyAI32[0].bits[1] = value;
+                InternalAIChanged32[0] = true;
+            }
+        }
+    }
+
     public int AnomalyKilltime
     {
         get => InternalAnomalyAI32[1].i;
@@ -229,20 +242,6 @@ public sealed class CAGlobalNPC : GlobalNPC, IResourceLoader
             {
                 InternalAnomalyAI32[5].f = value;
                 InternalAIChanged32[5] = true;
-            }
-        }
-    }
-
-    public int Debuff_DimensionalRend
-    {
-        get => InternalAnomalyAI32[6].i;
-        set
-        {
-            int temp = Math.Max(value, 0);
-            if (InternalAnomalyAI32[6].i != temp)
-            {
-                InternalAnomalyAI32[6].i = temp;
-                InternalAIChanged32[6] = true;
             }
         }
     }

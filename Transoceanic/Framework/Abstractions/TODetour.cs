@@ -132,8 +132,8 @@ public interface ITODetourProvider
 {
     /// <summary>
     /// 应用Detour逻辑。
-    /// <br/>使用 <see cref="TODetourUtils.Modify{TDelegate}(MethodBase, TDelegate)"/> 或 <see cref="TODetourUtils.Modify(MethodBase, MethodInfo)"/> 来实现Detour逻辑，
-    /// <br/>以便在 <see cref="TODetourHelper.Detours"/> 中注册Detour，并自动加载和卸载。
+    /// <br/>使用 <see cref="TODetourHandler.Modify{TDelegate}(MethodBase, TDelegate)"/> 或 <see cref="TODetourHandler.Modify(MethodBase, MethodInfo)"/> 来实现Detour逻辑，
+    /// <br/>以便在 <see cref="TODetourHandler.Detours"/> 中注册Detour，并自动加载和卸载。
     /// </summary>
     public abstract void ApplyDetour();
 

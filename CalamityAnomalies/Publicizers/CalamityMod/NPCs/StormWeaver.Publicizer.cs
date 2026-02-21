@@ -3,7 +3,7 @@
 namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
-public record StormWeaverHead_Publicizer(StormWeaverHead Source) : PublicizerBase<StormWeaverHead>(Source)
+public record StormWeaverHead_Publicizer(StormWeaverHead Source) : Publicizer<StormWeaverHead>(Source)
 {
     // LoadHeadIcons (static method)
     public static readonly MethodInfo s_m_LoadHeadIcons = GetStaticMethod("LoadHeadIcons");
@@ -39,7 +39,7 @@ public record StormWeaverHead_Publicizer(StormWeaverHead Source) : PublicizerBas
     }
 }
 
-public record StormWeaverTail_Publicizer(StormWeaverTail Source) : PublicizerBase<StormWeaverTail>(Source)
+public record StormWeaverTail_Publicizer(StormWeaverTail Source) : Publicizer<StormWeaverTail>(Source)
 {
     // invinceTime (instance field)
     public static readonly FieldInfo i_f_invinceTime = GetInstanceField("invinceTime");

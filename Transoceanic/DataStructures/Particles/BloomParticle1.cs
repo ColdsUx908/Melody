@@ -2,9 +2,8 @@
 
 public class BloomParticle1 : Particle
 {
-    public override string TexturePath => ParticleHelper.BaseParticleTexturePath + "BloomCircle";
+    public override string TexturePath => ParticleHandler.BaseParticleTexturePath + "BloomCircle";
     public override bool AutoKillByLifeTime => true;
-    public override bool UseCustomDraw => true;
     public override DrawBlendMode BlendMode => DrawBlendMode.AdditiveBlend;
 
     [ParticleTextureAsset]
@@ -31,17 +30,17 @@ public class BloomParticle1 : Particle
 
     public override void Update()
     {
-        Scale = MathHelper.Lerp(OriginalScale, FinalScale, TOMathHelper.ExponentialEaseOut(LifetimeCompletion, 4f));
+        Scale = MathHelper.Lerp(OriginalScale, FinalScale, TOMathUtils.ExponentialEaseOut(LifetimeCompletion, 4f));
         if (Fade)
-            Opacity = 1f - TOMathHelper.SineEaseIn(LifetimeCompletion);
+            Opacity = 1f - TOMathUtils.SineEaseIn(LifetimeCompletion);
 
         Color = BaseColor * (Fade ? Opacity : 1);
         Lighting.AddLight(Center, Color.R / 255f, Color.G / 255f, Color.B / 255f);
     }
 
-    public override void CustomDraw(SpriteBatch spriteBatch)
+    public override bool PreDraw(SpriteBatch spriteBatch)
     {
         spriteBatch.DrawFromCenter(Texture, Center - Main.screenPosition, Color * (Fade ? Opacity : 1), scale: Scale);
+        return false;
     }
-
 }

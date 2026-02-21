@@ -1,21 +1,5 @@
 ﻿namespace Transoceanic.Commands;
 
-public abstract class TOCommand
-{
-    public abstract CommandType Type { get; }
-
-    public abstract string Command { get; }
-
-    /// <summary>
-    /// 执行命令的函数。
-    /// </summary>
-    /// <param name="caller"></param>
-    /// <param name="args">参数数组。</param>
-    public abstract void Action(CommandCaller caller, string[] args);
-
-    public virtual void Help(CommandCaller caller, string[] args) { }
-}
-
 public sealed record CommandCallInfo(CommandType CommandType, string Command, CommandCaller Caller, string[] Args)
 {
     public CommandCallInfo(TOCommand commandInstance, CommandCaller caller, string[] args) : this(commandInstance.Type, commandInstance.Command, caller, args) { }
@@ -60,7 +44,11 @@ public sealed class TOGeneralChatCommand : ModCommand, ILocalizationPrefix
     public override void Action(CommandCaller caller, string input, string[] args)
     {
         if (args.Length == 0 || string.IsNullOrEmpty(args[0]))
+        {
             caller.ReplyLocalizedText(this, "Helper");
+            return;
+        }
+
         switch (args[0].ToLower())
         {
             case "help":
@@ -107,7 +95,7 @@ public sealed class TOCommandHelper : IResourceLoader, ILocalizationPrefix
         {
             try
             {
-                caller.Player.                Ocean.CommandCallInfo = new(commandType, command, caller, args);
+                caller.Player.Ocean.CommandCallInfo = new(commandType, command, caller, args);
                 value.Action(caller, args);
             }
             catch (CommandArgumentException e)

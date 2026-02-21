@@ -8,7 +8,16 @@ public static partial class TOExtensions
     {
         public TOGlobalProjectile Ocean => projectile?.GetGlobalProjectile<TOGlobalProjectile>();
 
-        public Player Owner => Main.player[projectile.owner];
+        public Player Owner
+        {
+            get
+            {
+                int owner = projectile.owner;
+                if (owner >= 0 && projectile.owner < Main.maxPlayers)
+                    return Main.player[projectile.owner];
+                return null;
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetModProjectile<T>() where T : ModProjectile => projectile?.ModProjectile as T;

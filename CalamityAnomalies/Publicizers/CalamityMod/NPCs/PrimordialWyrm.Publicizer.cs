@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record PrimordialWyrmHead_Publicizer(PrimordialWyrmHead Source) : PublicizerBase<PrimordialWyrmHead>(Source)
+public record PrimordialWyrmHead_Publicizer(PrimordialWyrmHead Source) : Publicizer<PrimordialWyrmHead>(Source)
 {
     // baseDistance (const)
     public const float baseDistance = 1000f;

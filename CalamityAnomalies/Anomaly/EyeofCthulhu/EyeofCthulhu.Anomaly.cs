@@ -130,7 +130,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
         }
     }
 
-    public float EyeRotation => TOMathHelper.NormalizeAngle(MathF.Atan2(NPC.position.Y + NPC.height - 59f - Target.Center.Y, NPC.Center.X - Target.Center.X) + MathHelper.PiOver2);
+    public float EyeRotation => TOMathUtils.NormalizeAngle(MathF.Atan2(NPC.position.Y + NPC.height - 59f - Target.Center.Y, NPC.Center.X - Target.Center.X) + MathHelper.PiOver2);
     public static float EnrageScale => CASharedData.AnomalyUltramundane || Main.IsItDay() ? 2.5f : 1f;
     public bool ShouldCharge => Vector2.Distance(Target.Center, NPC.Center) >= 320f;
     #endregion 数据
@@ -215,7 +215,7 @@ public sealed class EyeofCthulhu_Anomaly : AnomalyNPCBehavior
             if (NPC.rotation > targetRotation - acceleration && NPC.rotation < targetRotation + acceleration)
                 NPC.rotation = targetRotation;
 
-            NPC.rotation = TOMathHelper.NormalizeAngle(NPC.rotation);
+            NPC.rotation = TOMathUtils.NormalizeAngle(NPC.rotation);
 
             //视觉效果
             if (Main.rand.NextBool(5))

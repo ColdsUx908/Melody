@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record DarkEnergy_Publicizer(DarkEnergy Source) : PublicizerBase<DarkEnergy>(Source)
+public record DarkEnergy_Publicizer(DarkEnergy Source) : Publicizer<DarkEnergy>(Source)
 {
     // start (instance field)
     public static readonly FieldInfo i_f_start = GetInstanceField("start");

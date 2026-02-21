@@ -2,7 +2,7 @@
 
 namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 #pragma warning disable IDE1006
-public record Signus_Publicizer(Signus Source) : PublicizerBase<Signus>(Source)
+public record Signus_Publicizer(Signus Source) : Publicizer<Signus>(Source)
 {
     // spawnX (instance field)
     public static readonly FieldInfo i_f_spawnX = GetInstanceField("spawnX");

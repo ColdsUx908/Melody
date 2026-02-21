@@ -67,8 +67,6 @@ public sealed class CAPlayer : ModPlayer
     public override void ResetEffects()
     {
         Debuff_DimensionalRend = false;
-
-        base.ResetEffects();
     }
 }
 

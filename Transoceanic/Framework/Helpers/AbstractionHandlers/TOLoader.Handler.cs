@@ -1,6 +1,6 @@
-﻿namespace Transoceanic.Framework.Helpers.AbstractionHelpers;
+﻿namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
 
-public sealed class TOLoaderSystem : ModSystem
+public sealed class TOLoaderHandler : ModSystem
 {
     public override void PostAddRecipes()
     {

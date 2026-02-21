@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record Leviathan_Publicizer(Leviathan Source) : PublicizerBase<Leviathan>(Source)
+public record Leviathan_Publicizer(Leviathan Source) : Publicizer<Leviathan>(Source)
 {
     // biomeEnrageTimer (instance field)
     public static readonly FieldInfo i_f_biomeEnrageTimer = GetInstanceField("biomeEnrageTimer");
@@ -55,7 +55,7 @@ public record Leviathan_Publicizer(Leviathan Source) : PublicizerBase<Leviathan>
     }
 }
 
-public record Anahita_Publicizer(Anahita Source) : PublicizerBase<Anahita>(Source)
+public record Anahita_Publicizer(Anahita Source) : Publicizer<Anahita>(Source)
 {
     // biomeEnrageTimer (instance field)
     public static readonly FieldInfo i_f_biomeEnrageTimer = GetInstanceField("biomeEnrageTimer");

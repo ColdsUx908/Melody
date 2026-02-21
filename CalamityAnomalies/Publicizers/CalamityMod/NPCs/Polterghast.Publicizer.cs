@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record Polterghast_Publicizer(Polterghast Source) : PublicizerBase<Polterghast>(Source)
+public record Polterghast_Publicizer(Polterghast Source) : Publicizer<Polterghast>(Source)
 {
     // DespawnTimerMax (const)
     public const int DespawnTimerMax = 900;
@@ -42,7 +42,7 @@ public record Polterghast_Publicizer(Polterghast Source) : PublicizerBase<Polter
     }
 }
 
-public record PolterghastHook_Publicizer(PolterghastHook Source) : PublicizerBase<PolterghastHook>(Source)
+public record PolterghastHook_Publicizer(PolterghastHook Source) : Publicizer<PolterghastHook>(Source)
 {
     // despawnTimer (instance field)
     public static readonly FieldInfo i_f_despawnTimer = GetInstanceField("despawnTimer");
@@ -67,7 +67,7 @@ public record PolterghastHook_Publicizer(PolterghastHook Source) : PublicizerBas
     public void Movement(bool phase2, bool expertMode, bool revenge, bool death, bool speedBoost, bool despawnBoost, float lifeRatio, float tileEnrageMult, Player player) => i_d_Movement(Source, phase2, expertMode, revenge, death, speedBoost, despawnBoost, lifeRatio, tileEnrageMult, player);
 }
 
-public record PolterPhantom_Publicizer(PolterPhantom Source) : PublicizerBase<PolterPhantom>(Source)
+public record PolterPhantom_Publicizer(PolterPhantom Source) : Publicizer<PolterPhantom>(Source)
 {
     // despawnTimer (instance field)
     public static readonly FieldInfo i_f_despawnTimer = GetInstanceField("despawnTimer");
@@ -86,7 +86,7 @@ public record PolterPhantom_Publicizer(PolterPhantom Source) : PublicizerBase<Po
     }
 }
 
-public record PhantomFuckYou_Publicizer(PhantomFuckYou Source) : PublicizerBase<PhantomFuckYou>(Source)
+public record PhantomFuckYou_Publicizer(PhantomFuckYou Source) : Publicizer<PhantomFuckYou>(Source)
 {
     // start (instance field)
     public static readonly FieldInfo i_f_start = GetInstanceField("start");

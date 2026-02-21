@@ -6,7 +6,7 @@ public static partial class TOExtensions
 {
     extension(ref NPC.HitModifiers modifiers)
     {
-        public void SetInstantKillBetter(NPC target) => modifiers.FinalDamage += target.lifeMax;
+        public void SetInstantKillBetter(NPC target) => modifiers.FinalDamage.Flat += target.lifeMax;
 
         /// <summary>
         /// 将暴击字段设为 <see langword="true"/>。

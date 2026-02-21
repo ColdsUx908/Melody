@@ -24,12 +24,18 @@ public enum PriorityType : byte
 /// <summary>
 /// 运动学工具类。
 /// </summary>
-public static class TOKinematicHelper
+public static class TOKinematicUtils
 {
     /// <summary>
     /// 获取NPC目标。
     /// </summary>
-    /// <remarks><strong>警告</strong> 遍历NPC对性能有较大影响。</remarks>
+    /// <param name="origin">追踪检索原点。</param>
+    /// <param name="maxDistanceToCheck">最大检索距离。</param>
+    /// <param name="ignoreTiles">是否忽视实体物块。</param>
+    /// <param name="bossPriority">是否对Boss具有优先级（即若能获取到Boss目标，则不获取非Boss目标）。</param>
+    /// <param name="priorityType">优先级类型。<para/>可选择获取距离最近目标、生命值最低目标、最大生命值最高目标。</param>
+    /// <returns>获取到的NPC目标。如未获取成功，返回 <see langword="null"/>。</returns>
+    /// <remarks><strong>警告</strong> 遍历NPC对性能有较大影响，应只在需要时调用该方法。</remarks>
     public static NPC GetNPCTarget(Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, bool bossPriority = false, PriorityType priorityType = PriorityType.Closest)
     {
         float maxDistanceToCheckSquared = maxDistanceToCheck * maxDistanceToCheck;
@@ -169,7 +175,12 @@ public static class TOKinematicHelper
     /// <summary>
     /// 获取玩家目标。
     /// </summary>
-    /// <remarks><strong>警告</strong> 该方法应由NPC调用。</remarks>
+    /// <param name="origin">追踪检索原点。</param>
+    /// <param name="maxDistanceToCheck">最大检索距离。</param>
+    /// <param name="ignoreTiles">是否忽视实体物块。</param>
+    /// <param name="priorityType">优先级类型。<para/>可选择获取距离最近目标、生命值最低目标、最大生命值最高目标。</param>
+    /// <returns>获取到的玩家目标。如未获取成功，返回 <see langword="null"/>。</returns>
+    /// <remarks><strong>警告</strong> 遍历玩家对性能有较大影响，应只在需要时调用该方法。该方法应由NPC调用。</remarks>
     public static Player GetPlayerTarget(Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, PriorityType priorityType = PriorityType.Closest)
     {
         float maxDistanceToCheckSquared = maxDistanceToCheck * maxDistanceToCheck;
@@ -222,8 +233,13 @@ public static class TOKinematicHelper
     /// <summary>
     /// 获取PvP状态的玩家目标。
     /// </summary>
-    /// <param name="owner">调用方法的玩家。不会将该玩家作为潜在目标。</param>
-    /// <remarks><strong>警告</strong> 该方法应由玩家调用。慎用PvP玩家目标功能。</remarks>
+    /// <param name="owner">发起检索调用的玩家。不会将该玩家作为目标。</param>
+    /// <param name="origin">追踪检索原点。</param>
+    /// <param name="maxDistanceToCheck">最大检索距离。</param>
+    /// <param name="ignoreTiles">是否忽视实体物块。</param>
+    /// <param name="priorityType">优先级类型。<para/>可选择获取距离最近目标、生命值最低目标、最大生命值最高目标。</param>
+    /// <returns>获取到的玩家目标。如未获取成功，返回 <see langword="null"/>。</returns>
+    /// <remarks><strong>警告</strong> 遍历玩家对性能有较大影响，应只在需要时调用该方法。该方法应由玩家调用。</remarks>
     public static Player GetPvPPlayerTarget(Player owner, Vector2 origin, float maxDistanceToCheck, bool ignoreTiles = true, PriorityType priorityType = PriorityType.Closest)
     {
         if (Main.netMode == NetmodeID.SinglePlayer || !owner.active || !owner.hostile)

@@ -1,10 +1,8 @@
-﻿using System.Diagnostics;
-
-namespace CalamityAnomalies.Publicizers.CalamityMod;
+﻿namespace CalamityAnomalies.Publicizers.CalamityMod;
 
 #pragma warning disable IDE1006
 
-public record CalamityMod_Publicizer(CalamityMod_ Source) : PublicizerBase<CalamityMod_>(Source)
+public record CalamityMod_Publicizer(CalamityMod_ Source) : Publicizer<CalamityMod_>(Source)
 {
     // _Instance (static field)
     public static readonly FieldInfo s_f__Instance = GetStaticField("_Instance");

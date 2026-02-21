@@ -37,7 +37,7 @@ public abstract class EntityBehavior<TEntity> : IEntityBehavior where TEntity : 
     /// 存储当前行为所连接的实体实例。
     /// </summary>
     /// <remarks>
-    /// 注意：正常情况下，此字段仅在通过 <see cref="SimpleEntityBehaviorSet{TEntity, TBehavior}.GetBehaviors(TEntity, string)"/> 等方法获取行为实例时被赋值。
+    /// 注意：正常情况下，此字段仅在通过 <see cref="SimpleEntityBehaviorSet{TEntity, TBehavior}.Enumerate(TEntity, string)"/> 等方法获取行为实例时被赋值。
     /// <br/>如果直接实例化行为类，则需要手动为此字段赋值，否则在行为方法中访问此字段会导致 <see cref="NullReferenceException"/> 异常。
     /// <br/>如果须在外部对此字段赋值，请务必谨慎。
     /// </remarks>
@@ -2083,7 +2083,7 @@ public abstract class SingleNPCBehaviorHandler<TNPCBehavior> : GlobalNPCBehavior
     {
         foreach (SimpleEntityBehaviorSet<NPC, TNPCBehavior> simpleSet in BehaviorSet._data.Values)
         {
-            foreach (TNPCBehavior npcBehavior in simpleSet.GetBehaviors())
+            foreach (TNPCBehavior npcBehavior in simpleSet.Enumerate())
                 npcBehavior.SetStaticDefaults();
         }
     }
@@ -2677,7 +2677,7 @@ public abstract class SingleProjectileBehaviorHandler<TProjectileBehavior> : Glo
     {
         foreach (SimpleEntityBehaviorSet<Projectile, TProjectileBehavior> simpleSet in BehaviorSet._data.Values)
         {
-            foreach (TProjectileBehavior projectileBehavior in simpleSet.GetBehaviors())
+            foreach (TProjectileBehavior projectileBehavior in simpleSet.Enumerate())
                 projectileBehavior.SetStaticDefaults();
         }
     }
@@ -2990,7 +2990,7 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
     {
         foreach (SimpleEntityBehaviorSet<Item, TItemBehavior> simpleSet in BehaviorSet._data.Values)
         {
-            foreach (TItemBehavior itemBehavior in simpleSet.GetBehaviors())
+            foreach (TItemBehavior itemBehavior in simpleSet.Enumerate())
                 itemBehavior.SetStaticDefaults();
         }
     }
@@ -3005,7 +3005,7 @@ public abstract class SingleItemBehaviorHandler<TItemBehavior> : GlobalItemBehav
     {
         foreach (SimpleEntityBehaviorSet<Item, TItemBehavior> simpleSet in BehaviorSet._data.Values)
         {
-            foreach (TItemBehavior itemBehavior in simpleSet.GetBehaviors())
+            foreach (TItemBehavior itemBehavior in simpleSet.Enumerate())
                 itemBehavior.AddRecipes();
         }
     }

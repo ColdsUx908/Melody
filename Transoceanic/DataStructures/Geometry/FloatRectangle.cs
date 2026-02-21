@@ -50,6 +50,6 @@ public struct FloatRectangle : IEquatable<FloatRectangle>,
 
     public readonly bool Collides(Rectangle other) => Collides((FloatRectangle)other);
     public readonly bool Collides(FloatRectangle other) => Left < other.Right && Right > other.Left && Top < other.Bottom && Bottom > other.Top;
-    public readonly bool Collides(Circle other) => TOCollisionHelper.SingleCollision.FloatRectanglevCircleCollision(this, other);
-    public readonly bool Collides(RotatedRectangle other) => TOCollisionHelper.SingleCollision.RotatedRectanglevFloatRectangleCollision(other, this);
+    public readonly bool Collides(Circle other) => CollisionHandler.SingleCollision.FloatRectanglevCircleCollision(this, other);
+    public readonly bool Collides(RotatedRectangle other) => CollisionHandler.SingleCollision.RotatedRectanglevFloatRectangleCollision(other, this);
 }

@@ -2,23 +2,36 @@
 
 public class PulseRing : Particle
 {
-    public override string TexturePath => ParticleHelper.BaseParticleTexturePath + "HollowCircleHardEdge";
+    public override bool AutoLoadTexture => false;
+    public override string TexturePath => TOSharedData.InvisibleProj;
     public override bool AutoKillByLifeTime => true;
-    public override bool UseCustomDraw => true;
     public override DrawBlendMode BlendMode => DrawBlendMode.AdditiveBlend;
 
-    [ParticleTextureAsset]
+    [LoadTexture(ParticleHandler.BaseParticleTexturePath + "HollowCircleHardEdge")]
     private static Asset<Texture2D> _textureAsset;
     public static Texture2D Texture => _textureAsset?.Value;
+
+    [LoadTexture(ParticleHandler.BaseParticleTexturePath + "HollowCircleHardEdgeHD")]
+    private static Asset<Texture2D> _textureAssetHD;
+    public static Texture2D TextureHD => _textureAssetHD?.Value;
+
     public const float TextureRadius = 78f;
+    public const float TextureRadiusHD = 740f;
+    /// <summary>
+    /// 转换因子，用于将基于HD纹理的半径转换为基于普通纹理的半径。
+    /// <br/>该因子的值为 TextureRadius / TextureRadiusHD，即 78f / 740f，约等于 0.1054。这意味着基于HD纹理的半径值需要乘以这个因子才能得到对应的基于普通纹理的半径值。
+    /// <br/>该因子可确保绘制时无论使用哪种纹理，粒子的视觉大小都能保持一致。
+    /// </summary>
+    public const float TextureRadiusConversionFactor = TextureRadius / TextureRadiusHD;
 
-    private float OriginalScale;
-    private float FinalScale;
-    private float opacity;
-    private Vector2 Squish;
-    private Color BaseColor;
+    public float OriginalScale;
+    public float FinalScale;
+    public float Opacity;
+    public Vector2 Squish;
+    public Color BaseColor;
+    public bool UseHDTexture;
 
-    public PulseRing(Vector2 center, Vector2 velocity, Color color, Vector2 squish, float rotation, float originalScale, float finalScale, int lifeTime)
+    public PulseRing(Vector2 center, Vector2 velocity, Color color, Vector2 squish, float rotation, float originalScale, float finalScale, int lifeTime, bool useHDTexture = false)
     {
         Center = center;
         Velocity = velocity;
@@ -29,19 +42,22 @@ public class PulseRing : Particle
         Lifetime = lifeTime;
         Squish = squish;
         Rotation = rotation;
+        UseHDTexture = useHDTexture;
     }
 
     public override void Update()
     {
-        Scale = MathHelper.Lerp(OriginalScale, FinalScale, TOMathHelper.ExponentialEaseOut(LifetimeCompletion, 4f));
-        opacity = 1f - TOMathHelper.SineEaseIn(LifetimeCompletion);
+        Scale = MathHelper.Lerp(OriginalScale, FinalScale, TOMathUtils.ExponentialEaseOut(LifetimeCompletion, 4f));
+        Opacity = 1f - TOMathUtils.SineEaseIn(LifetimeCompletion);
 
-        Color = BaseColor * opacity;
+        Color = BaseColor * Opacity;
         Lighting.AddLight(Center, Color.R / 255f, Color.G / 255f, Color.B / 255f);
         Velocity *= 0.95f;
     }
 
-    public override void CustomDraw(SpriteBatch spriteBatch) =>
-        spriteBatch.Draw(Texture, Center - Main.screenPosition, null, Color * opacity, Rotation, Texture.Size() / 2f, Scale * Squish, SpriteEffects.None, 0);
-
+    public override bool PreDraw(SpriteBatch spriteBatch)
+    {
+        spriteBatch.DrawFromCenter(UseHDTexture ? TextureHD : Texture, Center - Main.screenPosition, Color * Opacity, null, Rotation, (UseHDTexture ? Scale * TextureRadiusConversionFactor : Scale) * Squish, SpriteEffects.None, 0);
+        return false;
+    }
 }

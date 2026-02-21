@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record Crabulon_Publicizer(Crabulon Source) : PublicizerBase<Crabulon>(Source)
+public record Crabulon_Publicizer(Crabulon Source) : Publicizer<Crabulon>(Source)
 {
     // biomeEnrageTimer (instance field)
     public static readonly FieldInfo i_f_biomeEnrageTimer = GetInstanceField("biomeEnrageTimer");

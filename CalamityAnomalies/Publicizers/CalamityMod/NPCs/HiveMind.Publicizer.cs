@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record HiveMind_Publicizer(HiveMind Source) : PublicizerBase<HiveMind>(Source)
+public record HiveMind_Publicizer(HiveMind Source) : Publicizer<HiveMind>(Source)
 {
     // LoadHeadIcons (static method)
     public static readonly MethodInfo s_m_LoadHeadIcons = GetStaticMethod("LoadHeadIcons");
@@ -242,7 +242,7 @@ public record HiveMind_Publicizer(HiveMind Source) : PublicizerBase<HiveMind>(So
     public void ReelBack() => i_d_ReelBack(Source);
 }
 
-public record HiveBlob_Publicizer(HiveBlob Source) : PublicizerBase<HiveBlob>(Source)
+public record HiveBlob_Publicizer(HiveBlob Source) : Publicizer<HiveBlob>(Source)
 {
     // ShootGateValue (const)
     public const float ShootGateValue = 240f;

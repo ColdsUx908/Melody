@@ -2,8 +2,6 @@
 
 namespace CalamityAnomalies.Core;
 
-#region Calamity Detour
-#region Abstract
 public abstract class BaseLaserbeamProjectileDetour<T> : ModProjectileDetour<T> where T : BaseLaserbeamProjectile
 {
     // Behavior
@@ -86,9 +84,7 @@ public abstract class BaseLaserbeamProjectileDetour<T> : ModProjectileDetour<T> 
         ApplySingleDetour(Detour_get_LaserOverlayColor);
     }
 }
-#endregion Abstract
 
-#region Normal
 public abstract class CalamityPlayerDetour : ModPlayerDetour<CalamityPlayer>
 {
     // MiscEffects
@@ -112,5 +108,3 @@ public abstract class CalamityGlobalNPCDetour : GlobalNPCDetour<CalamityGlobalNP
 public abstract class CalamityGlobalProjectileDetour : GlobalProjectileDetour<CalamityGlobalProjectile> { }
 
 public abstract class CalamityGlobalItemDetour : GlobalItemDetour<CalamityGlobalItem> { }
-#endregion Normal
-#endregion Calamity Detour

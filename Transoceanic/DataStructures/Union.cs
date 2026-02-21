@@ -8,6 +8,7 @@ public unsafe struct Union32
     [FieldOffset(0)] public fixed short shorts[2];
     [FieldOffset(0)] public fixed byte bytes[4];
     [FieldOffset(0)] public Bits32 bits;
+    [FieldOffset(0)] public Color color;
 
     public Union32(float f) => this.f = f;
 

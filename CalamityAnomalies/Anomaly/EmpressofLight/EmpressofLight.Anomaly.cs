@@ -1467,7 +1467,7 @@ public sealed partial class AnomalyEmpressofLight : AnomalyNPCBehavior
                                 d.velocity *= 0.005f;
                                 d.scale = 3f * Utils.GetLerpValue(0.7f, 0f, progress, clamped: true) * Utils.GetLerpValue(0f, 0.3f, progress, clamped: true);
                                 d.velocity = (MathHelper.TwoPi * (i / 4f) + MathHelper.PiOver4).ToRotationVector2() * 8f * Utils.GetLerpValue(1f, 0f, progress, clamped: true);
-                                d.velocity += base.NPC.velocity * 0.3f;
+                                d.velocity += NPC.velocity * 0.3f;
                                 float magicDustColorChange = 0f;
                                 if (effectType == 4)
                                     magicDustColorChange = 0.5f;
@@ -1480,7 +1480,7 @@ public sealed partial class AnomalyEmpressofLight : AnomalyNPCBehavior
                         case 5:
                             if (progress == 0f)
                             {
-                                d.customData = base.NPC;
+                                d.customData = NPC;
                                 d.scale = 1.5f;
                                 d.fadeIn = 0f;
                                 d.velocity = new Vector2(0f, -1f) + Main.rand.NextVector2Circular(1f, 1f);
@@ -1494,7 +1494,7 @@ public sealed partial class AnomalyEmpressofLight : AnomalyNPCBehavior
                                 d.fadeIn = 1.3f;
                                 d.velocity *= 3f;
                                 d.velocity.X *= 0.1f;
-                                d.velocity += base.NPC.velocity * 1f;
+                                d.velocity += NPC.velocity * 1f;
                             }
                             break;
                     }

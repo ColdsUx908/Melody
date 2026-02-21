@@ -1,12 +1,12 @@
 ﻿using Terraria.Graphics.Effects;
 using Transoceanic.Framework.RuntimeEditing;
 
-namespace Transoceanic.Framework.Helpers.AbstractionHelpers;
+namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
 
 internal sealed class TypeDetourUpdateReminder : IUpdateReminder
 {
     private static bool DefaultDetourMatch(MethodInfo source, MethodInfo detour) => source.Name == detour.Name;
-    private static bool DetourMatch(MethodInfo source, MethodInfo detour) => TODetourUtils.EvaluateDetourName(detour, out string sourceNameGot) && sourceNameGot == source.Name;
+    private static bool DetourMatch(MethodInfo source, MethodInfo detour) => TODetourHandler.EvaluateDetourName(detour, out string sourceNameGot) && sourceNameGot == source.Name;
     private static bool ShouldMethodBeChecked(MethodInfo method) => method.IsRealVirtualOrAbstract && !method.IsGenericMethod && !method.HasAttribute<ObsoleteAttribute>() && method.CanBeAccessedOutsideAssembly;
 
     private readonly record struct DetourTypeContainer(Type Source, Type Detour, Func<MethodInfo, bool> SourceIgnore = null, Func<MethodInfo, bool> DetourIgnore = null)

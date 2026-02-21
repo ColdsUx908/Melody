@@ -1,34 +1,53 @@
-﻿using System;
-using CalamityAnomalies;
-using CalamityMod.CalPlayer;
-using CalamityMod.Events;
-using CalamityMod.Projectiles.Boss;
-using CalamityMod.World;
-using Microsoft.Xna.Framework;
-using Terraria;
-using Terraria.Audio;
-using Terraria.ID;
-using Terraria.ModLoader;
+﻿namespace CalamityAnomalies.Anomaly.KingSlime;
 
-namespace CalamityAnomalies.Anomaly.KingSlime;
-
-public class KingSlimeJewelSapphire : CAModNPC
+public class KingSlimeJewelSapphire : CAModNPC, IKingSlimeJewel
 {
     public const float DespawnDistance = 5000f;
 
+    public bool HasInitialized
+    {
+        get => AI_Union_2.bits[0];
+        set
+        {
+            Union32 union = AI_Union_2;
+            union.bits[0] = value;
+            AI_Union_2 = union;
+        }
+    }
+
     public bool HasEnteredPhase2
     {
-        get => NPC.ai[2] == 1f;
-        set => NPC.ai[2] = value.ToInt();
+        get => AI_Union_2.bits[1];
+        set
+        {
+            Union32 union = AI_Union_2;
+            union.bits[1] = value;
+            AI_Union_2 = union;
+        }
     }
 
     public bool CanAttack
     {
-        get => NPC.ai[3] != 1f;
-        set => NPC.ai[3] = (!value).ToInt();
+        get => AI_Union_2.bits[2];
+        set
+        {
+            Union32 union = AI_Union_2;
+            union.bits[2] = value;
+            AI_Union_2 = union;
+        }
     }
 
-    public override string Texture => JewelHandler.JewelTexturePath;
+    public bool CanBeKilled
+    {
+        get => AI_Union_2.bits[3];
+        set
+        {
+            Union32 union = AI_Union_2;
+            union.bits[3] = value;
+            AI_Union_2 = union;
+        }
+    }
+
     public override string LocalizationCategory => "Anomaly.KingSlime";
 
     public override void SetStaticDefaults() => NPCID.Sets.NPCBestiaryDrawOffset.Add(Type, new NPCID.Sets.NPCBestiaryDrawModifiers() { Hide = true });
@@ -38,15 +57,15 @@ public class KingSlimeJewelSapphire : CAModNPC
         NPC.aiStyle = -1;
         AIType = -1;
         NPC.damage = 10;
-        NPC.width = 22;
-        NPC.height = 22;
+        NPC.width = 30;
+        NPC.height = 30;
         NPC.defense = 5;
         NPC.DR_NERD(0.05f);
 
-        NPC.lifeMax = 180;
+        NPC.lifeMax = 250;
         NPC.ApplyCalamityBossHealthBoost();
 
-        NPC.knockBackResist = 0.9f;
+        NPC.knockBackResist = 0.4f;
         NPC.noGravity = true;
         NPC.noTileCollide = true;
         NPC.HitSound = SoundID.NPCHit5;
@@ -60,7 +79,7 @@ public class KingSlimeJewelSapphire : CAModNPC
     {
         if (!OceanNPC.TryGetMaster(NPCID.KingSlime, out NPC master))
         {
-            JewelHandler.Despawn(NPC);
+            JewelHandler.Kill(NPC);
             return;
         }
 
@@ -72,6 +91,13 @@ public class KingSlimeJewelSapphire : CAModNPC
 
         NPC.damage = 0;
         Lighting.AddLight(NPC.Center, 0f, 0f, 1f);
+
+        if (!HasInitialized)
+        {
+            CanAttack = true;
+
+            HasInitialized = true;
+        }
 
         JewelHandler.Move(NPC, master.Center, 15f, 15f, 0.2f, 0.5f, 150f, -150f, 50f, -250f);
 
@@ -94,44 +120,18 @@ public class KingSlimeJewelSapphire : CAModNPC
             NPC.active = true;
             if (!HasEnteredPhase2)
                 JewelHandler.EnterPhase2(NPC);
-            return false;
+            return CanBeKilled;
         }
         return true;
     }
 
     public override void HitEffect(NPC.HitInfo hit)
     {
-        int dust = Dust.NewDust(NPC.position, NPC.width, NPC.height, DustID.GemSapphire, hit.HitDirection, -1f, 0, default, 1f);
-        Main.dust[dust].noGravity = true;
+        JewelHandler.HitEffect(NPC);
+    }
 
-        if (NPC.life <= 0)
-        {
-            NPC.position = NPC.Center;
-            NPC.width = NPC.height = 45;
-            NPC.position.X = NPC.position.X - (NPC.width / 2);
-            NPC.position.Y = NPC.position.Y - (NPC.height / 2);
-
-            for (int i = 0; i < 2; i++)
-            {
-                int rubyDust = Dust.NewDust(NPC.position, NPC.width, NPC.height, DustID.GemSapphire, 0f, 0f, 100, default, 2f);
-                Main.dust[rubyDust].noGravity = true;
-                Main.dust[rubyDust].velocity *= 3f;
-                if (Main.rand.NextBool())
-                {
-                    Main.dust[rubyDust].scale = 0.5f;
-                    Main.dust[rubyDust].fadeIn = 1f + Main.rand.Next(10) * 0.1f;
-                }
-            }
-
-            for (int j = 0; j < 10; j++)
-            {
-                int rubyDust2 = Dust.NewDust(NPC.position, NPC.width, NPC.height, DustID.GemSapphire, 0f, 0f, 100, default, 3f);
-                Main.dust[rubyDust2].noGravity = true;
-                Main.dust[rubyDust2].velocity *= 5f;
-                rubyDust2 = Dust.NewDust(NPC.position, NPC.width, NPC.height, DustID.GemSapphire, 0f, 0f, 100, default, 2f);
-                Main.dust[rubyDust2].noGravity = true;
-                Main.dust[rubyDust2].velocity *= 2f;
-            }
-        }
+    public override void OnKill()
+    {
+        JewelHandler.OnKill(NPC);
     }
 }

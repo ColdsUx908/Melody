@@ -146,9 +146,9 @@ public readonly struct TerrariaTime : IEquatable<TerrariaTime>
             Main.moonPhase = (int)MoonPhase;
     }
 
-    public PolarVector2 HourHand => PolarVector2.UnitClocks[12].RotatedBy(TOMathHelper.PiOver6 * (float)Time);
-    public PolarVector2 MinuteHand => PolarVector2.UnitClocks[12].RotatedBy(TOMathHelper.PiOver30 * (float)(Time - Hour));
-    public PolarVector2 SecondHand => PolarVector2.UnitClocks[12].RotatedBy(TOMathHelper.PiOver30 * Second / 1000f);
+    public PolarVector2 HourHand => PolarVector2.UnitClocks[12].RotatedBy(TOMathUtils.PiOver6 * (float)Time);
+    public PolarVector2 MinuteHand => PolarVector2.UnitClocks[12].RotatedBy(TOMathUtils.PiOver30 * (float)(Time - Hour));
+    public PolarVector2 SecondHand => PolarVector2.UnitClocks[12].RotatedBy(TOMathUtils.PiOver30 * Second / 1000f);
 
     public static TerrariaTime RealTime => new(DateTime.Now);
 }

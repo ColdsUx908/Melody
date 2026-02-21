@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record SoulSeeker_Publicizer(SoulSeeker Source) : PublicizerBase<SoulSeeker>(Source)
+public record SoulSeeker_Publicizer(SoulSeeker Source) : Publicizer<SoulSeeker>(Source)
 {
     // timer (instance field)
     public static readonly FieldInfo i_f_timer = GetInstanceField("timer");

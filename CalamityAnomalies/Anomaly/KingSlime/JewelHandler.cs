@@ -1,28 +1,75 @@
-﻿using CalamityAnomalies.Assets.Textures;
-using CalamityAnomalies.Publicizers.CalamityMod;
-using CalamityMod.NPCs.NormalNPCs;
-using Transoceanic.DataStructures.Particles;
-using Transoceanic.Framework.Helpers.AbstractionHelpers;
+﻿using CalamityMod.NPCs.NormalNPCs;
+using Transoceanic.Framework.Helpers.AbstractionHandlers;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
+public interface IKingSlimeJewel : IResourceLoader
+{
+    public abstract bool HasEnteredPhase2 { get; set; }
+    public abstract bool CanAttack { get; set; }
+    /// <summary>
+    /// 是否可被击杀。
+    /// <br/>仅在异象超凡中使用，表示是否可以通过伤害击杀宝石。
+    /// <br/>注意：<see cref="JewelHandler.Kill(NPC)"/> 方法会无视此属性直接击杀宝石，因为该方法并不依赖伤害系统
+    /// <br/>如果需要通过伤害击杀宝石，请先将此属性设为 <see langword="true"/>。
+    /// <br/>在异象超凡中，宝石默认不可被击杀。
+    /// </summary>
+    public abstract bool CanBeKilled { get; set; }
+}
+
 public sealed class JewelHandler : IResourceLoader
 {
-    public const string JewelTexturePath = "CalamityMod/NPCs/NormalNPCs/KingSlimeJewelRuby";
+    public const string AnomalyKingSlimePath = "CalamityAnomalies/Anomaly/KingSlime/";
 
-    public static Color EmeraldColor => Main.zenithWorld ? Color.Purple : Color.FullGreen;
+    [LoadTexture("CalamityMod/NPCs/NormalNPCs/KingSlimeJewelFlash")]
+    private static Asset<Texture2D> _flashTexture;
+    public static Texture2D FlashTexture => _flashTexture.Value;
+
+    [LoadTexture("CalamityMod/Particles/KingSlimeRubyShards")]
+    private static Asset<Texture2D> _rubyShardTexture;
+    public static Texture2D RubyShardTexture => _rubyShardTexture.Value;
+
+    [LoadTexture(AnomalyKingSlimePath + "KingSlimeEmeraldShards")]
+    private static Asset<Texture2D> _emeraldShardTexture;
+    public static Texture2D EmeraldShardTexture => _emeraldShardTexture.Value;
+
+    [LoadTexture(AnomalyKingSlimePath + "KingSlimeSapphireShards")]
+    private static Asset<Texture2D> _sapphireShardTexture;
+    public static Texture2D SapphireShardTexture => _sapphireShardTexture.Value;
+
+    [LoadTexture(AnomalyKingSlimePath + "KingSlimeRainbowShards")]
+    private static Asset<Texture2D> _rainbowShardTexture;
+    public static Texture2D RainbowShardTexture => _rainbowShardTexture.Value;
+
+    public static readonly SoundStyle SpawnSound = new("CalamityMod/Sounds/Custom/KingSlimeJewelSpawn") { Volume = 1f };
+    public static readonly SoundStyle ShatterSound = new("CalamityMod/Sounds/NPCKilled/CrownJewelShatter") { Volume = 0.3f };
+    public static readonly SoundStyle ShootSound = new("CalamityMod/Sounds/Custom/RedJewelFire");
+
     public static Color RubyColor => Main.zenithWorld ? Color.Cyan : Color.Red;
+    public static Color EmeraldColor => Main.zenithWorld ? Color.Purple : Color.Lime with { B = 40 };
     public static Color SapphireColor => Main.zenithWorld ? Color.Yellow : Color.Blue;
     public static Color RainbowColor => Main.DiscoColor;
-    public static Color EmeraldFinalColor => Main.zenithWorld ? new(255, 175, 255) : new(175, 255, 175);
     public static Color RubyFinalColor => Main.zenithWorld ? new(175, 255, 255) : new(255, 175, 175);
+    public static Color EmeraldFinalColor => Main.zenithWorld ? new(255, 175, 255) : new(175, 255, 175);
     public static Color SapphireFinalColor => Main.zenithWorld ? new(255, 255, 175) : new(175, 175, 255);
     public static Color RainbowFinalColor => Color.Lerp(Main.DiscoColor, Color.White, 0.7f);
 
+    /// <summary>
+    /// 获取宝石对应的 <see cref="IKingSlimeJewel"/> 实例。
+    /// </summary>
+    public static IKingSlimeJewel GetKingSlimeJewel(NPC jewel) => jewel.ModNPC switch
+    {
+        KingSlimeJewelRuby => new KingSlimeJewelRuby_Anomaly() { _entity = jewel },
+        KingSlimeJewelEmerald emerald => emerald,
+        KingSlimeJewelSapphire sapphire => sapphire,
+        KingSlimeJewelRainbow rainbow => rainbow,
+        _ => null
+    };
+
     public static Color GetColor(NPC jewel) => jewel.ModNPC switch
     {
-        KingSlimeJewelEmerald => EmeraldColor,
         KingSlimeJewelRuby => RubyColor,
+        KingSlimeJewelEmerald => EmeraldColor,
         KingSlimeJewelSapphire => SapphireColor,
         KingSlimeJewelRainbow => RainbowColor,
         _ => Color.White
@@ -30,10 +77,19 @@ public sealed class JewelHandler : IResourceLoader
 
     public static Color GetFinalColor(NPC jewel) => jewel.ModNPC switch
     {
-        KingSlimeJewelEmerald => EmeraldFinalColor,
         KingSlimeJewelRuby => RubyFinalColor,
+        KingSlimeJewelEmerald => EmeraldFinalColor,
         KingSlimeJewelSapphire => SapphireFinalColor,
         KingSlimeJewelRainbow => RainbowFinalColor,
+        _ => Color.White
+    };
+
+    public static Color GetFlashColor(NPC jewel) => jewel.ModNPC switch
+    {
+        KingSlimeJewelRuby => Color.Pink,
+        KingSlimeJewelEmerald => Color.LimeGreen,
+        KingSlimeJewelSapphire => Color.CornflowerBlue,
+        KingSlimeJewelRainbow => Color.Lerp(Main.DiscoColor, Color.White, 0.5f),
         _ => Color.White
     };
 
@@ -45,6 +101,16 @@ public sealed class JewelHandler : IResourceLoader
     {
         jewel.life = 0;
         jewel.HitEffect();
+        jewel.active = false;
+        jewel.netUpdate = true;
+    }
+
+    public static void Kill(NPC jewel)
+    {
+        GetKingSlimeJewel(jewel)?.CanBeKilled = true;
+        jewel.life = 0;
+        jewel.HitEffect();
+        jewel.ModNPC?.OnKill();
         jewel.active = false;
         jewel.netUpdate = true;
     }
@@ -65,7 +131,7 @@ public sealed class JewelHandler : IResourceLoader
     public static void Move(NPC jewel, Vector2 destination, float maxVelocityX, float maxVelocityY, float accelerationX, float accelerationY, float safeDistanceXMax, float safeDistanceXMin, float safeDistanceYMax, float safeDistanceYMin)
     {
         jewel.damage = 0;
-        jewel.knockBackResist = 0.7f;
+        jewel.knockBackResist = 0.4f;
         jewel.rotation = jewel.velocity.X / 15f;
         Vector2 distance = jewel.Center - destination;
         float adjustedX = distance.X - (safeDistanceXMax + safeDistanceXMin) / 2f;
@@ -106,21 +172,43 @@ public sealed class JewelHandler : IResourceLoader
     /// <param name="spriteBatch"><c>PreDraw</c> 方法中的 <c>spriteBatch</c> 参数。</param>
     /// <param name="screenPos"><c>PreDraw</c> 方法中的 <c>screenPos</c> 参数。</param>
     /// <param name="jewel">宝石。</param>
-    /// <param name="lerpValue">插值比例。</param>
-    public static void DrawJewel(SpriteBatch spriteBatch, Vector2 screenPos, NPC jewel, float lerpValue) =>
-        spriteBatch.DrawFromCenter(jewel.Texture, jewel.Center - screenPos, (Color.Lerp(GetColor(jewel), GetFinalColor(jewel), lerpValue) * (CheckIfPhase2(jewel) ? 0.5f : 1f)) with { A = jewel.GraphicAlpha }, null, jewel.rotation, jewel.scale);
-
-    public static void DrawAttackEffect(SpriteBatch spriteBatch, Vector2 screenPos, NPC jewel, float ratio, float radius, float scale)
+    /// <param name="ratio">插值比例。<br/>决定闪烁效果强度。</param>
+    public static void DrawJewel(SpriteBatch spriteBatch, Vector2 screenPos, NPC jewel, float ratio)
     {
         bool isRainbowJewel = jewel.ModNPC is KingSlimeJewelRainbow;
-        Color color = GetColor(jewel) with { A = 0 } * ratio * 1.5f;
-        float interpolation = TOMathHelper.QuadraticEaseOut(1f - ratio);
-        float interpolation2 = TOMathHelper.QuadraticEaseOut(Math.Clamp(1f - ratio, 0f, 0.2f) * 5f);
+        Color jewelColor = GetColor(jewel);
+        spriteBatch.DrawFromCenter(jewel.Texture, jewel.Center - screenPos, isRainbowJewel ? jewelColor : Color.White with { A = jewel.GraphicAlpha }, null, jewel.rotation, jewel.scale);
+        if (ratio > 0f) //攻击前的闪烁效果
+        {
+            Color flashColor = Color.Lerp(jewelColor, GetFlashColor(jewel), ratio).MultiplyRGBA(new Color(ratio, ratio, ratio, 0f)) * ratio;
+            spriteBatch.DrawFromCenter(FlashTexture, jewel.Center - screenPos, flashColor, null, jewel.rotation, jewel.scale * ratio * 1.2f);
+        }
+    }
+
+    /// <summary>
+    /// 宝石攻击效果（提示圈）绘制通用逻辑。
+    /// </summary>
+    /// <param name="spriteBatch"><c>PreDraw</c> 方法中的 <c>spriteBatch</c> 参数。</param>
+    /// <param name="screenPos"><c>PreDraw</c> 方法中的 <c>screenPos</c> 参数。</param>
+    /// <param name="jewel">宝石。</param>
+    /// <param name="ratio">插值比例。<br/>决定提示圈最终半径、宽度和透明度。</param>
+    /// <param name="radius">提示圈最大半径。</param>
+    /// <param name="scale"></param>
+    public static void DrawAttackEffect(SpriteBatch spriteBatch, Vector2 screenPos, NPC jewel, float ratio, float radius, float scale)
+    {
+        if (!CAClientConfig.Instance.AuxiliaryVisualEffects || ratio <= 0f)
+            return;
+
+        bool isRainbowJewel = jewel.ModNPC is KingSlimeJewelRainbow;
+        Color jewelColor = GetColor(jewel);
+        Color color = jewelColor with { A = 0 } * Math.Clamp(ratio * 1.5f, 0f, 1f);
+        float interpolation = TOMathUtils.QuadraticEaseOut(1f - ratio);
+        float interpolation2 = TOMathUtils.QuadraticEaseOut(Math.Clamp(1f - ratio, 0f, 0.2f) * 5f);
+
         for (int i = 0; i < 300; i++)
         {
-            if (isRainbowJewel)
-                color = Color.LerpMany(Color.RainbowColors, (ratio + i / 300f + TOMathHelper.GetTimeSin(0.5f, 0.5f, 0f, true)) % 1f) with { A = 0 } * ratio * 1.5f;
-            spriteBatch.DrawFromCenter(OrbParticle.Texture, jewel.Center + new PolarVector2(radius * interpolation, MathHelper.TwoPi / 300 * i) - screenPos, color, null, 0f, scale * interpolation2);
+            Color color2 = isRainbowJewel ? Color.LerpMany(Color.RainbowColors, (ratio + i / 300f + TOMathUtils.GetTimeSin(0.5f, 0.5f, 0f, true)) % 1f) with { A = 0 } * ratio * 1.5f : color;
+            spriteBatch.DrawFromCenter(OrbParticle.Texture, jewel.Center + new PolarVector2(radius * interpolation, MathHelper.TwoPi / 300 * i) - screenPos, color2, null, 0f, scale * interpolation2);
         }
     }
 
@@ -131,14 +219,28 @@ public sealed class JewelHandler : IResourceLoader
     /// <param name="velocity">粒子速度大小。</param>
     /// <param name="lifetime">粒子存在时长。</param>
     /// <param name="scale">粒子大小。</param>
-    public static void SpawnParticle(NPC jewel, float velocity, int lifetime, float scale)
+    public static void SpawnOrbParticle(NPC jewel, float velocity, int lifetime, float scale)
     {
         Color color = jewel.ModNPC switch
         {
             KingSlimeJewelRainbow => Color.GetRandomRainbowColor(),
             _ => GetColor(jewel)
         };
-        Transoceanic.Framework.Helpers.AbstractionHelpers.ParticleHelper.SpawnParticle(new OrbParticle(jewel.Center, Main.rand.NextPolarVector2(velocity), lifetime, scale, color, lifeEndRatio: 0.925f));
+        ParticleHandler.SpawnParticle(new OrbParticle(jewel.Center, Main.rand.NextPolarVector2(velocity), lifetime, scale, color, lifeEndRatio: 0.925f));
+    }
+
+    public static void SpawnPointingParticle(NPC jewel, int amount, bool extraParticle)
+    {
+        bool isRainbowJewel = jewel.ModNPC is KingSlimeJewelRainbow;
+        Color color = GetColor(jewel);
+        Color flashColor = GetFlashColor(jewel);
+
+        for (int i = 0; i < amount; i++)
+        {
+            ParticleHandler.SpawnParticle(new PointingParticle(jewel.Center, new Vector2(Main.rand.NextFloat(20), 0).RotatedByRandom(MathHelper.TwoPi), false, 10, Main.rand.NextFloat(0.8f, 1.5f), isRainbowJewel ? Color.GetRandomRainbowColor() with { A = 0 } : color));
+            if (extraParticle)
+                ParticleHandler.SpawnParticle(new PointingParticle(jewel.Center, new Vector2(Main.rand.NextFloat(10), 0).RotatedByRandom(MathHelper.TwoPi), false, 10, Main.rand.NextFloat(0.8f, 1.5f), isRainbowJewel ? Color.GetRandomRainbowColor() : flashColor));
+        }
     }
 
     public static void CreateDustFromJewelTo(NPC jewel, Vector2 destination, int type)
@@ -177,17 +279,14 @@ public sealed class JewelHandler : IResourceLoader
     public static void EnterPhase2(NPC jewel)
     {
         for (int i = 0; i < 20; i++)
-            SpawnParticle(jewel, Main.rand.NextFloat(2f, 2.5f), Main.rand.Next(20, 30), Main.rand.NextFloat(0.4f, 0.7f));
+            SpawnOrbParticle(jewel, Main.rand.NextFloat(2f, 2.5f), Main.rand.Next(20, 30), Main.rand.NextFloat(0.4f, 0.7f));
         SoundEngine.PlaySound(jewel.DeathSound, jewel.Center);
-        jewel.ai[2] = 1f;
+        GetKingSlimeJewel(jewel)?.HasEnteredPhase2 = true;
         jewel.dontTakeDamage = true;
         jewel.netUpdate = true;
     }
 
-    public static void DisableAttack(NPC jewel)
-    {
-        jewel.ai[3] = 1f;
-    }
+    public static void DisableAttack(NPC jewel) => GetKingSlimeJewel(jewel)?.CanAttack = false;
 
     public static int GetRandomDustID() => Main.rand.Next(7) switch
     {
@@ -200,4 +299,32 @@ public sealed class JewelHandler : IResourceLoader
         6 => DustID.GemAmber,
         _ => DustID.TintableDust
     };
+
+    public static void HitEffect(NPC jewel) => SpawnPointingParticle(jewel, 6, false);
+
+    public static void OnKill(NPC jewel)
+    {
+        bool isRainbowJewel = jewel.ModNPC is KingSlimeJewelRainbow;
+        SpawnPointingParticle(jewel, 6, true);
+
+        Texture2D shardTexture = jewel.ModNPC switch
+        {
+            KingSlimeJewelRuby => RubyShardTexture,
+            KingSlimeJewelEmerald => EmeraldShardTexture,
+            KingSlimeJewelSapphire => SapphireShardTexture,
+            KingSlimeJewelRainbow => RainbowShardTexture,
+            _ => null
+        };
+
+        float start = Main.rand.NextFloat(MathHelper.TwoPi);
+        for (int i = 0; i < 3; i++)
+        {
+            CustomSpriteParticle particle = isRainbowJewel
+                ? new(jewel.Center, new Vector2(0, -2).RotatedByRandom(start + MathHelper.ToRadians(20f)).RotatedBy(MathHelper.ToRadians(i * 125)), 120, shardTexture, 1f, new Color(255, 255, 255), Main.rand.NextFloat(0.2f, 0.6f), customFindFrameAction: p => p.Texture.Frame(1, 3, 0, i))
+                : new(jewel.Center, new Vector2(0, -2).RotatedByRandom(start + MathHelper.ToRadians(20f)).RotatedBy(MathHelper.ToRadians(i * 125)), 120, shardTexture, 1f, Color.GetRandomRainbowColor(), Main.rand.NextFloat(0.2f, 0.6f), customFindFrameAction: p => p.Texture.Frame(1, 3, 0, i));
+            ParticleHandler.SpawnParticle(particle);
+        }
+
+        SoundEngine.PlaySound(ShatterSound, jewel.Center);
+    }
 }

@@ -1,6 +1,6 @@
-﻿namespace Transoceanic.Framework.Helpers.AbstractionHelpers;
+﻿namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
 
-public static class PublicizerHelper
+public static class PublicizerHandler
 {
     /// <summary>
     /// 获取实例字段，找不到则抛出异常。

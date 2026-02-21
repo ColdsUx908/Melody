@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record DesertScourgeHead_Publicizer(DesertScourgeHead Source) : PublicizerBase<DesertScourgeHead>(Source)
+public record DesertScourgeHead_Publicizer(DesertScourgeHead Source) : Publicizer<DesertScourgeHead>(Source)
 {
     // biomeEnrageTimer (instance field)
     public static readonly FieldInfo i_f_biomeEnrageTimer = GetInstanceField("biomeEnrageTimer");
@@ -26,7 +26,7 @@ public record DesertScourgeHead_Publicizer(DesertScourgeHead Source) : Publicize
     public const int OpenMouthStopFrame = 4;
 }
 
-public record DesertNuisanceHead_Publicizer(DesertNuisanceHead Source) : PublicizerBase<DesertNuisanceHead>(Source)
+public record DesertNuisanceHead_Publicizer(DesertNuisanceHead Source) : Publicizer<DesertNuisanceHead>(Source)
 {
     // biomeEnrageTimer (instance field)
     public static readonly FieldInfo i_f_biomeEnrageTimer = GetInstanceField("biomeEnrageTimer");
@@ -48,7 +48,7 @@ public record DesertNuisanceHead_Publicizer(DesertNuisanceHead Source) : Publici
     public const int OpenMouthStopFrame = 4;
 }
 
-public record DesertNuisanceHeadYoung_Publicizer(DesertNuisanceHeadYoung Source) : PublicizerBase<DesertNuisanceHeadYoung>(Source)
+public record DesertNuisanceHeadYoung_Publicizer(DesertNuisanceHeadYoung Source) : Publicizer<DesertNuisanceHeadYoung>(Source)
 {
     // biomeEnrageTimer (instance field)
     public static readonly FieldInfo i_f_biomeEnrageTimer = GetInstanceField("biomeEnrageTimer");

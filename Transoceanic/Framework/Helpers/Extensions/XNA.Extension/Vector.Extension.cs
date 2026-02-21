@@ -16,7 +16,7 @@ public static partial class TOExtensions
         /// 获取向量的顺时针旋转角。
         /// </summary>
         /// <returns>零向量返回0，否则返回 [0, 2π) 范围内的浮点值。</returns>
-        public float Angle => TOMathHelper.NormalizeAngle(MathF.Atan2(vector.Y, vector.X));
+        public float Angle => TOMathUtils.NormalizeAngle(MathF.Atan2(vector.Y, vector.X));
 
         /// <summary>
         /// 安全地将向量化为单位向量。
@@ -25,15 +25,15 @@ public static partial class TOExtensions
         public Vector2 SafeNormalize() => vector == Vector2.Zero ? Vector2.Zero : Vector2.Normalize(vector);
 
         /// <summary>
-        /// 获取模为特定值的原向量同向向量。不改变原向量值。
+        /// 获取模为特定值的与原向量共线的向量。不改变原向量值。
         /// </summary>
-        /// <param name="length"></param>
         /// <returns></returns>
         public Vector2 ToCustomLength(float length) => vector.SafeNormalize() * length;
 
         public Vector2 RotatedByRandom() => vector.RotatedByRandom(MathHelper.Pi);
     }
 
+#pragma warning disable IDE0059 //作为ref扩展方法，其理应修改原向量值，因此不应警告无需赋值。
     extension(ref Vector2 vector)
     {
         public void CopyFrom(Vector2 other)
@@ -54,6 +54,7 @@ public static partial class TOExtensions
             set => vector = new PolarVector2(vector.Length(), value);
         }
     }
+#pragma warning restore IDE0059
 
     extension(Vector2)
     {
@@ -65,7 +66,12 @@ public static partial class TOExtensions
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        public static float IncludedAngle(Vector2 a, Vector2 b) => (float)Math.Acos(Vector2.Dot(a, b) / (a.Modulus * b.Modulus));
+        public static float IncludedAngle(Vector2 a, Vector2 b)
+        {
+            if (a == Vector2.Zero || b == Vector2.Zero)
+                return 0f;
+            return MathF.Acos(Vector2.Dot(a, b) / (a.Modulus * b.Modulus));
+        }
 
         /// <summary>
         /// 获取两个向量角平分线的单位方向向量。
@@ -85,5 +91,7 @@ public static partial class TOExtensions
         /// <param name="ratio">位似比。</param>
         /// <returns></returns>
         public static Vector2 Homothetic(Vector2 value, Vector2 center, float ratio) => center + ratio * (value - center);
+
+        public static Vector2 SmootherStep(Vector2 from, Vector2 to, float amount) => new(TOMathUtils.SmootherStep(from.X, to.X, amount), TOMathUtils.SmootherStep(from.Y, to.Y, amount));
     }
 }

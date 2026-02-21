@@ -8,7 +8,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record Artemis_Publicizer(Artemis Source) : PublicizerBase<Artemis>(Source)
+public record Artemis_Publicizer(Artemis Source) : Publicizer<Artemis>(Source)
 {
     // LoadHeadIcons (static method)
     public static readonly MethodInfo s_m_LoadHeadIcons = GetStaticMethod("LoadHeadIcons");
@@ -148,7 +148,7 @@ public record Artemis_Publicizer(Artemis Source) : PublicizerBase<Artemis>(Sourc
     }
 }
 
-public record Apollo_Publicizer(Apollo Source) : PublicizerBase<Apollo>(Source)
+public record Apollo_Publicizer(Apollo Source) : Publicizer<Apollo>(Source)
 {
     // LoadHeadIcons (static method)
     public static readonly MethodInfo s_m_LoadHeadIcons = GetStaticMethod("LoadHeadIcons");
@@ -240,7 +240,7 @@ public record Apollo_Publicizer(Apollo Source) : PublicizerBase<Apollo>(Source)
     public void KillProjectiles() => i_d_KillProjectiles(Source);
 }
 
-public record ThanatosHead_Publicizer(ThanatosHead Source) : PublicizerBase<ThanatosHead>(Source)
+public record ThanatosHead_Publicizer(ThanatosHead Source) : Publicizer<ThanatosHead>(Source)
 {
     // LoadHeadIcons (static method)
     public static readonly MethodInfo s_m_LoadHeadIcons = GetStaticMethod("LoadHeadIcons");
@@ -308,7 +308,7 @@ public record ThanatosHead_Publicizer(ThanatosHead Source) : PublicizerBase<Than
     public const float deathrayDuration = 180f;
 }
 
-public record ThanatosBody1_Publicizer(ThanatosBody1 Source) : PublicizerBase<ThanatosBody1>(Source)
+public record ThanatosBody1_Publicizer(ThanatosBody1 Source) : Publicizer<ThanatosBody1>(Source)
 {
     // LoadHeadIcons (static method)
     public static readonly MethodInfo s_m_LoadHeadIcons = GetStaticMethod("LoadHeadIcons");
@@ -342,7 +342,7 @@ public record ThanatosBody1_Publicizer(ThanatosBody1 Source) : PublicizerBase<Th
     public const float segmentCloseTimerDecrement = 0.2f;
 }
 
-public record ThanatosBody2_Publicizer(ThanatosBody2 Source) : PublicizerBase<ThanatosBody2>(Source)
+public record ThanatosBody2_Publicizer(ThanatosBody2 Source) : Publicizer<ThanatosBody2>(Source)
 {
     // LoadHeadIcons (static method)
     public static readonly MethodInfo s_m_LoadHeadIcons = GetStaticMethod("LoadHeadIcons");
@@ -376,7 +376,7 @@ public record ThanatosBody2_Publicizer(ThanatosBody2 Source) : PublicizerBase<Th
     public const float segmentCloseTimerDecrement = 0.2f;
 }
 
-public record ThanatosTail_Publicizer(ThanatosTail Source) : PublicizerBase<ThanatosTail>(Source)
+public record ThanatosTail_Publicizer(ThanatosTail Source) : Publicizer<ThanatosTail>(Source)
 {
     // LoadHeadIcons (static method)
     public static readonly MethodInfo s_m_LoadHeadIcons = GetStaticMethod("LoadHeadIcons");
@@ -410,7 +410,7 @@ public record ThanatosTail_Publicizer(ThanatosTail Source) : PublicizerBase<Than
     public const float segmentCloseTimerDecrement = 0.2f;
 }
 
-public record AresBody_Publicizer(AresBody Source) : PublicizerBase<AresBody>(Source)
+public record AresBody_Publicizer(AresBody Source) : Publicizer<AresBody>(Source)
 {
     // maxFramesX (const)
     public const int maxFramesX = 6;

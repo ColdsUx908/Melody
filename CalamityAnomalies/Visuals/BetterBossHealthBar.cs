@@ -8,7 +8,7 @@ using CalamityMod.NPCs.SlimeGod;
 using CalamityMod.UI;
 using Terraria.GameContent.Events;
 using Terraria.GameContent.UI.BigProgressBar;
-using Transoceanic.Framework.Helpers.AbstractionHelpers;
+using Transoceanic.Framework.Helpers.AbstractionHandlers;
 using static CalamityAnomalies.Visuals.BetterBossHealthBar;
 using static CalamityMod.UI.BossHealthBarManager;
 
@@ -410,7 +410,7 @@ public class BetterBossHPUI : BossHPUI
             result &= npcBehavior.PreUpdateCalBossBar(this);
             hasSingle = true;
         }
-        foreach (CAGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.GetBehaviors<CAGlobalNPCBehavior>(nameof(CAGlobalNPCBehavior.PreUpdateCalBossBar)))
+        foreach (CAGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.Enumerate<CAGlobalNPCBehavior>(nameof(CAGlobalNPCBehavior.PreUpdateCalBossBar)))
             result &= anomalyGNPCBehavior.PreUpdateCalBossBar(NPC, this, hasSingle);
         return result;
     }
@@ -428,7 +428,7 @@ public class BetterBossHPUI : BossHPUI
             npcBehavior.PostUpdateCalBossBar(this);
             hasSingle = true;
         }
-        foreach (CAGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.GetBehaviors<CAGlobalNPCBehavior>(nameof(CAGlobalNPCBehavior.PostUpdateCalBossBar)))
+        foreach (CAGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.Enumerate<CAGlobalNPCBehavior>(nameof(CAGlobalNPCBehavior.PostUpdateCalBossBar)))
             anomalyGNPCBehavior.PostUpdateCalBossBar(NPC, this, hasSingle);
     }
 
@@ -440,7 +440,7 @@ public class BetterBossHPUI : BossHPUI
 
             DrawComboBar(spriteBatch, x, y);
 
-            (float sin, float cos) = TOMathHelper.GetTimeSinCos(0.5f, 1f, 0f, true);
+            (float sin, float cos) = TOMathUtils.GetTimeSinCos(0.5f, 1f, 0f, true);
 
             Color seperatorColor;
             if (AnomalyNPC.IsRunningAnomalyAI)
@@ -490,11 +490,11 @@ public class BetterBossHPUI : BossHPUI
 
             float borderWidth;
             if (AnomalyNPC.IsRunningAnomalyAI)
-                borderWidth = (1.5f + TOMathHelper.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f);
+                borderWidth = (1.5f + TOMathUtils.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f);
             else if (EnrageTimer > 0)
-                borderWidth = (1f + TOMathHelper.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(EnrageTimer / 80f, 0f, 1f);
+                borderWidth = (1f + TOMathUtils.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(EnrageTimer / 80f, 0f, 1f);
             else if (IncreasingDefenseOrDRTimer > 0)
-                borderWidth = (1f + TOMathHelper.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 1f);
+                borderWidth = (1f + TOMathUtils.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 1f);
             else
                 borderWidth = 0f;
 
@@ -519,7 +519,7 @@ public class BetterBossHPUI : BossHPUI
             result &= npcBehavior.PreDrawCalBossBar(this, spriteBatch, ref x, ref y);
             hasSingle = true;
         }
-        foreach (CAGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.GetBehaviors<CAGlobalNPCBehavior>(nameof(CAGlobalNPCBehavior.PreDrawCalBossBar)))
+        foreach (CAGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.Enumerate<CAGlobalNPCBehavior>(nameof(CAGlobalNPCBehavior.PreDrawCalBossBar)))
             result &= anomalyGNPCBehavior.PreDrawCalBossBar(NPC, this, spriteBatch, ref x, ref y, hasSingle);
         return result;
     }
@@ -537,7 +537,7 @@ public class BetterBossHPUI : BossHPUI
             npcBehavior.PostDrawCalBossBar(this, spriteBatch, x, y);
             hasSingle = true;
         }
-        foreach (CAGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.GetBehaviors<CAGlobalNPCBehavior>(nameof(CAGlobalNPCBehavior.PostDrawCalBossBar)))
+        foreach (CAGlobalNPCBehavior anomalyGNPCBehavior in GlobalNPCBehaviorHandler.BehaviorSet.Enumerate<CAGlobalNPCBehavior>(nameof(CAGlobalNPCBehavior.PostDrawCalBossBar)))
             anomalyGNPCBehavior.PostDrawCalBossBar(NPC, this, spriteBatch, x, y, hasSingle);
     }
 

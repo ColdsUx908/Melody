@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record DevourerofGodsHead_Publicizer(DevourerofGodsHead Source) : PublicizerBase<DevourerofGodsHead>(Source)
+public record DevourerofGodsHead_Publicizer(DevourerofGodsHead Source) : Publicizer<DevourerofGodsHead>(Source)
 {
     // LoadHeadIcons (static method)
     public static readonly MethodInfo s_m_LoadHeadIcons = GetStaticMethod("LoadHeadIcons");
@@ -199,7 +199,7 @@ public record DevourerofGodsHead_Publicizer(DevourerofGodsHead Source) : Publici
     public Vector2 GetRiftLocation(bool spawnDust) => i_d_GetRiftLocation(Source, spawnDust);
 }
 
-public record DevourerofGodsBody_Publicizer(DevourerofGodsBody Source) : PublicizerBase<DevourerofGodsBody>(Source)
+public record DevourerofGodsBody_Publicizer(DevourerofGodsBody Source) : Publicizer<DevourerofGodsBody>(Source)
 {
     // LoadHeadIcons (static method)
     public static readonly MethodInfo s_m_LoadHeadIcons = GetStaticMethod("LoadHeadIcons");
@@ -244,7 +244,7 @@ public record DevourerofGodsBody_Publicizer(DevourerofGodsBody Source) : Publici
     public bool AnyTeleportRifts() => i_d_AnyTeleportRifts(Source);
 }
 
-public record DevourerofGodsTail_Publicizer(DevourerofGodsTail Source) : PublicizerBase<DevourerofGodsTail>(Source)
+public record DevourerofGodsTail_Publicizer(DevourerofGodsTail Source) : Publicizer<DevourerofGodsTail>(Source)
 {
     // LoadHeadIcons (static method)
     public static readonly MethodInfo s_m_LoadHeadIcons = GetStaticMethod("LoadHeadIcons");

@@ -25,7 +25,7 @@ public sealed class CAPlayerDownedBossUpdate_GlobalNPC : CAGlobalNPCBehavior
             DownedBossSystem.downedPrimordialWyrm = true;
 
         foreach (Player player in Player.ActivePlayers)
-            player.            Anomaly.DownedBossCalamity.BossesOnKill(npc);
+            player.Anomaly.DownedBossCalamity.BossesOnKill(npc);
     }
 }
 
@@ -34,6 +34,6 @@ public sealed class CAPlayerDownedBossUpdate_System : ModSystem
     public override void PostUpdateNPCs()
     {
         foreach (Player player in Player.ActivePlayers)
-            player.            Anomaly.DownedBossCalamity.WorldPolluted();
+            player.Anomaly.DownedBossCalamity.WorldPolluted();
     }
 }

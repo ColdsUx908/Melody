@@ -3,7 +3,6 @@
 public class OrbParticle : Particle
 {
     public override bool AutoKillByLifeTime => true;
-    public override bool UseCustomDraw => true;
     public override DrawBlendMode BlendMode => UseAdditiveBlend ? DrawBlendMode.AdditiveBlend : DrawBlendMode.AlphaBlend;
 
     [ParticleTextureAsset]
@@ -38,7 +37,7 @@ public class OrbParticle : Particle
     {
         if (LifetimeCompletion > LifeEndRatio)
         {
-            float interpolation = TOMathHelper.QuadraticEaseOut(1f - (LifetimeCompletion - LifeEndRatio) / (1f - LifeEndRatio));
+            float interpolation = TOMathUtils.QuadraticEaseOut(1f - (LifetimeCompletion - LifeEndRatio) / (1f - LifeEndRatio));
             FadeOut = interpolation;
             Scale = InitialScale * interpolation;
         }
@@ -49,7 +48,7 @@ public class OrbParticle : Particle
         Rotation = Velocity.ToRotation() + MathHelper.PiOver2;
     }
 
-    public override void CustomDraw(SpriteBatch spriteBatch)
+    public override bool PreDraw(SpriteBatch spriteBatch)
     {
         Texture2D texture = Texture;
         Vector2 scale = new(Scale);
@@ -57,5 +56,7 @@ public class OrbParticle : Particle
         spriteBatch.DrawFromCenter(texture, Center - Main.screenPosition, Color, null, Rotation, scale);
         if (GlowCenter)
             spriteBatch.DrawFromCenter(texture, Center - Main.screenPosition, Color.White * FadeOut, null, Rotation, scale * new Vector2(0.5f, 0.5f));
+
+        return false;
     }
 }

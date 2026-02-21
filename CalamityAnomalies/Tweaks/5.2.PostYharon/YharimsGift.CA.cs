@@ -37,7 +37,7 @@ public static class YharimsGift_Handler
 
     public static string BlessingName => ModContent.GetModItem(CurrentBlessingType)?.DisplayName.Value ?? "None";
 
-    public static Color GiftColor => Color.Lerp(Color.Orange, Color.Gold, TOMathHelper.GetTimeSin(0.4f, 0.7f, TOMathHelper.PiOver3, true));
+    public static Color GiftColor => Color.Lerp(Color.Orange, Color.Gold, TOMathUtils.GetTimeSin(0.4f, 0.7f, TOMathUtils.PiOver3, true));
 
     public static Color GiftColor2 => Color.Lerp(Color.OrangeRed, GiftColor, 0.5f);
 
@@ -50,7 +50,7 @@ public static class YharimsGift_Handler
         CAPlayer anomalyPlayer = Main.LocalPlayer.Anomaly;
         if (anomalyPlayer.YharimsGift && CurrentBlessingType == item.type)
         {
-            _enchantmentEnergyParticles.InterpolationSpeed = MathHelper.Lerp(0.065f, 0.1f, TOMathHelper.GetTimeSin(0.5f, 0.7f, TOMathHelper.PiOver3, true));
+            _enchantmentEnergyParticles.InterpolationSpeed = MathHelper.Lerp(0.065f, 0.1f, TOMathUtils.GetTimeSin(0.5f, 0.7f, TOMathUtils.PiOver3, true));
             _enchantmentEnergyParticles.DrawSet(position + Main.screenPosition);
         }
         if (anomalyPlayer.YharimsGift_Last is not null)
@@ -61,8 +61,8 @@ public static class YharimsGift_Handler
             if (index != 0)
             {
                 int buffTimer = anomalyPlayer.YharimsGift_Change[index].GetValue(TOSharedData.GameTimer.TotalTicks, 40, item.type == CurrentBlessingType);
-                int timer = TOMathHelper.Min(blessingOcean.GetEquippedTimer(40), giftOcean.GetEquippedTimer(40), buffTimer);
-                item.DrawInventoryWithBorder(spriteBatch, position, frame, origin, scale, 24, (TOMathHelper.GetTimeSin(0.3f, 0.7f, TOMathHelper.PiOver12, true) + 2.8f) * timer / 40f, GiftColor2);
+                int timer = TOMathUtils.Min(blessingOcean.GetEquippedTimer(40), giftOcean.GetEquippedTimer(40), buffTimer);
+                item.DrawInventoryWithBorder(spriteBatch, position, frame, origin, scale, 24, (TOMathUtils.GetTimeSin(0.3f, 0.7f, TOMathUtils.PiOver12, true) + 2.8f) * timer / 40f, GiftColor2);
             }
         }
     }

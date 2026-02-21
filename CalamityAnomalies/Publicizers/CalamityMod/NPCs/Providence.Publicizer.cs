@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record Providence_Publicizer(Providence Source) : PublicizerBase<Providence>(Source)
+public record Providence_Publicizer(Providence Source) : Publicizer<Providence>(Source)
 {
     // AIState (instance property)
     public static readonly PropertyInfo i_f_AIState = GetInstanceProperty("AIState");
@@ -125,7 +125,7 @@ public record Providence_Publicizer(Providence Source) : PublicizerBase<Providen
     public void SpawnLootBox() => i_d_SpawnLootBox(Source);
 }
 
-public record ProvSpawnOffense_Publicizer(ProvSpawnOffense Source) : PublicizerBase<ProvSpawnOffense>(Source)
+public record ProvSpawnOffense_Publicizer(ProvSpawnOffense Source) : Publicizer<ProvSpawnOffense>(Source)
 {
     // start (instance field)
     public static readonly FieldInfo i_f_start = GetInstanceField("start");
@@ -136,7 +136,7 @@ public record ProvSpawnOffense_Publicizer(ProvSpawnOffense Source) : PublicizerB
     }
 }
 
-public record ProvSpawnDefense_Publicizer(ProvSpawnDefense Source) : PublicizerBase<ProvSpawnDefense>(Source)
+public record ProvSpawnDefense_Publicizer(ProvSpawnDefense Source) : Publicizer<ProvSpawnDefense>(Source)
 {
     // start (instance field)
     public static readonly FieldInfo i_f_start = GetInstanceField("start");
@@ -147,7 +147,7 @@ public record ProvSpawnDefense_Publicizer(ProvSpawnDefense Source) : PublicizerB
     }
 }
 
-public record ProvSpawnHealer_Publicizer(ProvSpawnHealer Source) : PublicizerBase<ProvSpawnHealer>(Source)
+public record ProvSpawnHealer_Publicizer(ProvSpawnHealer Source) : Publicizer<ProvSpawnHealer>(Source)
 {
     // start (instance field)
     public static readonly FieldInfo i_f_start = GetInstanceField("start");

@@ -4,7 +4,7 @@ namespace CalamityAnomalies.Publicizers.CalamityMod.NPCs;
 
 #pragma warning disable IDE1006
 
-public record Brimling_Publicizer(Brimling Source) : PublicizerBase<Brimling>(Source)
+public record Brimling_Publicizer(Brimling Source) : Publicizer<Brimling>(Source)
 {
     // boostDR (instance field)
     public static readonly FieldInfo i_f_boostDR = GetInstanceField("boostDR");

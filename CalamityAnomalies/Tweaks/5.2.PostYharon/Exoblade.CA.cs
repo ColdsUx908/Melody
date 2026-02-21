@@ -150,12 +150,12 @@ public sealed class ExobladeProj_Override : CAProjectileOverride<ExobladeProj>
                         switch (Main.rand.Next(10))
                         {
                             case 0 or 1:
-                                Projectile.RotatedProj<Exobeam>(12, TOMathHelper.PiOver6, projectile.GetSource_FromAI(), projectile.Owner.Center, boltVelocity, boltDamage, projectile.knockBack / 3f, projectile.owner, AprilFoolProj);
-                                Projectile.RotatedProj<Exobeam>(6, TOMathHelper.PiOver3, projectile.GetSource_FromAI(), projectile.Owner.Center, boltVelocity.RotatedBy(TOMathHelper.PiOver12) * 0.55f, boltDamage, projectile.knockBack / 3f, projectile.owner, AprilFoolProj);
+                                Projectile.RotatedProj<Exobeam>(12, TOMathUtils.PiOver6, projectile.GetSource_FromAI(), projectile.Owner.Center, boltVelocity, boltDamage, projectile.knockBack / 3f, projectile.owner, AprilFoolProj);
+                                Projectile.RotatedProj<Exobeam>(6, TOMathUtils.PiOver3, projectile.GetSource_FromAI(), projectile.Owner.Center, boltVelocity.RotatedBy(TOMathUtils.PiOver12) * 0.55f, boltDamage, projectile.knockBack / 3f, projectile.owner, AprilFoolProj);
                                 break;
                             case 2 or 3:
                                 for (int i = 0; i < 6; i++)
-                                    Projectile.RotatedProj<Exobeam>(3, TOMathHelper.PiOver3 * 2, projectile.GetSource_FromAI(), projectile.Owner.Center, boltVelocity.RotatedByRandom(MathHelper.TwoPi) * (1.2f - i * 0.125f), boltDamage, projectile.knockBack / 3f, projectile.owner, AprilFoolProj);
+                                    Projectile.RotatedProj<Exobeam>(3, TOMathUtils.PiOver3 * 2, projectile.GetSource_FromAI(), projectile.Owner.Center, boltVelocity.RotatedByRandom(MathHelper.TwoPi) * (1.2f - i * 0.125f), boltDamage, projectile.knockBack / 3f, projectile.owner, AprilFoolProj);
                                 break;
                             case 4 or 5:
                                 for (int i = 0; i < 4; i++)
@@ -173,12 +173,12 @@ public sealed class ExobladeProj_Override : CAProjectileOverride<ExobladeProj>
                             case 8:
                                 for (int i = 0; i < 12; i++)
                                 {
-                                    Vector2 velocity = boltVelocity.RotatedBy(TOMathHelper.PiOver6 * i);
-                                    Projectile.RotatedProj<Exobeam>(3, TOMathHelper.PiOver3 * 2, projectile.GetSource_FromAI(), projectile.Owner.Center + velocity * (i % 2 == 0 ? 30f : 60f), velocity * (i % 2 == 0 ? 0.8f : 1.1f), boltDamage, projectile.knockBack / 3f, projectile.owner, AprilFoolProj);
+                                    Vector2 velocity = boltVelocity.RotatedBy(TOMathUtils.PiOver6 * i);
+                                    Projectile.RotatedProj<Exobeam>(3, TOMathUtils.PiOver3 * 2, projectile.GetSource_FromAI(), projectile.Owner.Center + velocity * (i % 2 == 0 ? 30f : 60f), velocity * (i % 2 == 0 ? 0.8f : 1.1f), boltDamage, projectile.knockBack / 3f, projectile.owner, AprilFoolProj);
                                 }
                                 break;
                             case 9:
-                                Projectile.RotatedProj<Exobeam>(36, TOMathHelper.PiOver12, projectile.GetSource_FromAI(), projectile.Owner.Center, boltVelocity * 1.15f, boltDamage, projectile.knockBack / 3f, projectile.owner, AprilFoolProj);
+                                Projectile.RotatedProj<Exobeam>(36, TOMathUtils.PiOver12, projectile.GetSource_FromAI(), projectile.Owner.Center, boltVelocity * 1.15f, boltDamage, projectile.knockBack / 3f, projectile.owner, AprilFoolProj);
                                 break;
                         }
                     }

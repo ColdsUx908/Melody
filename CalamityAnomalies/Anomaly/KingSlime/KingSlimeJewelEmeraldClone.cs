@@ -2,7 +2,7 @@
 
 public sealed class KingSlimeJewelEmeraldClone : CAModProjectile
 {
-    public override string Texture => JewelHandler.JewelTexturePath;
+    public override string Texture => "CalamityAnomalies/Anomaly/KingSlime/KingSlimeJewelEmerald";
 
     public override void SetDefaults()
     {
@@ -19,14 +19,14 @@ public sealed class KingSlimeJewelEmeraldClone : CAModProjectile
     {
         Timer1++;
         Lighting.AddLight(Projectile.Center, 0f, Projectile.Opacity, 0f);
-        Projectile.Opacity = 0.8f * Math.Min(Math.Clamp(Timer1, 0f, 7f) / 7f, Math.Clamp(Projectile.timeLeft, 0f, 10f) / 10f);
+        Projectile.Opacity = 0.6f * Math.Min(Math.Clamp(Timer1, 0f, 7f) / 7f, Math.Clamp(Projectile.timeLeft, 0f, 10f) / 10f);
     }
 
     public override bool? CanDamage() => Projectile.Opacity > 0.6f;
 
     public override bool PreDraw(ref Color lightColor)
     {
-        Main.spriteBatch.DrawFromCenter(Projectile.Texture, Projectile.Center - Main.screenPosition, Color.Lerp(Main.zenithWorld ? Color.Purple : Color.FullGreen, Main.zenithWorld ? new Color(255, 175, 255) : new Color(175, 255, 175), Math.Clamp(Projectile.timeLeft, 0f, 12f) / 12f) * Projectile.Opacity, null, Projectile.rotation, Projectile.scale);
+        Main.spriteBatch.DrawFromCenter(Projectile.Texture, Projectile.Center - Main.screenPosition, Color.Lerp(Main.zenithWorld ? Color.Purple : Color.White, Main.zenithWorld ? new Color(255, 175, 255) : new Color(175, 255, 175), Math.Clamp(Projectile.timeLeft, 0f, 12f) / 12f) * Projectile.Opacity, null, Projectile.rotation, Projectile.scale);
         return false;
     }
 }

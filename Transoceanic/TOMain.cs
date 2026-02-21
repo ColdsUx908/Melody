@@ -28,7 +28,7 @@ global using Terraria.Utilities;
 global using Transoceanic.Commands;
 global using Transoceanic.Framework.Abstractions;
 global using Transoceanic.Framework.Helpers;
-global using Transoceanic.Framework.Helpers.AbstractionHelpers;
+global using Transoceanic.Framework.Helpers.AbstractionHandlers;
 global using Transoceanic.GlobalInstances;
 global using ZLinq;
 
