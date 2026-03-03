@@ -15,7 +15,7 @@ public static partial class TOExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetModNPC<T>([NotNullWhen(true)] out T result) where T : ModNPC => (result = npc.GetModNPC<T>()) is not null;
 
-        public Texture2D Texture => TextureAssets.Npc[npc.type].Value;
+        public Texture2D Texture => TOAssetUtils.GetNPCTexture(npc.type);
 
         public Player PlayerTarget => npc.HasPlayerTarget ? Main.player[npc.target] : null;
         public NPC NPCTarget => npc.HasNPCTarget ? Main.npc[npc.target - 300] : null;
@@ -34,7 +34,7 @@ public static partial class TOExtensions
 
         public bool IsFriendly => npc.active && (npc.friendly || npc.townNPC || npc.lifeMax <= 5);
 
-        public bool IsEnemy => npc.active && (!npc.friendly && npc.lifeMax >= 5);
+        public bool IsEnemy => npc.active && !npc.friendly && npc.lifeMax >= 5;
 
         /// <summary>
         /// 检查NPC是否为Boss。
@@ -64,11 +64,19 @@ public static partial class TOExtensions
 
         public bool IsFacingTarget => npc.direction == npc.TargetDirection;
 
-        public void FaceNPCTarget(Entity target) => npc.direction = Math.Sign(target.Center.X - npc.Center.X) switch
+        public void FaceTarget(Entity target)
         {
-            -1 => -1,
-            _ => 1
-        };
+            npc.direction = Math.Sign(target.Center.X - npc.Center.X) switch
+            {
+                -1 => -1,
+                _ => 1
+            };
+            npc.directionY = Math.Sign(target.Center.Y - npc.Center.Y) switch
+            {
+                -1 => -1,
+                _ => 1
+            };
+        }
 
         /// <summary>
         /// 将NPC速度设置为指定值，同时更新旋转。
@@ -90,7 +98,7 @@ public static partial class TOExtensions
         /// <param name="rotationOffset">旋转偏移值。
         /// <br/>在设置旋转时会加上该值，使NPC额外顺时针旋转。
         /// <br/>例如，对于贴图方向向上的弹幕，应设置该值为 <see cref="MathHelper.PiOver2"/>。</param>
-        public void VelocityToRotation(float rotationOffset = 0f) => npc.rotation = npc.velocity.ToRotation() + rotationOffset;
+        public void VelocityToRotation(float rotationOffset = 0f) => npc.rotation = TOMathUtils.NormalizeWithPeriod(npc.velocity.ToRotation() + rotationOffset);
 
         /// <summary>
         /// 如果现有目标无效，获取新的目标。
@@ -103,12 +111,32 @@ public static partial class TOExtensions
             if (!npc.HasValidTarget)
                 npc.TargetClosest(faceTarget);
 
-            Player target = Main.player[npc.target];
+            Player target = npc.PlayerTarget;
 
             if (distanceThreshold >= 0f && !npc.WithinRange(target.Center, distanceThreshold - target.aggro))
                 npc.TargetClosest(faceTarget);
 
             return npc.HasValidTarget && npc.WithinRange(target.Center, distanceThreshold - target.aggro);
+        }
+
+        public bool TargetClosestIfInvalid(bool faceTarget, Func<Player, bool> validMatch)
+        {
+            validMatch ??= p => false;
+            if (npc.HasValidTarget && validMatch(npc.PlayerTarget))
+                return true;
+
+            foreach (Player player in Player.AlivePlayers)
+            {
+                if (validMatch(player))
+                {
+                    npc.target = player.whoAmI;
+                    if (faceTarget)
+                        npc.FaceTarget(player);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public void ChangeScaleFixBottom(int width, int height, float newScale)
@@ -133,6 +161,216 @@ public static partial class TOExtensions
         }
 
         public void AddBuff<T>(int time, bool quiet = false) where T : ModBuff => npc.AddBuff(ModContent.BuffType<T>(), time, quiet);
+
+        #region GlobalNPC
+        /// <inheritdoc cref="TOGlobalNPC.Identifier"/>
+        public long Identifier => npc.Ocean.Identifier;
+
+        /// <inheritdoc cref="TOGlobalNPC.SpawnTime"/>
+        public int SpawnTime
+        {
+            get => npc.Ocean.SpawnTime;
+            internal set => npc.Ocean.SpawnTime = value;
+        }
+
+        public bool AlwaysRotating
+        {
+            get => npc.Ocean.OceanAI32[0].bits[0];
+            set
+            {
+                TOGlobalNPC ocean = npc.Ocean;
+                if (ocean.OceanAI32[0].bits[0] != value)
+                {
+                    ocean.OceanAI32[0].bits[0] = value;
+                    ocean.AIChanged32[0] = true;
+                }
+            }
+        }
+
+        public int ActiveTime
+        {
+            get => npc.Ocean.OceanAI32[1].i;
+            set
+            {
+                TOGlobalNPC ocean = npc.Ocean;
+                if (ocean.OceanAI32[1].i != value)
+                {
+                    ocean.OceanAI32[1].i = value;
+                    ocean.AIChanged32[1] = true;
+                }
+            }
+        }
+
+        public float RotationOffset
+        {
+            get => npc.Ocean.OceanAI32[2].f;
+            set
+            {
+                TOGlobalNPC ocean = npc.Ocean;
+                if (ocean.OceanAI32[2].f != value)
+                {
+                    ocean.OceanAI32[2].f = value;
+                    ocean.AIChanged32[2] = true;
+                }
+            }
+        }
+
+        public NPC Master
+        {
+            get
+            {
+                int masterIndex = npc.Ocean.OceanAI32[3].i;
+                return masterIndex >= 0 && masterIndex < Main.maxNPCs ? Main.npc[masterIndex] : null;
+            }
+            set
+            {
+                TOGlobalNPC ocean = npc.Ocean;
+                int temp = value?.whoAmI ?? Main.maxNPCs;
+                if (ocean.OceanAI32[3].i != temp)
+                {
+                    ocean.OceanAI32[3].i = temp;
+                    ocean.AIChanged32[3] = true;
+                }
+            }
+        }
+
+        public bool TryGetMaster(int masterType, out NPC master)
+        {
+            NPC temp = npc.Master;
+            if (temp is not null && temp.active && temp.type == masterType)
+            {
+                master = temp;
+                return true;
+            }
+            master = null;
+            return false;
+        }
+
+        public bool TryGetMaster<T>(out NPC master) where T : ModNPC => npc.TryGetMaster(ModContent.NPCType<T>(), out master);
+
+        public bool TryGetMaster<T>(out NPC master, out T modNPC) where T : ModNPC
+        {
+            if (npc.TryGetMaster(ModContent.NPCType<T>(), out master))
+            {
+                modNPC = master.GetModNPC<T>();
+                return true;
+            }
+            modNPC = null;
+            return false;
+        }
+
+        public int Timer1
+        {
+            get => npc.Ocean.OceanAI32[^9].i;
+            set
+            {
+                TOGlobalNPC ocean = npc.Ocean;
+                if (ocean.OceanAI32[^9].i != value)
+                {
+                    ocean.OceanAI32[^9].i = value;
+                    ocean.AIChanged32[^9] = true;
+                }
+            }
+        }
+
+        public int Timer2
+        {
+            get => npc.Ocean.OceanAI32[^8].i;
+            set
+            {
+                TOGlobalNPC ocean = npc.Ocean;
+                if (ocean.OceanAI32[^8].i != value)
+                {
+                    ocean.OceanAI32[^8].i = value;
+                    ocean.AIChanged32[^8] = true;
+                }
+            }
+        }
+
+        public int Timer3
+        {
+            get => npc.Ocean.OceanAI32[^7].i;
+            set
+            {
+                TOGlobalNPC ocean = npc.Ocean;
+                if (ocean.OceanAI32[^7].i != value)
+                {
+                    ocean.OceanAI32[^7].i = value;
+                    ocean.AIChanged32[^7] = true;
+                }
+            }
+        }
+
+        public int Timer4
+        {
+            get => npc.Ocean.OceanAI32[^6].i;
+            set
+            {
+                TOGlobalNPC ocean = npc.Ocean;
+                if (ocean.OceanAI32[^6].i != value)
+                {
+                    ocean.OceanAI32[^6].i = value;
+                    ocean.AIChanged32[^6] = true;
+                }
+            }
+        }
+
+        public int Timer5
+        {
+            get => npc.Ocean.OceanAI32[^5].i;
+            set
+            {
+                TOGlobalNPC ocean = npc.Ocean;
+                if (ocean.OceanAI32[^5].i != value)
+                {
+                    ocean.OceanAI32[^5].i = value;
+                    ocean.AIChanged32[^5] = true;
+                }
+            }
+        }
+
+        public float Timer6
+        {
+            get => npc.Ocean.OceanAI32[^4].f;
+            set
+            {
+                TOGlobalNPC ocean = npc.Ocean;
+                if (ocean.OceanAI32[^4].f != value)
+                {
+                    ocean.OceanAI32[^4].f = value;
+                    ocean.AIChanged32[^4] = true;
+                }
+            }
+        }
+
+        public float Timer7
+        {
+            get => npc.Ocean.OceanAI32[^3].f;
+            set
+            {
+                TOGlobalNPC ocean = npc.Ocean;
+                if (ocean.OceanAI32[^3].f != value)
+                {
+                    ocean.OceanAI32[^3].f = value;
+                    ocean.AIChanged32[^3] = true;
+                }
+            }
+        }
+
+        public float Timer8
+        {
+            get => npc.Ocean.OceanAI32[^2].f;
+            set
+            {
+                TOGlobalNPC ocean = npc.Ocean;
+                if (ocean.OceanAI32[^2].f != value)
+                {
+                    ocean.OceanAI32[^2].f = value;
+                    ocean.AIChanged32[^2] = true;
+                }
+            }
+        }
+        #endregion GlobalNPC
     }
 
     extension(NPC)

@@ -59,7 +59,7 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
         ModifyWithCATweakColor(num, localizationPrefixProvider.GetTextValue($"{Tooltip}{num}"));
 
     public CAItemTooltipModifier ModifyWithCATweakColorDefault(ILocalizationPrefix localizationPrefixProvider, int num, params object[] args) =>
-        ModifyWithCATweakColor(num, localizationPrefixProvider.GetTextFormat($"{Tooltip}{num}", args));
+        ModifyWithCATweakColor(num, localizationPrefixProvider.GetTextValue($"{Tooltip}{num}", args));
 
     public CAItemTooltipModifier ClearAllCATooltips()
     {
@@ -102,11 +102,11 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
 
     public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_nextCATooltipIndex}"));
 
-    public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, params object[] args) => AddCATooltip(localizationPrefixProvider.GetTextFormat($"{CATooltip}{_nextCATooltipIndex}", args));
+    public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, params object[] args) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_nextCATooltipIndex}", args));
 
     public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, Color newColor) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_nextCATooltipIndex}"), newColor);
 
-    public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, Color newColor, params object[] args) => AddCATooltip(localizationPrefixProvider.GetTextFormat($"{CATooltip}{_nextCATooltipNum}", args), newColor);
+    public CAItemTooltipModifier AddCATooltipDefault(ILocalizationPrefix localizationPrefixProvider, Color newColor, params object[] args) => AddCATooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_nextCATooltipNum}", args), newColor);
 
     public CAItemTooltipModifier AddCATweakTooltip(string text) => AddCATooltip(text, CASharedData.GetGradientColor(0.25f));
 
@@ -119,7 +119,7 @@ public sealed class CAItemTooltipModifier : ItemTooltipModifier
 
     public CAItemTooltipModifier AddCATweakTooltipDefault(ILocalizationPrefix localizationPrefixProvider) => AddCATweakTooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_nextCATooltipIndex}"));
 
-    public CAItemTooltipModifier AddCATweakTooltipDefault(ILocalizationPrefix localizationPrefixProvider, params object[] args) => AddCATweakTooltip(localizationPrefixProvider.GetTextFormat($"{CATooltip}{_nextCATooltipIndex}", args));
+    public CAItemTooltipModifier AddCATweakTooltipDefault(ILocalizationPrefix localizationPrefixProvider, params object[] args) => AddCATweakTooltip(localizationPrefixProvider.GetTextValue($"{CATooltip}{_nextCATooltipIndex}", args));
 
     public CAItemTooltipModifier AddExpendedDisplayLine() => AddCATooltip(CalamityUtils.GetTextValue("Misc.ShiftToExpand"), new Color(0xBE, 0xBE, 0xBE));
 }

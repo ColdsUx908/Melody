@@ -1,4 +1,4 @@
-﻿namespace CalamityAnomalies.Assets.Textures;
+﻿namespace CalamityAnomalies.Assets;
 
 public sealed class CATextures
 {
@@ -37,6 +37,10 @@ public sealed class CATextures
     [LoadTexture(TexturePathPrefix + "Touhou/Scale1")]
     internal static Asset<Texture2D> _scale1;
     public static Texture2D Scale1 => _scale1?.Value;
+
+    [LoadTexture(TexturePathPrefix + "Touhou/Scale2")]
+    internal static Asset<Texture2D> _scale2;
+    public static Texture2D Scale2 => _scale2?.Value;
 
     [LoadTexture(TexturePathPrefix + "UI/AnomalyModeIndicator")]
     internal static Asset<Texture2D> _anomalyModeIndicator;

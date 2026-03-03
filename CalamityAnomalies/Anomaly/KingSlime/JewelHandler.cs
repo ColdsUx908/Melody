@@ -3,21 +3,7 @@ using Transoceanic.Framework.Helpers.AbstractionHandlers;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
-public interface IKingSlimeJewel : IResourceLoader
-{
-    public abstract bool HasEnteredPhase2 { get; set; }
-    public abstract bool CanAttack { get; set; }
-    /// <summary>
-    /// 是否可被击杀。
-    /// <br/>仅在异象超凡中使用，表示是否可以通过伤害击杀宝石。
-    /// <br/>注意：<see cref="JewelHandler.Kill(NPC)"/> 方法会无视此属性直接击杀宝石，因为该方法并不依赖伤害系统
-    /// <br/>如果需要通过伤害击杀宝石，请先将此属性设为 <see langword="true"/>。
-    /// <br/>在异象超凡中，宝石默认不可被击杀。
-    /// </summary>
-    public abstract bool CanBeKilled { get; set; }
-}
-
-public sealed class JewelHandler : IResourceLoader
+public sealed class JewelHandler : IContentLoader
 {
     public const string AnomalyKingSlimePath = "CalamityAnomalies/Anomaly/KingSlime/";
 
@@ -89,7 +75,7 @@ public sealed class JewelHandler : IResourceLoader
         KingSlimeJewelRuby => Color.Pink,
         KingSlimeJewelEmerald => Color.LimeGreen,
         KingSlimeJewelSapphire => Color.CornflowerBlue,
-        KingSlimeJewelRainbow => Color.Lerp(Main.DiscoColor, Color.White, 0.5f),
+        KingSlimeJewelRainbow => Color.White,
         _ => Color.White
     };
 
@@ -107,7 +93,6 @@ public sealed class JewelHandler : IResourceLoader
 
     public static void Kill(NPC jewel)
     {
-        GetKingSlimeJewel(jewel)?.CanBeKilled = true;
         jewel.life = 0;
         jewel.HitEffect();
         jewel.ModNPC?.OnKill();
@@ -177,11 +162,13 @@ public sealed class JewelHandler : IResourceLoader
     {
         bool isRainbowJewel = jewel.ModNPC is KingSlimeJewelRainbow;
         Color jewelColor = GetColor(jewel);
-        spriteBatch.DrawFromCenter(jewel.Texture, jewel.Center - screenPos, isRainbowJewel ? jewelColor : Color.White with { A = jewel.GraphicAlpha }, null, jewel.rotation, jewel.scale);
+        if (isRainbowJewel)
+            TODrawUtils.DrawBorderTextureFromCenter(spriteBatch, jewel.Texture, jewel.Center - screenPos, null, jewelColor, jewel.rotation, jewel.scale, borderWidth: 3f + TOMathUtils.TimeWrappingFunction.GetTimeSin(1f, unsigned: true));
+        spriteBatch.DrawFromCenter(jewel.Texture, jewel.Center - screenPos, null, isRainbowJewel ? jewelColor : Color.White with { A = jewel.GraphicAlpha }, jewel.rotation, jewel.scale);
         if (ratio > 0f) //攻击前的闪烁效果
         {
             Color flashColor = Color.Lerp(jewelColor, GetFlashColor(jewel), ratio).MultiplyRGBA(new Color(ratio, ratio, ratio, 0f)) * ratio;
-            spriteBatch.DrawFromCenter(FlashTexture, jewel.Center - screenPos, flashColor, null, jewel.rotation, jewel.scale * ratio * 1.2f);
+            spriteBatch.DrawFromCenter(FlashTexture, jewel.Center - screenPos, null, flashColor, jewel.rotation, jewel.scale * ratio * (isRainbowJewel ? 1.4f : 1.25f));
         }
     }
 
@@ -202,13 +189,13 @@ public sealed class JewelHandler : IResourceLoader
         bool isRainbowJewel = jewel.ModNPC is KingSlimeJewelRainbow;
         Color jewelColor = GetColor(jewel);
         Color color = jewelColor with { A = 0 } * Math.Clamp(ratio * 1.5f, 0f, 1f);
-        float interpolation = TOMathUtils.QuadraticEaseOut(1f - ratio);
-        float interpolation2 = TOMathUtils.QuadraticEaseOut(Math.Clamp(1f - ratio, 0f, 0.2f) * 5f);
+        float interpolation = TOMathUtils.Interpolation.QuadraticEaseOut(1f - ratio);
+        float interpolation2 = TOMathUtils.Interpolation.QuadraticEaseOut(Math.Clamp(1f - ratio, 0f, 0.2f) * 5f);
 
         for (int i = 0; i < 300; i++)
         {
-            Color color2 = isRainbowJewel ? Color.LerpMany(Color.RainbowColors, (ratio + i / 300f + TOMathUtils.GetTimeSin(0.5f, 0.5f, 0f, true)) % 1f) with { A = 0 } * ratio * 1.5f : color;
-            spriteBatch.DrawFromCenter(OrbParticle.Texture, jewel.Center + new PolarVector2(radius * interpolation, MathHelper.TwoPi / 300 * i) - screenPos, color2, null, 0f, scale * interpolation2);
+            Color color2 = isRainbowJewel ? Color.LerpMany(Color.RainbowColors, (ratio + i / 300f + TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 0.5f, 0f, true)) % 1f) with { A = 0 } * ratio * 1.5f : color;
+            spriteBatch.DrawFromCenter(ParticleHandler.GetTexture<OrbParticle>(), jewel.Center + new PolarVector2(radius * interpolation, MathHelper.TwoPi / 300 * i) - screenPos, null, color2, 0f, scale * interpolation2);
         }
     }
 
@@ -250,7 +237,7 @@ public sealed class JewelHandler : IResourceLoader
         int dustDivisor = Math.Max(maxDustIterations / maxDust, 2);
 
         Vector2 start = jewel.Center;
-        Vector2 spinningpoint = new Vector2(0f, -1f).RotatedByRandom();
+        Vector2 spinningpoint = Vector2.UnitX.RotatedByRandom();
         for (int i = 0; i < maxDustIterations; i++)
         {
             if (i % dustDivisor == 0)
@@ -274,7 +261,7 @@ public sealed class JewelHandler : IResourceLoader
         }
     }
 
-    public static bool CheckIfPhase2(NPC jewel) => jewel.ai[2] > 0f;
+    public static bool CheckIfPhase2(NPC jewel) => GetKingSlimeJewel(jewel).HasEnteredPhase2;
 
     public static void EnterPhase2(NPC jewel)
     {
@@ -319,9 +306,10 @@ public sealed class JewelHandler : IResourceLoader
         float start = Main.rand.NextFloat(MathHelper.TwoPi);
         for (int i = 0; i < 3; i++)
         {
+            int iClone = i;
             CustomSpriteParticle particle = isRainbowJewel
-                ? new(jewel.Center, new Vector2(0, -2).RotatedByRandom(start + MathHelper.ToRadians(20f)).RotatedBy(MathHelper.ToRadians(i * 125)), 120, shardTexture, 1f, new Color(255, 255, 255), Main.rand.NextFloat(0.2f, 0.6f), customFindFrameAction: p => p.Texture.Frame(1, 3, 0, i))
-                : new(jewel.Center, new Vector2(0, -2).RotatedByRandom(start + MathHelper.ToRadians(20f)).RotatedBy(MathHelper.ToRadians(i * 125)), 120, shardTexture, 1f, Color.GetRandomRainbowColor(), Main.rand.NextFloat(0.2f, 0.6f), customFindFrameAction: p => p.Texture.Frame(1, 3, 0, i));
+                ? new(jewel.Center, new Vector2(0, -2).RotatedByRandom(start + MathHelper.ToRadians(20f)).RotatedBy(MathHelper.ToRadians(i * 125)), 120, shardTexture, 1f, Color.GetRandomRainbowColor(), Main.rand.NextFloat(0.2f, 0.6f), BlendState.Additive, customGetFrameAction: p => p.Texture.Frame(1, 3, 0, iClone))
+                : new(jewel.Center, new Vector2(0, -2).RotatedByRandom(start + MathHelper.ToRadians(20f)).RotatedBy(MathHelper.ToRadians(i * 125)), 120, shardTexture, 1f, new Color(255, 255, 255), Main.rand.NextFloat(0.2f, 0.6f), BlendState.Additive, customGetFrameAction: p => p.Texture.Frame(1, 3, 0, iClone));
             ParticleHandler.SpawnParticle(particle);
         }
 

@@ -45,58 +45,39 @@ public static class TOLocalizationUtils
     public static void ChatLocalizedTextFormat(string key, Color? textColor = null, params object[] args)
     {
         if (Main.netMode == NetmodeID.SinglePlayer)
-            Main.NewText(Language.GetTextFormat(key, args), textColor ?? Color.White);
+            Main.NewText(Language.GetTextValue(key, args), textColor ?? Color.White);
         else
-            ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(Language.GetTextFormat(key, args)), textColor ?? Color.White);
+            ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(Language.GetTextValue(key, args)), textColor ?? Color.White);
     }
 
     public static void ChatLocalizedTextFormat(string key, Player receiver, Color? textColor = null, params object[] args)
     {
         if (Main.netMode == NetmodeID.SinglePlayer)
-            Main.NewText(Language.GetTextFormat(key, args), textColor ?? Color.White);
+            Main.NewText(Language.GetTextValue(key, args), textColor ?? Color.White);
         else
-            ChatHelper.SendChatMessageToClient(NetworkText.FromLiteral(Language.GetTextFormat(key, args)), textColor ?? Color.White, receiver.whoAmI);
+            ChatHelper.SendChatMessageToClient(NetworkText.FromLiteral(Language.GetTextValue(key, args)), textColor ?? Color.White, receiver.whoAmI);
     }
 
     public static void ChatLocalizedText(ILocalizationPrefix localizationPrefixProvider, string suffix, Color? textColor = null) => ChatLocalizedText(localizationPrefixProvider.GetKey(suffix), textColor);
 
     public static void ChatLocalizedText(ILocalizationPrefix localizationPrefixProvider, string suffix, Color? textColor = null, params ReadOnlySpan<Player> receivers) => ChatLocalizedText(localizationPrefixProvider.GetKey(suffix), textColor, receivers);
 
-    public static void ChatLocalizedTextFormat(ILocalizationPrefix localizationPrefixProvider, string suffix, Color? textColor = null, params object[] args) => ChatLocalizedTextFormat(localizationPrefixProvider.GetKey(suffix), textColor, args);
+    public static void ChatLocalizedText(ILocalizationPrefix localizationPrefixProvider, string suffix, Color? textColor = null, params object[] args) => ChatLocalizedTextFormat(localizationPrefixProvider.GetKey(suffix), textColor, args);
 
-    public static void ChatLocalizedTextFormat(ILocalizationPrefix localizationPrefixProvider, string suffix, Player receiver, Color? textColor = null, params object[] args) => ChatLocalizedTextFormat(localizationPrefixProvider.GetKey(suffix), receiver, textColor, args);
+    public static void ChatLocalizedText(ILocalizationPrefix localizationPrefixProvider, string suffix, Player receiver, Color? textColor = null, params object[] args) => ChatLocalizedTextFormat(localizationPrefixProvider.GetKey(suffix), receiver, textColor, args);
 
-    public static void ChatLocalizedTextFormat(string key, Player[] receivers, Color? textColor = null, params object[] args)
+    public static void ChatLocalizedText(string key, Player[] receivers, Color? textColor = null, params object[] args)
     {
         if (Main.netMode == NetmodeID.SinglePlayer)
-            Main.NewText(Language.GetTextFormat(key, args), textColor ?? Color.White);
+            Main.NewText(Language.GetTextValue(key, args), textColor ?? Color.White);
         else
         {
             foreach (Player player in receivers)
-                ChatHelper.SendChatMessageToClient(NetworkText.FromLiteral(Language.GetTextFormat(key, args)), textColor ?? Color.White, player.whoAmI);
+                ChatHelper.SendChatMessageToClient(NetworkText.FromLiteral(Language.GetTextValue(key, args)), textColor ?? Color.White, player.whoAmI);
         }
     }
 
-    public static void ChatStringBuilder(StringBuilder builder, Color? textcolor = null)
-    {
-        if (Main.netMode == NetmodeID.SinglePlayer)
-            Main.NewText(builder.ToString(), textcolor ?? Color.White);
-        else
-            ChatHelper.BroadcastChatMessage(NetworkText.FromLiteral(builder.ToString()), textcolor ?? Color.White);
-    }
-
-    public static void ChatStringBuilder(StringBuilder builder, Color? textcolor = null, params ReadOnlySpan<Player> receivers)
-    {
-        if (Main.netMode == NetmodeID.SinglePlayer)
-            Main.NewText(builder.ToString(), textcolor ?? Color.White);
-        else
-        {
-            foreach (Player player in receivers)
-                ChatHelper.SendChatMessageToClient(NetworkText.FromLiteral(builder.ToString()), textcolor ?? Color.White, player.whoAmI);
-        }
-    }
-
-    public static StringBuilder CreateWithDebugHeader()
+    public static StringBuilder CreateStringBuilderWithErrorHeader()
     {
         StringBuilder builder = new();
         builder.AppendLine("[Transoceanic ERROR]");
@@ -113,7 +94,7 @@ public static class TOLocalizationUtils
     public static void ChatDebugErrorMessage(string key, Player[] receivers, params object[] args)
     {
         ChatLiteralText("[Transoceanic ERROR]", TOSharedData.TODebugErrorColor, receivers);
-        ChatLocalizedTextFormat(TOSharedData.DebugPrefix + key, receivers, TOSharedData.TODebugErrorColor, args);
+        ChatLocalizedText(TOSharedData.DebugPrefix + key, receivers, TOSharedData.TODebugErrorColor, args);
         ChatLocalizedText(TOSharedData.DebugErrorMessageKey, TOSharedData.TODebugErrorColor, receivers);
     }
 

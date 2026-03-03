@@ -3,12 +3,7 @@
 public class PointingParticle : Particle
 {
     public override bool AutoKillByLifeTime => true;
-    public override DrawBlendMode BlendMode => _useAdditiveBlend ? DrawBlendMode.AdditiveBlend : DrawBlendMode.AlphaBlend;
-
-
-    [ParticleTextureAsset]
-    private static Asset<Texture2D> _textureAsset;
-    public static Texture2D Texture => _textureAsset?.Value;
+    public override BlendState DrawBlendState => _useAdditiveBlend ? BlendState.Additive : BlendState.AlphaBlend;
 
     public Color InitialColor;
     public bool AffectedByGravity;
@@ -46,8 +41,8 @@ public class PointingParticle : Particle
     {
         Vector2 scale = new Vector2(0.5f, 1.6f) * Scale;
 
-        spriteBatch.DrawFromCenter(Texture, Center - Main.screenPosition, Color, null, Rotation, scale, 0, 0f);
-        spriteBatch.DrawFromCenter(Texture, Center - Main.screenPosition, Color, null, Rotation, scale * new Vector2(0.45f, 1f), 0, 0f);
+        spriteBatch.DrawFromCenter_VectorScale(Texture, Center - Main.screenPosition, null, Color, Rotation, scale, 0, 0f);
+        spriteBatch.DrawFromCenter_VectorScale(Texture, Center - Main.screenPosition, null, Color, Rotation, scale * new Vector2(0.45f, 1f), 0, 0f);
 
         return false;
     }

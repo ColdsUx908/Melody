@@ -1,6 +1,6 @@
 ﻿namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
 
-public sealed class ModDOTHandler : IResourceLoader
+public sealed class ModDOTHandler : IContentLoader
 {
     internal static readonly List<ModDOT> ModDOTSet = [];
     internal static readonly Dictionary<int, (Func<Player, bool> hasBuffPlayer, Func<NPC, bool> hasBuffNPC, Func<Player, float> damagePlayer, Func<NPC, float>, Func<NPC, int> damageValue)> ExternalDOTSet = [];
@@ -19,9 +19,9 @@ public sealed class ModDOTHandler : IResourceLoader
     public static void RegisterDOT<T>(Func<Player, bool> hasBuffPlayer, Func<NPC, bool> hasBuffNPC, Func<Player, float> damagePlayer = null, Func<NPC, float> damageNPC = null, Func<NPC, int> damageValue = null, bool cover = true) where T : ModBuff =>
         RegisterDOT(ModContent.BuffType<T>(), hasBuffPlayer, hasBuffNPC, damagePlayer, damageNPC, damageValue, cover);
 
-    void IResourceLoader.PostSetupContent() => ModDOTSet.AddRange(TOReflectionUtils.GetTypeInstancesDerivedFrom<ModDOT>());
+    void IContentLoader.PostSetupContent() => ModDOTSet.AddRange(TOReflectionUtils.GetTypeInstancesDerivedFrom<ModDOT>());
 
-    void IResourceLoader.OnModUnload()
+    void IContentLoader.OnModUnload()
     {
         ModDOTSet.Clear();
         ExternalDOTSet.Clear();

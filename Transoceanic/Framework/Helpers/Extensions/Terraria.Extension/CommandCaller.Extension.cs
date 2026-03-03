@@ -6,7 +6,7 @@ public static partial class TOExtensions
     {
         public void ReplyLocalizedText(string key, Color? textColor = null) => caller.Reply(Language.GetTextValue(key), textColor ?? Color.White);
 
-        public void ReplyLocalizedTextFormat(string key, Color? textColor = null, params object[] args) => caller.Reply(Language.GetTextFormat(key, args), textColor ?? Color.White);
+        public void ReplyLocalizedTextFormat(string key, Color? textColor = null, params object[] args) => caller.Reply(Language.GetTextValue(key, args), textColor ?? Color.White);
 
         public void ReplyLocalizedText(ILocalizationPrefix localizationPrefixProvider, string suffix, Color? textColor = null) => caller.ReplyLocalizedText(localizationPrefixProvider.GetKey(suffix), textColor);
 

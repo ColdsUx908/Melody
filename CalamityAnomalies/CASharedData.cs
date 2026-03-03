@@ -1,5 +1,5 @@
-﻿using CalamityMod.NPCs.SupremeCalamitas;
-using CalamityMod.World;
+﻿using CalamityAnomalies.Anomaly;
+using CalamityMod.NPCs.SupremeCalamitas;
 
 namespace CalamityAnomalies;
 
@@ -17,14 +17,19 @@ public sealed class CASharedData : ModSystem
     public static readonly Color SecondaryColor = Color.Pink;
 
     public static readonly List<Color> ColorList = [MainColor, SecondaryColor, MainColor];
+    public static readonly List<Color> ColorList2 = [MainColor, TOSharedData.CelestialColor, MainColor];
 
     public static readonly Color AnomalyUltramundaneColor = new(0xE8, 0x97, 0xFF);
+
+    public static readonly List<Color> ColorList3 = [MainColor, AnomalyUltramundaneColor, MainColor];
+
+    public static readonly Color GFBColor = Color.IndianRed;
 
     public static Assembly Assembly => field ??= CAMain.Instance.Code;
 
     public static string ModName => field ??= CAMain.Instance.Name;
 
-    public static Color GetGradientColor(float ratio = 0.5f) => Color.LerpMany(ColorList, TOMathUtils.GetTimeSin(ratio / 2f, unsigned: true));
+    public static Color GetGradientColor(float maxRatio = 0.5f) => Color.LerpMany(ColorList, TOMathUtils.TimeWrappingFunction.GetTimeSin(maxRatio / 2f, unsigned: true));
 
     public static SoundStyle MetalPipeFalling = new("CalamityMod/Sounds/Custom/MetalPipeFalling");
 
@@ -45,32 +50,54 @@ public sealed class CASharedData : ModSystem
     /// <summary>
     /// 异象模式。
     /// </summary>
-    public static bool Anomaly { get; internal set; }
+    public static bool Anomaly
+    {
+        get;
+        internal set
+        {
+            if (field ^ value)
+            {
+                if (!value && AnomalyUltramundane)
+                    AnomalyModeHandler.DisableUltra();
+
+                field = value;
+
+                if (TOSharedData.GeneralClient)
+                {
+                    string key = AnomalyLocalizationPrefix + "AnomalyMode." + (value ? "Activate" : "Deactivate") + (Main.zenithWorld ? "_GFB" : "");
+                    Color color = Main.zenithWorld ? GFBColor : MainColor;
+                    TOLocalizationUtils.ChatLocalizedText(key, color);
+                }
+                if (value)
+                    AnomalyModeHandler.CheckAnomalyUltra();
+
+                CANetSync.SyncAnomalyMode();
+                OnAnomalyModeToggled?.Invoke(value);
+            }
+        }
+    }
+    public static event Action<bool> OnAnomalyModeToggled;
 
     /// <summary>
     /// 异象超凡。
     /// </summary>
-    public static bool AnomalyUltramundane { get; internal set; }
+    public static bool AnomalyUltramundane
+    {
+        get;
+        internal set
+        {
+            if (field ^ value)
+            {
+                field = value;
+                if (TOSharedData.GeneralClient)
+                    TOLocalizationUtils.ChatLocalizedText(AnomalyLocalizationPrefix + "AnomalyMode." + (value ? "UltraActivate" : "UltraDeactivate"), Color.Red);
 
-    /// <summary>
-    /// 传奇复仇。
-    /// </summary>
-    public static bool LR => CalamityWorld.LegendaryMode && CalamityWorld.revenge;
+                OnAnomalyUltramundaneToggled?.Invoke(value);
+            }
+        }
 
-    /// <summary>
-    /// 传奇死亡。
-    /// </summary>
-    public static bool LD => CalamityWorld.LegendaryMode && CalamityWorld.death;
-
-    /// <summary>
-    /// 传奇复仇GFB。
-    /// </summary>
-    public static bool LRG => CalamityWorld.LegendaryMode && CalamityWorld.revenge && Main.zenithWorld;
-
-    /// <summary>
-    /// 传奇死亡GFB。
-    /// </summary>
-    public static bool LDG => CalamityWorld.LegendaryMode && CalamityWorld.death && Main.zenithWorld;
+    }
+    public static event Action<bool> OnAnomalyUltramundaneToggled;
 
     public static bool PermaFrostActive
     {
@@ -103,6 +130,11 @@ public sealed class CASharedData : ModSystem
     public override void LoadWorldData(TagCompound tag)
     {
         Anomaly = tag.GetBool("Anomaly");
+    }
+
+    public override void SaveWorldHeader(TagCompound tag)
+    {
+        tag["Anomaly"] = Anomaly;
     }
     #endregion World
 }

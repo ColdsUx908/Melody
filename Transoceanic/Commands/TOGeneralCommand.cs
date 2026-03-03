@@ -68,7 +68,7 @@ public sealed class TOGeneralChatCommand : ModCommand, ILocalizationPrefix
     }
 }
 
-public sealed class TOCommandHelper : IResourceLoader, ILocalizationPrefix
+public sealed class TOCommandHelper : IContentLoader, ILocalizationPrefix
 {
     internal static TOCommandHelper Instance { get; private set; }
 
@@ -76,7 +76,7 @@ public sealed class TOCommandHelper : IResourceLoader, ILocalizationPrefix
 
     public string LocalizationPrefix => TOSharedData.ModLocalizationPrefix + "Commands.GeneralCommand";
 
-    void IResourceLoader.PostSetupContent()
+    void IContentLoader.PostSetupContent()
     {
         Instance = this;
 
@@ -87,7 +87,7 @@ public sealed class TOCommandHelper : IResourceLoader, ILocalizationPrefix
         }
     }
 
-    void IResourceLoader.OnModUnload() => CommandSet.Clear();
+    void IContentLoader.OnModUnload() => CommandSet.Clear();
 
     public void TryExecute(CommandCaller caller, string command, CommandType commandType, string[] args)
     {

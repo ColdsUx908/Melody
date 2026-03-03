@@ -63,9 +63,9 @@ public sealed class LoadTextureAttribute : Attribute
     public LoadTextureAttribute(string texturePath) => TexturePath = texturePath;
 }
 
-public sealed class TextureLoader : IResourceLoader
+public sealed class TextureLoader : IContentLoader
 {
-    void IResourceLoader.PostSetupContent()
+    void IContentLoader.PostSetupContent()
     {
         foreach ((FieldInfo field, LoadTextureAttribute attribute) in TOReflectionUtils.GetMembersWithAttribute<FieldInfo, LoadTextureAttribute>())
         {
@@ -74,7 +74,7 @@ public sealed class TextureLoader : IResourceLoader
         }
     }
 
-    void IResourceLoader.OnModUnload()
+    void IContentLoader.OnModUnload()
     {
         foreach ((FieldInfo field, _) in TOReflectionUtils.GetMembersWithAttribute<FieldInfo, LoadTextureAttribute>())
         {

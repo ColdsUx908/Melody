@@ -2,14 +2,9 @@
 
 public class PulseRing : Particle
 {
-    public override bool AutoLoadTexture => false;
-    public override string TexturePath => TOSharedData.InvisibleProj;
+    public override string TexturePath => ParticleHandler.BaseParticleTexturePath + "HollowCircleHardEdge";
     public override bool AutoKillByLifeTime => true;
-    public override DrawBlendMode BlendMode => DrawBlendMode.AdditiveBlend;
-
-    [LoadTexture(ParticleHandler.BaseParticleTexturePath + "HollowCircleHardEdge")]
-    private static Asset<Texture2D> _textureAsset;
-    public static Texture2D Texture => _textureAsset?.Value;
+    public override BlendState DrawBlendState => BlendState.Additive;
 
     [LoadTexture(ParticleHandler.BaseParticleTexturePath + "HollowCircleHardEdgeHD")]
     private static Asset<Texture2D> _textureAssetHD;
@@ -47,8 +42,8 @@ public class PulseRing : Particle
 
     public override void Update()
     {
-        Scale = MathHelper.Lerp(OriginalScale, FinalScale, TOMathUtils.ExponentialEaseOut(LifetimeCompletion, 4f));
-        Opacity = 1f - TOMathUtils.SineEaseIn(LifetimeCompletion);
+        Scale = MathHelper.Lerp(OriginalScale, FinalScale, TOMathUtils.Interpolation.ExponentialEaseOut(LifetimeCompletion, 4f));
+        Opacity = 1f - TOMathUtils.Interpolation.SineEaseIn(LifetimeCompletion);
 
         Color = BaseColor * Opacity;
         Lighting.AddLight(Center, Color.R / 255f, Color.G / 255f, Color.B / 255f);
@@ -57,7 +52,7 @@ public class PulseRing : Particle
 
     public override bool PreDraw(SpriteBatch spriteBatch)
     {
-        spriteBatch.DrawFromCenter(UseHDTexture ? TextureHD : Texture, Center - Main.screenPosition, Color * Opacity, null, Rotation, (UseHDTexture ? Scale * TextureRadiusConversionFactor : Scale) * Squish, SpriteEffects.None, 0);
+        spriteBatch.DrawFromCenter_VectorScale(UseHDTexture ? TextureHD : Texture, Center - Main.screenPosition, null, Color * Opacity, Rotation, (UseHDTexture ? Scale * TextureRadiusConversionFactor : Scale) * Squish, SpriteEffects.None, 0);
         return false;
     }
 }

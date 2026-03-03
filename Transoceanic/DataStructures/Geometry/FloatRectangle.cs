@@ -4,7 +4,8 @@ public struct FloatRectangle : IEquatable<FloatRectangle>,
     ICollidableWithRectangle,
     ICollidable<FloatRectangle, FloatRectangle>,
     ICollidable<FloatRectangle, Circle>,
-    ICollidable<FloatRectangle, RotatedRectangle>
+    ICollidable<FloatRectangle, RotatedRectangle>,
+    ICollidable<FloatRectangle, Ring>
 {
     public Vector2 Position;
     public float Width;
@@ -50,6 +51,7 @@ public struct FloatRectangle : IEquatable<FloatRectangle>,
 
     public readonly bool Collides(Rectangle other) => Collides((FloatRectangle)other);
     public readonly bool Collides(FloatRectangle other) => Left < other.Right && Right > other.Left && Top < other.Bottom && Bottom > other.Top;
-    public readonly bool Collides(Circle other) => CollisionHandler.SingleCollision.FloatRectanglevCircleCollision(this, other);
-    public readonly bool Collides(RotatedRectangle other) => CollisionHandler.SingleCollision.RotatedRectanglevFloatRectangleCollision(other, this);
+    public readonly bool Collides(Circle other) => TOMathUtils.Geometry.FloatRectanglevCircleCollision(this, other);
+    public readonly bool Collides(RotatedRectangle other) => TOMathUtils.Geometry.RotatedRectanglevFloatRectangleCollision(other, this);
+    public readonly bool Collides(Ring other) => TOMathUtils.Geometry.FloatRectanglevRingCollision(this, other);
 }

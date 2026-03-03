@@ -1,48 +1,46 @@
-﻿namespace Transoceanic.DataStructures.Particles;
+﻿using Transoceanic.DataStructures.Assets;
+
+namespace Transoceanic.DataStructures.Particles;
 
 public class CustomSpriteParticle : Particle
 {
-    public Texture2D Texture;
-    public bool _useAdditiveBlend;
+    public new Texture2D Texture;
     public float MaxGravity = 0f;
     public float Opacity = 1f;
 
-    public Func<CustomSpriteParticle, Rectangle> CustomFindFrameAction;
+    public Func<CustomSpriteParticle, Rectangle?> CustomGetFrameAction;
     public Action<CustomSpriteParticle> CustomUpdateAction;
 
     public const int ExtraDataSlots = 8;
     public Union32[] ExtraData = new Union32[ExtraDataSlots];
 
     public override bool AutoLoadTexture => false;
-    public override string TexturePath => TOSharedData.InvisibleProj;
+    public override string TexturePath => TOTextures.InvisibleTexturePath;
     public override bool AutoKillByLifeTime => true;
-    public override DrawBlendMode BlendMode => _useAdditiveBlend ? DrawBlendMode.AdditiveBlend : DrawBlendMode.AlphaBlend;
+    public override BlendState DrawBlendState { get; }
 
-    public CustomSpriteParticle(Vector2 relativePosition, Vector2 velocity, int lifetime, Texture2D texture, float scale, Color color, float grav = 0f, bool useAdditiveBlend = true, bool important = false,
-        Func<CustomSpriteParticle, Rectangle> customFindFrameAction = null, Action<CustomSpriteParticle> customUpdateAction = null)
+    public CustomSpriteParticle(Vector2 relativePosition, Vector2 velocity, int lifetime, Texture2D texture, float scale, Color color, float maxGravity = 0f, BlendState blendState = null,
+        Func<CustomSpriteParticle, Rectangle?> customGetFrameAction = null, Action<CustomSpriteParticle> customUpdateAction = null)
     {
         Center = relativePosition;
-        MaxGravity = grav;
+        MaxGravity = maxGravity;
         Velocity = velocity;
         Scale = scale;
         Lifetime = lifetime;
-        _useAdditiveBlend = useAdditiveBlend;
-        Important = important;
+        DrawBlendState = blendState ?? BlendState.AlphaBlend;
         Color = color;
         Texture = texture;
-        CustomFindFrameAction = customFindFrameAction;
+        CustomGetFrameAction = customGetFrameAction;
         CustomUpdateAction = customUpdateAction;
     }
 
-    public CustomSpriteParticle(Vector2 relativePosition, Vector2 velocity, int lifetime, string texturePath, float scale, Color color, float grav = 0f, bool useAddativeBlend = true, bool important = false,
-        Func<CustomSpriteParticle, Rectangle> customFindFrameAction = null, Action<CustomSpriteParticle> customUpdateAction = null)
-        : this(relativePosition, velocity, lifetime, ModContent.Request<Texture2D>(texturePath).Value, scale, color, grav, useAddativeBlend, important, customFindFrameAction, customUpdateAction)
+    public CustomSpriteParticle(Vector2 relativePosition, Vector2 velocity, int lifetime, string texturePath, float scale, Color color, float maxGravity = 0f, BlendState blendState = null,
+        Func<CustomSpriteParticle, Rectangle?> customGetFrameAction = null, Action<CustomSpriteParticle> customUpdateAction = null)
+        : this(relativePosition, velocity, lifetime, ModContent.Request<Texture2D>(texturePath).Value, scale, color, maxGravity, blendState, customGetFrameAction, customUpdateAction)
     { }
 
     public override void Update()
     {
-        Center += Velocity;
-
         if (Timer > Lifetime - 20)
         {
             Scale *= 0.9f;
@@ -62,11 +60,9 @@ public class CustomSpriteParticle : Particle
         CustomUpdateAction?.Invoke(this);
     }
 
-    public override Rectangle? GetFrame() => CustomFindFrameAction?.Invoke(this);
-
     public override bool PreDraw(SpriteBatch spriteBatch)
     {
-        spriteBatch.DrawFromCenter(Texture, Center - Main.screenPosition, Color.Lerp(Color.Transparent, Color, Opacity), GetFrame(), Rotation, 1f, SpriteEffects.None);
+        spriteBatch.DrawFromCenter(Texture, Center - Main.screenPosition, CustomGetFrameAction?.Invoke(this), Color.Lerp(Color.Transparent, Color, Opacity), Rotation, 1f, SpriteEffects.None);
         return false;
     }
 }

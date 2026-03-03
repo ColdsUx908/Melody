@@ -150,7 +150,7 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
 {
     public static Func<T, bool> MatchAll => _ => true;
     public static Func<T, bool> MatchNone => _ => false;
-    public static TOExclusiveIterator<T> Empty => new([], _ => false, new HashSet<T>());
+    public static TOExclusiveIterator<T> Empty => new([], MatchNone, new HashSet<T>());
 
     private readonly ReadOnlySpan<T> _span;
     private readonly Func<T, bool> _match;
@@ -163,11 +163,11 @@ public readonly ref struct TOExclusiveIterator<T> where T : class
         _exclusions = exceptions;
     }
 
-    public TOExclusiveIterator(ReadOnlySpan<T> span, Func<T, bool> match, params ReadOnlySpan<T> exceptionIndexes)
+    public TOExclusiveIterator(ReadOnlySpan<T> span, Func<T, bool> match, params ReadOnlySpan<T> exceptions)
     {
         _span = span;
         _match = match;
-        _exclusions = [.. exceptionIndexes];
+        _exclusions = [.. exceptions];
     }
 
     public Enumerator GetEnumerator() => new(this);
@@ -323,6 +323,7 @@ public static class IteratorMatches
 {
     public static readonly Func<Item, bool> Item_IsActive = i => i.active;
     public static readonly Func<Player, bool> Player_IsActive = p => p.active;
+    public static readonly Func<Player, bool> Player_IsAlive = p => p.Alive;
     public static readonly Func<Player, bool> Player_IsPVP = p => p.IsPvP;
     public static readonly Func<Projectile, bool> Projectile_IsActive = p => p.active;
     public static readonly Func<NPC, bool> NPC_IsActive = n => n.active;

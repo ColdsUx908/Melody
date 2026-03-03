@@ -1,6 +1,4 @@
-﻿using Transoceanic;
-
-namespace CalamityAnomalies.GameContents;
+﻿namespace CalamityAnomalies.GameContents;
 
 public sealed class Celestial : ModRarity
 {

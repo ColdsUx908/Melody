@@ -1,5 +1,4 @@
-﻿using CalamityAnomalies.Tweaks;
-using CalamityMod.NPCs.Abyss;
+﻿using CalamityMod.NPCs.Abyss;
 using CalamityMod.NPCs.AcidRain;
 using CalamityMod.NPCs.AquaticScourge;
 using CalamityMod.NPCs.AstrumAureus;
@@ -41,8 +40,8 @@ public sealed class CAPlayer : ModPlayer
     public PlayerDownedBossCalamity DownedBossAnomaly = new();
 
     public GuaranteedBoolean YharimsGift;
-    public YharimsGift_CurrentBlessing YharimsGift_Blessing = YharimsGift_CurrentBlessing.None;
-    public readonly SmoothInt[] YharimsGift_Change = new SmoothInt[YharimsGift_Handler._totalBlessings];
+    //public YharimsGift_CurrentBlessing YharimsGift_Blessing = YharimsGift_CurrentBlessing.None;
+    //public readonly SmoothInt[] YharimsGift_Change = new SmoothInt[YharimsGift_Handler._totalBlessings];
     public Item YharimsGift_Last;
 
     public override ModPlayer Clone(Player newEntity)
@@ -57,8 +56,8 @@ public sealed class CAPlayer : ModPlayer
         clone.DownedBossAnomaly = DownedBossAnomaly;
 
         clone.YharimsGift = YharimsGift;
-        clone.YharimsGift_Blessing = YharimsGift_Blessing;
-        Array.Copy(YharimsGift_Change, clone.YharimsGift_Change, YharimsGift_Change.Length);
+        //clone.YharimsGift_Blessing = YharimsGift_Blessing;
+        //Array.Copy(YharimsGift_Change, clone.YharimsGift_Change, YharimsGift_Change.Length);
         clone.YharimsGift_Last = YharimsGift_Last;
 
         return clone;

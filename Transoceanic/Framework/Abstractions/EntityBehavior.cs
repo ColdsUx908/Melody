@@ -13,7 +13,7 @@ namespace Transoceanic.Framework.Abstractions;
 [AttributeUsage(AttributeTargets.Class, Inherited = true)]
 public sealed class CriticalBehaviorAttribute : Attribute;
 
-public interface IEntityBehavior : ILoadable, IResourceLoader
+public interface IEntityBehavior : ILoadable, IContentLoader
 {
     public abstract Mod Mod { get; }
 
@@ -39,7 +39,7 @@ public abstract class EntityBehavior<TEntity> : IEntityBehavior where TEntity : 
     /// <remarks>
     /// 注意：正常情况下，此字段仅在通过 <see cref="SimpleEntityBehaviorSet{TEntity, TBehavior}.Enumerate(TEntity, string)"/> 等方法获取行为实例时被赋值。
     /// <br/>如果直接实例化行为类，则需要手动为此字段赋值，否则在行为方法中访问此字段会导致 <see cref="NullReferenceException"/> 异常。
-    /// <br/>如果须在外部对此字段赋值，请务必谨慎。
+    /// <br/>如果确需要在外部对此字段赋值，请务必谨慎。
     /// </remarks>
     public TEntity _entity;
 
@@ -57,10 +57,10 @@ public abstract class EntityBehavior<TEntity> : IEntityBehavior where TEntity : 
     void ILoadable.Unload() => Unload();
     public virtual void Unload() { }
 
-    void IResourceLoader.PostSetupContent() => PostSetupContent();
+    void IContentLoader.PostSetupContent() => PostSetupContent();
     public virtual void PostSetupContent() { }
 
-    void IResourceLoader.OnModUnload() => UnModUnload();
+    void IContentLoader.OnModUnload() => UnModUnload();
     public virtual void UnModUnload() { }
 }
 
@@ -1290,28 +1290,43 @@ public abstract class SingleNPCBehavior : SingleEntityBehavior<NPC>
 
     public int Timer1
     {
-        get => OceanNPC.Timer1;
-        set => OceanNPC.Timer1 = value;
+        get => NPC.Timer1;
+        set => NPC.Timer1 = value;
     }
     public int Timer2
     {
-        get => OceanNPC.Timer2;
-        set => OceanNPC.Timer2 = value;
+        get => NPC.Timer2;
+        set => NPC.Timer2 = value;
     }
     public int Timer3
     {
-        get => OceanNPC.Timer3;
-        set => OceanNPC.Timer3 = value;
+        get => NPC.Timer3;
+        set => NPC.Timer3 = value;
     }
-    public float Timer4
+    public int Timer4
     {
-        get => OceanNPC.Timer4;
-        set => OceanNPC.Timer4 = value;
+        get => NPC.Timer4;
+        set => NPC.Timer4 = value;
     }
-    public float Timer5
+    public int Timer5
     {
-        get => OceanNPC.Timer5;
-        set => OceanNPC.Timer5 = value;
+        get => NPC.Timer5;
+        set => NPC.Timer5 = value;
+    }
+    public float Timer6
+    {
+        get => NPC.Timer6;
+        set => NPC.Timer6 = value;
+    }
+    public float Timer7
+    {
+        get => NPC.Timer7;
+        set => NPC.Timer7 = value;
+    }
+    public float Timer8
+    {
+        get => NPC.Timer8;
+        set => NPC.Timer8 = value;
     }
 
     public Union32 AI_Union_0
@@ -1602,28 +1617,28 @@ public abstract class SingleProjectileBehavior : SingleEntityBehavior<Projectile
 
     public int Timer1
     {
-        get => OceanProjectile.Timer1;
-        set => OceanProjectile.Timer1 = value;
+        get => Projectile.Timer1;
+        set => Projectile.Timer1 = value;
     }
     public int Timer2
     {
-        get => OceanProjectile.Timer2;
-        set => OceanProjectile.Timer2 = value;
+        get => Projectile.Timer2;
+        set => Projectile.Timer2 = value;
     }
     public int Timer3
     {
-        get => OceanProjectile.Timer3;
-        set => OceanProjectile.Timer3 = value;
+        get => Projectile.Timer3;
+        set => Projectile.Timer3 = value;
     }
     public float Timer4
     {
-        get => OceanProjectile.Timer4;
-        set => OceanProjectile.Timer4 = value;
+        get => Projectile.Timer4;
+        set => Projectile.Timer4 = value;
     }
     public float Timer5
     {
-        get => OceanProjectile.Timer5;
-        set => OceanProjectile.Timer5 = value;
+        get => Projectile.Timer5;
+        set => Projectile.Timer5 = value;
     }
 
     public Union32 AI_Union_0

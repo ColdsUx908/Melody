@@ -6,7 +6,7 @@ public static partial class TOExtensions
     {
         public void AppendLocalizedLine(string key) => builder.AppendLine(Language.GetTextValue(key));
 
-        public void AppendLocalizedLineFormat(string key, params object[] args) => builder.AppendLine(Language.GetTextFormat(key, args));
+        public void AppendLocalizedLineFormat(string key, params object[] args) => builder.AppendLine(Language.GetTextValue(key, args));
 
         public void AppendLocalizedLine(ILocalizationPrefix localizationPrefixProvider, string suffix) => builder.AppendLocalizedLine(localizationPrefixProvider.GetKey(suffix));
 

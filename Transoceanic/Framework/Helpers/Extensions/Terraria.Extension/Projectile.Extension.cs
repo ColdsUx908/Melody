@@ -26,7 +26,7 @@ public static partial class TOExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetModProjectile<T>([NotNullWhen(true)] out T result) where T : ModProjectile => (result = projectile.GetModProjectile<T>()) is not null;
 
-        public Texture2D Texture => TextureAssets.Projectile[projectile.type].Value;
+        public Texture2D Texture => TOAssetUtils.GetProjectileTexture(projectile.type);
 
         public byte GraphicAlpha
         {
@@ -71,6 +71,106 @@ public static partial class TOExtensions
             projectile.height = (int)(height * newScale);
             projectile.scale = newScale;
         }
+
+        #region GlobalProjectile
+        public bool AlwaysRotating
+        {
+            get => projectile.Ocean.OceanAI32[0].bits[0];
+            set
+            {
+                TOGlobalProjectile ocean = projectile.Ocean;
+                if (ocean.OceanAI32[0].bits[0] != value)
+                {
+                    ocean.OceanAI32[0].bits[0] = value;
+                    ocean.AIChanged32[0] = true;
+                }
+            }
+        }
+
+        public float RotationOffset
+        {
+            get => projectile.Ocean.OceanAI32[1].f;
+            set
+            {
+                TOGlobalProjectile ocean = projectile.Ocean;
+                if (ocean.OceanAI32[1].f != value)
+                {
+                    ocean.OceanAI32[1].f = value;
+                    ocean.AIChanged32[1] = true;
+                }
+            }
+        }
+
+        public int Timer1
+        {
+            get => projectile.Ocean.OceanAI32[^6].i;
+            set
+            {
+                TOGlobalProjectile ocean = projectile.Ocean;
+                if (ocean.OceanAI32[^6].i != value)
+                {
+                    ocean.OceanAI32[^6].i = value;
+                    ocean.AIChanged32[^6] = true;
+                }
+            }
+        }
+
+        public int Timer2
+        {
+            get => projectile.Ocean.OceanAI32[^5].i;
+            set
+            {
+                TOGlobalProjectile ocean = projectile.Ocean;
+                if (ocean.OceanAI32[^5].i != value)
+                {
+                    ocean.OceanAI32[^5].i = value;
+                    ocean.AIChanged32[^5] = true;
+                }
+            }
+        }
+
+        public int Timer3
+        {
+            get => projectile.Ocean.OceanAI32[^4].i;
+            set
+            {
+                TOGlobalProjectile ocean = projectile.Ocean;
+                if (ocean.OceanAI32[^4].i != value)
+                {
+                    ocean.OceanAI32[^4].i = value;
+                    ocean.AIChanged32[^4] = true;
+                }
+            }
+        }
+
+        public float Timer4
+        {
+            get => projectile.Ocean.OceanAI32[^3].f;
+            set
+            {
+                TOGlobalProjectile ocean = projectile.Ocean;
+                if (ocean.OceanAI32[^3].f != value)
+                {
+                    ocean.OceanAI32[^3].f = value;
+                    ocean.AIChanged32[^3] = true;
+                }
+            }
+        }
+
+        public float Timer5
+        {
+            get => projectile.Ocean.OceanAI32[^2].f;
+            set
+            {
+                TOGlobalProjectile ocean = projectile.Ocean;
+                if (ocean.OceanAI32[^2].f != value)
+                {
+                    ocean.OceanAI32[^2].f = value;
+                    ocean.AIChanged32[^2] = true;
+                }
+            }
+        }
+        #endregion GlobalProjectile
     }
 
     extension(Projectile)
@@ -118,7 +218,9 @@ public static partial class TOExtensions
             int index = Projectile.NewProjectile(source, position, velocity, type, damage, knockback, owner);
             if (index < Main.maxProjectiles)
             {
-                action?.Invoke(Main.projectile[index]);
+                Projectile projectile = Main.projectile[index];
+                projectile.velocity = velocity;
+                action?.Invoke(projectile);
                 NetMessage.SendData(MessageID.SyncProjectile, -1, -1, null, index);
             }
         }
@@ -157,6 +259,7 @@ public static partial class TOExtensions
             if (index < Main.maxProjectiles)
             {
                 projectile = Main.projectile[index];
+                projectile.velocity = velocity;
                 action?.Invoke(projectile);
                 NetMessage.SendData(MessageID.SyncProjectile, -1, -1, null, index);
                 return true;
@@ -220,10 +323,7 @@ public static partial class TOExtensions
         /// <param name="action">执行的行为。仅当成功生成Projectile时生效。</param>
         public static void RotatedProj<T>(int number, float radian,
             IEntitySource source, Vector2 position, Vector2 velocity, int damage, float knockback, int owner = -1, Action<Projectile> action = null)
-            where T : ModProjectile
-        {
-            for (int i = 0; i < number; i++)
-                NewProjectileAction(source, position, velocity.RotatedBy(radian * i), ModContent.ProjectileType<T>(), damage, knockback, owner, action);
-        }
+            where T : ModProjectile =>
+            Projectile.RotatedProj(number, radian, source, position, velocity, ModContent.ProjectileType<T>(), damage, knockback, owner, action);
     }
 }

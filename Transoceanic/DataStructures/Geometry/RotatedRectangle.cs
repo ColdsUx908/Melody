@@ -12,7 +12,7 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>,
     public RotatedRectangle(FloatRectangle source, float rotation)
     {
         Source = source;
-        Rotation = TOMathUtils.NormalizeAngle(rotation);
+        Rotation = TOMathUtils.NormalizeWithPeriod(rotation);
     }
 
     public RotatedRectangle(Vector2 center, float width, float height, float rotation) : this(Rectangle.FromCenter(center, width, height), rotation) { }
@@ -114,21 +114,21 @@ public struct RotatedRectangle : IEquatable<RotatedRectangle>,
         ReadOnlySpan<Vector2> bPoints = [bPoint1, bPoint2, bPoint3, bPoint4];
 
         (float sinA, float cosA) = MathF.SinCos(Rotation);
-        if (!CollisionHandler.OverlapOnAxis(new Vector2(cosA, sinA), aPoints, bPoints))
+        if (!TOMathUtils.Geometry.OverlapOnAxis(new Vector2(cosA, sinA), aPoints, bPoints))
             return false;
-        if (!CollisionHandler.OverlapOnAxis(new Vector2(-sinA, cosA), aPoints, bPoints))
+        if (!TOMathUtils.Geometry.OverlapOnAxis(new Vector2(-sinA, cosA), aPoints, bPoints))
             return false;
 
         (float sinB, float cosB) = MathF.SinCos(other.Rotation);
-        if (!CollisionHandler.OverlapOnAxis(new Vector2(cosB, sinB), aPoints, bPoints))
+        if (!TOMathUtils.Geometry.OverlapOnAxis(new Vector2(cosB, sinB), aPoints, bPoints))
             return false;
-        if (!CollisionHandler.OverlapOnAxis(new Vector2(-sinB, cosB), aPoints, bPoints))
+        if (!TOMathUtils.Geometry.OverlapOnAxis(new Vector2(-sinB, cosB), aPoints, bPoints))
             return false;
 
         return true;
     }
 
     public readonly bool Collides(Rectangle other) => Collides((FloatRectangle)other);
-    public readonly bool Collides(FloatRectangle other) => CollisionHandler.SingleCollision.RotatedRectanglevFloatRectangleCollision(this, other);
-    public readonly bool Collides(Circle other) => CollisionHandler.SingleCollision.RotatedRectanglevCircleCollision(this, other);
+    public readonly bool Collides(FloatRectangle other) => TOMathUtils.Geometry.RotatedRectanglevFloatRectangleCollision(this, other);
+    public readonly bool Collides(Circle other) => TOMathUtils.Geometry.RotatedRectanglevCircleCollision(this, other);
 }

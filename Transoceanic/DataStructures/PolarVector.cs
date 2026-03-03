@@ -26,7 +26,7 @@ public struct PolarVector2 : IEquatable<PolarVector2>
     public float Angle
     {
         readonly get => Radius == 0f ? 0f : field;
-        set => field = Radius == 0f ? 0f : TOMathUtils.NormalizeAngle(value); //零向量的角度强制为0
+        set => field = Radius == 0f ? 0f : TOMathUtils.NormalizeWithPeriod(value); //零向量的角度强制为0
     }
 
     /// <summary>

@@ -1,13 +1,11 @@
 ﻿#define CELESS_DEV
 
-using CalamityAnomalies.Assets.Textures;
 using CalamityAnomalies.GameContents;
 using CalamityAnomalies.Publicizers.CalamityMod;
 using CalamityMod.NPCs.DevourerofGods;
 using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework.Input;
 using Terraria.GameContent.ItemDropRules;
-using Transoceanic;
 using Transoceanic.Framework.Helpers.AbstractionHandlers;
 
 namespace CalamityAnomalies.DeveloperContents;
@@ -354,7 +352,7 @@ public sealed class ColdheartIcicleProj : BaseShortswordProjectile, ICAModProjec
     }
 }
 
-public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
+public sealed class ColdheartIcicleDream : CAModProjectile, IContentLoader
 {
     public int TargetIndex = -1;
     public Entity Target
@@ -372,6 +370,14 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
             _ => -1,
         };
     }
+
+    public bool TargetValid => Target switch
+    {
+        Player player => player.Alive,
+        NPC npc => npc.active,
+        _ => false
+    };
+
 
 #if CELESS_DEV
     public const int LifeTime = 100;
@@ -424,7 +430,7 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
     public const int LifeTime = 50;
 #endif
 
-    public override string Texture => TOSharedData.InvisibleProj;
+    public override string Texture => TOTextures.InvisibleTexturePath;
 
     public override string LocalizationCategory => "DeveloperContents";
 
@@ -472,10 +478,10 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
             case BehaviorType.Dream:
                 Projectile.Center = Projectile.Owner.Center;
                 Projectile.timeLeft = LifeTime;
-                float interpolation = TOMathUtils.QuadraticEaseOut(Timer1 > 2398 ? (2598 - Timer1) / 200f : Math.Clamp(Timer1 / 240f, 0f, 1f));
+                float interpolation = TOMathUtils.Interpolation.QuadraticEaseOut(Timer1 > 2398 ? (2598 - Timer1) / 200f : Timer1 / 240f);
                 if (Main.rand.NextProbability((float)(Timer1 > 2398 ? (2598 - Timer1) / 200f : Math.Clamp(Timer1 / 240f, 0f, 1f)) * 0.8f))
-                    ParticleHandler.SpawnParticle(new OrbParticle(SnowflakeCenter, Main.rand.NextVector2Circular(6f, 4f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.4f, 0.7f), Color.White, Main.rand.NextFloat(0.9f, 1.4f), 0.8f, important: true));
-                SnowflakeScale = 0.7f * interpolation;
+                    ParticleHandler.SpawnParticle(new OrbParticle(SnowflakeCenter, Main.rand.NextVector2Circular(6f, 4f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.4f, 0.7f), Color.White, Main.rand.NextFloat(0.9f, 1.4f), 0.8f) { Important = true });
+                SnowflakeScale = 1.4f * interpolation;
                 SnowflakeRotation += 0.03f * interpolation * interpolation;
                 if (!ShouldStopRotating)
                 {
@@ -540,13 +546,13 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
                         break;
                     case 4:
                         if (Timer1 > 200)
-                            interpolation3 = TOMathUtils.QuadraticEaseOut((float)((700 - Timer1) / 500f));
+                            interpolation3 = TOMathUtils.Interpolation.QuadraticEaseOut((700 - Timer1) / 500f);
                         if (Timer1 > 100)
-                            interpolation4 = TOMathUtils.QuadraticEaseOut((float)((700 - Timer1) / 600f));
+                            interpolation4 = TOMathUtils.Interpolation.QuadraticEaseOut((700 - Timer1) / 600f);
                         if (Timer1 == 500)
                         {
                             for (int i = 0; i < 2000; i++)
-                                ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Owner.Center + new Vector2(Main.rand.NextFloat(-1600f, 1600f), -1300f - Main.rand.NextFloat(3700f)), Main.rand.NextVector2Circular(8f, 6f), Main.rand.Next(370, 660), Main.rand.NextFloat(0.4f, 0.7f), Color.White, Main.rand.NextFloat(0.25f, 0.7f), 0.8f, important: true));
+                                ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Owner.Center + new Vector2(Main.rand.NextFloat(-1600f, 1600f), -1300f - Main.rand.NextFloat(3700f)), Main.rand.NextVector2Circular(8f, 6f), Main.rand.Next(370, 660), Main.rand.NextFloat(0.4f, 0.7f), Color.White, Main.rand.NextFloat(0.25f, 0.7f), 0.8f) { Important = true });
                         }
                         if (Timer1 > 700)
                             Projectile.Kill();
@@ -561,9 +567,11 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
 #endif
         void NormalAI()
         {
-            Projectile.Center = Target.Center;
+            bool targetValid = TargetValid;
+            if (targetValid)
+                Projectile.Center = Target.Center;
             Projectile.timeLeft = LifeTime;
-            if (Timer2 > 0 || !Target.active || (Target is NPC npc && npc.life <= 0) || (Target is Player player && (player.dead || player.ghost)) || Timer1 > 6000)
+            if (Timer2 > 0 || !targetValid || Timer1 > 6000)
                 Timer2 = Math.Max(Timer2 + 1, 100 - Timer1 / 3);
             if (Timer2 >= 100)
                 Projectile.Kill();
@@ -603,7 +611,7 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
                             Vector2 circleCenter = Projectile.Center + new PolarVector2(radius, angle);
                             (float sin, float cos) = MathF.SinCos(MathHelper.Lerp(-EllipseData.MaxAngleOffset, EllipseData.MaxAngleOffset, amount));
                             Vector2 position = circleCenter + new Vector2(a * cos, b * sin).RotatedBy(angle);
-                            Main.spriteBatch.DrawFromCenter(OrbParticle.Texture, position - Main.screenPosition, Color.White with { A = 0 }, null, 0f, 0.5f * Utils.Remap(amount, 0f, 1.83f, 0.4f, 1.2f));
+                            Main.spriteBatch.DrawFromCenter(ParticleHandler.GetTexture<OrbParticle>(), position - Main.screenPosition, null, Color.White, 0f, 0.5f * Utils.Remap(amount, 0f, 1.83f, 0.4f, 1.2f));
                         }
                     }
                 }
@@ -625,10 +633,9 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
             Main.instance.GraphicsDevice.RasterizerState.ScissorTestEnable = true;
             Main.instance.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
             float radius = 40f; //圆心半径
-            Vector2 origin = OrbParticle.Texture.Size() * 0.5f;
             for (int j = 0; j < 6; j++)
             {
-                int localTimer = TOMathUtils.Min(Timer2 > 0 ? (100 - Timer2) / 2 : 100, Timer1 - j * 10, LifeTime);
+                int localTimer = TOMathUtils.Min(100 - Timer2, Timer1 - j * 10, LifeTime);
                 for (int i = 0; i <= localTimer * 10; i++)
                 {
                     float a = radius * EllipseData.AMultiplier; //椭圆半长轴
@@ -644,7 +651,7 @@ public sealed class ColdheartIcicleDream : CAModProjectile, IResourceLoader
                     Vector2 circleCenter = Projectile.Center + new PolarVector2(radius, angle);
                     (float sin, float cos) = MathF.SinCos(MathHelper.Lerp(-EllipseData.MaxAngleOffset, EllipseData.MaxAngleOffset, amount));
                     Vector2 position = circleCenter + new Vector2(a * cos, b * sin).RotatedBy(angle);
-                    Main.spriteBatch.DrawFromCenter(OrbParticle.Texture, position - Main.screenPosition, Color.White with { A = 0 }, null, 0f, 0.3f * Utils.Remap(amount, 0f, 1.83f, 0.4f, 1.2f));
+                    Main.spriteBatch.DrawFromCenter(ParticleHandler.GetTexture<OrbParticle>(), position - Main.screenPosition, null, Color.White with { A = 0 }, 0f, 0.3f * Utils.Remap(amount, 0f, 1.83f, 0.4f, 1.2f));
                 }
             }
         }
@@ -681,7 +688,7 @@ public sealed class ColdheartIcicleSnowflake : CAModProjectile, ICAModProjectile
 {
     public const int LeftTime = 360;
 
-    public override string Texture => TOSharedData.InvisibleProj;
+    public override string Texture => TOTextures.InvisibleTexturePath;
 
     public override string LocalizationCategory => "DeveloperContents";
 
@@ -690,12 +697,12 @@ public sealed class ColdheartIcicleSnowflake : CAModProjectile, ICAModProjectile
         Projectile.width = 80;
         Projectile.height = 80;
         Projectile.netImportant = true;
-        Projectile.scale = 0.5f;
         Projectile.friendly = true;
         Projectile.tileCollide = false;
         Projectile.ignoreWater = true;
         Projectile.DamageType = DamageClass.Melee;
-        Projectile.timeLeft = LeftTime;
+        Projectile.timeLeft = LeftTime * 2;
+        Projectile.extraUpdates = 1;
         Projectile.usesLocalNPCImmunity = true;
         Projectile.localNPCHitCooldown = -1;
         Projectile.ArmorPenetration = 350258;
@@ -706,17 +713,19 @@ public sealed class ColdheartIcicleSnowflake : CAModProjectile, ICAModProjectile
         Lighting.AddLight(Projectile.Center, Color.White.ToVector3());
 
         Timer1++;
-        float interpolation = TOMathUtils.QuadraticEaseOut(Timer1 <= 10 ? Timer1 / 10f : Timer1 >= LeftTime - 25 ? (LeftTime - Timer1) / 25f : 1f);
-        Projectile.velocity.Modulus = Utils.Remap(Timer1, 0, LeftTime, 18f, 30f) * interpolation;
-        Projectile.BetterChangeScale(80, 80, 0.5f * interpolation, Projectile.Center);
+
+        float interpolation = TOMathUtils.Interpolation.QuadraticEaseOut(Timer1 <= 20 ? Timer1 / 20f : Timer1 >= (LeftTime - 25) * 2 ? (LeftTime - Timer1) / 50f : 1f);
+        Projectile.velocity.Modulus = Utils.Remap(Timer1, 0, LeftTime, 10f, 15f) * interpolation;
+        Projectile.BetterChangeScale(80, 80, interpolation, Projectile.Center);
         Projectile.rotation += 0.05f * interpolation;
-        ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(4f, 4f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.35f, 0.6f), Color.White, Main.rand.NextFloat(0.8f, 1.3f), 0.8f, important: true));
-        if (Projectile.timeLeft <= 25)
-            ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(5f, 5f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.35f, 0.6f), Color.White, Main.rand.NextFloat(0.8f, 1.3f), 0.8f, important: true));
-        if (Projectile.timeLeft <= 8)
+        if (Main.rand.NextBool(3))
+            ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(4f, 4f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.35f, 0.6f), Color.White, Main.rand.NextFloat(0.8f, 1.3f), 0.8f) { Important = true });
+        if (Projectile.timeLeft <= 40 && Main.rand.NextBool(3))
+            ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(5f, 5f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.35f, 0.6f), Color.White, Main.rand.NextFloat(0.8f, 1.3f), 0.8f) { Important = true });
+        if (Projectile.timeLeft <= 15 && Main.rand.NextBool(3))
         {
-            ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(6f, 6f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.35f, 0.6f), Color.White, Main.rand.NextFloat(0.8f, 1.3f), 0.8f, important: true));
-            ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(7f, 7f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.35f, 0.6f), Color.White, Main.rand.NextFloat(0.8f, 1.3f), 0.8f, important: true));
+            ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(6f, 6f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.35f, 0.6f), Color.White, Main.rand.NextFloat(0.8f, 1.3f), 0.8f) { Important = true });
+            ParticleHandler.SpawnParticle(new OrbParticle(Projectile.Center, Projectile.velocity + Main.rand.NextVector2Circular(7f, 7f), Main.rand.Next(40, 75), Main.rand.NextFloat(0.35f, 0.6f), Color.White, Main.rand.NextFloat(0.8f, 1.3f), 0.8f) { Important = true });
         }
     }
 
@@ -728,13 +737,16 @@ public sealed class ColdheartIcicleSnowflake : CAModProjectile, ICAModProjectile
 
     public static void DrawSnowflake(Vector2 center, float scale, float rotation)
     {
+        Texture2D scaleTexture = CATextures.Scale2;
         Vector2 position = center - Main.screenPosition;
-        Vector2 origin = new(CATextures.Scale1.Width / 2f, CATextures.Scale1.Height);
+        Vector2 origin = new(scaleTexture.Width / 2f, scaleTexture.Height);
+        Main.spriteBatch.ChangeBlendState(BlendState.Additive);
         for (int i = 0; i < 6; i++)
         {
             float angle = rotation + MathHelper.PiOver2 + TOMathUtils.PiOver3 * i;
-            Main.EntitySpriteDraw(CATextures.Scale1, position, null, Color.White, angle, origin, scale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(scaleTexture, position, null, Color.White, angle, origin, scale, SpriteEffects.None, 0f);
         }
+        Main.spriteBatch.ChangeBlendState(BlendState.AlphaBlend);
     }
 
     public override void OnKill(int timeLeft)

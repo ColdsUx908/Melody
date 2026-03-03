@@ -2,13 +2,6 @@
 
 public abstract class Particle
 {
-    public enum DrawBlendMode
-    {
-        AlphaBlend,
-        NonPremultiplied,
-        AdditiveBlend,
-    }
-
     /// <summary>
     /// 粒子的内部ID。该值在粒子构造时自动设置，且对于同一粒子类型的所有实例都相同。
     /// </summary>
@@ -24,6 +17,11 @@ public abstract class Particle
     /// </summary>
     public bool Important;
 
+    public virtual string TexturePath => "";
+    public Asset<Texture2D> Asset;
+    public Texture2D Texture => Asset.Value;
+
+    public virtual bool AutoUpdatePosition => true;
     public virtual bool AutoKillByLifeTime => false;
     public int Lifetime = 0;
 
@@ -39,9 +37,12 @@ public abstract class Particle
     public bool AffectedByLight;
 
     public virtual bool AutoLoadTexture => true;
-    public virtual string TexturePath => "";
 
-    public Particle() => Type = ParticleHandler._particleTypes[GetType()];
+    public Particle()
+    {
+        Type = ParticleHandler._particleTypes[GetType()];
+        Asset = ParticleHandler._particleCache[Type].TemplateInstance.Asset;
+    }
 
     /// <summary>
     /// 更新粒子状态。
@@ -49,9 +50,9 @@ public abstract class Particle
     /// </summary>
     public virtual void Update() { }
 
-    public virtual Rectangle? GetFrame() => null;
+    public virtual Rectangle? GetFrame(Texture2D texture) => null;
 
-    public virtual DrawBlendMode BlendMode => DrawBlendMode.AlphaBlend;
+    public virtual BlendState DrawBlendState => BlendState.AlphaBlend;
 
     /// <summary>
     /// 在 <see cref="ParticleHandler"/> 的默认绘制代码调用前调用。
@@ -68,14 +69,3 @@ public abstract class Particle
 
     public void Kill() => ParticleHandler.AddToRemoveList(this);
 }
-
-/// <summary>
-/// 用于标记粒子类中表示纹理资源路径的字段。
-/// <para/>被标记的字段必须满足以下条件：
-/// <br/>1. 字段类型必须为 <see cref="Asset{Texture2D}"/>；
-/// <br/>2. 为静态字段；
-/// <br/>3. 可写。
-/// <para/><see cref="ParticleHandler"/> 加载粒子类型时，会自动在每个粒子类型中尝试寻找被标记的字段并赋值。
-/// </summary>
-[AttributeUsage(AttributeTargets.Field)]
-public sealed class ParticleTextureAssetAttribute : Attribute;

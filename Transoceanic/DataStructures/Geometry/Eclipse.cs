@@ -12,7 +12,7 @@ public struct Ellipse : IEquatable<Ellipse>
         Center = center;
         A = a;
         B = b;
-        Rotation = TOMathUtils.NormalizeAngle(rotation);
+        Rotation = TOMathUtils.NormalizeWithPeriod(rotation);
     }
 
     public readonly bool Equals(Ellipse other) => Center == other.Center && A == other.A && B == other.B && Rotation == other.Rotation;

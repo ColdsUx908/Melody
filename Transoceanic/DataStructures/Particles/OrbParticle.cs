@@ -3,11 +3,7 @@
 public class OrbParticle : Particle
 {
     public override bool AutoKillByLifeTime => true;
-    public override DrawBlendMode BlendMode => UseAdditiveBlend ? DrawBlendMode.AdditiveBlend : DrawBlendMode.AlphaBlend;
-
-    [ParticleTextureAsset]
-    private static Asset<Texture2D> _textureAsset;
-    public static Texture2D Texture => _textureAsset?.Value;
+    public override BlendState DrawBlendState => UseAdditiveBlend ? BlendState.Additive : BlendState.AlphaBlend;
 
     public Color InitialColor;
     public bool UseAdditiveBlend = true;
@@ -18,7 +14,7 @@ public class OrbParticle : Particle
     public float LifeEndRatio;
     public bool AffectedByGravity => GravityMultiplier > 0f;
 
-    public OrbParticle(Vector2 center, Vector2 velocity, int lifetime, float scale, Color color, float gravityMultiplier = 0f, float lifeEndRatio = 0f, bool useAdditiveBlend = true, bool important = false, bool glowCenter = true)
+    public OrbParticle(Vector2 center, Vector2 velocity, int lifetime, float scale, Color color, float gravityMultiplier = 0f, float lifeEndRatio = 0f, bool useAdditiveBlend = true, bool glowCenter = true)
     {
         Center = center;
         Velocity = velocity;
@@ -27,7 +23,6 @@ public class OrbParticle : Particle
         Lifetime = lifetime;
         Color = InitialColor = color;
         UseAdditiveBlend = useAdditiveBlend;
-        Important = important;
         GlowCenter = glowCenter;
         InitialScale = scale;
         LifeEndRatio = lifeEndRatio;
@@ -37,7 +32,7 @@ public class OrbParticle : Particle
     {
         if (LifetimeCompletion > LifeEndRatio)
         {
-            float interpolation = TOMathUtils.QuadraticEaseOut(1f - (LifetimeCompletion - LifeEndRatio) / (1f - LifeEndRatio));
+            float interpolation = TOMathUtils.Interpolation.QuadraticEaseOut(1f - (LifetimeCompletion - LifeEndRatio) / (1f - LifeEndRatio));
             FadeOut = interpolation;
             Scale = InitialScale * interpolation;
         }
@@ -53,9 +48,9 @@ public class OrbParticle : Particle
         Texture2D texture = Texture;
         Vector2 scale = new(Scale);
 
-        spriteBatch.DrawFromCenter(texture, Center - Main.screenPosition, Color, null, Rotation, scale);
+        spriteBatch.DrawFromCenter_VectorScale(texture, Center - Main.screenPosition, null, Color, Rotation, scale);
         if (GlowCenter)
-            spriteBatch.DrawFromCenter(texture, Center - Main.screenPosition, Color.White * FadeOut, null, Rotation, scale * new Vector2(0.5f, 0.5f));
+            spriteBatch.DrawFromCenter_VectorScale(texture, Center - Main.screenPosition, null, Color.White * FadeOut, Rotation, scale * new Vector2(0.5f, 0.5f));
 
         return false;
     }

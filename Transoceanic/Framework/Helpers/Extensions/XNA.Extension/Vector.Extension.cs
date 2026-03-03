@@ -16,7 +16,9 @@ public static partial class TOExtensions
         /// 获取向量的顺时针旋转角。
         /// </summary>
         /// <returns>零向量返回0，否则返回 [0, 2π) 范围内的浮点值。</returns>
-        public float Angle => TOMathUtils.NormalizeAngle(MathF.Atan2(vector.Y, vector.X));
+        public float Angle => TOMathUtils.NormalizeWithPeriod(MathF.Atan2(vector.Y, vector.X));
+
+        public float ToRotation(float rotationOffset) => vector.ToRotation() + rotationOffset;
 
         /// <summary>
         /// 安全地将向量化为单位向量。
@@ -92,6 +94,6 @@ public static partial class TOExtensions
         /// <returns></returns>
         public static Vector2 Homothetic(Vector2 value, Vector2 center, float ratio) => center + ratio * (value - center);
 
-        public static Vector2 SmootherStep(Vector2 from, Vector2 to, float amount) => new(TOMathUtils.SmootherStep(from.X, to.X, amount), TOMathUtils.SmootherStep(from.Y, to.Y, amount));
+        public static Vector2 SmootherStep(Vector2 from, Vector2 to, float amount) => new(TOMathUtils.Interpolation.SmootherStep(from.X, to.X, amount), TOMathUtils.Interpolation.SmootherStep(from.Y, to.Y, amount));
     }
 }

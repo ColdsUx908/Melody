@@ -4,6 +4,7 @@ global using System.IO;
 global using System.Linq;
 global using System.Reflection;
 global using System.Runtime.CompilerServices;
+global using CalamityAnomalies.Assets;
 global using CalamityAnomalies.Core;
 global using CalamityAnomalies.GlobalInstances;
 global using CalamityAnomalies.Visual;
@@ -26,23 +27,23 @@ global using Terraria.Localization;
 global using Terraria.ModLoader;
 global using Terraria.ModLoader.IO;
 global using Terraria.Utilities;
+global using Transoceanic;
 global using Transoceanic.DataStructures;
+global using Transoceanic.DataStructures.Assets;
 global using Transoceanic.DataStructures.Geometry;
 global using Transoceanic.DataStructures.Particles;
 global using Transoceanic.Framework;
 global using Transoceanic.Framework.Abstractions;
 global using Transoceanic.Framework.Helpers;
-global using Transoceanic.GlobalInstances;
 global using ZLinq;
 global using CalamityMod_ = CalamityMod.CalamityMod;
 using CalamityAnomalies.ModCompatibility;
-using Transoceanic;
 
 namespace CalamityAnomalies;
 
 // Developed by ColdsUx
 
-public sealed class CAMain : Mod, IResourceLoader
+public sealed class CAMain : Mod, IContentLoader
 {
     internal static CAMain Instance { get; private set; }
 
@@ -74,11 +75,6 @@ public sealed class CAMain : Mod, IResourceLoader
             Loaded = true;
             Loading = false;
         }
-    }
-
-    public override void PostSetupContent()
-    {
-        TOSharedData.SyncEnabled = true;
     }
 
     public override void Unload()

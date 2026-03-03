@@ -12,28 +12,43 @@ public abstract class TOModNPC : ModNPC, ITOModNPC
 
     public int Timer1
     {
-        get => OceanNPC.Timer1;
-        set => OceanNPC.Timer1 = value;
+        get => NPC.Timer1;
+        set => NPC.Timer1 = value;
     }
     public int Timer2
     {
-        get => OceanNPC.Timer2;
-        set => OceanNPC.Timer2 = value;
+        get => NPC.Timer2;
+        set => NPC.Timer2 = value;
     }
     public int Timer3
     {
-        get => OceanNPC.Timer3;
-        set => OceanNPC.Timer3 = value;
+        get => NPC.Timer3;
+        set => NPC.Timer3 = value;
     }
-    public float Timer4
+    public int Timer4
     {
-        get => OceanNPC.Timer4;
-        set => OceanNPC.Timer4 = value;
+        get => NPC.Timer4;
+        set => NPC.Timer4 = value;
     }
-    public float Timer5
+    public int Timer5
     {
-        get => OceanNPC.Timer5;
-        set => OceanNPC.Timer5 = value;
+        get => NPC.Timer5;
+        set => NPC.Timer5 = value;
+    }
+    public float Timer6
+    {
+        get => NPC.Timer6;
+        set => NPC.Timer6 = value;
+    }
+    public float Timer7
+    {
+        get => NPC.Timer7;
+        set => NPC.Timer7 = value;
+    }
+    public float Timer8
+    {
+        get => NPC.Timer8;
+        set => NPC.Timer8 = value;
     }
 
     public Union32 AI_Union_0
@@ -90,28 +105,28 @@ public abstract class TOModProjectile : ModProjectile, ITOModProjectile
 
     public int Timer1
     {
-        get => OceanProjectile.Timer1;
-        set => OceanProjectile.Timer1 = value;
+        get => Projectile.Timer1;
+        set => Projectile.Timer1 = value;
     }
     public int Timer2
     {
-        get => OceanProjectile.Timer2;
-        set => OceanProjectile.Timer2 = value;
+        get => Projectile.Timer2;
+        set => Projectile.Timer2 = value;
     }
     public int Timer3
     {
-        get => OceanProjectile.Timer3;
-        set => OceanProjectile.Timer3 = value;
+        get => Projectile.Timer3;
+        set => Projectile.Timer3 = value;
     }
     public float Timer4
     {
-        get => OceanProjectile.Timer4;
-        set => OceanProjectile.Timer4 = value;
+        get => Projectile.Timer4;
+        set => Projectile.Timer4 = value;
     }
     public float Timer5
     {
-        get => OceanProjectile.Timer5;
-        set => OceanProjectile.Timer5 = value;
+        get => Projectile.Timer5;
+        set => Projectile.Timer5 = value;
     }
 
     public Union32 AI_Union_0

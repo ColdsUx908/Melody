@@ -27,6 +27,6 @@ public struct Circle : IEquatable<Circle>,
 
     public readonly bool Collides(Rectangle other) => Collides((FloatRectangle)other);
     public readonly bool Collides(Circle other) => Vector2.Distance(Center, other.Center) <= Radius + other.Radius;
-    public readonly bool Collides(FloatRectangle other) => CollisionHandler.SingleCollision.FloatRectanglevCircleCollision(other, this);
-    public readonly bool Collides(RotatedRectangle other) => CollisionHandler.SingleCollision.RotatedRectanglevCircleCollision(other, this);
+    public readonly bool Collides(FloatRectangle other) => TOMathUtils.Geometry.FloatRectanglevCircleCollision(other, this);
+    public readonly bool Collides(RotatedRectangle other) => TOMathUtils.Geometry.RotatedRectanglevCircleCollision(other, this);
 }

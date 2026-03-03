@@ -1,6 +1,6 @@
 ﻿namespace Transoceanic.DataStructures;
 
-public sealed class ModReference : IResourceLoader
+public sealed class ModReference : IContentLoader
 {
     /// <summary>
     /// 检测特定Mod是否已加载，可获取实例。
@@ -68,7 +68,7 @@ public sealed class ModReference : IResourceLoader
     public static Container WrathoftheGods { get; private set; }
 
     [LoadPriority(1e10)]
-    void IResourceLoader.PostSetupContent()
+    void IContentLoader.PostSetupContent()
     {
         CA = new("CalamityAnomalies");
         Calamity = new("CalamityMod");
@@ -110,7 +110,7 @@ public sealed class ModReference : IResourceLoader
         WrathoftheGods = new("NoxusBoss");
     }
 
-    void IResourceLoader.OnModUnload()
+    void IContentLoader.OnModUnload()
     {
         CA = null;
         Calamity = null;

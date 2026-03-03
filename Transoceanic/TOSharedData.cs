@@ -17,9 +17,6 @@ true;
     public const string DebugPrefix = ModLocalizationPrefix + "DEBUG.";
     public const string DebugErrorMessageKey = ModLocalizationPrefix + "DEBUG.ErrorMessage";
     public const string StringEmptyError = "String cannot be null or whitespace.";
-
-    public const string InvisibleProj = "Transoceanic/DataStructures/Textures/InvisibleProj";
-
     private const string DEBUGPlayerName = "~ColdsUx";
     public static bool IsDEBUGPlayer(Player player) => DEBUG && player?.name == DEBUGPlayerName;
 
@@ -50,9 +47,9 @@ true;
 
     public static bool GeneralClient => Main.netMode != NetmodeID.MultiplayerClient;
 
-    public static float GeneralSeconds => Main.GlobalTimeWrappedHourly;
-
-    public static float GeneralMinutes => GeneralSeconds / 60f;
+    public static GameTime Time { get; private set; }
+    public static float TotalSeconds => (float)Time.TotalGameTime.TotalSeconds;
+    public static float TotalMinutes => TotalSeconds / 60f;
 
     public static TerrariaTimer GameTimer { get; internal set; }
 
@@ -112,6 +109,14 @@ true;
     void ITOLoader.Load()
     {
         GameTimer = 0;
+
+        On_Main.Update += On_Main_Update;
+
+        static void On_Main_Update(On_Main.orig_Update orig, Main self, GameTime gameTime)
+        {
+            Time = gameTime;
+            orig(self, gameTime);
+        }
     }
 
     void ITOLoader.Unload()

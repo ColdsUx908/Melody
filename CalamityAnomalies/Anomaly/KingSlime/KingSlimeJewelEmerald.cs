@@ -1,7 +1,6 @@
 ﻿using CalamityAnomalies.DataStructures;
 using CalamityMod.Dusts;
 using CalamityMod.Projectiles.Boss;
-using Transoceanic;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
@@ -19,7 +18,10 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
     public int ChargeCooldownTime => HasEnteredPhase2 ? 210 : 150;
     public int ChargePreparationTime => HasEnteredPhase2 ? 75 : 60;
     public static int ChargeTime => 60;
-    public float ChargeSpeed => CASharedData.AnomalyUltramundane ? (HasEnteredPhase2 ? 24f : 28f) : (HasEnteredPhase2 ? 18f : 22f);
+    public float ChargeSpeed => Ultra ? (HasEnteredPhase2 ? 24f : 28f) : (HasEnteredPhase2 ? 18f : 22f);
+
+    private static readonly ProjectileDamageContainer _kingSlimeJewelEmeraldCloneDamage = new(30, 60, 90, 120, 102, 150);
+    public static int KingSlimeJewelEmeraldCloneDamage => _kingSlimeJewelEmeraldCloneDamage.Value;
 
     public Behavior CurrentAttack
     {
@@ -66,7 +68,7 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
         }
     }
 
-    public bool CanBeKilled
+    public bool KingSlimeDead
     {
         get => AI_Union_2.bits[3];
         set
@@ -76,9 +78,6 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
             AI_Union_2 = union;
         }
     }
-
-    private static readonly ProjectileDamageContainer _kingSlimeJewelEmeraldClone_Damage = new(30, 60, 90, 120, 100, 150);
-    public static int KingSlimeJewelEmeraldCloneDamage => _kingSlimeJewelEmeraldClone_Damage.Damage;
 
     public override string LocalizationCategory => "Anomaly.KingSlime";
 
@@ -102,16 +101,22 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
         NPC.noTileCollide = true;
         NPC.HitSound = SoundID.NPCHit5;
         NPC.DeathSound = SoundID.NPCDeath15;
-        NPC.Calamity().VulnerableToSickness = false;
+        CalamityNPC.VulnerableToSickness = false;
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) => NPC.lifeMax = (int)(NPC.lifeMax * balance);
 
     public override void AI()
     {
-        if (!OceanNPC.TryGetMaster(NPCID.KingSlime, out NPC master))
+        if (KingSlimeDead)
         {
             JewelHandler.Kill(NPC);
+            return;
+        }
+
+        if (!NPC.TryGetMaster(NPCID.KingSlime, out NPC master))
+        {
+            JewelHandler.Despawn(NPC);
             return;
         }
 
@@ -231,11 +236,11 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
             void ChargeBehavior()
             {
                 KingSlime_Anomaly kingSlimeBehavior = new() { _entity = master };
-                bool validSapphire = !HasEnteredPhase2 && kingSlimeBehavior.JewelSapphireAlive;
+                bool validSapphire = !HasEnteredPhase2 && kingSlimeBehavior.HasSapphireBuff;
                 NPC sapphire = validSapphire ? kingSlimeBehavior.JewelSapphire : null;
 
                 SoundEngine.PlaySound(SoundID.Item38, NPC.Center);
-                JewelHandler.SpawnPointingParticle(NPC,6, true);
+                JewelHandler.SpawnPointingParticle(NPC, 6, true);
                 int particleAmount = HasEnteredPhase2 ? 10 : 15;
                 if (validSapphire)
                     particleAmount += 25;
@@ -255,10 +260,10 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
                 {
                     JewelHandler.CreateDustFromJewelTo(sapphire, NPC.Center, Main.zenithWorld ? DustID.GemTopaz : DustID.GemSapphire);
 
-                    int type = Main.zenithWorld ? ModContent.ProjectileType<JewelProjectile>() : ModContent.ProjectileType<KingSlimeJewelEmeraldClone>();
+                    int type = Main.zenithWorld ? ModContent.ProjectileType<JewelProjectile>() : ModContent.ProjectileType<KingSlimeJewelEmeraldShadow>();
                     Vector2 velocityUnit = NPC.GetVelocityTowards(NPC.PlayerTarget, 1f);
                     Vector2 offset = velocityUnit.RotatedBy(MathHelper.PiOver2);
-                    int amount = CASharedData.AnomalyUltramundane ? 4 : 3;
+                    int amount = Ultra ? 4 : 3;
                     for (int i = -amount; i <= amount; i++)
                     {
                         Projectile.NewProjectileAction(NPC.GetSource_FromAI(), NPC.Center + offset * 24f * i + velocityUnit * (60f - 20f * Math.Abs(i)), velocityUnit * chargeSpeed, type, KingSlimeJewelEmeraldCloneDamage, 0f, Main.myPlayer, p =>
@@ -291,13 +296,13 @@ public class KingSlimeJewelEmerald : CAModNPC, IKingSlimeJewel
 
     public override bool CheckDead()
     {
-        if (CASharedData.AnomalyUltramundane)
+        if (Ultra && !KingSlimeDead)
         {
             NPC.life = 1;
             NPC.active = true;
             if (!HasEnteredPhase2)
                 JewelHandler.EnterPhase2(NPC);
-            return CanBeKilled;
+            return false;
         }
         return true;
     }

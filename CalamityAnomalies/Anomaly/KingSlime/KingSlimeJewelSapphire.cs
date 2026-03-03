@@ -37,7 +37,7 @@ public class KingSlimeJewelSapphire : CAModNPC, IKingSlimeJewel
         }
     }
 
-    public bool CanBeKilled
+    public bool KingSlimeDead
     {
         get => AI_Union_2.bits[3];
         set
@@ -70,16 +70,22 @@ public class KingSlimeJewelSapphire : CAModNPC, IKingSlimeJewel
         NPC.noTileCollide = true;
         NPC.HitSound = SoundID.NPCHit5;
         NPC.DeathSound = SoundID.NPCDeath15;
-        NPC.Calamity().VulnerableToSickness = false;
+        CalamityNPC.VulnerableToSickness = false;
     }
 
     public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) => NPC.lifeMax = (int)(NPC.lifeMax * balance);
 
     public override void AI()
     {
-        if (!OceanNPC.TryGetMaster(NPCID.KingSlime, out NPC master))
+        if (KingSlimeDead)
         {
             JewelHandler.Kill(NPC);
+            return;
+        }
+
+        if (!NPC.TryGetMaster(NPCID.KingSlime, out NPC master))
+        {
+            JewelHandler.Despawn(NPC);
             return;
         }
 
@@ -114,13 +120,13 @@ public class KingSlimeJewelSapphire : CAModNPC, IKingSlimeJewel
 
     public override bool CheckDead()
     {
-        if (CASharedData.AnomalyUltramundane)
+        if (Ultra && !KingSlimeDead)
         {
             NPC.life = 1;
             NPC.active = true;
             if (!HasEnteredPhase2)
                 JewelHandler.EnterPhase2(NPC);
-            return CanBeKilled;
+            return false;
         }
         return true;
     }

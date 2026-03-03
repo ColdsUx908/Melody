@@ -2973,11 +2973,11 @@ public sealed class GlobalItemBehaviorHandler : GlobalItem
     }
 }
 
-public sealed class BehaviorLoader : IResourceLoader
+public sealed class BehaviorLoader : IContentLoader
 {
     private static IEnumerable<IEntityBehavior> _allBehaviors;
 
-    void IResourceLoader.PostSetupContent()
+    void IContentLoader.PostSetupContent()
     {
         _allBehaviors = TOReflectionUtils.GetTypeInstancesDerivedFrom<IEntityBehavior>();
 
@@ -2986,7 +2986,7 @@ public sealed class BehaviorLoader : IResourceLoader
         GlobalProjectileBehaviorHandler.BehaviorSet.FillSet(_allBehaviors.OfType<GlobalProjectileBehavior>());
         GlobalItemBehaviorHandler.BehaviorSet.FillSet(_allBehaviors.OfType<GlobalItemBehavior>());
     }
-    void IResourceLoader.OnModUnload()
+    void IContentLoader.OnModUnload()
     {
         PlayerBehaviorHandler.BehaviorSet.Clear();
         GlobalNPCBehaviorHandler.BehaviorSet.Clear();

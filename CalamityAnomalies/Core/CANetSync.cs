@@ -1,8 +1,6 @@
-﻿using Transoceanic;
+﻿namespace CalamityAnomalies.Core;
 
-namespace CalamityAnomalies.Core;
-
-public static class CANetSync
+public sealed class CANetSync : ICALoader
 {
     public static class ID
     {
@@ -52,5 +50,10 @@ public static class CANetSync
                     CASharedData.Anomaly = reader.ReadBoolean();
                 break;
         }
+    }
+
+    void ICALoader.Load()
+    {
+        TOSharedData.SyncEnabled = true;
     }
 }

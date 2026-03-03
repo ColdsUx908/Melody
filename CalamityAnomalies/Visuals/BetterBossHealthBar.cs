@@ -14,7 +14,7 @@ using static CalamityMod.UI.BossHealthBarManager;
 
 namespace CalamityAnomalies.Visuals;
 
-public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, IResourceLoader, ILocalizationPrefix
+public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarManager>, IContentLoader, ILocalizationPrefix
 {
     public string LocalizationPrefix => CASharedData.ModLocalizationPrefix + "UI.BetterBossHealthBar";
 
@@ -65,11 +65,11 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
         _validIdentifiers.Clear();
         foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(n => !BossExclusionList.Contains(n.type)))
         {
-            long fromNPC = npc.Ocean.Identifier;
-            if (CurrentBars.ContainsKey(fromNPC))
-                _validIdentifiers.Add(fromNPC);
+            long npcIdentifier = npc.Identifier;
+            if (CurrentBars.ContainsKey(npcIdentifier))
+                _validIdentifiers.Add(npcIdentifier);
             else if (CurrentBars.Count < MaxBars && ((npc.IsABoss() && !_exclusiveNPCTypes.Contains(npc.type)) || MinibossHPBarList.Contains(npc.type) || npc.Calamity().CanHaveBossHealthBar))
-                CurrentBars.Add(fromNPC, new BetterBossHPUI(npc));
+                CurrentBars.Add(npcIdentifier, new BetterBossHPUI(npc));
         }
 
         foreach ((long identifier, BetterBossHPUI newBar) in CurrentBars)
@@ -80,7 +80,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
         }
     }
 
-    void IResourceLoader.PostSetupContent()
+    void IContentLoader.PostSetupContent()
     {
         _exclusiveNPCTypes.Add(NPCID.EaterofWorldsBody);
         _exclusiveNPCTypes.Add(NPCID.EaterofWorldsTail);
@@ -131,7 +131,7 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
                 long life = 0L;
                 foreach ((long identifier, NPC n) in b.CustomOneToMany)
                 {
-                    if (n.Ocean.Identifier == identifier && n.active && n.lifeMax > 0)
+                    if (n.Identifier == identifier && n.active && n.lifeMax > 0)
                     {
                         lifeMax += n.lifeMax;
                         life += n.life;
@@ -143,63 +143,9 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
             }
             return false;
         });
-
-        //克苏鲁之脑、无尽虚空
-        /*
-        _lifeFunctions.Add(b =>
-        {
-            NPC npc = b.NPC;
-            if (npc.ModNPC is CeaselessVoid || npc.type == NPCID.BrainofCthulhu)
-            {
-                if (b.CustomOneToMany.Count > 0 && (npc.ModNPC is CeaselessVoid || npc.ai[0] >= 0f)) //克苏鲁之脑仅考虑一阶段
-                {
-                    long lifeMax = 0L;
-                    long life = 0L;
-                    foreach ((long identifier, NPC n) in b.CustomOneToMany)
-                    {
-                        if (n.Ocean().Identifier == identifier && n.active && n.lifeMax > 0)
-                        {
-                            lifeMax += n.lifeMax;
-                            life += n.life;
-                        }
-                    }
-                    if (b.CombinedNPCMaxLife != 0L && (b.InitialMaxLife == 0L || b.InitialMaxLife < b.CombinedNPCMaxLife))
-                        b.InitialMaxLife = b.CombinedNPCMaxLife;
-                }
-                else
-                {
-                    b.CombinedNPCMaxLife = npc.lifeMax;
-                    b.InitialMaxLife = npc.lifeMax;
-                    b.CombinedNPCLife = npc.lifeMax;
-                }
-                return true;
-            }
-            return false;
-        });
-        _smallTextFunctions.Add((b, out text, out disableOrig) =>
-        {
-            NPC npc = b.NPC;
-            if (npc.ModNPC is CeaselessVoid || (npc.type == NPCID.BrainofCthulhu && npc.ai[0] >= 0f))
-            {
-                int count = b.CustomOneToMany.Count;
-                bool hasExtra = count > 0;
-                string key = npc.ModNPC is CeaselessVoid ? "CeaselessVoidExtension" : "BrainofCthulhuExtension";
-                if (hasExtra)
-                    text = this.GetTextFormatWithPrefix(key, count, b.CombinedNPCLife, b.InitialMaxLife);
-                else
-                    text = this.GetTextFormatWithPrefix(key, count, 0, 0);
-                text += $" {npc.life} / {npc.lifeMax}";
-                disableOrig = true;
-                return true;
-            }
-            text = "";
-            disableOrig = false;
-            return false;
-        });
-        */
     }
 
-    void IResourceLoader.OnModUnload()
+    void IContentLoader.OnModUnload()
     {
         _exclusiveNPCTypes.Clear();
         _overridingNameFunctions.Clear();
@@ -207,9 +153,9 @@ public sealed class BetterBossHealthBar : ModBossBarStyleDetour<BossHealthBarMan
         _smallTextFunctions.Clear();
     }
 
-    void IResourceLoader.OnWorldLoad() => CurrentBars.Clear();
+    void IContentLoader.OnWorldLoad() => CurrentBars.Clear();
 
-    void IResourceLoader.OnWorldUnload() => CurrentBars.Clear();
+    void IContentLoader.OnWorldUnload() => CurrentBars.Clear();
 }
 
 /// <summary>
@@ -251,6 +197,22 @@ public class BetterBossHPUI : BossHPUI
     public new long CombinedNPCLife;
     public new long CombinedNPCMaxLife;
 
+    public new float NPCLifeRatio
+    {
+        get
+        {
+            if (!Valid)
+                return 0f;
+
+            float temp = (float)CombinedNPCLife / InitialMaxLife;
+
+            if (float.IsNaN(temp) || float.IsInfinity(temp))
+                return 0f;
+
+            return temp;
+        }
+    }
+
     public new bool NPCIsEnraged => Valid && NPC.active && (CalamityNPC.CurrentlyEnraged || (HasOneToMany && CustomOneToMany.Values.AsValueEnumerable().Any(n => n.Calamity().CurrentlyEnraged)));
 
     public new bool NPCIsIncreasingDefenseOrDR => Valid && NPC.active && (CalamityNPC.CurrentlyIncreasingDefenseOrDR || (HasOneToMany && CustomOneToMany.Values.AsValueEnumerable().Any(n => n.Calamity().CurrentlyIncreasingDefenseOrDR)));
@@ -264,7 +226,7 @@ public class BetterBossHPUI : BossHPUI
     public BetterBossHPUI(NPC npc) : base(npc.whoAmI, null)
     {
         NPC = Main.npc[NPCIndex];
-        Identifier = NPC.Ocean.Identifier;
+        Identifier = NPC.Identifier;
         AnomalyNPC = NPC.Anomaly;
         CalamityNPC = NPC.Calamity();
 
@@ -287,6 +249,12 @@ public class BetterBossHPUI : BossHPUI
 
         if (PreUpdate())
         {
+            CustomOneToMany.Clear();
+            if (HasOneToMany)
+            {
+                foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(n => CustomOneToManyIndexes.Contains(n.type)))
+                    CustomOneToMany.TryAdd(npc.Identifier, npc);
+            }
             UpdateNPCLife();
             UpdateMaxLife();
 
@@ -298,26 +266,21 @@ public class BetterBossHPUI : BossHPUI
             }
             PreviousLife = CombinedNPCLife;
 
-            if (ComboDamageCountdown > 0)
-                ComboDamageCountdown--;
-
-            CustomOneToMany.Clear();
-            if (HasOneToMany)
-            {
-                foreach (NPC npc in TOIteratorFactory.NewActiveNPCIterator(n => CustomOneToManyIndexes.Contains(n.type)))
-                    CustomOneToMany.TryAdd(npc.Ocean.Identifier, npc);
-            }
-
-            OpenAnimationTimer = Math.Clamp(OpenAnimationTimer + 1, 0, 120); //由80改为120
-
             if (Valid)
             {
+                if (ComboDamageCountdown > 0)
+                    ComboDamageCountdown--;
+
+                OpenAnimationTimer = Math.Clamp(OpenAnimationTimer + 1, 0, 120); //由80改为120
+
                 EnrageTimer = Math.Clamp(EnrageTimer + (NPCIsEnraged ? 1 : -4), 0, 120);
                 IncreasingDefenseOrDRTimer = Math.Clamp(IncreasingDefenseOrDRTimer + (NPCIsIncreasingDefenseOrDR ? 1 : -4), 0, 120);
                 CloseAnimationTimer = Math.Clamp(CloseAnimationTimer - 2, 0, 120);
             }
             else
             {
+                ComboDamageCountdown = 0;
+
                 EnrageTimer = Math.Clamp(EnrageTimer - 4, 0, 120);
                 IncreasingDefenseOrDRTimer = Math.Clamp(EnrageTimer - 4, 0, 120);
                 CloseAnimationTimer++;
@@ -357,7 +320,7 @@ public class BetterBossHPUI : BossHPUI
         long result = NPC.life;
         foreach ((long identifier, NPC npc) in CustomOneToMany)
         {
-            if (npc.Ocean.Identifier == identifier && npc.active && npc.life > 0)
+            if (npc.Identifier == identifier && npc.active && npc.life > 0)
                 result += npc.life;
         }
         CombinedNPCLife = result;
@@ -386,7 +349,7 @@ public class BetterBossHPUI : BossHPUI
         long result = NPC.lifeMax;
         foreach ((long identifier, NPC npc) in CustomOneToMany)
         {
-            if (npc.Ocean.Identifier == identifier && npc.active && npc.life > 0)
+            if (npc.Identifier == identifier && npc.active && npc.life > 0)
                 result += npc.lifeMax;
         }
         CombinedNPCMaxLife = result;
@@ -440,7 +403,7 @@ public class BetterBossHPUI : BossHPUI
 
             DrawComboBar(spriteBatch, x, y);
 
-            (float sin, float cos) = TOMathUtils.GetTimeSinCos(0.5f, 1f, 0f, true);
+            (float sin, float cos) = TOMathUtils.TimeWrappingFunction.GetTimeSinCos(0.5f, 1f, 0f, true);
 
             Color seperatorColor;
             if (AnomalyNPC.IsRunningAnomalyAI)
@@ -466,6 +429,8 @@ public class BetterBossHPUI : BossHPUI
                 mainColor = Color.Lerp(CASharedData.GetGradientColor(0.1f), CASharedData.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * cos * 0.8f);
                 if (IncreasingDefenseOrDRTimer > 0)
                     mainColor = Color.Lerp(mainColor.Value, Color.LightGray * 0.7f, Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 0.6f));
+                if (EnrageTimer > 0)
+                    mainColor = Color.Lerp(mainColor.Value, Color.Red * 0.6f, Math.Clamp(EnrageTimer / 80f, 0f, 0.6f));
             }
             else if (EnrageTimer > 0)
                 mainColor = Color.Red * 0.6f;
@@ -481,6 +446,8 @@ public class BetterBossHPUI : BossHPUI
                 borderColor = Color.Lerp(CASharedData.GetGradientColor(0.1f), CASharedData.AnomalyUltramundaneColor, AnomalyNPC.AnomalyUltraBarTimer / 120f * sin * 0.8f);
                 if (IncreasingDefenseOrDRTimer > 0)
                     borderColor = Color.Lerp(borderColor.Value, Color.LightGray * 0.2f, Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 0.6f));
+                if (EnrageTimer > 0)
+                    borderColor = Color.Lerp(borderColor.Value, Color.Gray * 0.2f, Math.Clamp(EnrageTimer / 80f, 0f, 0.6f));
             }
             else if (EnrageTimer > 0 || IncreasingDefenseOrDRTimer > 0)
                 borderColor = Color.Black * 0.2f;
@@ -490,11 +457,11 @@ public class BetterBossHPUI : BossHPUI
 
             float borderWidth;
             if (AnomalyNPC.IsRunningAnomalyAI)
-                borderWidth = (1.5f + TOMathUtils.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f);
+                borderWidth = (1.5f + TOMathUtils.TimeWrappingFunction.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(AnomalyNPC.AnomalyAITimer / 120f, 0f, 1f);
             else if (EnrageTimer > 0)
-                borderWidth = (1f + TOMathUtils.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(EnrageTimer / 80f, 0f, 1f);
+                borderWidth = (1f + TOMathUtils.TimeWrappingFunction.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(EnrageTimer / 80f, 0f, 1f);
             else if (IncreasingDefenseOrDRTimer > 0)
-                borderWidth = (1f + TOMathUtils.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 1f);
+                borderWidth = (1f + TOMathUtils.TimeWrappingFunction.GetTimeSin(0.75f, 1f, 0f, true)) * Math.Clamp(IncreasingDefenseOrDRTimer / 80f, 0f, 1f);
             else
                 borderWidth = 0f;
 

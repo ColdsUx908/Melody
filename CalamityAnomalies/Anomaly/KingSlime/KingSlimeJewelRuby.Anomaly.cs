@@ -1,7 +1,6 @@
 ﻿using CalamityAnomalies.DataStructures;
 using CalamityMod.NPCs.NormalNPCs;
 using CalamityMod.Projectiles.Boss;
-using Transoceanic;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
@@ -10,6 +9,9 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
     public const float DespawnDistance = 5000f;
 
     public int ShootCooldownTime => HasEnteredPhase2 ? (Main.zenithWorld ? 240 : 120) : (Main.zenithWorld ? 180 : 90);
+
+    private static readonly ProjectileDamageContainer _jewelProjectileDamage = new(30, 52, 72, 84, 84, 102);
+    public static int JewelProjectileDamage => _jewelProjectileDamage.Value;
 
     public bool HasInitialized
     {
@@ -44,7 +46,7 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
         }
     }
 
-    public bool CanBeKilled
+    public bool KingSlimeDead
     {
         get => AI_Union_2.bits[3];
         set
@@ -54,9 +56,6 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
             AI_Union_2 = union;
         }
     }
-
-    private static readonly ProjectileDamageContainer _jewelProjectile_Damage = new(30, 50, 70, 85, 80, 100);
-    public static int JewelProjectileDamage => _jewelProjectile_Damage.Damage;
 
     public override void SetDefaults()
     {
@@ -69,9 +68,15 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
 
     public override bool PreAI()
     {
-        if (!OceanNPC.TryGetMaster(NPCID.KingSlime, out NPC master))
+        if (KingSlimeDead)
         {
             JewelHandler.Kill(NPC);
+            return false;
+        }
+
+        if (!NPC.TryGetMaster(NPCID.KingSlime, out NPC master))
+        {
+            JewelHandler.Despawn(NPC);
             return false;
         }
 
@@ -115,7 +120,7 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
         void Shoot()
         {
             KingSlime_Anomaly kingSlimeBehavior = new() { _entity = master };
-            bool validSapphire = !HasEnteredPhase2 && kingSlimeBehavior.JewelSapphireAlive;
+            bool validSapphire = !HasEnteredPhase2 && kingSlimeBehavior.HasSapphireBuff;
             NPC sapphire = validSapphire ? kingSlimeBehavior.JewelSapphire : null;
 
             SoundEngine.PlaySound(JewelHandler.ShootSound, NPC.Center);
@@ -124,13 +129,13 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
                 particleAmount += 20;
             for (int i = 0; i < particleAmount; i++)
                 JewelHandler.SpawnOrbParticle(NPC, Main.rand.NextFloat(3f, 6f), Main.rand.Next(30, 45), Main.rand.NextFloat(0.4f, 0.7f));
-            JewelHandler.SpawnPointingParticle(NPC,6, true);
+            JewelHandler.SpawnPointingParticle(NPC, 6, true);
 
             if (!TOSharedData.GeneralClient)
                 return;
 
-            int amount = HasEnteredPhase2 ? (Main.zenithWorld ? 7 : 3) : (Main.zenithWorld ? 17 : 5);
-            float singleRadian = MathHelper.ToRadians(HasEnteredPhase2 ? (Main.zenithWorld ? 18f : 10f) : (Main.zenithWorld ? 18f : CASharedData.AnomalyUltramundane ? 13.5f : 12f));
+            int amount = HasEnteredPhase2 ? (Main.zenithWorld ? 7 : Ultra ? 3 : 1) : (Main.zenithWorld ? 17 : Ultra ? 5 : 3);
+            float singleRadian = MathHelper.ToRadians(HasEnteredPhase2 ? (Main.zenithWorld ? 18f : 9f) : (Main.zenithWorld ? 18f : Ultra ? 13.5f : 12f));
             float radian = singleRadian * (amount - 1);
             float initialRotation = (Target.Center - NPC.Center).ToRotation() - radian / 2f;
             Projectile.RotatedProj<JewelProjectile>(amount, singleRadian, NPC.GetSource_FromAI(), NPC.Center, new PolarVector2(Main.zenithWorld ? 16f : 15f, initialRotation), JewelProjectileDamage, 0f, Main.myPlayer, p =>
@@ -147,8 +152,8 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
             {
                 JewelHandler.CreateDustFromJewelTo(sapphire, NPC.Center, Main.zenithWorld ? DustID.GemTopaz : DustID.GemSapphire);
 
-                int type = Main.zenithWorld ? ModContent.ProjectileType<KingSlimeJewelEmeraldClone>() : ModContent.ProjectileType<JewelProjectile>();
-                int amount1 = CASharedData.AnomalyUltramundane ? 7 : Main.zenithWorld ? 9 : 5;
+                int type = Main.zenithWorld ? ModContent.ProjectileType<KingSlimeJewelEmeraldShadow>() : ModContent.ProjectileType<JewelProjectile>();
+                int amount1 = Ultra ? 7 : Main.zenithWorld ? 9 : 5;
                 Projectile.RotatedProj(amount1, MathHelper.TwoPi / amount1, NPC.GetSource_FromAI(), NPC.Center, NPC.GetVelocityTowards(NPC.PlayerTarget, Main.zenithWorld ? 13.5f : 18f), type, JewelProjectileDamage, 0f, Main.myPlayer, BuffedRubyProjectileAction);
             }
 
@@ -171,20 +176,20 @@ public sealed class KingSlimeJewelRuby_Anomaly : AnomalyNPCBehavior<KingSlimeJew
         float timeLeftGateValue = 30f;
         float gateValue = ShootCooldownTime - timeLeftGateValue;
         float ratio = Timer1 > gateValue ? (Timer1 - gateValue) / timeLeftGateValue : 0f;
-            JewelHandler.DrawAttackEffect(spriteBatch, screenPos, NPC, ratio, Main.zenithWorld ? 120f : 100f, 0.35f);
+        JewelHandler.DrawAttackEffect(spriteBatch, screenPos, NPC, ratio, Main.zenithWorld ? 120f : 100f, 0.35f);
         JewelHandler.DrawJewel(spriteBatch, screenPos, NPC, ratio);
         return false;
     }
 
     public override bool CheckDead()
     {
-        if (CASharedData.AnomalyUltramundane)
+        if (Ultra && !KingSlimeDead)
         {
             NPC.life = 1;
             NPC.active = true;
             if (!HasEnteredPhase2)
                 JewelHandler.EnterPhase2(NPC);
-            return CanBeKilled;
+            return false;
         }
         return true;
     }

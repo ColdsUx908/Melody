@@ -72,9 +72,9 @@ public sealed class TOMain : Mod
 
     public override void PostSetupContent()
     {
-        foreach (IResourceLoader loader in
-            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IResourceLoader>().AsValueEnumerable()
-            orderby pair.type.GetMethod(nameof(IResourceLoader.PostSetupContent), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+        foreach (IContentLoader loader in
+            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>().AsValueEnumerable()
+            orderby pair.type.GetMethod(nameof(IContentLoader.PostSetupContent), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
             select pair.instance)
         {
             loader.PostSetupContent();

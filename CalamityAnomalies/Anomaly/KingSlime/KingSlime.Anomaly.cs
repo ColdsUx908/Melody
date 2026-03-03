@@ -1,5 +1,4 @@
 ﻿using CalamityMod.NPCs.NormalNPCs;
-using Transoceanic;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
@@ -29,14 +28,14 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
     }
 
     public const float DespawnDistance = 5000f;
-    public static float MaxScale => Main.zenithWorld ? (TOSharedData.LegendaryMode ? 6f : 5f) : CASharedData.AnomalyUltramundane ? 4.5f : 3f;
+    public static float MaxScale => Main.zenithWorld ? (TOSharedData.LegendaryMode ? 6f : 5f) : Ultra ? 4.5f : 3f;
     public static float MinScale => Main.zenithWorld ? 0.5f : 1f;
     public static float SpawnSlimeDistance => TOSharedData.LegendaryMode && Main.zenithWorld ? 0.01f : 0.05f;
-    public static float SpawnSlimePow => Main.zenithWorld ? 0.5f : CASharedData.AnomalyUltramundane ? 0.3f : 0.2f;
-    public static float JewelEmeraldLifeRatio => CASharedData.AnomalyUltramundane ? 0.75f : 0.7f;
-    public static float JewelRubyLifeRatio => CASharedData.AnomalyUltramundane ? 0.75f : 0.5f;
-    public static float JewelSapphireLifeRatio => CASharedData.AnomalyUltramundane ? 0.5f : 0.3f;
-    public static float Phase2LifeRatio => 0.1f;
+    public static float SpawnSlimePow => Main.zenithWorld ? 0.5f : Ultra ? 0.3f : 0.2f;
+    public static float JewelRubyLifeRatio => Ultra ? 0.75f : 0.7f;
+    public static float JewelEmeraldLifeRatio => Ultra ? 0.75f : 0.5f;
+    public static float JewelSapphireLifeRatio => Ultra ? 0.5f : 0.3f;
+    public static float Phase2LifeRatio => Ultra ? 0.1f : 0f;
 
     public Phase CurrentPhase
     {
@@ -44,7 +43,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
         set => NPC.ai[0] = (int)value;
     }
 
-    public bool ShouldEnterPhase2 => CASharedData.AnomalyUltramundane && NPC.LifeRatio < Phase2LifeRatio;
+    public bool ShouldEnterPhase2 => Ultra && NPC.LifeRatio < Phase2LifeRatio;
     public bool InvalidPhase1 => ShouldEnterPhase2 && CurrentPhase is Phase.Phase1 or Phase.PhaseChange_1To2;
     public bool Phase2 => CurrentPhase == Phase.Phase2;
 
@@ -70,7 +69,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
     }
 
     #region 宝石
-    public bool JewelEmeraldSpawned
+    public bool JewelRubySpawned
     {
         get => AnomalyNPC.AnomalyAI32[0].bits[0];
         set
@@ -83,10 +82,10 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
         }
     }
     /// <summary>
-    /// 王冠绿宝石实例。
+    /// 王冠红宝石实例。
     /// <br/>在 <see cref="SetDefaults"/> 中初始化为 <c>DummyNPC</c>。
     /// </summary>
-    public unsafe NPC JewelEmerald
+    public unsafe NPC JewelRuby
     {
         get => Main.npc[AnomalyNPC.AnomalyAI32[1].bytes[0]];
         set
@@ -99,10 +98,10 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             }
         }
     }
-    public bool JewelEmeraldAlive => JewelEmerald.active && JewelEmerald.ModNPC is KingSlimeJewelEmerald && JewelEmerald.Ocean.Master == NPC;
-    public bool JewelEmeraldDead => JewelEmeraldSpawned && !JewelEmeraldAlive;
+    public bool JewelRubyAlive => JewelRuby.active && JewelRuby.ModNPC is KingSlimeJewelRuby && JewelRuby.Master == NPC;
+    public bool JewelRubyDead => JewelRubySpawned && !JewelRubyAlive;
 
-    public bool JewelRubySpawned
+    public bool JewelEmeraldSpawned
     {
         get => AnomalyNPC.AnomalyAI32[0].bits[1];
         set
@@ -115,10 +114,10 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
         }
     }
     /// <summary>
-    /// 王冠红宝石实例。
+    /// 王冠绿宝石实例。
     /// <br/>在 <see cref="SetDefaults"/> 中初始化为 <c>DummyNPC</c>。
     /// </summary>
-    public unsafe NPC JewelRuby
+    public unsafe NPC JewelEmerald
     {
         get => Main.npc[AnomalyNPC.AnomalyAI32[1].bytes[1]];
         set
@@ -131,8 +130,8 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             }
         }
     }
-    public bool JewelRubyAlive => JewelRuby.active && JewelRuby.ModNPC is KingSlimeJewelRuby && JewelRuby.Ocean.Master == NPC;
-    public bool JewelRubyDead => JewelRubySpawned && !JewelRubyAlive;
+    public bool JewelEmeraldAlive => JewelEmerald.active && JewelEmerald.ModNPC is KingSlimeJewelEmerald && JewelEmerald.Master == NPC;
+    public bool JewelEmeraldDead => JewelEmeraldSpawned && !JewelEmeraldAlive;
 
     public bool JewelSapphireSpawned
     {
@@ -163,7 +162,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             }
         }
     }
-    public bool JewelSapphireAlive => JewelSapphire.active && JewelSapphire.ModNPC is KingSlimeJewelSapphire && JewelSapphire.Ocean.Master == NPC;
+    public bool JewelSapphireAlive => JewelSapphire.active && JewelSapphire.ModNPC is KingSlimeJewelSapphire && JewelSapphire.Master == NPC;
     public bool JewelSapphireDead => JewelSapphireSpawned && !JewelSapphireAlive;
     public bool HasSapphireBuff => JewelSapphireAlive && !JewelHandler.CheckIfPhase2(JewelSapphire);
 
@@ -196,7 +195,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             }
         }
     }
-    public bool JewelRainbowAlive => JewelRainbow.active && JewelRainbow.ModNPC is KingSlimeJewelRainbow && JewelRainbow.Ocean.Master == NPC;
+    public bool JewelRainbowAlive => JewelRainbow.active && JewelRainbow.ModNPC is KingSlimeJewelRainbow && JewelRainbow.Master == NPC;
     public bool JewelRainbowDead => JewelRainbowSpawned && !JewelRainbowAlive;
     #endregion 宝石
 
@@ -338,8 +337,8 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
         TeleportScaleMultiplier = 1f;
         DespawnScaleMultiplier = 1f;
 
-        JewelEmerald = NPC.DummyNPC;
         JewelRuby = NPC.DummyNPC;
+        JewelEmerald = NPC.DummyNPC;
         JewelSapphire = NPC.DummyNPC;
     }
 
@@ -354,7 +353,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             return false;
         }
         else
-            NPC.FaceNPCTarget(Target);
+            NPC.FaceTarget(Target);
 
         NPC.noTileCollide = false;
         bool hasSapphireBuff = HasSapphireBuff;
@@ -364,8 +363,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             SapphireBuffRatio -= 0.025f;
         CalamityNPC.CurrentlyIncreasingDefenseOrDR = hasSapphireBuff;
         NPC.defense = JewelSapphireDead ? (int)(NPC.defDefense * 0.75f) : hasSapphireBuff ? (int)(NPC.defDefense * 1.25f) : NPC.defDefense;
-        CalamityNPC.DR = CASharedData.AnomalyUltramundane && hasSapphireBuff ? 0.2f : 0f;
-        //AnomalyNPC.ExtraDR = InvalidPhase1 ? Utils.Remap(NPC.LifeRatio, Phase2LifeRatio, Phase2LifeRatio - 0.01f, 0f, 1f) : 0f;
+        CalamityNPC.DR = Ultra && hasSapphireBuff ? 0.2f : 0f;
 
         switch (CurrentPhase)
         {
@@ -534,7 +532,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             {
                 n.velocity = new Vector2(Main.rand.NextFloat(-1.5f, 1.5f), Main.rand.NextFloat(-3f, 3f));
                 n.ai[0] = -1000 * Main.rand.Next(3);
-                n.Ocean.Master = NPC;
+                n.Master = NPC;
             });
         }
 
@@ -542,7 +540,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
 
         void SpawnJewelAction(NPC n)
         {
-            n.Ocean.Master = NPC;
+            n.Master = NPC;
             n.netUpdate = true;
             SoundEngine.PlaySound(JewelHandler.SpawnSound, GetJewelSpawnPosition());
             SpawnJewelParticle(n, 50);
@@ -550,18 +548,9 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
 
         void TrySpawnMinions()
         {
-            if (!TOSharedData.GeneralClient || OceanNPC.Master is not null) //史莱姆王召唤的史莱姆王不再召唤仆从
+            if (!TOSharedData.GeneralClient || NPC.Master is not null) //史莱姆王召唤的史莱姆王不再召唤仆从
                 return;
 
-            if (NPC.LifeRatio < JewelEmeraldLifeRatio && !JewelEmeraldSpawned)
-            {
-                NPC.NewNPCAction<KingSlimeJewelEmerald>(NPC.GetSource_FromAI(), GetJewelSpawnPosition(), NPC.whoAmI, action: n =>
-                {
-                    SpawnJewelAction(n);
-                    JewelEmerald = n;
-                    JewelEmeraldSpawned = true;
-                });
-            }
             if (NPC.LifeRatio < JewelRubyLifeRatio && !JewelRubySpawned)
             {
                 NPC.NewNPCAction<KingSlimeJewelRuby>(NPC.GetSource_FromAI(), GetJewelSpawnPosition(), NPC.whoAmI, action: n =>
@@ -569,6 +558,15 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     SpawnJewelAction(n);
                     JewelRuby = n;
                     JewelRubySpawned = true;
+                });
+            }
+            if (NPC.LifeRatio < JewelEmeraldLifeRatio && !JewelEmeraldSpawned)
+            {
+                NPC.NewNPCAction<KingSlimeJewelEmerald>(NPC.GetSource_FromAI(), GetJewelSpawnPosition(), NPC.whoAmI, action: n =>
+                {
+                    SpawnJewelAction(n);
+                    JewelEmerald = n;
+                    JewelEmeraldSpawned = true;
                 });
             }
             if (NPC.LifeRatio < JewelSapphireLifeRatio && !JewelSapphireSpawned)
@@ -642,7 +640,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                                 type = NPCID.ShimmerSlime;
                                 break;
                             case 13 when Main.zenithWorld || Main.hardMode: //夜明史莱姆、彩虹史莱姆
-                                type = (Main.raining || CASharedData.AnomalyUltramundane) && Main.rand.NextBool(5) ? NPCID.RainbowSlime : NPCID.IlluminantSlime;
+                                type = (Main.raining || Ultra) && Main.rand.NextBool(5) ? NPCID.RainbowSlime : NPCID.IlluminantSlime;
                                 break;
                             case 14 when Main.rand.NextBool(15): //粉史莱姆
                                 type = NPCID.Pinky;
@@ -656,11 +654,11 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     SpawnSlime(type);
                 }
 
-                if (Main.zenithWorld && Main.rand.NextBool(1) && Main.rand.NextBool(1000)) //GFB世界中0.1%概率生成史莱姆王！
+                if (Main.zenithWorld && Main.rand.NextBool(1000)) //GFB世界中0.1%概率生成史莱姆王！
                 {
                     NPC.NewNPCAction(NPC.GetBossSpawnSource(Target.whoAmI), NPC.Center, NPCID.KingSlime, action: n =>
                     {
-                        n.Ocean.Master = NPC;
+                        n.Master = NPC;
                         SoundEngine.PlaySound(SoundID.Roar, n.Center);
                         TOLocalizationUtils.ChatLocalizedText(this, "GFBSummon", Color.LightSeaGreen);
                     });
@@ -676,13 +674,13 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     Timer2++;
 
                     NPC.damage = 0;
-                    NPC.GravityMultiplier *= CASharedData.AnomalyUltramundane && NPC.velocity.Y > 0f ? Utils.Remap(Timer2, 15, 60, 1f, 1.5f) : 1f;
-                    NPC.MaxFallSpeedMultiplier *= CASharedData.AnomalyUltramundane && NPC.velocity.Y > 0f ? Utils.Remap(Timer2, 15, 60, 1f, 1.75f) : 1f;
+                    NPC.GravityMultiplier *= Ultra && NPC.velocity.Y > 0f ? Utils.Remap(Timer2, 15, 60, 1f, 1.5f) : 1f;
+                    NPC.MaxFallSpeedMultiplier *= Ultra && NPC.velocity.Y > 0f ? Utils.Remap(Timer2, 15, 60, 1f, 1.75f) : 1f;
                     StopHorizontalMovement();
                     if (NPC.velocity.Y == 0f && TeleportScaleMultiplier > 0.6f)
                         Timer1++;
 
-                    int jumpDelay = (int)MathHelper.Lerp(CASharedData.AnomalyUltramundane ? 20f : 27.5f, CASharedData.AnomalyUltramundane ? 15f : 20f, NPC.LostLifeRatio);
+                    float jumpDelay = MathHelper.Lerp(Ultra ? 20f : 27.5f, Ultra ? 15f : 20f, NPC.LostLifeRatio);
                     if (Timer1 > jumpDelay)
                     {
                         if (CurrentBehavior != Behavior.HighJump)
@@ -741,14 +739,14 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                             {
                                 NPC.GravityMultiplier *= CurrentBehavior switch
                                 {
-                                    Behavior.HighJump => CASharedData.AnomalyUltramundane ? (Phase2 ? Utils.Remap(Timer2, 10, 55, 1.5f, 2f) : Utils.Remap(Timer2, 15, 60, 1.35f, 1.75f)) : 1.25f,
-                                    Behavior.NormalJump => CASharedData.AnomalyUltramundane && Phase2 ? Utils.Remap(Timer2, 15, 55, 1.15f, 1.5f) : 1f,
+                                    Behavior.HighJump => Ultra ? (Phase2 ? Utils.Remap(Timer2, 10, 55, 1.5f, 2f) : Utils.Remap(Timer2, 15, 60, 1.35f, 1.75f)) : 1.25f,
+                                    Behavior.NormalJump => Ultra && Phase2 ? Utils.Remap(Timer2, 15, 55, 1.15f, 1.5f) : 1f,
                                     _ => 1f
                                 };
                                 NPC.MaxFallSpeedMultiplier *= CurrentBehavior switch
                                 {
-                                    Behavior.HighJump => CASharedData.AnomalyUltramundane ? (Phase2 ? Utils.Remap(Timer2, 10, 55, 2f, 2.75f) : Utils.Remap(Timer2, 15, 60, 1.85f, 2.5f)) : 1.75f,
-                                    Behavior.NormalJump => CASharedData.AnomalyUltramundane && Phase2 ? Utils.Remap(Timer2, 15, 55, 1.15f, 1.5f) : 1f,
+                                    Behavior.HighJump => Ultra ? (Phase2 ? Utils.Remap(Timer2, 10, 55, 2f, 2.75f) : Utils.Remap(Timer2, 15, 60, 1.85f, 2.5f)) : 1.75f,
+                                    Behavior.NormalJump => Ultra && Phase2 ? Utils.Remap(Timer2, 15, 55, 1.15f, 1.5f) : 1f,
                                     _ => 1f
                                 };
                             }
@@ -775,7 +773,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
 
             float GetMaxVelocityX() => CurrentBehavior switch
             {
-                Behavior.RapidJump => (Phase2 ? MathHelper.Lerp(15f, 17f, LostLifeRatio2) : MathHelper.Lerp(13.5f, 15f, NPC.LostLifeRatio)) + TOMathUtils.QuadraticEaseOut(Math.Max(Math.Abs(NPC.Center.X - Target.Center.X) - 300f, 0f) / 1000f) * 5f,
+                Behavior.RapidJump => (Phase2 ? MathHelper.Lerp(15f, 17f, LostLifeRatio2) : MathHelper.Lerp(13.5f, 15f, NPC.LostLifeRatio)) + TOMathUtils.Interpolation.QuadraticEaseOut(Math.Max(Math.Abs(NPC.Center.X - Target.Center.X) - 300f, 0f) / 1000f) * 5f,
                 Behavior.HighJump => ChangedVelocityDirectionDuringJump switch
                 {
                     0 => Phase2 ? MathHelper.Lerp(11.5f, 13f, LostLifeRatio2) : MathHelper.Lerp(9f, 11.5f, NPC.LostLifeRatio),
@@ -851,7 +849,7 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     break;
                 case 1: //停止水平移动并缩小体型，满足条件时传送
                     MakeSlimeDust((int)Utils.Remap(NPC.scale, MinScale, MaxScale, 5f, 12.5f));
-                    TeleportScaleMultiplier -= MathHelper.Lerp(CASharedData.AnomalyUltramundane ? 0.016f : 0.013f, CASharedData.AnomalyUltramundane ? 0.02f : 0.015f, NPC.LostLifeRatio);
+                    TeleportScaleMultiplier -= MathHelper.Lerp(Ultra ? 0.016f : 0.013f, Ultra ? 0.02f : 0.015f, NPC.LostLifeRatio);
                     if (StopHorizontalMovement() && TeleportScaleMultiplier <= 0.2f)
                     {
                         Gore.NewGoreAction(NPC.GetSource_FromAI(), NPC.Center + new Vector2(-40f, -NPC.height / 2f), NPC.velocity, GoreID.KingSlimeCrown, g => g.timeLeft += 180);
@@ -879,10 +877,10 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
             switch (Timer1)
             {
                 case 0:
-                    if (JewelEmeraldAlive)
-                        JewelHandler.DisableAttack(JewelEmerald);
                     if (JewelRubyAlive)
                         JewelHandler.DisableAttack(JewelRuby);
+                    if (JewelEmeraldAlive)
+                        JewelHandler.DisableAttack(JewelEmerald);
                     if (JewelSapphireAlive)
                         JewelHandler.DisableAttack(JewelSapphire);
                     break;
@@ -892,15 +890,15 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
                     for (int i = 0; i < 6; i++)
                         SpawnSlime(NPCID.RainbowSlime);
                     Vector2 position = GetJewelSpawnPosition();
-                    if (JewelEmeraldAlive)
-                    {
-                        JewelHandler.CreateDustFromJewelTo(JewelEmerald, position, Main.zenithWorld ? DustID.GemAmethyst : DustID.GemEmerald);
-                        JewelHandler.Kill(JewelEmerald);
-                    }
                     if (JewelRubyAlive)
                     {
                         JewelHandler.CreateDustFromJewelTo(JewelRuby, position, Main.zenithWorld ? DustID.IceTorch : DustID.GemRuby);
                         JewelHandler.Kill(JewelRuby);
+                    }
+                    if (JewelEmeraldAlive)
+                    {
+                        JewelHandler.CreateDustFromJewelTo(JewelEmerald, position, Main.zenithWorld ? DustID.GemAmethyst : DustID.GemEmerald);
+                        JewelHandler.Kill(JewelEmerald);
                     }
                     if (JewelSapphireAlive)
                     {
@@ -928,8 +926,8 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
 
             if (Timer1 is >= 100 and <= 160) //回复血量
             {
-                float ratio = Utils.GetLerpValue(100f, 160f, Timer1, true);
-                int newLife = (int)MathHelper.Lerp(NPC.life, NPC.lifeMax * MathHelper.Lerp(0.1f, 0.5f, ratio), TOMathUtils.LogarithmicEaseOut(ratio));
+                float ratio = (Timer1 - 100f) / 60f;
+                int newLife = (int)MathHelper.Lerp(NPC.life, NPC.lifeMax * MathHelper.Lerp(0.1f, 0.5f, ratio), TOMathUtils.Interpolation.LogarithmicEaseOut(ratio));
                 int increasedLife = Math.Clamp(newLife - NPC.life, 0, NPC.lifeMax / 2 - NPC.life);
 
                 if (increasedLife > 0)
@@ -948,9 +946,49 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
         #endregion 行为函数
     }
 
+    public override void FindFrame(int frameHeight)
+    {
+        /*
+        if (NPC.velocity.Y != 0f)
+        {
+            if (NPC.frame.Y < frameHeight * 4)
+            {
+                NPC.frame.Y = frameHeight * 4;
+                NPC.frameCounter = 0.0;
+            }
+
+            if ((NPC.frameCounter += 1.0) >= 4.0)
+                NPC.frame.Y = frameHeight * 5;
+
+        }
+        else
+        {
+            if (NPC.frame.Y >= frameHeight * 5)
+            {
+                NPC.frame.Y = frameHeight * 4;
+                NPC.frameCounter = 0.0;
+            }
+            NPC.frameCounter += 1.0;
+
+
+            if (num2 > 0)
+                NPC.frameCounter += 1.0;
+            if (num2 == 4)
+                NPC.frameCounter += 1.0;
+            if (frameCounter >= 8.0)
+            {
+                NPC.frame.Y += frameHeight;
+                NPC.frameCounter = 0.0;
+                if (NPC.frame.Y >= frameHeight * 4)
+                    NPC.frame.Y = 0;
+            }
+        }
+        */
+    }
+
     public override Color? GetAlpha(Color drawColor)
     {
-        Color newColor = Color.Lerp(new Color(0, 0, 150, NPC.alpha), new Color(125, 125, 255, NPC.alpha), TOMathUtils.GetTimeSin(0.35f, 1.5f, unsigned: true) + 0.3f);
+        Color newColor = Color.Lerp(new Color(0, 0, 150, NPC.alpha), new Color(125, 125, 255, NPC.alpha), TOMathUtils.TimeWrappingFunction.GetTimeSin(0.35f, 1.5f, unsigned: true) + 0.3f);
         Color preRainbow = Color.Lerp(Main.zenithWorld ? new Color(125, 125, 255, NPC.alpha) : drawColor, newColor, SapphireBuffRatio);
 
         if (Main.remixWorld || Main.zenithWorld)
@@ -967,13 +1005,13 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
 
     public override void ModifyIncomingHit(ref NPC.HitModifiers modifiers)
     {
-        if (CASharedData.AnomalyUltramundane && !Phase2)
+        if (Ultra && !Phase2)
             modifiers.SetMaxDamage((int)(NPC.life - NPC.lifeMax * Phase2LifeRatio));
     }
 
     public override bool CheckDead()
     {
-        if (CASharedData.AnomalyUltramundane && !Phase2 && !NPC.downedSlimeKing)
+        if (Ultra && !Phase2 && !NPC.downedSlimeKing)
         {
             NPC.life = 1;
             NPC.active = true;
@@ -982,5 +1020,17 @@ public class KingSlime_Anomaly : AnomalyNPCBehavior, ILocalizationPrefix
         }
 
         return true;
+    }
+
+    public override void OnKill()
+    {
+        if (JewelRubyAlive)
+            JewelHandler.GetKingSlimeJewel(JewelRuby)?.KingSlimeDead = true;
+        if (JewelEmeraldAlive)
+            JewelHandler.GetKingSlimeJewel(JewelEmerald)?.KingSlimeDead = true;
+        if (JewelSapphireAlive)
+            JewelHandler.GetKingSlimeJewel(JewelSapphire)?.KingSlimeDead = true;
+        if (JewelRainbowAlive)
+            JewelHandler.GetKingSlimeJewel(JewelRainbow)?.KingSlimeDead = true;
     }
 }

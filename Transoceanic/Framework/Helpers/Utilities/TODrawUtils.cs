@@ -18,7 +18,7 @@ public static class TODrawUtils
         Texture2D texture, float wantedScale = 1f, Vector2 drawOffset = default)
         => spriteBatch.Draw(texture, position + drawOffset * wantedScale, frame, drawColor, 0f, origin, wantedScale, SpriteEffects.None, 0);
 
-    public static void DrawBorderTexture(SpriteBatch spriteBatch, Texture2D texture, Vector2 baseDrawPosition, Rectangle? sourceRectangle, Color color, float rotation = 0f, Vector2 origin = default, float scale = 1f, SpriteEffects spriteEffects = SpriteEffects.None, float layerDepth = 0f,
+    public static void DrawBorderTexture(SpriteBatch spriteBatch, Texture2D texture, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation = 0f, Vector2 origin = default, float scale = 1f, SpriteEffects spriteEffects = SpriteEffects.None, float layerDepth = 0f,
         int way = 8, float borderWidth = 1f)
     {
         if (borderWidth > 0f)
@@ -27,7 +27,21 @@ public static class TODrawUtils
             for (int i = 0; i < way; i++)
             {
                 Vector2 offset = new PolarVector2(borderWidth, MathHelper.TwoPi / way * i);
-                spriteBatch.Draw(texture, baseDrawPosition + offset, sourceRectangle, color, rotation, origin, scale, spriteEffects, layerDepth);
+                spriteBatch.Draw(texture, position + offset, sourceRectangle, color, rotation, origin, scale, spriteEffects, layerDepth);
+            }
+        }
+    }
+
+    public static void DrawBorderTextureFromCenter(SpriteBatch spriteBatch, Texture2D texture, Vector2 center, Rectangle? sourceRectangle, Color color, float rotation = 0f, float scale = 1f, SpriteEffects spriteEffects = SpriteEffects.None, float layerDepth = 0f,
+        int way = 8, float borderWidth = 1f)
+    {
+        if (borderWidth > 0f)
+        {
+            color.A = 0;
+            for (int i = 0; i < way; i++)
+            {
+                Vector2 offset = new PolarVector2(borderWidth, MathHelper.TwoPi / way * i);
+                spriteBatch.DrawFromCenter(texture, center + offset, sourceRectangle, color, rotation, scale, spriteEffects, layerDepth);
             }
         }
     }

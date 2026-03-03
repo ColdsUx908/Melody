@@ -21,7 +21,7 @@ public sealed class DimensionalRend : CalamityModDOT
     /// <br/>在实体速度为25（127mph）时达到最大值1。
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float GetVelocityInterpolation(Entity entity) => TOMathUtils.QuadraticEaseOut(Math.Clamp(entity.velocity.Length() / 25f, 0f, 1f));
+    public static float GetVelocityInterpolation(Entity entity) => TOMathUtils.Interpolation.QuadraticEaseOut(entity.velocity.Length() / 25f);
 }
 
 public sealed class DimensionalRend_Player : CAPlayerBehavior

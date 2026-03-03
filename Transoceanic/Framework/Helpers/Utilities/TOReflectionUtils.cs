@@ -54,26 +54,18 @@ public static class TOReflectionUtils
         nameof(MemberwiseClone)
     ];
 
-    public static object CreateInstanceSafe(Type type)
+    public static object CreateInstanceSafe(Type type, bool notInitialize = false)
     {
-        if (!type.IsAbstract && !type.IsInterface)
+        if (type.IsAbstract || type.IsInterface)
+            return null;
+
+        if (type.IsValueType || (type.HasParameterlessConstructor && !notInitialize))
         {
-            if (type.HasParameterlessConstructor)
-            {
-                try
-                {
-                    return Activator.CreateInstance(type, true);
-                }
-                catch
-                {
-                    return RuntimeHelpers.GetUninitializedObject(type);
-                }
-            }
-            else
-                return RuntimeHelpers.GetUninitializedObject(type);
+            try { return Activator.CreateInstance(type, true); }
+            catch (TargetInvocationException) { return RuntimeHelpers.GetUninitializedObject(type); }
         }
         else
-            return null;
+            return RuntimeHelpers.GetUninitializedObject(type);
     }
 
     public static T CreateInstanceSafe<T>() where T : class => (T)CreateInstanceSafe(typeof(T));
@@ -147,10 +139,10 @@ public static class TOReflectionUtils
     /// <typeparam name="T"></typeparam>
     /// <param name="assemblyToSearch"></param>
     /// <returns></returns>
-    public static IEnumerable<T> GetTypeInstancesDerivedFrom<T>(Assembly assemblyToSearch) where T : class =>
+    public static IEnumerable<T> GetTypeInstancesDerivedFrom<T>(Assembly assemblyToSearch, bool notInitialize = false) where T : class =>
         AssemblyManager.GetLoadableTypes(assemblyToSearch)
         .Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract)
-        .Select(type => (T)CreateInstanceSafe(type))
+        .Select(type => (T)CreateInstanceSafe(type, notInitialize))
         .Where(instance => instance is not null);
 
     /// <summary>
@@ -160,9 +152,9 @@ public static class TOReflectionUtils
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    public static IEnumerable<T> GetTypeInstancesDerivedFrom<T>() where T : class =>
+    public static IEnumerable<T> GetTypeInstancesDerivedFrom<T>(bool notInitialize = false) where T : class =>
         GetAllTypes().Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract)
-        .Select(type => (T)CreateInstanceSafe(type))
+        .Select(type => (T)CreateInstanceSafe(type, notInitialize))
         .Where(instance => instance is not null);
 
     /// <summary>
@@ -171,9 +163,9 @@ public static class TOReflectionUtils
     /// <typeparam name="T"></typeparam>
     /// <param name="assemblyToSearch"></param>
     /// <returns></returns>
-    public static IEnumerable<(Type Type, T Instance)> GetTypesAndInstancesDerivedFrom<T>(Assembly assemblyToSearch) where T : class =>
+    public static IEnumerable<(Type Type, T Instance)> GetTypesAndInstancesDerivedFrom<T>(Assembly assemblyToSearch, bool notInitialize = false) where T : class =>
         AssemblyManager.GetLoadableTypes(assemblyToSearch).Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract)
-        .Select(type => (type, instance: (T)CreateInstanceSafe(type)))
+        .Select(type => (type, instance: (T)CreateInstanceSafe(type, notInitialize)))
         .Where(pair => pair.instance is not null);
 
     /// <summary>
@@ -183,9 +175,9 @@ public static class TOReflectionUtils
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    public static IEnumerable<(Type type, T instance)> GetTypesAndInstancesDerivedFrom<T>() where T : class =>
+    public static IEnumerable<(Type type, T instance)> GetTypesAndInstancesDerivedFrom<T>(bool notInitialize = false) where T : class =>
         GetAllTypes().Where(type => type.IsAssignableTo(typeof(T)) && !type.IsAbstract)
-        .Select(type => (type, instance: (T)CreateInstanceSafe(type))).Where(pair => pair.instance is not null);
+        .Select(type => (type, instance: (T)CreateInstanceSafe(type, notInitialize))).Where(pair => pair.instance is not null);
 
     /// <summary>
     /// 获取指定程序集中所有指定特性修饰的类型及对应特性实例。
@@ -258,10 +250,7 @@ public static class TOReflectionUtils
 
     public static Delegate CreateMethodDelegate(MethodInfo method) => Delegate.CreateDelegate(GetDelegateType(method), method);
 
-    public static object GetDefaultValue(Type type)
-    {
-        return (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)) || !type.IsValueType ? null : Activator.CreateInstance(type);
-    }
+    public static object GetDefaultValue(Type type) => (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>)) || !type.IsValueType ? null : Activator.CreateInstance(type);
 
     public static bool TryAssignSingleInstance(object instance)
     {

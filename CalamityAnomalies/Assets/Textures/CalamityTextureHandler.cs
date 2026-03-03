@@ -1,5 +1,5 @@
 ﻿namespace CalamityAnomalies.Assets.Textures;
 
-public sealed class CalamityTextureHandler : IResourceLoader
+public sealed class CalamityTextureHandler : IContentLoader
 {
 }

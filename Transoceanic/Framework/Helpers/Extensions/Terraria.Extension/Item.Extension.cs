@@ -15,11 +15,22 @@ public static partial class TOExtensions
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetModItem<T>([NotNullWhen(true)] out T result) where T : ModItem => (result = item.GetModItem<T>()) is not null;
 
-        public Texture2D Texture => TextureAssets.Item[item.type].Value;
+        public Texture2D Texture => TOAssetUtils.GetItemTexture(item.type);
 
         public void DrawInventoryWithBorder(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Vector2 origin, float scale,
             int way, float borderWidth, Color borderColor) =>
             TODrawUtils.DrawBorderTexture(spriteBatch, TextureAssets.Item[item.type].Value, position, frame, borderColor, 0f, origin, scale, way: way, borderWidth: borderWidth);
+
+        #region GlobalItem
+        /// <summary>
+        /// 获取一个物品的装备时长。
+        /// </summary>
+        /// <param name="max"></param>
+        /// <returns>装备时长。
+        /// <br/>在物品装备时，返回值从0逐渐增加至 <paramref name="max"/>；未装备时，从 <paramref name="max"/> 逐渐减少至 <c>0</c>。
+        /// </returns>
+        public int GetEquippedTimer(int max) => item.Ocean.Equip_Timer.GetValue(TOSharedData.GameTimer.TotalTicks, max);
+        #endregion GlobalItem
     }
 
     extension(Item)

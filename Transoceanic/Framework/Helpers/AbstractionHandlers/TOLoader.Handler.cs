@@ -4,9 +4,9 @@ public sealed class TOLoaderHandler : ModSystem
 {
     public override void PostAddRecipes()
     {
-        foreach (IResourceLoader loader in
-            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IResourceLoader>().AsValueEnumerable()
-            orderby pair.type.GetMethod(nameof(IResourceLoader.PostAddRecipes), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0
+        foreach (IContentLoader loader in
+            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>().AsValueEnumerable()
+            orderby pair.type.GetMethod(nameof(IContentLoader.PostAddRecipes), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0
             select pair.instance)
         {
             loader.PostAddRecipes();
@@ -15,9 +15,9 @@ public sealed class TOLoaderHandler : ModSystem
 
     public override void OnModUnload()
     {
-        foreach (IResourceLoader loader in (
-            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IResourceLoader>().AsValueEnumerable()
-            orderby pair.type.GetMethod(nameof(IResourceLoader.PostSetupContent), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+        foreach (IContentLoader loader in (
+            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>().AsValueEnumerable()
+            orderby pair.type.GetMethod(nameof(IContentLoader.PostSetupContent), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
             select pair.instance).Reverse())
         {
             loader.OnModUnload();
@@ -26,9 +26,9 @@ public sealed class TOLoaderHandler : ModSystem
 
     public override void OnWorldLoad()
     {
-        foreach (IResourceLoader loader in
-            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IResourceLoader>().AsValueEnumerable()
-            orderby pair.type.GetMethod(nameof(IResourceLoader.OnWorldLoad), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+        foreach (IContentLoader loader in
+            from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>().AsValueEnumerable()
+            orderby pair.type.GetMethod(nameof(IContentLoader.OnWorldLoad), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
             select pair.instance)
         {
             loader.OnWorldLoad();
@@ -39,9 +39,9 @@ public sealed class TOLoaderHandler : ModSystem
     {
         if (TOMain.Loaded)
         {
-            foreach (IResourceLoader loader in (
-                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IResourceLoader>().AsValueEnumerable()
-                orderby pair.type.GetMethod(nameof(IResourceLoader.OnWorldLoad), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
+            foreach (IContentLoader loader in (
+                from pair in TOReflectionUtils.GetTypesAndInstancesDerivedFrom<IContentLoader>().AsValueEnumerable()
+                orderby pair.type.GetMethod(nameof(IContentLoader.OnWorldLoad), TOReflectionUtils.UniversalBindingFlags)?.Attribute<LoadPriorityAttribute>()?.Priority ?? 0 descending
                 select pair.instance).Reverse())
             {
                 loader.OnWorldUnload();

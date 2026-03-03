@@ -5,7 +5,7 @@ using Transoceanic.Framework.RuntimeEditing;
 
 namespace CalamityAnomalies.GlobalInstances.Single;
 
-public sealed class CANPCDR : CAGlobalNPCBehavior, IResourceLoader
+public sealed class CANPCDR : CAGlobalNPCBehavior, IContentLoader
 {
     public delegate void Orig_ApplyDR(CalamityGlobalNPC self, NPC npc, ref NPC.HitModifiers modifiers);
 
@@ -51,47 +51,55 @@ public sealed class CANPCDR : CAGlobalNPCBehavior, IResourceLoader
     public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
     {
         float baseDR = GetBaseDR(npc);
+
         StatModifier baseDRModifier = new();
         StatModifier standardDRModifier = new();
         StatModifier timedDRModifier = new();
+
         foreach (CAGlobalItemBehavior behavior in GlobalItemBehaviorHandler.BehaviorSet.Enumerate<CAGlobalItemBehavior>(nameof(CAGlobalItemBehavior.ModifyHitNPC_DR)))
             behavior.ModifyHitNPC_DR(item, npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (item.TryGetBehavior(out CASingleItemBehavior itemBehavior, nameof(CASingleItemBehavior.ModifyHitNPC_DR)))
             itemBehavior.ModifyHitNPC_DR(npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (item.ModItem is ICAModItem caItem)
             caItem.ModifyHitNPC_DR(npc, player, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
+
         baseDR = baseDRModifier.ApplyTo(baseDR);
         float standardDR = standardDRModifier.ApplyTo(baseDR);
         float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR));
+
         modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR - npc.Anomaly.ExtraDR, 0f, 1f);
     }
 
     public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
     {
         float baseDR = GetBaseDR(npc);
+
         StatModifier baseDRModifier = new();
         StatModifier standardDRModifier = new();
         StatModifier timedDRModifier = new();
+
         foreach (CAGlobalProjectileBehavior behavior in GlobalProjectileBehaviorHandler.BehaviorSet.Enumerate<CAGlobalProjectileBehavior>(nameof(CAGlobalProjectileBehavior.ModifyHitNPC_DR)))
             behavior.ModifyHitNPC_DR(projectile, npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (projectile.TryGetBehavior(out CASingleProjectileBehavior projectileBehavior, nameof(CASingleProjectileBehavior.ModifyHitNPC_DR)))
             projectileBehavior.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
         if (projectile.ModProjectile is ICAModProjectile caProjectile)
             caProjectile.ModifyHitNPC_DR(npc, ref modifiers, baseDR, ref baseDRModifier, ref standardDRModifier, ref timedDRModifier);
+
         baseDR = baseDRModifier.ApplyTo(baseDR);
         float standardDR = standardDRModifier.ApplyTo(baseDR);
         float timedDR = timedDRModifier.ApplyTo(GetTimedDR(npc, baseDR));
+
         modifiers.FinalDamage *= Math.Clamp(1f - standardDR - timedDR - npc.Anomaly.ExtraDR, 0f, 1f);
     }
 
-    void IResourceLoader.PostSetupContent()
+    void IContentLoader.PostSetupContent()
     {
         Type type = typeof(CalamityGlobalNPC);
         TODetourHandler.Modify(type, "ApplyDR", Detour_ApplyDR);
         OrigMethod_ApplyDRReduction = type.GetMethod("ApplyDRReduction", TOReflectionUtils.UniversalBindingFlags).CreateDelegate<Orig_ApplyDRReduction>();
     }
 
-    void IResourceLoader.OnModUnload()
+    void IContentLoader.OnModUnload()
     {
         OrigMethod_ApplyDRReduction = null;
     }

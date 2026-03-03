@@ -84,6 +84,8 @@ public enum CalamityLogicType_NPCBehavior
 
 public abstract class CASingleNPCBehavior : SingleNPCBehavior
 {
+    public static bool Ultra => CASharedData.AnomalyUltramundane;
+
     public sealed override CAMain Mod => CAMain.Instance;
 
     public CAGlobalNPC AnomalyNPC => _entity.Anomaly;
@@ -154,6 +156,8 @@ public enum OrigMethodType_CalamityGlobalProjectile
 
 public abstract class CASingleProjectileBehavior : SingleProjectileBehavior
 {
+    public static bool Ultra => CASharedData.AnomalyUltramundane;
+
     public sealed override CAMain Mod => CAMain.Instance;
 
     public CAGlobalProjectile AnomalyProjectile => _entity.Anomaly;
@@ -198,6 +202,8 @@ public abstract class AnomalyProjecileBehavior<T> : CASingleProjectileBehavior<T
 
 public abstract class CASingleItemBehavior : SingleItemBehavior
 {
+    public static bool Ultra => CASharedData.AnomalyUltramundane;
+
     public sealed override CAMain Mod => CAMain.Instance;
 
     public CAGlobalItem AnomalyItem => _entity.Anomaly;
@@ -3207,7 +3213,7 @@ public sealed class CASingleItemBehaviorHandler : SingleItemBehaviorHandler<CASi
     protected override SingleEntityBehaviorSet<Item, CASingleItemBehavior> BehaviorSet => CAEntityChangeHelper.ItemBehaviors;
 }
 
-public sealed class CAEntityChangeHelper : IResourceLoader
+public sealed class CAEntityChangeHelper : IContentLoader
 {
     internal static readonly SingleEntityBehaviorSet<NPC, CASingleNPCBehavior> NPCBehaviors = new();
 
@@ -3215,7 +3221,7 @@ public sealed class CAEntityChangeHelper : IResourceLoader
 
     internal static readonly SingleEntityBehaviorSet<Item, CASingleItemBehavior> ItemBehaviors = new();
 
-    void IResourceLoader.PostSetupContent()
+    void IContentLoader.PostSetupContent()
     {
         Assembly assembly = CASharedData.Assembly;
         NPCBehaviors.FillSet(assembly);
@@ -3226,7 +3232,7 @@ public sealed class CAEntityChangeHelper : IResourceLoader
             caTweak.RegisterTweak();
     }
 
-    void IResourceLoader.OnModUnload()
+    void IContentLoader.OnModUnload()
     {
         NPCBehaviors.Clear();
         ProjectileBehaviors.Clear();

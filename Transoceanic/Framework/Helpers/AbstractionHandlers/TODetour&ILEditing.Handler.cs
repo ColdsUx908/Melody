@@ -4,7 +4,7 @@ using MonoMod.RuntimeDetour;
 
 namespace Transoceanic.Framework.RuntimeEditing;
 
-public sealed partial class TODetourHandler : IResourceLoader
+public sealed partial class TODetourHandler : IContentLoader
 {
     public sealed class DetourSet : IEnumerable<Hook>
     {
@@ -112,7 +112,7 @@ public sealed partial class TODetourHandler : IResourceLoader
 
     internal static readonly DetourSet Detours = [];
 
-    void IResourceLoader.PostSetupContent()
+    void IContentLoader.PostSetupContent()
     {
         Detours.Clear();
 
@@ -133,7 +133,7 @@ public sealed partial class TODetourHandler : IResourceLoader
             detourProvider.ApplyDetour();
     }
 
-    void IResourceLoader.OnModUnload() => Detours.Clear();
+    void IContentLoader.OnModUnload() => Detours.Clear();
 
     private const string DefaultPrefix = "Detour_";
     [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern = """^{0}(?<methodName>[\S]*?)(?:__[\S]*)?$""";
@@ -354,12 +354,12 @@ public sealed partial class TODetourHandler : IResourceLoader
     }
 }
 
-public sealed partial class TOILEditingHandler : IResourceLoader
+public sealed partial class TOILEditingHandler : IContentLoader
 {
 
     internal static readonly List<ILHook> Manipulators = [];
 
-    void IResourceLoader.PostSetupContent()
+    void IContentLoader.PostSetupContent()
     {
         Manipulators.Clear();
 
@@ -371,7 +371,7 @@ public sealed partial class TOILEditingHandler : IResourceLoader
         }
     }
 
-    void IResourceLoader.OnModUnload() => Manipulators.Clear();
+    void IContentLoader.OnModUnload() => Manipulators.Clear();
 
     [StringSyntax(StringSyntaxAttribute.Regex)] private const string Pattern = """^{0}(?<methodName>[\S]*?)(?:__[\S]*)?$""";
 

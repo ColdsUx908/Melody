@@ -1,6 +1,4 @@
-﻿using Transoceanic;
-
-namespace CalamityAnomalies.GlobalInstances.Single;
+﻿namespace CalamityAnomalies.GlobalInstances.Single;
 
 public sealed class CAItemTweakTooltip : CAGlobalItemBehavior, ILocalizationPrefix
 {

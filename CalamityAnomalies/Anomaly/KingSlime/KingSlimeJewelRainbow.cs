@@ -1,5 +1,4 @@
 ﻿using CalamityAnomalies.DataStructures;
-using Transoceanic;
 
 namespace CalamityAnomalies.Anomaly.KingSlime;
 
@@ -16,6 +15,9 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
     public const float DespawnDistance = 5000f;
     public const int AttackCycleTypes = 3;
     public static int ShootCooldownTime => 150;
+
+    private static readonly ProjectileDamageContainer _jewelProjectileRainbowDamage = new(40, 65, 90, 110, 105, 125);
+    public static int JewelProjectileRainbowDamage => _jewelProjectileRainbowDamage.Value;
 
     public Attack CurrentAttack
     {
@@ -62,7 +64,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
         }
     }
 
-    public bool CanBeKilled
+    public bool KingSlimeDead
     {
         get => AI_Union_2.bits[3];
         set
@@ -83,9 +85,6 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
             AI_Union_2 = union;
         }
     }
-
-    private static readonly ProjectileDamageContainer _jewelProjectileRainbow_Damage = new(40, 65, 90, 110, 105, 125);
-    public static int JewelProjectileRainbowDamage => _jewelProjectileRainbow_Damage.Damage;
 
     public override string LocalizationCategory => "Anomaly.KingSlime";
 
@@ -115,11 +114,19 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
         CalamityNPC.VulnerableToSickness = false;
     }
 
+    public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment) => NPC.lifeMax = (int)(NPC.lifeMax * balance);
+
     public override void AI()
     {
-        if (!OceanNPC.TryGetMaster(NPCID.KingSlime, out NPC master))
+        if (KingSlimeDead)
         {
             JewelHandler.Kill(NPC);
+            return;
+        }
+
+        if (!NPC.TryGetMaster(NPCID.KingSlime, out NPC master))
+        {
+            JewelHandler.Despawn(NPC);
             return;
         }
 
@@ -136,10 +143,10 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
 
         if (!HasInitialized)
         {
-            Projectile.NewProjectileAction<RainbowExplosion>(NPC.GetSource_FromAI(), NPC.Center, Vector2.Zero, 100, 0f, action: p =>
+            Projectile.NewProjectileAction<RainbowShockwave>(NPC.GetSource_FromAI(), NPC.Center, Vector2.Zero, 100, 0f, action: p =>
             {
                 p.scale = 0f;
-                RainbowExplosion modP = p.GetModProjectile<RainbowExplosion>();
+                RainbowShockwave modP = p.GetModProjectile<RainbowShockwave>();
                 modP.Jewel = NPC;
                 modP.Master = master;
             });
@@ -353,7 +360,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
             3 => 0.425f,
             _ => 0.35f
         };
-            JewelHandler.DrawAttackEffect(spriteBatch, screenPos, NPC, ratio, radius, scale);
+        JewelHandler.DrawAttackEffect(spriteBatch, screenPos, NPC, ratio, radius, scale);
         JewelHandler.DrawJewel(spriteBatch, screenPos, NPC, ratio);
         return false;
     }
@@ -369,7 +376,7 @@ public sealed class KingSlimeJewelRainbow : CAModNPC, IKingSlimeJewel
             {
                 Vector2 old = oldPos[i - 1];
                 Vector2 oldold = oldPos[i];
-                float rotation = (old - oldold).ToRotation() - MathHelper.PiOver2;
+                float rotation = (old - oldold).ToRotation(-MathHelper.PiOver2);
                 Vector2 scale = new(1f, Vector2.Distance(oldold, old) / texture.Height);
                 Color color = white * (1f - (float)i / oldPos.Length);
                 spriteBatch.Draw(texture, oldold + entity.Size / 2f - screenPos, null, color, rotation, origin, scale, effects, 0f);

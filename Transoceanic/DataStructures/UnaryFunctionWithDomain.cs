@@ -229,9 +229,7 @@ public sealed class UnaryFunctionWithDomain : UnaryFunctionWithDomainBase<float>
             for (int j = i + 1; j < segments.Length; j++)
             {
                 if (MathInterval.Overlap(segments[i].interval, segments[j].interval))
-                {
                     throw new ArgumentException($"区间 {segments[i].interval} 和 {segments[j].interval} 重叠");
-                }
             }
         }
 

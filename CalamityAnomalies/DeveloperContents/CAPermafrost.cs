@@ -6,7 +6,6 @@ using CalamityMod.NPCs.TownNPCs;
 using CalamityMod.Projectiles.Boss;
 using CalamityMod.Skies;
 using Terraria.Graphics.Shaders;
-using Transoceanic;
 using Transoceanic.Framework.Helpers.AbstractionHandlers;
 using Transoceanic.Framework.RuntimeEditing;
 using static CalamityMod.NPCs.SupremeCalamitas.SupremeCalamitas;
@@ -14,7 +13,7 @@ using static CalamityMod.Projectiles.Boss.SCalRitualDrama;
 
 namespace CalamityAnomalies.DeveloperContents;
 
-public sealed class Permafrost_Handler : IResourceLoader
+public sealed class Permafrost_Handler : IContentLoader
 {
     private static Asset<Texture2D> _centerTexture;
     public static Texture2D CenterTexture => _centerTexture?.Value;
@@ -22,14 +21,14 @@ public sealed class Permafrost_Handler : IResourceLoader
     private static Asset<Texture2D> _immuneTexture;
     public static Texture2D ImmuneTexture => _immuneTexture?.Value;
 
-    void IResourceLoader.PostSetupContent()
+    void IContentLoader.PostSetupContent()
     {
         AssetRepository assets = CalamityMod_Publicizer.Instance.Assets;
         _centerTexture = assets.Request<Texture2D>("Particles/CentralGold");
         _immuneTexture = assets.Request<Texture2D>("Particles/SemiCircularSmearVertical");
     }
 
-    void IResourceLoader.OnModUnload()
+    void IContentLoader.OnModUnload()
     {
         _centerTexture = null;
         _immuneTexture = null;
@@ -47,7 +46,7 @@ public sealed class CAPermafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocal
 
     private static class Data
     {
-        public static Color BlueColor => Color.Lerp(Color.LightCyan, Color.Cyan, TOMathUtils.GetTimeSin(0.2f, 1f, 0f, true));
+        public static Color BlueColor => Color.Lerp(Color.LightCyan, Color.Cyan, TOMathUtils.TimeWrappingFunction.GetTimeSin(0.2f, 1f, 0f, true));
 
         public static readonly List<Color> NameColors =
         [
@@ -58,7 +57,7 @@ public sealed class CAPermafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocal
             Color.LightSkyBlue
         ];
 
-        public static Color NameColor => Color.LerpMany(NameColors, TOMathUtils.GetTimeSin(0.5f, 0.6f, 0f, true));
+        public static Color NameColor => Color.LerpMany(NameColors, TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 0.6f, 0f, true));
 
         public const float DespawnDistance = 15000f;
 
@@ -192,8 +191,8 @@ public sealed class CAPermafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocal
 
             #region 力场和护盾
             // Shield effect rotation
-            ModNPC.rotateToPlayer = ModNPC.rotateToPlayer.AngleLerp((Target.Center - NPC.Center).SafeNormalize(Vector2.UnitY).ToRotation() + MathHelper.PiOver2, 0.04f);
-            ModNPC.rotateAwayPlayer = ModNPC.rotateAwayPlayer.AngleLerp((Target.Center - NPC.Center).SafeNormalize(Vector2.UnitY).ToRotation() - MathHelper.PiOver2, 0.04f);
+            ModNPC.rotateToPlayer = ModNPC.rotateToPlayer.AngleLerp((Target.Center - NPC.Center).SafeNormalize(Vector2.UnitY).ToRotation(MathHelper.PiOver2), 0.04f);
+            ModNPC.rotateAwayPlayer = ModNPC.rotateAwayPlayer.AngleLerp((Target.Center - NPC.Center).SafeNormalize(Vector2.UnitY).ToRotation(-MathHelper.PiOver2), 0.04f);
 
             if (ModNPC.hitTimer > 0)
                 ModNPC.hitTimer--;
@@ -392,7 +391,7 @@ public sealed class CAPermafrost : CASingleNPCBehavior<SupremeCalamitas>, ILocal
         newBar.DrawNPCName(spriteBatch, x, y, null,
             Data.BlueColor * newBar.AnimationCompletionRatio2,
             Data.NameColor * newBar.AnimationCompletionRatio2,
-            Math.Clamp(OceanNPC.ActiveTime, 0f, 360f) / 240f + TOMathUtils.GetTimeSin(0.5f, 1f, TOMathUtils.PiOver3, true) + NPC.LostLifeRatio / 2f);
+            Math.Clamp(NPC.ActiveTime, 0f, 360f) / 240f + TOMathUtils.TimeWrappingFunction.GetTimeSin(0.5f, 1f, TOMathUtils.PiOver3, true) + NPC.LostLifeRatio / 2f);
         newBar.DrawBigLifeText(spriteBatch, x, y);
         newBar.DrawExtraSmallText(spriteBatch, x, y);
 
@@ -415,12 +414,12 @@ public sealed class PermafrostRitualDrama : CASingleProjectileBehavior<SCalRitua
         if (Projectile.timeLeft == 689)
         {
             for (int i = 0; i < 2; i++)
-                ParticleHandler.SpawnParticle(new BloomParticle1(Projectile.Center, Vector2.Zero, Color.Lerp(Color.Blue, Color.Cyan, 0.7f), 0f, 0.55f, 270, false));
-            ParticleHandler.SpawnParticle(new BloomParticle1(Projectile.Center, Vector2.Zero, Color.White, 0f, 0.5f, 270, false));
+                ParticleHandler.SpawnParticle(new BloomParticle(Projectile.Center, Vector2.Zero, Color.Lerp(Color.Blue, Color.Cyan, 0.7f), 0f, 0.55f, 270, false));
+            ParticleHandler.SpawnParticle(new BloomParticle(Projectile.Center, Vector2.Zero, Color.White, 0f, 0.5f, 270, false));
         }
 
         if (Projectile.timeLeft == 689 - 180)
-            ParticleHandler.SpawnParticle(new BloomParticle1(Projectile.Center, Vector2.Zero, CASharedData.AnomalyUltramundaneColor, 0f, 0.85f, 90, false));
+            ParticleHandler.SpawnParticle(new BloomParticle(Projectile.Center, Vector2.Zero, CASharedData.AnomalyUltramundaneColor, 0f, 0.85f, 90, false));
 
         // If needed, these effects may continue after the ritual timer, to ensure that there are no awkward
         // background changes between the time it takes for SCal to appear after this projectile is gone.

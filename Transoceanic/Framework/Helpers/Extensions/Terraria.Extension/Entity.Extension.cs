@@ -35,6 +35,11 @@ public static partial class TOExtensions
         };
 
         /// <summary>
+        /// 获取一个指向目的地的速度向量，长度为 <paramref name="length"/>。
+        /// </summary>
+        public Vector2 GetVelocityTowards(Vector2 destination, float length) => (destination - entity.Center).ToCustomLength(length);
+
+        /// <summary>
         /// 获取一个指向目标的速度向量，长度为 <paramref name="length"/>。
         /// </summary>
         public Vector2 GetVelocityTowards(Entity target, float length) => (target.Center - entity.Center).ToCustomLength(length);

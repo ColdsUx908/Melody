@@ -33,6 +33,8 @@ public interface ICAModNPC
 
 public abstract class CAModNPC : TOModNPC, ICAModNPC
 {
+    public static bool Ultra => CASharedData.AnomalyUltramundane;
+
     public CAGlobalNPC AnomalyNPC => NPC.Anomaly;
     public CalamityGlobalNPC CalamityNPC => NPC.Calamity();
 
@@ -49,6 +51,8 @@ public interface ICAModProjectile
 
 public abstract class CAModProjectile : TOModProjectile, ICAModProjectile
 {
+    public static bool Ultra => CASharedData.AnomalyUltramundane;
+
     public CAGlobalProjectile AnomalyProjectile => Projectile.Anomaly;
     public CalamityGlobalProjectile CalamityProjectile => Projectile.Calamity();
 
@@ -62,6 +66,8 @@ public interface ICAModItem
 
 public abstract class CAModItem : TOModItem, ICAModItem
 {
+    public static bool Ultra => CASharedData.AnomalyUltramundane;
+
     public CAGlobalItem AnomalyItem => Item.Anomaly;
     public CalamityGlobalItem CalamityItem => Item.Calamity();
 

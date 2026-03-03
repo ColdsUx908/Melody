@@ -816,6 +816,10 @@ public abstract class ModItemDetour<T> : ModTypeDetour<T> where T : ModItem
     public delegate bool Orig_AllowPrefix(T self, int pre);
     public virtual bool Detour_AllowPrefix(Orig_AllowPrefix orig, T self, int pre) => orig(self, pre);
 
+    // ApplyPrefix
+    public delegate void Orig_ApplyPrefix(T self, int pre);
+    public virtual void Detour_ApplyPrefix(Orig_ApplyPrefix orig, T self, int pre) => orig(self, pre);
+
     // CanUseItem
     public delegate bool Orig_CanUseItem(T self, Player player);
     public virtual bool Detour_CanUseItem(Orig_CanUseItem orig, T self, Player player) => orig(self, player);
@@ -4409,6 +4413,10 @@ public abstract class GlobalItemDetour<T> : GlobalTypeDetour<Item, GlobalItem, T
     // AllowPrefix
     public delegate bool Orig_AllowPrefix(T self, Item item, int pre);
     public virtual bool Detour_AllowPrefix(Orig_AllowPrefix orig, T self, Item item, int pre) => orig(self, item, pre);
+
+    // ApplyPrefix
+    public delegate void Orig_ApplyPrefix(T self, Item item, int pre);
+    public virtual void Detour_ApplyPrefix(Orig_ApplyPrefix orig, T self, Item item, int pre) => orig(self, item, pre);
 
     // CanUseItem
     public delegate bool Orig_CanUseItem(T self, Item item, Player player);

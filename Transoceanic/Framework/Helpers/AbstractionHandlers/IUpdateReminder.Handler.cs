@@ -1,6 +1,6 @@
 ﻿namespace Transoceanic.Framework.Helpers.AbstractionHandlers;
 
-public sealed class UpdateReminderHandler : ModSystem, ILocalizationPrefix, IResourceLoader
+public sealed class UpdateReminderHandler : ModSystem, ILocalizationPrefix, IContentLoader
 {
     private static event Action UpdateReminder;
     private static event Action ExternalUpdateReminder;
@@ -22,7 +22,7 @@ public sealed class UpdateReminderHandler : ModSystem, ILocalizationPrefix, IRes
         }
     }
 
-    void IResourceLoader.PostSetupContent()
+    void IContentLoader.PostSetupContent()
     {
         foreach (IUpdateReminder updateReminder in TOReflectionUtils.GetTypeInstancesDerivedFrom<IUpdateReminder>())
             UpdateReminder += updateReminder.RegisterUpdateReminder();
@@ -30,5 +30,5 @@ public sealed class UpdateReminderHandler : ModSystem, ILocalizationPrefix, IRes
             ExternalUpdateReminder += externalUpdateReminder.RegisterUpdateReminder();
     }
 
-    void IResourceLoader.OnModUnload() => UpdateReminder = null;
+    void IContentLoader.OnModUnload() => UpdateReminder = null;
 }
